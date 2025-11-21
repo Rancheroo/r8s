@@ -37,7 +37,7 @@ Repository successfully created at `/home/bradmin/github/r9s` with the following
 - Connection testing
 - Profile validation
 
-### ✅ Phase 3: Basic TUI (COMPLETE - Cluster View Working)
+### ✅ Phase 3: Basic TUI (COMPLETE)
 
 **Files Created:**
 - `internal/tui/app.go` - Main Bubble Tea application
@@ -170,9 +170,9 @@ export PATH=$PATH:/usr/local/go/bin
 
 ## 🚧 What's Next (TODO)
 
-### Phase 4: Additional Resource Views
-- [x] Deployments view (list deployments with replicas, available, up-to-date)
-- [x] Services view (list services with type, cluster-IP, external-IP, ports)
+### ✅ Phase 4: Additional Resource Views (COMPLETE)
+- ✅ Deployments view (list deployments with replicas, available, up-to-date)
+- ✅ Services view (list services with type, cluster-IP, external-IP, ports)
 - [ ] ConfigMaps view (list config maps with data keys count)
 - [ ] Secrets view (list secrets with type, data keys count)
 - [ ] Nodes view (list nodes with status, roles, version, CPU, memory)
