@@ -18,7 +18,7 @@ Repository successfully created at `/home/bradmin/github/r9s` with the following
 - Go 1.25 (latest major version)
 - Bubble Tea v1.2.4 (stable, not beta v2)
 - Lipgloss v1.0.0
-- Bubble-table v0.16.3
+- Bubble-table v0.15.2 (corrected from v0.16.3 which doesn't exist)
 - Cobra v1.8.1
 - Viper v1.19.0
 
@@ -37,7 +37,7 @@ Repository successfully created at `/home/bradmin/github/r9s` with the following
 - Connection testing
 - Profile validation
 
-### ✅ Phase 3: Basic TUI (PARTIAL - Cluster View Only)
+### ✅ Phase 3: Basic TUI (COMPLETE - Cluster View Working)
 
 **Files Created:**
 - `internal/tui/app.go` - Main Bubble Tea application
@@ -148,6 +148,9 @@ export PATH=$PATH:/usr/local/go/bin
 - ✅ Responsive terminal resizing
 - ✅ Color-coded cluster states
 - ✅ Error handling for auth failures
+- ✅ Successfully tested against live Rancher instance (rancher.do.4rl.io)
+- ✅ Displays 2 clusters with correct information
+- ✅ JSON unmarshaling fixed for Rancher API responses
 
 ## 🚧 What's Next (TODO)
 
@@ -190,11 +193,10 @@ export PATH=$PATH:/usr/local/go/bin
 
 ## 🐛 Known Issues
 
-1. **Go not installed** - Project requires Go 1.23+ (see Prerequisites above)
-2. **Config validation** - Currently exits if no config, should guide user better
-3. **No navigation** - Can only view clusters, can't drill down yet
-4. **No filtering** - Filter mode not implemented
-5. **No command mode** - Command mode not implemented
+1. **No navigation** - Can only view clusters, can't drill down yet
+2. **No filtering** - Filter mode not implemented
+3. **No command mode** - Command mode not implemented
+4. **State colors not applied to table rows** - Need to style rows based on state
 
 ## 💡 Development Commands
 
@@ -244,10 +246,11 @@ make test
 - v1.2.4 is battle-tested
 - Can upgrade to v2 later when stable
 
-**Bubble-table v0.16.3** - Latest stable table component
+**Bubble-table v0.15.2** - Stable table component
 - Excellent k9s-style tables
 - Built-in pagination, sorting, filtering
 - Customizable styling
+- Note: v0.16.3 doesn't exist, v0.15.2 is the correct version
 
 ### API Client Design
 
