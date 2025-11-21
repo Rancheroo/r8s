@@ -21,9 +21,7 @@ var (
 	headerStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(colorCyan).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderBottom(true).
-			BorderForeground(colorGray)
+			Padding(0, 1)
 
 	// Breadcrumb style
 	breadcrumbStyle = lipgloss.NewStyle().
