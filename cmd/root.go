@@ -16,7 +16,7 @@ var (
 	insecure    bool
 	contextName string
 	namespace   string
-	
+
 	versionInfo struct {
 		Version string
 		Commit  string
@@ -37,7 +37,7 @@ including projects, namespaces, and Rancher-specific resources.`,
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
-		
+
 		// Override config with CLI flags
 		if insecure {
 			cfg.Insecure = true
@@ -48,7 +48,7 @@ including projects, namespaces, and Rancher-specific resources.`,
 		if namespace != "" {
 			cfg.Namespace = namespace
 		}
-		
+
 		// Create and start TUI
 		app := tui.NewApp(cfg)
 		p := tea.NewProgram(
@@ -56,11 +56,11 @@ including projects, namespaces, and Rancher-specific resources.`,
 			tea.WithAltScreen(),
 			tea.WithMouseCellMotion(),
 		)
-		
+
 		if _, err := p.Run(); err != nil {
 			return fmt.Errorf("TUI error: %w", err)
 		}
-		
+
 		return nil
 	},
 }
@@ -77,7 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip TLS certificate verification")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
-	
+
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(configCmd)

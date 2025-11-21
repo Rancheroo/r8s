@@ -15,7 +15,7 @@ type Config struct {
 	Profiles        []Profile `yaml:"profiles"`
 	RefreshInterval string    `yaml:"refreshInterval"`
 	LogLevel        string    `yaml:"logLevel"`
-	
+
 	// Runtime overrides (not from file)
 	Insecure  bool
 	Context   string
@@ -53,34 +53,34 @@ func Load(cfgFile, profileName string) (*Config, error) {
 		}
 		cfgFile = filepath.Join(home, ".r9s", "config.yaml")
 	}
-	
+
 	// Check if config file exists
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
 		return createDefaultConfig(cfgFile)
 	}
-	
+
 	// Read config file
 	data, err := os.ReadFile(cfgFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
-	
+
 	// Parse config
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
-	
+
 	// Use specified profile or current profile
 	if profileName != "" {
 		cfg.CurrentProfile = profileName
 	}
-	
+
 	// Validate profile exists
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
-	
+
 	return &cfg, nil
 }
 
@@ -89,7 +89,7 @@ func (c *Config) Validate() error {
 	if len(c.Profiles) == 0 {
 		return fmt.Errorf("no profiles configured")
 	}
-	
+
 	// Check if current profile exists
 	found := false
 	for _, p := range c.Profiles {
@@ -101,7 +101,7 @@ func (c *Config) Validate() error {
 	if !found {
 		return fmt.Errorf("profile '%s' not found", c.CurrentProfile)
 	}
-	
+
 	return nil
 }
 
@@ -141,27 +141,27 @@ func createDefaultConfig(cfgFile string) (*Config, error) {
 		RefreshInterval: "5s",
 		LogLevel:        "info",
 	}
-	
+
 	// Create config directory
 	dir := filepath.Dir(cfgFile)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	// Write default config
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	if err := os.WriteFile(cfgFile, data, 0600); err != nil {
 		return nil, fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	fmt.Printf("Created default config file at %s\n", cfgFile)
 	fmt.Println("Please edit the file to add your Rancher credentials.")
 	os.Exit(0)
-	
+
 	return cfg, nil
 }
 
@@ -174,15 +174,15 @@ func (c *Config) Save(cfgFile string) error {
 		}
 		cfgFile = filepath.Join(home, ".r9s", "config.yaml")
 	}
-	
+
 	data, err := yaml.Marshal(c)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	if err := os.WriteFile(cfgFile, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	return nil
 }

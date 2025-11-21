@@ -156,6 +156,8 @@ export PATH=$PATH:/usr/local/go/bin
 - ✅ Projects view: name, state, namespace count, age
 - ✅ Namespaces view: name, project, state, age (filtered by project)
 - ✅ Pods view: name, namespace, state, node, restarts, age (filtered by namespace)
+- ✅ Deployments view: name, ready, up-to-date, available, age
+- ✅ Services view: name, type, cluster-ip, ports, age
 - ✅ System/Unassigned namespaces pseudo-project for kube-system, cattle-system, etc.
 - ✅ Proper filtering at each level (project → namespaces, namespace → pods)
 
@@ -169,8 +171,8 @@ export PATH=$PATH:/usr/local/go/bin
 ## 🚧 What's Next (TODO)
 
 ### Phase 4: Additional Resource Views
-- [ ] Deployments view (list deployments with replicas, available, up-to-date)
-- [ ] Services view (list services with type, cluster-IP, external-IP, ports)
+- [x] Deployments view (list deployments with replicas, available, up-to-date)
+- [x] Services view (list services with type, cluster-IP, external-IP, ports)
 - [ ] ConfigMaps view (list config maps with data keys count)
 - [ ] Secrets view (list secrets with type, data keys count)
 - [ ] Nodes view (list nodes with status, roles, version, CPU, memory)

@@ -23,11 +23,11 @@ func NewClient(url, token string, insecure bool) *Client {
 	if !strings.HasSuffix(url, "/v3") {
 		url = strings.TrimSuffix(url, "/") + "/v3"
 	}
-	
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
-	
+
 	return &Client{
 		baseURL: url,
 		token:   token,
@@ -41,33 +41,33 @@ func NewClient(url, token string, insecure bool) *Client {
 // doRequest performs an HTTP request with authentication
 func (c *Client) doRequest(method, path string, body io.Reader) (*http.Response, error) {
 	url := c.baseURL + path
-	
+
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Add authentication header
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	
+
 	// Check for authentication errors
 	if resp.StatusCode == http.StatusUnauthorized {
 		resp.Body.Close()
 		return nil, fmt.Errorf("authentication failed: invalid token or credentials")
 	}
-	
+
 	if resp.StatusCode == http.StatusForbidden {
 		resp.Body.Close()
 		return nil, fmt.Errorf("access forbidden: insufficient permissions")
 	}
-	
+
 	return resp, nil
 }
 
@@ -78,18 +78,18 @@ func (c *Client) get(path string, result interface{}) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
 	}
-	
+
 	if result != nil {
 		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 			return fmt.Errorf("failed to decode response: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -148,6 +148,26 @@ func (c *Client) ListPods(projectID string) (*PodCollection, error) {
 	var result PodCollection
 	// Rancher uses project-scoped pod endpoints
 	path := "/projects/" + projectID + "/pods"
+	if err := c.get(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// ListDeployments returns all deployments for a project
+func (c *Client) ListDeployments(projectID string) (*DeploymentCollection, error) {
+	var result DeploymentCollection
+	path := "/projects/" + projectID + "/deployments"
+	if err := c.get(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// ListServices returns all services for a project
+func (c *Client) ListServices(projectID string) (*ServiceCollection, error) {
+	var result ServiceCollection
+	path := "/projects/" + projectID + "/services"
 	if err := c.get(path, &result); err != nil {
 		return nil, err
 	}

@@ -21,6 +21,8 @@ const (
 	ViewProjects
 	ViewNamespaces
 	ViewPods
+	ViewDeployments
+	ViewServices
 )
 
 // ViewContext holds context for the current view
@@ -36,21 +38,23 @@ type ViewContext struct {
 
 // App represents the main TUI application
 type App struct {
-	config  *config.Config
-	client  *rancher.Client
-	width   int
-	height  int
-	
+	config *config.Config
+	client *rancher.Client
+	width  int
+	height int
+
 	// Navigation state
 	viewStack   []ViewContext
 	currentView ViewContext
-	
-// Data for different views
-	clusters   []rancher.Cluster
-	projects   []rancher.Project
-	namespaces []rancher.Namespace
-	pods       []rancher.Pod
-	
+
+	// Data for different views
+	clusters    []rancher.Cluster
+	projects    []rancher.Project
+	namespaces  []rancher.Namespace
+	pods        []rancher.Pod
+	deployments []rancher.Deployment
+	services    []rancher.Service
+
 	// UI state
 	table    table.Model
 	error    string
@@ -68,14 +72,14 @@ func NewApp(cfg *config.Config) *App {
 			error:  fmt.Sprintf("Failed to get profile: %v", err),
 		}
 	}
-	
+
 	// Create Rancher client
 	client := rancher.NewClient(
 		profile.URL,
 		profile.GetToken(),
 		cfg.Insecure || profile.Insecure,
 	)
-	
+
 	// Test connection
 	if err := client.TestConnection(); err != nil {
 		return &App{
@@ -84,7 +88,7 @@ func NewApp(cfg *config.Config) *App {
 			error:  fmt.Sprintf("Failed to connect to Rancher: %v", err),
 		}
 	}
-	
+
 	return &App{
 		config:      cfg,
 		client:      client,
@@ -104,7 +108,7 @@ func (a *App) Init() tea.Cmd {
 // Update handles messages and updates the model
 func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
-	
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		// Handle help screen
@@ -115,7 +119,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return a, nil
 		}
-		
+
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return a, tea.Quit
@@ -136,49 +140,79 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, a.refreshCurrentView()
 			}
 			return a, nil
+		case "1":
+			if a.isNamespaceResourceView() {
+				a.currentView.viewType = ViewPods
+				a.loading = true
+				return a, a.refreshCurrentView()
+			}
+		case "2":
+			if a.isNamespaceResourceView() {
+				a.currentView.viewType = ViewDeployments
+				a.loading = true
+				return a, a.refreshCurrentView()
+			}
+		case "3":
+			if a.isNamespaceResourceView() {
+				a.currentView.viewType = ViewServices
+				a.loading = true
+				return a, a.refreshCurrentView()
+			}
 		}
-		
+
 	case tea.WindowSizeMsg:
 		a.width = msg.Width
 		a.height = msg.Height
 		a.updateTable()
-		
+
 	case clustersMsg:
 		a.loading = false
 		a.clusters = msg.clusters
 		a.error = ""
 		a.updateTable()
-		
+
 	case projectsMsg:
 		a.loading = false
 		a.projects = msg.projects
 		a.error = ""
 		a.updateTable()
-		
+
 	case namespacesMsg:
 		a.loading = false
 		a.namespaces = msg.namespaces
 		a.error = ""
 		a.updateTable()
-		
+
 	case podsMsg:
 		a.loading = false
 		a.pods = msg.pods
 		a.error = ""
 		a.updateTable()
-		
+
+	case deploymentsMsg:
+		a.loading = false
+		a.deployments = msg.deployments
+		a.error = ""
+		a.updateTable()
+
+	case servicesMsg:
+		a.loading = false
+		a.services = msg.services
+		a.error = ""
+		a.updateTable()
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
 	}
-	
+
 	// Update table
 	newTable, cmd := a.table.Update(msg)
 	a.table = newTable
 	if cmd != nil {
 		cmds = append(cmds, cmd)
 	}
-	
+
 	return a, tea.Batch(cmds...)
 }
 
@@ -187,23 +221,23 @@ func (a *App) View() string {
 	if a.error != "" {
 		return errorStyle.Render(fmt.Sprintf("Error: %s\n\nPress 'q' to quit", a.error))
 	}
-	
+
 	if a.loading {
 		return loadingStyle.Render("Loading clusters...")
 	}
-	
+
 	if a.showHelp {
 		return renderHelp()
 	}
-	
+
 	// Build view components
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
 	statusText := a.getStatusText()
 	status := statusStyle.Render(statusText)
-	
+
 	// Render table
 	tableView := a.table.View()
-	
+
 	// Join all components
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -226,15 +260,15 @@ func (a *App) updateTable() {
 		a.updateNamespacesTable()
 	case ViewPods:
 		a.updatePodsTable()
+	case ViewDeployments:
+		a.updateDeploymentsTable()
+	case ViewServices:
+		a.updateServicesTable()
 	}
 }
 
 // updateClustersTable updates the table with cluster data
 func (a *App) updateClustersTable() {
-	if len(a.clusters) == 0 {
-		return
-	}
-	
 	// Define columns
 	columns := []table.Column{
 		table.NewColumn("name", "NAME", 30),
@@ -243,14 +277,14 @@ func (a *App) updateClustersTable() {
 		table.NewColumn("provider", "PROVIDER", 15),
 		table.NewColumn("age", "AGE", 10),
 	}
-	
+
 	// Build rows with styled state
 	rows := []table.Row{}
 	for _, cluster := range a.clusters {
 		age := formatAge(cluster.Created)
 		version := formatVersion(cluster.Version)
 		stateStyled := GetStateStyle(cluster.State).Render(cluster.State)
-		
+
 		rows = append(rows, table.NewRow(table.RowData{
 			"name":     cluster.Name,
 			"state":    stateStyled,
@@ -259,7 +293,7 @@ func (a *App) updateClustersTable() {
 			"age":      age,
 		}))
 	}
-	
+
 	// Create or update table
 	a.table = table.New(columns).
 		WithRows(rows).
@@ -272,10 +306,6 @@ func (a *App) updateClustersTable() {
 
 // updateProjectsTable updates the table with project data
 func (a *App) updateProjectsTable() {
-	if len(a.projects) == 0 {
-		return
-	}
-	
 	// Define columns
 	columns := []table.Column{
 		table.NewColumn("name", "NAME", 40),
@@ -283,27 +313,27 @@ func (a *App) updateProjectsTable() {
 		table.NewColumn("namespaces", "NAMESPACES", 15),
 		table.NewColumn("age", "AGE", 10),
 	}
-	
+
 	// Build rows with styled state
 	rows := []table.Row{}
 	for _, project := range a.projects {
 		age := formatAge(project.Created)
 		stateStyled := GetStateStyle(project.State).Render(project.State)
-		
+
 		// Display name or ID if name is empty
 		displayName := project.DisplayName
 		if displayName == "" {
 			displayName = project.Name
 		}
-		
+
 		rows = append(rows, table.NewRow(table.RowData{
 			"name":       displayName,
 			"state":      stateStyled,
-			"namespaces": "-",  // TODO: fetch namespace count
+			"namespaces": "-", // TODO: fetch namespace count
 			"age":        age,
 		}))
 	}
-	
+
 	// Create or update table
 	a.table = table.New(columns).
 		WithRows(rows).
@@ -316,10 +346,6 @@ func (a *App) updateProjectsTable() {
 
 // updateNamespacesTable updates the table with namespace data
 func (a *App) updateNamespacesTable() {
-	if len(a.namespaces) == 0 {
-		return
-	}
-	
 	// Define columns
 	columns := []table.Column{
 		table.NewColumn("name", "NAME", 40),
@@ -327,13 +353,13 @@ func (a *App) updateNamespacesTable() {
 		table.NewColumn("state", "STATE", 15),
 		table.NewColumn("age", "AGE", 10),
 	}
-	
+
 	// Build rows with styled state
 	rows := []table.Row{}
 	for _, ns := range a.namespaces {
 		age := formatAge(ns.Created)
 		stateStyled := GetStateStyle(ns.State).Render(ns.State)
-		
+
 		// Extract project name from ID
 		projectName := "-"
 		if ns.ProjectID != "" {
@@ -343,7 +369,7 @@ func (a *App) updateNamespacesTable() {
 				projectName = parts[1]
 			}
 		}
-		
+
 		rows = append(rows, table.NewRow(table.RowData{
 			"name":    ns.Name,
 			"project": projectName,
@@ -351,7 +377,7 @@ func (a *App) updateNamespacesTable() {
 			"age":     age,
 		}))
 	}
-	
+
 	// Create or update table
 	a.table = table.New(columns).
 		WithRows(rows).
@@ -364,10 +390,6 @@ func (a *App) updateNamespacesTable() {
 
 // updatePodsTable updates the table with pod data
 func (a *App) updatePodsTable() {
-	if len(a.pods) == 0 {
-		return
-	}
-	
 	// Define columns
 	columns := []table.Column{
 		table.NewColumn("name", "NAME", 35),
@@ -377,13 +399,13 @@ func (a *App) updatePodsTable() {
 		table.NewColumn("restarts", "RESTARTS", 10),
 		table.NewColumn("age", "AGE", 10),
 	}
-	
+
 	// Build rows with styled state
 	rows := []table.Row{}
 	for _, pod := range a.pods {
 		age := formatAge(pod.Created)
 		stateStyled := GetStateStyle(pod.State).Render(pod.State)
-		
+
 		// Extract namespace name from ID
 		namespaceName := "-"
 		if pod.NamespaceID != "" {
@@ -395,7 +417,7 @@ func (a *App) updatePodsTable() {
 				namespaceName = pod.NamespaceID
 			}
 		}
-		
+
 		rows = append(rows, table.NewRow(table.RowData{
 			"name":      pod.Name,
 			"namespace": namespaceName,
@@ -405,7 +427,91 @@ func (a *App) updatePodsTable() {
 			"age":       age,
 		}))
 	}
-	
+
+	// Create or update table
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}
+
+// updateDeploymentsTable updates the table with deployment data
+func (a *App) updateDeploymentsTable() {
+	// Define columns
+	columns := []table.Column{
+		table.NewColumn("name", "NAME", 35),
+		table.NewColumn("ready", "READY", 10),
+		table.NewColumn("uptodate", "UP-TO-DATE", 10),
+		table.NewColumn("available", "AVAILABLE", 10),
+		table.NewColumn("age", "AGE", 10),
+	}
+
+	// Build rows
+	rows := []table.Row{}
+	for _, dep := range a.deployments {
+		age := formatAge(dep.Created)
+		// Logic for state color could be improved, defaulting to simple state check
+		stateStyled := GetStateStyle(dep.State).Render(fmt.Sprintf("%d/%d", dep.ReadyReplicas, dep.Replicas))
+
+		rows = append(rows, table.NewRow(table.RowData{
+			"name":      dep.Name,
+			"ready":     stateStyled,
+			"uptodate":  fmt.Sprintf("%d", dep.UpToDateReplicas),
+			"available": fmt.Sprintf("%d", dep.AvailableReplicas),
+			"age":       age,
+		}))
+	}
+
+	// Create or update table
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}
+
+// updateServicesTable updates the table with service data
+func (a *App) updateServicesTable() {
+	// Define columns
+	columns := []table.Column{
+		table.NewColumn("name", "NAME", 35),
+		table.NewColumn("type", "TYPE", 15),
+		table.NewColumn("clusterip", "CLUSTER-IP", 15),
+		table.NewColumn("ports", "PORTS", 25),
+		table.NewColumn("age", "AGE", 10),
+	}
+
+	// Build rows
+	rows := []table.Row{}
+	for _, svc := range a.services {
+		age := formatAge(svc.Created)
+
+		ports := []string{}
+		for _, p := range svc.Ports {
+			ports = append(ports, fmt.Sprintf("%d/%s", p.Port, p.Protocol))
+		}
+		portsStr := strings.Join(ports, ",")
+
+		// Use Kind as Type (e.g., ClusterIP)
+		svcType := svc.Kind
+		if svcType == "" {
+			svcType = svc.Type
+		}
+
+		rows = append(rows, table.NewRow(table.RowData{
+			"name":      svc.Name,
+			"type":      svcType,
+			"clusterip": svc.ClusterIP,
+			"ports":     portsStr,
+			"age":       age,
+		}))
+	}
+
 	// Create or update table
 	a.table = table.New(columns).
 		WithRows(rows).
@@ -422,12 +528,12 @@ func (a *App) fetchClusters() tea.Cmd {
 		if a.client == nil {
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
-		
+
 		collection, err := a.client.ListClusters()
 		if err != nil {
 			return errMsg{err}
 		}
-		
+
 		return clustersMsg{clusters: collection.Data}
 	}
 }
@@ -447,6 +553,14 @@ type namespacesMsg struct {
 
 type podsMsg struct {
 	pods []rancher.Pod
+}
+
+type deploymentsMsg struct {
+	deployments []rancher.Deployment
+}
+
+type servicesMsg struct {
+	services []rancher.Service
 }
 
 type errMsg struct {
@@ -480,7 +594,7 @@ func renderHelp() string {
     > ^ <     
    /|   |\    Press '?' 'Esc' or 'q' to close
   (_|   |_)`)
-	
+
 	helpText := lipgloss.NewStyle().
 		Foreground(colorWhite).
 		Padding(1, 2).
@@ -490,6 +604,7 @@ func renderHelp() string {
   g            Go to top
   G            Go to bottom
   PgUp/PgDn    Page up/down
+  1/2/3        Switch views (Pods/Deploy/Svc)
 
 ACTIONS
   Enter        Navigate into selected resource
@@ -513,7 +628,7 @@ STATUS COLORS
   Yellow       Pending / Provisioning
   Red          Failed / Error
   Gray         Completed / Terminated`)
-	
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		logo,
@@ -535,6 +650,12 @@ func (a *App) getBreadcrumb() string {
 	case ViewPods:
 		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
+	case ViewDeployments:
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
+	case ViewServices:
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	default:
 		return "r9s"
 	}
@@ -544,7 +665,7 @@ func (a *App) getBreadcrumb() string {
 func (a *App) getStatusText() string {
 	count := 0
 	resourceType := "items"
-	
+
 	switch a.currentView.viewType {
 	case ViewClusters:
 		count = len(a.clusters)
@@ -558,13 +679,19 @@ func (a *App) getStatusText() string {
 	case ViewPods:
 		count = len(a.pods)
 		resourceType = "pods"
+	case ViewDeployments:
+		count = len(a.deployments)
+		resourceType = "deployments"
+	case ViewServices:
+		count = len(a.services)
+		resourceType = "services"
 	}
-	
+
 	navHelp := ""
 	if len(a.viewStack) > 0 {
 		navHelp = " | 'Esc' to go back"
 	}
-	
+
 	return fmt.Sprintf(" %d %s%s | '?' for help | 'q' to quit | 'r' to refresh ",
 		count, resourceType, navHelp)
 }
@@ -580,6 +707,10 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchNamespaces(a.currentView.clusterID, a.currentView.projectID)
 	case ViewPods:
 		return a.fetchPods(a.currentView.projectID, a.currentView.namespaceName)
+	case ViewDeployments:
+		return a.fetchDeployments(a.currentView.projectID, a.currentView.namespaceName)
+	case ViewServices:
+		return a.fetchServices(a.currentView.projectID, a.currentView.namespaceName)
 	default:
 		return nil
 	}
@@ -590,7 +721,7 @@ func (a *App) handleEnter() tea.Cmd {
 	if a.table.HighlightedRow().Data == nil {
 		return nil
 	}
-	
+
 	switch a.currentView.viewType {
 	case ViewClusters:
 		// Get selected cluster
@@ -598,14 +729,14 @@ func (a *App) handleEnter() tea.Cmd {
 		if selected.Data == nil {
 			return nil
 		}
-		
+
 		clusterName := selected.Data["name"].(string)
 		// Find cluster by name to get ID
 		for _, cluster := range a.clusters {
 			if cluster.Name == clusterName {
 				// Push current view to stack
 				a.viewStack = append(a.viewStack, a.currentView)
-				
+
 				// Navigate to projects view
 				a.currentView = ViewContext{
 					viewType:    ViewProjects,
@@ -616,14 +747,14 @@ func (a *App) handleEnter() tea.Cmd {
 				return a.fetchProjects(cluster.ID)
 			}
 		}
-		
+
 	case ViewProjects:
 		// Get selected project
 		selected := a.table.HighlightedRow()
 		if selected.Data == nil {
 			return nil
 		}
-		
+
 		projectName := selected.Data["name"].(string)
 		// Find project by name to get ID
 		for _, project := range a.projects {
@@ -634,7 +765,7 @@ func (a *App) handleEnter() tea.Cmd {
 			if displayName == projectName {
 				// Push current view to stack
 				a.viewStack = append(a.viewStack, a.currentView)
-				
+
 				// Navigate to namespaces view
 				a.currentView = ViewContext{
 					viewType:    ViewNamespaces,
@@ -647,21 +778,21 @@ func (a *App) handleEnter() tea.Cmd {
 				return a.fetchNamespaces(a.currentView.clusterID, project.ID)
 			}
 		}
-		
+
 	case ViewNamespaces:
 		// Get selected namespace
 		selected := a.table.HighlightedRow()
 		if selected.Data == nil {
 			return nil
 		}
-		
+
 		namespaceName := selected.Data["name"].(string)
 		// Find namespace by name
 		for _, ns := range a.namespaces {
 			if ns.Name == namespaceName {
 				// Push current view to stack
 				a.viewStack = append(a.viewStack, a.currentView)
-				
+
 				// Navigate to pods view
 				a.currentView = ViewContext{
 					viewType:      ViewPods,
@@ -677,7 +808,7 @@ func (a *App) handleEnter() tea.Cmd {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -687,12 +818,12 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 		if a.client == nil {
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
-		
+
 		collection, err := a.client.ListProjects(clusterID)
 		if err != nil {
 			return errMsg{err}
 		}
-		
+
 		// Add a pseudo-project for unassigned/system namespaces
 		systemProject := rancher.Project{
 			ID:          clusterID + ":__UNASSIGNED__",
@@ -701,10 +832,10 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 			ClusterID:   clusterID,
 			State:       "active",
 		}
-		
+
 		// Prepend the system project to the list
 		projects := append([]rancher.Project{systemProject}, collection.Data...)
-		
+
 		return projectsMsg{projects: projects}
 	}
 }
@@ -715,18 +846,18 @@ func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 		if a.client == nil {
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
-		
+
 		collection, err := a.client.ListNamespaces(clusterID)
 		if err != nil {
 			return errMsg{err}
 		}
-		
+
 		// Filter namespaces by project ID
 		filteredNamespaces := []rancher.Namespace{}
-		
+
 		// Check if this is the special unassigned project
 		isUnassigned := strings.HasSuffix(projectID, ":__UNASSIGNED__")
-		
+
 		for _, ns := range collection.Data {
 			if isUnassigned {
 				// Show namespaces with no project or system namespaces
@@ -740,7 +871,7 @@ func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 				}
 			}
 		}
-		
+
 		return namespacesMsg{namespaces: filteredNamespaces}
 	}
 }
@@ -751,12 +882,12 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 		if a.client == nil {
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
-		
+
 		collection, err := a.client.ListPods(projectID)
 		if err != nil {
 			return errMsg{err}
 		}
-		
+
 		// Filter pods by namespace name
 		filteredPods := []rancher.Pod{}
 		for _, pod := range collection.Data {
@@ -768,20 +899,84 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 					podNamespace = parts[1]
 				}
 			}
-			
+
 			if podNamespace == namespaceName {
 				filteredPods = append(filteredPods, pod)
 			}
 		}
-		
+
 		return podsMsg{pods: filteredPods}
+	}
+}
+
+// fetchDeployments fetches deployments for a project, filtered by namespace
+func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
+	return func() tea.Msg {
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListDeployments(projectID)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		// Filter by namespace
+		filtered := []rancher.Deployment{}
+		for _, dep := range collection.Data {
+			depNamespace := dep.NamespaceID
+			if strings.Contains(depNamespace, ":") {
+				parts := strings.Split(depNamespace, ":")
+				if len(parts) > 1 {
+					depNamespace = parts[1]
+				}
+			}
+
+			if depNamespace == namespaceName {
+				filtered = append(filtered, dep)
+			}
+		}
+
+		return deploymentsMsg{deployments: filtered}
+	}
+}
+
+// fetchServices fetches services for a project, filtered by namespace
+func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
+	return func() tea.Msg {
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListServices(projectID)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		// Filter by namespace
+		filtered := []rancher.Service{}
+		for _, svc := range collection.Data {
+			svcNamespace := svc.NamespaceID
+			if strings.Contains(svcNamespace, ":") {
+				parts := strings.Split(svcNamespace, ":")
+				if len(parts) > 1 {
+					svcNamespace = parts[1]
+				}
+			}
+
+			if svcNamespace == namespaceName {
+				filtered = append(filtered, svc)
+			}
+		}
+
+		return servicesMsg{services: filtered}
 	}
 }
 
 // formatAge formats a time.Time into a human-readable age string
 func formatAge(t time.Time) string {
 	age := time.Since(t)
-	
+
 	if age < time.Minute {
 		return fmt.Sprintf("%ds", int(age.Seconds()))
 	}
@@ -796,4 +991,11 @@ func formatAge(t time.Time) string {
 		return fmt.Sprintf("%dd", days)
 	}
 	return fmt.Sprintf("%dy", days/365)
+}
+
+// isNamespaceResourceView checks if current view is a namespace-level resource view
+func (a *App) isNamespaceResourceView() bool {
+	return a.currentView.viewType == ViewPods ||
+		a.currentView.viewType == ViewDeployments ||
+		a.currentView.viewType == ViewServices
 }
