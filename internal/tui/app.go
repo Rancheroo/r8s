@@ -338,59 +338,56 @@ func formatVersion(v *rancher.ClusterVersion) string {
 
 // renderHelp renders the help screen
 func renderHelp() string {
-	title := lipgloss.NewStyle().
-		Bold(true).
+	// ASCII Rancher cow logo
+	logo := lipgloss.NewStyle().
 		Foreground(colorCyan).
-		Padding(1, 0).
-		Render("r9s - Rancher9s Help")
+		Bold(true).
+		Padding(0, 2).
+		Render(`
+    /\_/\     r9s - Rancher9s
+   ( o.o )    k9s-inspired TUI for Rancher
+    > ^ <     
+   /|   |\    Press '?' 'Esc' or 'q' to close
+  (_|   |_)`)
 	
 	helpText := lipgloss.NewStyle().
 		Foreground(colorWhite).
-		Padding(0, 2).
-		Render(`
-NAVIGATION
-  ↑/k        Move up
-  ↓/j        Move down
-  g          Go to top
-  G          Go to bottom
-  PgUp       Page up
-  PgDn       Page down
+		Padding(1, 2).
+		Render(`NAVIGATION
+  ↑/k          Move up
+  ↓/j          Move down
+  g            Go to top
+  G            Go to bottom
+  PgUp/PgDn    Page up/down
 
 ACTIONS
-  Enter      Navigate into selected resource
-  Esc        Go back to previous view
-  r, Ctrl+R  Refresh current view
-  ?          Show this help
-  q, Ctrl+C  Quit
+  Enter        Navigate into selected resource
+  Esc          Go back to previous view
+  r / Ctrl+R   Refresh current view
+  ?            Show this help
+  q / Ctrl+C   Quit application
 
-COMMAND MODE (not yet implemented)
-  :          Enter command mode
-  :clusters  List clusters
-  :projects  List projects
-  :pods      List pods
+COMMAND MODE (coming soon)
+  :            Enter command mode
+  :clusters    List clusters
+  :projects    List projects
+  :pods        List pods
 
-FILTER MODE (not yet implemented)
-  /          Enter filter mode
-  Esc        Exit filter mode
+FILTER MODE (coming soon)
+  /            Enter filter mode
+  Esc          Exit filter mode
 
 STATUS COLORS
-  Green      Active/Running
-  Yellow     Pending/Provisioning
-  Red        Failed/Error
-  Gray       Completed/Terminated
-`)
-	
-	footer := lipgloss.NewStyle().
-		Foreground(colorGray).
-		Italic(true).
-		Padding(1, 2).
-		Render("Press '?' or 'q' or 'Esc' to close help")
+  Green        Active / Running
+  Yellow       Pending / Provisioning
+  Red          Failed / Error
+  Gray         Completed / Terminated`)
 	
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		title,
+		logo,
+		"",
 		helpText,
-		footer,
 	)
 }
 
