@@ -129,10 +129,21 @@ type CRDNames struct {
 
 // CRDVersion represents a version of a CRD
 type CRDVersion struct {
-	Name    string `json:"name"`
-	Served  bool   `json:"served"`
-	Storage bool   `json:"storage"`
-	// Schema is omitted for now as it's complex, we can add it later for details view
+	Name    string     `json:"name"`
+	Served  bool       `json:"served"`
+	Storage bool       `json:"storage"`
+	Schema  *CRDSchema `json:"schema,omitempty"`
+}
+
+// CRDSchema represents the schema of a CRD version
+type CRDSchema struct {
+	OpenAPIV3Schema *OpenAPIV3Schema `json:"openAPIV3Schema,omitempty"`
+}
+
+// OpenAPIV3Schema represents the OpenAPI v3 schema
+type OpenAPIV3Schema struct {
+	Description string `json:"description,omitempty"`
+	Type        string `json:"type,omitempty"`
 }
 
 // UnstructuredList represents a generic K8s list response

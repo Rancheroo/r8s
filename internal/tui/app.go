@@ -68,10 +68,11 @@ type App struct {
 	projectNamespaceCounts map[string]int
 
 	// UI state
-	table    table.Model
-	error    string
-	loading  bool
-	showHelp bool
+	table             table.Model
+	error             string
+	loading           bool
+	showHelp          bool
+	showCRDDescription bool
 }
 
 // NewApp creates a new TUI application
@@ -204,6 +205,12 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.loading = true
 				return a, a.refreshCurrentView()
 			}
+		case "i":
+			// Toggle CRD description caption in CRD view
+			if a.currentView.viewType == ViewCRDs {
+				a.showCRDDescription = !a.showCRDDescription
+				return a, nil
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -296,6 +303,21 @@ func (a *App) View() string {
 
 	// Render table
 	tableView := a.table.View()
+
+	// Add description caption if in CRD view and toggled on
+	if a.currentView.viewType == ViewCRDs && a.showCRDDescription {
+		caption := a.getCRDDescriptionCaption()
+		return lipgloss.JoinVertical(
+			lipgloss.Left,
+			breadcrumb,
+			"",
+			tableView,
+			"",
+			caption,
+			"",
+			status,
+		)
+	}
 
 	// Join all components
 	return lipgloss.JoinVertical(
@@ -591,12 +613,12 @@ func (a *App) updateCRDsTable() {
 		return
 	}
 
-	// Define columns
+	// Define columns (removed DESCRIPTION column to fix alignment)
 	columns := []table.Column{
-		table.NewColumn("name", "NAME", 40),
-		table.NewColumn("group", "GROUP", 30),
-		table.NewColumn("version", "VERSION", 15),
-		table.NewColumn("scope", "SCOPE", 15),
+		table.NewColumn("name", "NAME", 50),
+		table.NewColumn("group", "GROUP", 35),
+		table.NewColumn("version", "VERSION", 12),
+		table.NewColumn("scope", "SCOPE", 12),
 		table.NewColumn("age", "AGE", 10),
 	}
 
@@ -605,8 +627,19 @@ func (a *App) updateCRDsTable() {
 	for _, crd := range a.crds {
 		age := formatAge(crd.Metadata.CreationTimestamp)
 		version := "-"
+
 		if len(crd.Spec.Versions) > 0 {
-			version = crd.Spec.Versions[0].Name
+			// Find best version
+			for _, v := range crd.Spec.Versions {
+				if v.Served {
+					version = v.Name
+					break
+				}
+			}
+			// Fallback if no served version found (shouldn't happen but safe)
+			if version == "-" {
+				version = crd.Spec.Versions[0].Name
+			}
 		}
 
 		rows = append(rows, table.NewRow(table.RowData{
@@ -777,6 +810,8 @@ ACTIONS
   Enter        Navigate into selected resource
   Esc          Go back to previous view
   r / Ctrl+R   Refresh current view
+  Shift+C      Switch to CRD Explorer (from Cluster/Project)
+  i            Toggle CRD description (in CRD view)
   ?            Show this help
   q / Ctrl+C   Quit application
 
@@ -833,6 +868,55 @@ func (a *App) getBreadcrumb() string {
 	}
 }
 
+// getCRDDescriptionCaption returns the description caption for the selected CRD
+func (a *App) getCRDDescriptionCaption() string {
+	if a.table.HighlightedRow().Data == nil {
+		return ""
+	}
+
+	crdName := a.table.HighlightedRow().Data["name"].(string)
+
+	// Find the CRD
+	for _, crd := range a.crds {
+		if crd.Metadata.Name == crdName {
+			description := ""
+			// Find served version description
+			if len(crd.Spec.Versions) > 0 {
+				for _, v := range crd.Spec.Versions {
+					if v.Served {
+						if v.Schema != nil && v.Schema.OpenAPIV3Schema != nil {
+							description = v.Schema.OpenAPIV3Schema.Description
+						}
+						break
+					}
+				}
+			}
+
+			if description == "" {
+				description = "No description available for this CRD."
+			}
+
+			// Create caption box
+			captionStyle := lipgloss.NewStyle().
+				Foreground(colorWhite).
+				Background(colorDarkGray).
+				Padding(1, 2).
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(colorCyan).
+				Width(a.width - 4)
+
+			title := lipgloss.NewStyle().
+				Bold(true).
+				Foreground(colorCyan).
+				Render("Description: ")
+
+			return captionStyle.Render(title + description)
+		}
+	}
+
+	return ""
+}
+
 // getStatusText returns the status bar text based on current view
 func (a *App) getStatusText() string {
 	count := 0
@@ -870,8 +954,14 @@ func (a *App) getStatusText() string {
 		navHelp = " | 'Esc' to go back"
 	}
 
-	return fmt.Sprintf(" %d %s%s | '?' for help | 'q' to quit | 'r' to refresh ",
-		count, resourceType, navHelp)
+	// Add CRD-specific help
+	crdHelp := ""
+	if a.currentView.viewType == ViewCRDs {
+		crdHelp = " | 'i' for description"
+	}
+
+	return fmt.Sprintf(" %d %s%s | '?' for help | 'q' to quit | 'r' to refresh | Shift+C for CRDs%s ",
+		count, resourceType, navHelp, crdHelp)
 }
 
 // refreshCurrentView refreshes data for the current view
@@ -1015,12 +1105,25 @@ func (a *App) handleEnter() tea.Cmd {
 		a.viewStack = append(a.viewStack, a.currentView)
 
 		// Navigate to CRD Instances
+
+		// Find best version (served=true)
+		bestVersion := ""
+		if len(selectedCRD.Spec.Versions) > 0 {
+			bestVersion = selectedCRD.Spec.Versions[0].Name // Default
+			for _, v := range selectedCRD.Spec.Versions {
+				if v.Served {
+					bestVersion = v.Name
+					break
+				}
+			}
+		}
+
 		a.currentView = ViewContext{
 			viewType:    ViewCRDInstances,
 			clusterID:   a.currentView.clusterID,
 			clusterName: a.currentView.clusterName,
 			crdGroup:    selectedCRD.Spec.Group,
-			crdVersion:  selectedCRD.Spec.Versions[0].Name, // Use first version
+			crdVersion:  bestVersion,
 			crdResource: selectedCRD.Spec.Names.Plural,
 			crdKind:     selectedCRD.Spec.Names.Kind,
 			crdScope:    selectedCRD.Spec.Scope,
@@ -1033,7 +1136,7 @@ func (a *App) handleEnter() tea.Cmd {
 		return a.fetchCRDInstances(
 			a.currentView.clusterID,
 			selectedCRD.Spec.Group,
-			selectedCRD.Spec.Versions[0].Name,
+			bestVersion,
 			selectedCRD.Spec.Names.Plural,
 			"", // All namespaces
 		)
@@ -1244,6 +1347,10 @@ func (a *App) fetchCRDInstances(clusterID, group, version, resource, namespace s
 
 		collection, err := a.client.ListCustomResources(clusterID, group, version, resource, namespace)
 		if err != nil {
+			// Handle 404 specifically
+			if strings.Contains(err.Error(), "404") {
+				return errMsg{fmt.Errorf("Failed to list resources. API endpoint not found (404).\nThe CRD version '%s' might not be served or the resource path is incorrect.\nPlease create an issue if this persists.", version)}
+			}
 			return errMsg{err}
 		}
 
