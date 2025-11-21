@@ -2,6 +2,13 @@ package rancher
 
 import "time"
 
+// Sort represents Rancher API sort options
+type Sort struct {
+	Order   string            `json:"order,omitempty"`
+	Reverse string            `json:"reverse,omitempty"`
+	Links   map[string]string `json:"links,omitempty"`
+}
+
 // Collection represents a Rancher API collection response
 type Collection struct {
 	Type         string                   `json:"type"`
@@ -10,7 +17,7 @@ type Collection struct {
 	CreateTypes  map[string]string        `json:"createTypes"`
 	Actions      map[string]string        `json:"actions"`
 	Pagination   *Pagination              `json:"pagination,omitempty"`
-	Sort         map[string]string        `json:"sort,omitempty"`
+	Sort         *Sort                    `json:"sort,omitempty"`
 	Filters      map[string][]interface{} `json:"filters,omitempty"`
 }
 
@@ -30,21 +37,28 @@ type ClusterCollection struct {
 	Data []Cluster `json:"data"`
 }
 
+// ClusterVersion represents Kubernetes version info
+type ClusterVersion struct {
+	GitVersion string `json:"gitVersion,omitempty"`
+	Major      string `json:"major,omitempty"`
+	Minor      string `json:"minor,omitempty"`
+}
+
 // Cluster represents a Rancher cluster
 type Cluster struct {
-	ID                  string            `json:"id"`
-	Type                string            `json:"type"`
-	Name                string            `json:"name"`
-	State               string            `json:"state"`
-	Transitioning       string            `json:"transitioning"`
-	TransitioningMessage string           `json:"transitioningMessage"`
-	Version             string            `json:"version"`
-	Provider            string            `json:"provider"`
-	Created             time.Time         `json:"created"`
-	Labels              map[string]string `json:"labels,omitempty"`
-	Annotations         map[string]string `json:"annotations,omitempty"`
-	Links               map[string]string `json:"links"`
-	Actions             map[string]string `json:"actions"`
+	ID                   string            `json:"id"`
+	Type                 string            `json:"type"`
+	Name                 string            `json:"name"`
+	State                string            `json:"state"`
+	Transitioning        string            `json:"transitioning"`
+	TransitioningMessage string            `json:"transitioningMessage"`
+	Version              *ClusterVersion   `json:"version,omitempty"`
+	Provider             string            `json:"provider"`
+	Created              time.Time         `json:"created"`
+	Labels               map[string]string `json:"labels,omitempty"`
+	Annotations          map[string]string `json:"annotations,omitempty"`
+	Links                map[string]string `json:"links"`
+	Actions              map[string]string `json:"actions"`
 }
 
 // ProjectCollection represents a collection of projects

@@ -122,10 +122,7 @@ func (a *App) View() string {
 	breadcrumb := breadcrumbStyle.Render("Rancher Clusters")
 	status := statusStyle.Render(fmt.Sprintf(" %d clusters | Press 'q' to quit | 'r' to refresh ", len(a.clusters)))
 	
-	// Calculate content height
-	contentHeight := a.height - lipgloss.Height(breadcrumb) - lipgloss.Height(status) - 2
-	
-	// Render table with proper height
+	// Render table
 	tableView := a.table.View()
 	
 	// Join all components
@@ -158,11 +155,12 @@ func (a *App) updateTable() {
 	rows := []table.Row{}
 	for _, cluster := range a.clusters {
 		age := formatAge(cluster.Created)
+		version := formatVersion(cluster.Version)
 		
 		rows = append(rows, table.NewRow(table.RowData{
 			"name":     cluster.Name,
 			"state":    cluster.State,
-			"version":  cluster.Version,
+			"version":  version,
 			"provider": cluster.Provider,
 			"age":      age,
 		}))
@@ -201,6 +199,20 @@ type clustersMsg struct {
 
 type errMsg struct {
 	error
+}
+
+// formatVersion formats a ClusterVersion object into a string
+func formatVersion(v *rancher.ClusterVersion) string {
+	if v == nil {
+		return "N/A"
+	}
+	if v.GitVersion != "" {
+		return v.GitVersion
+	}
+	if v.Major != "" && v.Minor != "" {
+		return fmt.Sprintf("v%s.%s", v.Major, v.Minor)
+	}
+	return "Unknown"
 }
 
 // formatAge formats a time.Time into a human-readable age string
