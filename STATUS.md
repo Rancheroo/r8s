@@ -138,65 +138,123 @@ export PATH=$PATH:/usr/local/go/bin
 
 ## 🎯 What Works Now
 
+### Core Navigation (✅ COMPLETE)
 - ✅ Loads config from `~/.r9s/config.yaml`
 - ✅ Authenticates with Rancher via bearer token
-- ✅ Lists all clusters in a beautiful table
-- ✅ Shows cluster name, state, version, provider, age
-- ✅ Keyboard navigation (↑/↓, j/k)
+- ✅ Full navigation hierarchy: Clusters → Projects → Namespaces → Pods
+- ✅ Navigation stack (Esc to go back through views)
+- ✅ Breadcrumb trail showing current location
+- ✅ Help screen ('?' key)
+- ✅ Keyboard navigation (↑/↓, j/k, Enter, Esc)
 - ✅ Refresh with 'r' or Ctrl+R
 - ✅ Quit with 'q' or Ctrl+C
 - ✅ Responsive terminal resizing
-- ✅ Color-coded cluster states
-- ✅ Error handling for auth failures
-- ✅ Successfully tested against live Rancher instance (rancher.do.4rl.io)
-- ✅ Displays 2 clusters with correct information
-- ✅ JSON unmarshaling fixed for Rancher API responses
+- ✅ Color-coded resource states
+
+### Resource Views (✅ COMPLETE)
+- ✅ Clusters view: name, state, version, provider, age
+- ✅ Projects view: name, state, namespace count, age
+- ✅ Namespaces view: name, project, state, age (filtered by project)
+- ✅ Pods view: name, namespace, state, node, restarts, age (filtered by namespace)
+- ✅ System/Unassigned namespaces pseudo-project for kube-system, cattle-system, etc.
+- ✅ Proper filtering at each level (project → namespaces, namespace → pods)
+
+### Data & API
+- ✅ Project-scoped pod API endpoint
+- ✅ Namespace filtering by project ID
+- ✅ Pod filtering by namespace name
+- ✅ Error handling for auth failures and API errors
+- ✅ Successfully tested against live Rancher instance
 
 ## 🚧 What's Next (TODO)
 
-### Phase 3: Complete TUI Framework
-- [ ] Navigation stack (back button, breadcrumb trail)
-- [ ] Drill-down into selected cluster (Enter key)
-- [ ] Command mode (`:` for commands)
-- [ ] Filter mode (`/` for filtering)
-- [ ] Help screen (`?`)
+### Phase 4: Additional Resource Views
+- [ ] Deployments view (list deployments with replicas, available, up-to-date)
+- [ ] Services view (list services with type, cluster-IP, external-IP, ports)
+- [ ] ConfigMaps view (list config maps with data keys count)
+- [ ] Secrets view (list secrets with type, data keys count)
+- [ ] Nodes view (list nodes with status, roles, version, CPU, memory)
+- [ ] PersistentVolumeClaims view
+- [ ] Ingresses view
 
-### Phase 4: Resource Views
-- [ ] Projects view (list projects in cluster)
-- [ ] Namespaces view (list namespaces in project)
-- [ ] Pods view (list pods with status, ready, restarts)
-- [ ] Deployments, Services, ConfigMaps, Secrets views
-- [ ] Real-time status updates (watch mechanism)
+### Phase 5: CRD Browser (NEW FEATURE)
+- [ ] CRD discovery - list all Custom Resource Definitions in cluster
+- [ ] CRD schema viewer - display OpenAPI schema, fields, types
+- [ ] CRD description - explain purpose and use case (AI-powered or manual annotations)
+- [ ] Custom Resource instances view - list instances of each CRD
+- [ ] CRD details view showing:
+  - Group, Version, Kind
+  - Scope (Namespaced vs Cluster)
+  - Field descriptions and types
+  - Required vs optional fields
+  - Validation rules
+  - Example manifests
+- [ ] CRD interaction guide:
+  - How to create instances
+  - Common kubectl commands
+  - API endpoints
+  - Related resources
+- [ ] CRD actions:
+  - Create new CR instance (`c` key)
+  - Edit CR instance (`e` key)
+  - Delete CR instance (`d` key)
+  - Describe CR in YAML (`y` key)
+- [ ] Rancher-specific CRDs:
+  - cattle.io resources (App, Project, etc.)
+  - fleet.cattle.io resources
+  - catalog resources
 
-### Phase 5: Actions
-- [ ] Describe resource (`d` key)
+### Phase 6: Resource Actions
+- [ ] Describe resource (`d` key) - show full YAML/JSON
 - [ ] Edit YAML (`e` key, opens $EDITOR)
 - [ ] Delete resource (Ctrl+D, with confirmation)
-- [ ] View logs (`l` key, with follow)
-- [ ] Shell into pod (`s` key)
-- [ ] Port forward (`p` key)
+- [ ] View logs (`l` key, with follow) - for pods
+- [ ] Shell into pod (`s` key) - interactive shell
+- [ ] Port forward (`p` key) - local port to pod port
+- [ ] Scale workload (`+`/`-` keys) - for deployments/statefulsets
+- [ ] Restart workload (`Ctrl+R`) - rollout restart
 
-### Phase 6: Rancher-Specific Features
+### Phase 7: Command Mode & Filters
+- [ ] Command mode (`:` for commands):
+  - `:clusters`, `:projects`, `:ns`, `:pods`, `:deploy`, `:svc`
+  - `:crds` - list all CRDs
+  - `:crd <name>` - view specific CRD
+  - `:apps`, `:mca`, `:fleet` - Rancher-specific
+  - `:help`, `:quit`
+- [ ] Filter mode (`/` for filtering)
+- [ ] Advanced filtering by labels, state, age
+
+### Phase 8: Rancher-Specific Features
 - [ ] Catalog apps view (`:apps`)
 - [ ] Multi-cluster apps (`:mca`)
 - [ ] Fleet workspaces (`:fleet`)
+- [ ] Fleet GitOps view
 - [ ] App upgrade workflow
+- [ ] Rancher settings browser
+- [ ] Global DNS entries
+- [ ] Monitoring dashboards
 
-### Phase 7: Polish & Production
+### Phase 9: Polish & Production
 - [ ] Auto-refresh with configurable interval
-- [ ] WebSocket watch for real-time updates
+- [ ] Real-time watch for resource updates (WebSocket or polling)
 - [ ] kubectl integration for exec/logs/port-forward
 - [ ] Kubeconfig generation from Rancher API
 - [ ] Error recovery and retry logic
 - [ ] Comprehensive unit tests
 - [ ] Integration tests with mock Rancher API
+- [ ] Performance optimization for large clusters
+- [ ] Persistent preferences (last view, sort order, etc.)
+- [ ] Multi-profile quick switching
+- [ ] Export resource lists to CSV/JSON
 
 ## 🐛 Known Issues
 
-1. **No navigation** - Can only view clusters, can't drill down yet
+1. **No additional workload views** - Only pods supported, need deployments, services, etc.
 2. **No filtering** - Filter mode not implemented
 3. **No command mode** - Command mode not implemented
-4. **State colors not applied to table rows** - Need to style rows based on state
+4. **No resource actions** - Can't describe, edit, delete, logs, exec yet
+5. **No CRD support** - Cannot browse or interact with custom resources
+6. **No real-time updates** - Manual refresh required
 
 ## 💡 Development Commands
 

@@ -199,6 +199,99 @@ If you see "json: cannot unmarshal..." errors:
 4. Verify all optional fields use `omitempty` tags
 5. Use pointers for optional complex types
 
+### Implementing CRD Browser
+**Overview**: The CRD Browser lets users discover, understand, and interact with Custom Resource Definitions.
+
+**API Endpoints:**
+```
+GET /v3/clusters/{clusterID}/customresourcedefinitions  # List CRDs
+GET /v3/clusters/{clusterID}/customresourcedefinitions/{crdName}  # Get CRD details
+GET /v3/clusters/{clusterID}/customresources/{group}/{version}/{kind}  # List CR instances
+```
+
+**Data Structures:**
+```go
+type CRD struct {
+    ID          string              `json:"id"`
+    Name        string              `json:"name"`
+    Group       string              `json:"spec.group"`
+    Kind        string              `json:"spec.names.kind"`
+    Plural      string              `json:"spec.names.plural"`
+    Scope       string              `json:"spec.scope"` // Namespaced or Cluster
+    Versions    []CRDVersion        `json:"spec.versions"`
+    Created     time.Time           `json:"created"`
+}
+
+type CRDVersion struct {
+    Name    string        `json:"name"`
+    Served  bool          `json:"served"`
+    Storage bool          `json:"storage"`
+    Schema  *OpenAPIV3Schema `json:"schema.openAPIV3Schema"`
+}
+
+type OpenAPIV3Schema struct {
+    Type        string                      `json:"type"`
+    Properties  map[string]SchemaProperty   `json:"properties"`
+    Required    []string                    `json:"required"`
+    Description string                      `json:"description"`
+}
+
+type SchemaProperty struct {
+    Type        string                    `json:"type"`
+    Description string                    `json:"description"`
+    Format      string                    `json:"format,omitempty"`
+    Properties  map[string]SchemaProperty `json:"properties,omitempty"`
+    Items       *SchemaProperty           `json:"items,omitempty"`
+    Enum        []interface{}             `json:"enum,omitempty"`
+    Minimum     *float64                  `json:"minimum,omitempty"`
+    Maximum     *float64                  `json:"maximum,omitempty"`
+}
+```
+
+**UI Flow:**
+1. **CRD List View**
+   - Columns: Name, Group, Kind, Scope, Versions, Age
+   - Navigate with j/k, Enter to view details
+   
+2. **CRD Details View**
+   - Show Group/Version/Kind header
+   - Display schema in tree format
+   - Highlight required fields
+   - Show field types and descriptions
+   - Actions: `i` to list instances, `e` for example YAML
+   
+3. **CR Instances View**
+   - List all instances of the CRD
+   - Columns: Name, Namespace (if namespaced), Status, Age
+   - Actions: `d` describe, `e` edit, `Del` delete
+
+**Schema Display Format:**
+```
+apiVersion: apps.cattle.io/v1
+kind: App
+metadata:
+  name: string (required)
+  namespace: string (required)
+spec:
+  chart: string
+    Chart name from catalog
+  version: string
+    Chart version
+  targetNamespace: string
+    Namespace to install chart into
+  values: object
+    Helm values override
+```
+
+**Implementation Steps:**
+1. Add CRD types to `internal/rancher/types.go`
+2. Add CRD client methods to `internal/rancher/client.go`
+3. Create `ViewCRDs` and `ViewCRInstances` view types
+4. Add CRD table rendering functions
+5. Add CRD schema parser and tree renderer
+6. Add `:crds` command mode handler
+7. Add CRD actions (describe, list instances, create/edit/delete CRs)
+
 ## Dependencies
 
 - Go 1.25+ (1.23+ will work)
@@ -216,8 +309,31 @@ Version info is injected at build time via ldflags in the Makefile:
 
 ## Future Implementation Phases
 See STATUS.md for detailed implementation roadmap. Key upcoming features:
-- Phase 4: Project, Namespace, Pod, Workload views
-- Phase 5: Actions (describe, edit, delete, logs, exec, port-forward)
-- Phase 6: Command mode (`:pods`, `:deployments`, etc.) and filter mode (`/`)
-- Phase 7: Real-time updates via WebSocket or polling
-- Phase 8: Rancher-specific features (Catalog Apps, Multi-Cluster Apps, Fleet)
+
+### Phase 4: Additional Resource Views
+- Deployments, Services, ConfigMaps, Secrets, Nodes, PVCs, Ingresses
+
+### Phase 5: CRD Browser (NEW FEATURE)
+**Purpose**: Browse and interact with Custom Resource Definitions and their instances
+
+**Features:**
+- **CRD Discovery**: List all CRDs in the cluster with group, version, kind
+- **Schema Viewer**: Display OpenAPI v3 schema with field types and descriptions
+- **CRD Explanation**: AI-powered or annotation-based descriptions of what each CRD does
+- **Instance Browser**: List all instances of a selected CRD type
+- **Interaction Guide**: Show how to create/modify/delete CR instances
+- **Rancher CRDs**: Special handling for cattle.io, fleet.cattle.io resources
+
+**Implementation Notes:**
+- Access via `:crds` command mode or dedicated view
+- Parse OpenAPI schema from CRD spec.versions[].schema
+- Extract field descriptions from schema.properties
+- Show required vs optional fields
+- Display validation rules (min/max, enum, pattern)
+- Provide example manifests
+- Link to related documentation
+
+### Phase 6: Actions (describe, edit, delete, logs, exec, port-forward)
+### Phase 7: Command mode (`:pods`, `:deployments`, `:crds`, etc.) and filter mode (`/`)
+### Phase 8: Real-time updates via WebSocket or polling
+### Phase 9: Rancher-specific features (Catalog Apps, Multi-Cluster Apps, Fleet)

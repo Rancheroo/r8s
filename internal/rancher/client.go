@@ -133,10 +133,21 @@ func (c *Client) ListProjects(clusterID string) (*ProjectCollection, error) {
 	return &result, nil
 }
 
-// ListNamespaces returns all namespaces
-func (c *Client) ListNamespaces(projectID string) (*NamespaceCollection, error) {
+// ListNamespaces returns all namespaces for a cluster
+func (c *Client) ListNamespaces(clusterID string) (*NamespaceCollection, error) {
 	var result NamespaceCollection
-	path := "/clusters/" + extractClusterID(projectID) + "/namespaces"
+	path := "/clusters/" + clusterID + "/namespaces"
+	if err := c.get(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// ListPods returns all pods for a project
+func (c *Client) ListPods(projectID string) (*PodCollection, error) {
+	var result PodCollection
+	// Rancher uses project-scoped pod endpoints
+	path := "/projects/" + projectID + "/pods"
 	if err := c.get(path, &result); err != nil {
 		return nil, err
 	}

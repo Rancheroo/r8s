@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,11 +25,13 @@ const (
 
 // ViewContext holds context for the current view
 type ViewContext struct {
-	viewType    ViewType
-	clusterID   string
-	clusterName string
-	projectID   string
-	projectName string
+	viewType      ViewType
+	clusterID     string
+	clusterName   string
+	projectID     string
+	projectName   string
+	namespaceID   string
+	namespaceName string
 }
 
 // App represents the main TUI application
@@ -42,9 +45,11 @@ type App struct {
 	viewStack   []ViewContext
 	currentView ViewContext
 	
-	// Data for different views
-	clusters []rancher.Cluster
-	projects []rancher.Project
+// Data for different views
+	clusters   []rancher.Cluster
+	projects   []rancher.Project
+	namespaces []rancher.Namespace
+	pods       []rancher.Pod
 	
 	// UI state
 	table    table.Model
@@ -150,6 +155,18 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.error = ""
 		a.updateTable()
 		
+	case namespacesMsg:
+		a.loading = false
+		a.namespaces = msg.namespaces
+		a.error = ""
+		a.updateTable()
+		
+	case podsMsg:
+		a.loading = false
+		a.pods = msg.pods
+		a.error = ""
+		a.updateTable()
+		
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
@@ -205,6 +222,10 @@ func (a *App) updateTable() {
 		a.updateClustersTable()
 	case ViewProjects:
 		a.updateProjectsTable()
+	case ViewNamespaces:
+		a.updateNamespacesTable()
+	case ViewPods:
+		a.updatePodsTable()
 	}
 }
 
@@ -293,6 +314,108 @@ func (a *App) updateProjectsTable() {
 		BorderRounded()
 }
 
+// updateNamespacesTable updates the table with namespace data
+func (a *App) updateNamespacesTable() {
+	if len(a.namespaces) == 0 {
+		return
+	}
+	
+	// Define columns
+	columns := []table.Column{
+		table.NewColumn("name", "NAME", 40),
+		table.NewColumn("project", "PROJECT", 25),
+		table.NewColumn("state", "STATE", 15),
+		table.NewColumn("age", "AGE", 10),
+	}
+	
+	// Build rows with styled state
+	rows := []table.Row{}
+	for _, ns := range a.namespaces {
+		age := formatAge(ns.Created)
+		stateStyled := GetStateStyle(ns.State).Render(ns.State)
+		
+		// Extract project name from ID
+		projectName := "-"
+		if ns.ProjectID != "" {
+			// ProjectID format: c-xxxxx:p-yyyyy
+			parts := strings.Split(ns.ProjectID, ":")
+			if len(parts) > 1 {
+				projectName = parts[1]
+			}
+		}
+		
+		rows = append(rows, table.NewRow(table.RowData{
+			"name":    ns.Name,
+			"project": projectName,
+			"state":   stateStyled,
+			"age":     age,
+		}))
+	}
+	
+	// Create or update table
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}
+
+// updatePodsTable updates the table with pod data
+func (a *App) updatePodsTable() {
+	if len(a.pods) == 0 {
+		return
+	}
+	
+	// Define columns
+	columns := []table.Column{
+		table.NewColumn("name", "NAME", 35),
+		table.NewColumn("namespace", "NAMESPACE", 25),
+		table.NewColumn("state", "STATE", 15),
+		table.NewColumn("node", "NODE", 20),
+		table.NewColumn("restarts", "RESTARTS", 10),
+		table.NewColumn("age", "AGE", 10),
+	}
+	
+	// Build rows with styled state
+	rows := []table.Row{}
+	for _, pod := range a.pods {
+		age := formatAge(pod.Created)
+		stateStyled := GetStateStyle(pod.State).Render(pod.State)
+		
+		// Extract namespace name from ID
+		namespaceName := "-"
+		if pod.NamespaceID != "" {
+			// NamespaceID format: namespace-name or c-xxxxx:namespace-name
+			parts := strings.Split(pod.NamespaceID, ":")
+			if len(parts) > 1 {
+				namespaceName = parts[1]
+			} else {
+				namespaceName = pod.NamespaceID
+			}
+		}
+		
+		rows = append(rows, table.NewRow(table.RowData{
+			"name":      pod.Name,
+			"namespace": namespaceName,
+			"state":     stateStyled,
+			"node":      pod.NodeName,
+			"restarts":  fmt.Sprintf("%d", pod.RestartCount),
+			"age":       age,
+		}))
+	}
+	
+	// Create or update table
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}
+
 // fetchClusters fetches clusters from Rancher
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
@@ -316,6 +439,14 @@ type clustersMsg struct {
 
 type projectsMsg struct {
 	projects []rancher.Project
+}
+
+type namespacesMsg struct {
+	namespaces []rancher.Namespace
+}
+
+type podsMsg struct {
+	pods []rancher.Pod
 }
 
 type errMsg struct {
@@ -402,8 +533,8 @@ func (a *App) getBreadcrumb() string {
 		return fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
 			a.currentView.clusterName, a.currentView.projectName)
 	case ViewPods:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Pods",
-			a.currentView.clusterName, a.currentView.projectName)
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	default:
 		return "r9s"
 	}
@@ -421,6 +552,12 @@ func (a *App) getStatusText() string {
 	case ViewProjects:
 		count = len(a.projects)
 		resourceType = "projects"
+	case ViewNamespaces:
+		count = len(a.namespaces)
+		resourceType = "namespaces"
+	case ViewPods:
+		count = len(a.pods)
+		resourceType = "pods"
 	}
 	
 	navHelp := ""
@@ -439,6 +576,10 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchClusters()
 	case ViewProjects:
 		return a.fetchProjects(a.currentView.clusterID)
+	case ViewNamespaces:
+		return a.fetchNamespaces(a.currentView.clusterID, a.currentView.projectID)
+	case ViewPods:
+		return a.fetchPods(a.currentView.projectID, a.currentView.namespaceName)
 	default:
 		return nil
 	}
@@ -475,6 +616,66 @@ func (a *App) handleEnter() tea.Cmd {
 				return a.fetchProjects(cluster.ID)
 			}
 		}
+		
+	case ViewProjects:
+		// Get selected project
+		selected := a.table.HighlightedRow()
+		if selected.Data == nil {
+			return nil
+		}
+		
+		projectName := selected.Data["name"].(string)
+		// Find project by name to get ID
+		for _, project := range a.projects {
+			displayName := project.DisplayName
+			if displayName == "" {
+				displayName = project.Name
+			}
+			if displayName == projectName {
+				// Push current view to stack
+				a.viewStack = append(a.viewStack, a.currentView)
+				
+				// Navigate to namespaces view
+				a.currentView = ViewContext{
+					viewType:    ViewNamespaces,
+					clusterID:   a.currentView.clusterID,
+					clusterName: a.currentView.clusterName,
+					projectID:   project.ID,
+					projectName: displayName,
+				}
+				a.loading = true
+				return a.fetchNamespaces(a.currentView.clusterID, project.ID)
+			}
+		}
+		
+	case ViewNamespaces:
+		// Get selected namespace
+		selected := a.table.HighlightedRow()
+		if selected.Data == nil {
+			return nil
+		}
+		
+		namespaceName := selected.Data["name"].(string)
+		// Find namespace by name
+		for _, ns := range a.namespaces {
+			if ns.Name == namespaceName {
+				// Push current view to stack
+				a.viewStack = append(a.viewStack, a.currentView)
+				
+				// Navigate to pods view
+				a.currentView = ViewContext{
+					viewType:      ViewPods,
+					clusterID:     a.currentView.clusterID,
+					clusterName:   a.currentView.clusterName,
+					projectID:     a.currentView.projectID,
+					projectName:   a.currentView.projectName,
+					namespaceID:   ns.ID,
+					namespaceName: ns.Name,
+				}
+				a.loading = true
+				return a.fetchPods(a.currentView.projectID, ns.Name)
+			}
+		}
 	}
 	
 	return nil
@@ -492,7 +693,88 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 			return errMsg{err}
 		}
 		
-		return projectsMsg{projects: collection.Data}
+		// Add a pseudo-project for unassigned/system namespaces
+		systemProject := rancher.Project{
+			ID:          clusterID + ":__UNASSIGNED__",
+			Name:        "__UNASSIGNED__",
+			DisplayName: "System / Unassigned Namespaces",
+			ClusterID:   clusterID,
+			State:       "active",
+		}
+		
+		// Prepend the system project to the list
+		projects := append([]rancher.Project{systemProject}, collection.Data...)
+		
+		return projectsMsg{projects: projects}
+	}
+}
+
+// fetchNamespaces fetches namespaces for a cluster, filtered by project
+func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
+	return func() tea.Msg {
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+		
+		collection, err := a.client.ListNamespaces(clusterID)
+		if err != nil {
+			return errMsg{err}
+		}
+		
+		// Filter namespaces by project ID
+		filteredNamespaces := []rancher.Namespace{}
+		
+		// Check if this is the special unassigned project
+		isUnassigned := strings.HasSuffix(projectID, ":__UNASSIGNED__")
+		
+		for _, ns := range collection.Data {
+			if isUnassigned {
+				// Show namespaces with no project or system namespaces
+				if ns.ProjectID == "" || ns.ProjectID == "null" {
+					filteredNamespaces = append(filteredNamespaces, ns)
+				}
+			} else {
+				// Exact match on ProjectID
+				if ns.ProjectID == projectID {
+					filteredNamespaces = append(filteredNamespaces, ns)
+				}
+			}
+		}
+		
+		return namespacesMsg{namespaces: filteredNamespaces}
+	}
+}
+
+// fetchPods fetches pods for a project, filtered by namespace
+func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
+	return func() tea.Msg {
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+		
+		collection, err := a.client.ListPods(projectID)
+		if err != nil {
+			return errMsg{err}
+		}
+		
+		// Filter pods by namespace name
+		filteredPods := []rancher.Pod{}
+		for _, pod := range collection.Data {
+			// Extract namespace from NamespaceID
+			podNamespace := pod.NamespaceID
+			if strings.Contains(podNamespace, ":") {
+				parts := strings.Split(podNamespace, ":")
+				if len(parts) > 1 {
+					podNamespace = parts[1]
+				}
+			}
+			
+			if podNamespace == namespaceName {
+				filteredPods = append(filteredPods, pod)
+			}
+		}
+		
+		return podsMsg{pods: filteredPods}
 	}
 }
 
