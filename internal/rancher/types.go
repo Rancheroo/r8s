@@ -83,6 +83,66 @@ type Project struct {
 	Actions     map[string]string `json:"actions"`
 }
 
+// --- Kubernetes API Types (via Proxy) ---
+
+// CRDList represents a list of CustomResourceDefinitions (K8s API)
+type CRDList struct {
+	ApiVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Items      []CRD  `json:"items"`
+}
+
+// CRD represents a CustomResourceDefinition
+type CRD struct {
+	Metadata ObjectMeta `json:"metadata"`
+	Spec     CRDSpec    `json:"spec"`
+}
+
+// ObjectMeta represents standard K8s metadata
+type ObjectMeta struct {
+	Name              string            `json:"name"`
+	Namespace         string            `json:"namespace,omitempty"`
+	UID               string            `json:"uid,omitempty"`
+	ResourceVersion   string            `json:"resourceVersion,omitempty"`
+	CreationTimestamp time.Time         `json:"creationTimestamp,omitempty"`
+	Labels            map[string]string `json:"labels,omitempty"`
+	Annotations       map[string]string `json:"annotations,omitempty"`
+}
+
+// CRDSpec represents the spec of a CRD
+type CRDSpec struct {
+	Group    string       `json:"group"`
+	Names    CRDNames     `json:"names"`
+	Scope    string       `json:"scope"`
+	Versions []CRDVersion `json:"versions"`
+}
+
+// CRDNames represents the names of a CRD
+type CRDNames struct {
+	Plural     string   `json:"plural"`
+	Singular   string   `json:"singular"`
+	ShortNames []string `json:"shortNames,omitempty"`
+	Kind       string   `json:"kind"`
+	ListKind   string   `json:"listKind"`
+	Categories []string `json:"categories,omitempty"`
+}
+
+// CRDVersion represents a version of a CRD
+type CRDVersion struct {
+	Name    string `json:"name"`
+	Served  bool   `json:"served"`
+	Storage bool   `json:"storage"`
+	// Schema is omitted for now as it's complex, we can add it later for details view
+}
+
+// UnstructuredList represents a generic K8s list response
+type UnstructuredList struct {
+	ApiVersion string                   `json:"apiVersion"`
+	Kind       string                   `json:"kind"`
+	Metadata   map[string]interface{}   `json:"metadata"`
+	Items      []map[string]interface{} `json:"items"`
+}
+
 // NamespaceCollection represents a collection of namespaces
 type NamespaceCollection struct {
 	Collection

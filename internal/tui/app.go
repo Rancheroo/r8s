@@ -23,6 +23,8 @@ const (
 	ViewPods
 	ViewDeployments
 	ViewServices
+	ViewCRDs
+	ViewCRDInstances
 )
 
 // ViewContext holds context for the current view
@@ -34,6 +36,12 @@ type ViewContext struct {
 	projectName   string
 	namespaceID   string
 	namespaceName string
+	// Context for CRDs
+	crdGroup    string
+	crdVersion  string
+	crdResource string
+	crdKind     string
+	crdScope    string
 }
 
 // App represents the main TUI application
@@ -48,12 +56,14 @@ type App struct {
 	currentView ViewContext
 
 	// Data for different views
-	clusters    []rancher.Cluster
-	projects    []rancher.Project
-	namespaces  []rancher.Namespace
-	pods        []rancher.Pod
-	deployments []rancher.Deployment
-	services    []rancher.Service
+	clusters     []rancher.Cluster
+	projects     []rancher.Project
+	namespaces   []rancher.Namespace
+	pods         []rancher.Pod
+	deployments  []rancher.Deployment
+	services     []rancher.Service
+	crds         []rancher.CRD
+	crdInstances []map[string]interface{}
 
 	projectNamespaceCounts map[string]int
 
@@ -142,6 +152,40 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, a.refreshCurrentView()
 			}
 			return a, nil
+		case "C":
+			// Special binding to jump to CRDs from Cluster view
+			if a.currentView.viewType == ViewClusters || a.currentView.viewType == ViewProjects {
+				// Need cluster ID
+				clusterID := a.currentView.clusterID
+				clusterName := a.currentView.clusterName
+
+				// If in Cluster view, get selected cluster
+				if a.currentView.viewType == ViewClusters {
+					if a.table.HighlightedRow().Data == nil {
+						return a, nil
+					}
+					name := a.table.HighlightedRow().Data["name"].(string)
+					for _, c := range a.clusters {
+						if c.Name == name {
+							clusterID = c.ID
+							clusterName = c.Name
+							break
+						}
+					}
+				}
+
+				// Push current view
+				a.viewStack = append(a.viewStack, a.currentView)
+
+				// Navigate to CRDs
+				a.currentView = ViewContext{
+					viewType:    ViewCRDs,
+					clusterID:   clusterID,
+					clusterName: clusterName,
+				}
+				a.loading = true
+				return a, a.fetchCRDs(clusterID)
+			}
 		case "1":
 			if a.isNamespaceResourceView() {
 				a.currentView.viewType = ViewPods
@@ -201,6 +245,18 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case servicesMsg:
 		a.loading = false
 		a.services = msg.services
+		a.error = ""
+		a.updateTable()
+
+	case crdsMsg:
+		a.loading = false
+		a.crds = msg.crds
+		a.error = ""
+		a.updateTable()
+
+	case crdInstancesMsg:
+		a.loading = false
+		a.crdInstances = msg.instances
 		a.error = ""
 		a.updateTable()
 
@@ -267,6 +323,10 @@ func (a *App) updateTable() {
 		a.updateDeploymentsTable()
 	case ViewServices:
 		a.updateServicesTable()
+	case ViewCRDs:
+		a.updateCRDsTable()
+	case ViewCRDInstances:
+		a.updateCRDInstancesTable()
 	}
 }
 
@@ -525,6 +585,101 @@ func (a *App) updateServicesTable() {
 		BorderRounded()
 }
 
+// updateCRDsTable updates the table with CRD data
+func (a *App) updateCRDsTable() {
+	if len(a.crds) == 0 {
+		return
+	}
+
+	// Define columns
+	columns := []table.Column{
+		table.NewColumn("name", "NAME", 40),
+		table.NewColumn("group", "GROUP", 30),
+		table.NewColumn("version", "VERSION", 15),
+		table.NewColumn("scope", "SCOPE", 15),
+		table.NewColumn("age", "AGE", 10),
+	}
+
+	// Build rows
+	rows := []table.Row{}
+	for _, crd := range a.crds {
+		age := formatAge(crd.Metadata.CreationTimestamp)
+		version := "-"
+		if len(crd.Spec.Versions) > 0 {
+			version = crd.Spec.Versions[0].Name
+		}
+
+		rows = append(rows, table.NewRow(table.RowData{
+			"name":    crd.Metadata.Name,
+			"group":   crd.Spec.Group,
+			"version": version,
+			"scope":   crd.Spec.Scope,
+			"age":     age,
+		}))
+	}
+
+	// Create or update table
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}
+
+// updateCRDInstancesTable updates the table with generic CRD instance data
+func (a *App) updateCRDInstancesTable() {
+	if len(a.crdInstances) == 0 {
+		return
+	}
+
+	// Define columns - generic since we don't know schema
+	columns := []table.Column{
+		table.NewColumn("name", "NAME", 40),
+		table.NewColumn("namespace", "NAMESPACE", 25),
+		table.NewColumn("age", "AGE", 10),
+	}
+
+	// Build rows
+	rows := []table.Row{}
+	for _, instance := range a.crdInstances {
+		// Extract metadata
+		name := "-"
+		namespace := "-"
+		age := "-"
+
+		if metadata, ok := instance["metadata"].(map[string]interface{}); ok {
+			if n, ok := metadata["name"].(string); ok {
+				name = n
+			}
+			if ns, ok := metadata["namespace"].(string); ok {
+				namespace = ns
+			}
+			if tsStr, ok := metadata["creationTimestamp"].(string); ok {
+				if ts, err := time.Parse(time.RFC3339, tsStr); err == nil {
+					age = formatAge(ts)
+				}
+			}
+		}
+
+		rows = append(rows, table.NewRow(table.RowData{
+			"name":      name,
+			"namespace": namespace,
+			"age":       age,
+		}))
+	}
+
+	// Create or update table
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}
+
 // fetchClusters fetches clusters from Rancher
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
@@ -565,6 +720,14 @@ type deploymentsMsg struct {
 
 type servicesMsg struct {
 	services []rancher.Service
+}
+
+type crdsMsg struct {
+	crds []rancher.CRD
+}
+
+type crdInstancesMsg struct {
+	instances []map[string]interface{}
 }
 
 type errMsg struct {
@@ -660,6 +823,11 @@ func (a *App) getBreadcrumb() string {
 	case ViewServices:
 		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
+	case ViewCRDs:
+		return fmt.Sprintf("Cluster: %s > Custom Resource Definitions", a.currentView.clusterName)
+	case ViewCRDInstances:
+		return fmt.Sprintf("Cluster: %s > CRD: %s.%s (%s)",
+			a.currentView.clusterName, a.currentView.crdResource, a.currentView.crdGroup, a.currentView.crdKind)
 	default:
 		return "r9s"
 	}
@@ -689,6 +857,12 @@ func (a *App) getStatusText() string {
 	case ViewServices:
 		count = len(a.services)
 		resourceType = "services"
+	case ViewCRDs:
+		count = len(a.crds)
+		resourceType = "CRDs"
+	case ViewCRDInstances:
+		count = len(a.crdInstances)
+		resourceType = strings.ToLower(a.currentView.crdKind) + "s"
 	}
 
 	navHelp := ""
@@ -715,6 +889,16 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchDeployments(a.currentView.projectID, a.currentView.namespaceName)
 	case ViewServices:
 		return a.fetchServices(a.currentView.projectID, a.currentView.namespaceName)
+	case ViewCRDs:
+		return a.fetchCRDs(a.currentView.clusterID)
+	case ViewCRDInstances:
+		return a.fetchCRDInstances(
+			a.currentView.clusterID,
+			a.currentView.crdGroup,
+			a.currentView.crdVersion,
+			a.currentView.crdResource,
+			"", // TODO: support namespace filtering
+		)
 	default:
 		return nil
 	}
@@ -811,6 +995,48 @@ func (a *App) handleEnter() tea.Cmd {
 				return a.fetchPods(a.currentView.projectID, ns.Name)
 			}
 		}
+	case ViewCRDs:
+		// Get selected CRD
+		selected := a.table.HighlightedRow()
+		if selected.Data == nil {
+			return nil
+		}
+
+		crdName := selected.Data["name"].(string)
+		var selectedCRD rancher.CRD
+		for _, crd := range a.crds {
+			if crd.Metadata.Name == crdName {
+				selectedCRD = crd
+				break
+			}
+		}
+
+		// Push current view
+		a.viewStack = append(a.viewStack, a.currentView)
+
+		// Navigate to CRD Instances
+		a.currentView = ViewContext{
+			viewType:    ViewCRDInstances,
+			clusterID:   a.currentView.clusterID,
+			clusterName: a.currentView.clusterName,
+			crdGroup:    selectedCRD.Spec.Group,
+			crdVersion:  selectedCRD.Spec.Versions[0].Name, // Use first version
+			crdResource: selectedCRD.Spec.Names.Plural,
+			crdKind:     selectedCRD.Spec.Names.Kind,
+			crdScope:    selectedCRD.Spec.Scope,
+		}
+
+		// For namespaced CRDs, do we want to filter by namespace?
+		// Currently, this lists ALL instances across all namespaces if scope is Namespaced.
+		// Future improvement: Allow filtering by namespace.
+		a.loading = true
+		return a.fetchCRDInstances(
+			a.currentView.clusterID,
+			selectedCRD.Spec.Group,
+			selectedCRD.Spec.Versions[0].Name,
+			selectedCRD.Spec.Names.Plural,
+			"", // All namespaces
+		)
 	}
 
 	return nil
@@ -990,6 +1216,38 @@ func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 		}
 
 		return servicesMsg{services: filtered}
+	}
+}
+
+// fetchCRDs fetches CRDs for a cluster
+func (a *App) fetchCRDs(clusterID string) tea.Cmd {
+	return func() tea.Msg {
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListCRDs(clusterID)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		return crdsMsg{crds: collection.Items}
+	}
+}
+
+// fetchCRDInstances fetches instances of a CRD
+func (a *App) fetchCRDInstances(clusterID, group, version, resource, namespace string) tea.Cmd {
+	return func() tea.Msg {
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListCustomResources(clusterID, group, version, resource, namespace)
+		if err != nil {
+			return errMsg{err}
+		}
+
+		return crdInstancesMsg{instances: collection.Items}
 	}
 }
 

@@ -13,23 +13,29 @@ import (
 // Client represents a Rancher API client
 type Client struct {
 	baseURL    string
+	rootURL    string
 	token      string
 	httpClient *http.Client
 }
 
 // NewClient creates a new Rancher API client
 func NewClient(url, token string, insecure bool) *Client {
-	// Ensure URL has /v3 prefix
-	if !strings.HasSuffix(url, "/v3") {
-		url = strings.TrimSuffix(url, "/") + "/v3"
+	// Normalize URL to root (remove /v3 suffix if present)
+	rootURL := strings.TrimSuffix(url, "/")
+	if strings.HasSuffix(rootURL, "/v3") {
+		rootURL = strings.TrimSuffix(rootURL, "/v3")
 	}
+
+	// Base URL for V3 API
+	baseURL := rootURL + "/v3"
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 	}
 
 	return &Client{
-		baseURL: url,
+		baseURL: baseURL,
+		rootURL: rootURL,
 		token:   token,
 		httpClient: &http.Client{
 			Transport: tr,
@@ -172,6 +178,76 @@ func (c *Client) ListServices(projectID string) (*ServiceCollection, error) {
 		return nil, err
 	}
 	return &result, nil
+}
+
+// ListCRDs returns all CustomResourceDefinitions in the cluster (via K8s proxy)
+func (c *Client) ListCRDs(clusterID string) (*CRDList, error) {
+	var result CRDList
+	// Using K8s proxy endpoint as Rancher v3 API doesn't expose CRDs directly in a simple way
+	path := "/k8s/clusters/" + clusterID + "/apis/apiextensions.k8s.io/v1/customresourcedefinitions"
+
+	// Use getViaRoot to bypass /v3 prefix
+	if err := c.getViaRoot(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// ListCustomResources returns all instances of a CRD (via K8s proxy)
+// If namespace is empty, lists all resources (for Cluster scope) or across all namespaces (for Namespaced scope)
+func (c *Client) ListCustomResources(clusterID, group, version, plural, namespace string) (*UnstructuredList, error) {
+	var result UnstructuredList
+	var path string
+
+	// Construct K8s API path
+	basePath := "/k8s/clusters/" + clusterID + "/apis/" + group + "/" + version
+
+	if namespace != "" {
+		path = basePath + "/namespaces/" + namespace + "/" + plural
+	} else {
+		path = basePath + "/" + plural
+	}
+
+	// Use getViaRoot to bypass /v3 prefix
+	if err := c.getViaRoot(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// getViaRoot performs a GET request using the root URL (without /v3 prefix)
+func (c *Client) getViaRoot(path string, result interface{}) error {
+	// Temporarily override baseURL logic for this request
+	url := c.rootURL + path
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add authentication header
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	if result != nil {
+		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+			return fmt.Errorf("failed to decode response: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // extractClusterID extracts cluster ID from project ID (format: c-xxxxx:p-yyyyy)

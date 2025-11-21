@@ -180,10 +180,10 @@ export PATH=$PATH:/usr/local/go/bin
 - [ ] Ingresses view
 
 ### Phase 5: CRD Browser (NEW FEATURE)
-- [ ] CRD discovery - list all Custom Resource Definitions in cluster
+- [x] CRD discovery - list all Custom Resource Definitions in cluster
+- [x] Custom Resource instances view - list instances of each CRD
 - [ ] CRD schema viewer - display OpenAPI schema, fields, types
 - [ ] CRD description - explain purpose and use case (AI-powered or manual annotations)
-- [ ] Custom Resource instances view - list instances of each CRD
 - [ ] CRD details view showing:
   - Group, Version, Kind
   - Scope (Namespaced vs Cluster)
