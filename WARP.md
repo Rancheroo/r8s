@@ -48,6 +48,20 @@ The test Rancher instance is at: `https://rancher.do.4rl.io`
 
 Configuration is stored in `~/.r9s/config.yaml`. You'll need to set `insecure: true` for this test instance due to certificate issues.
 
+## Git Workflow
+
+### Branching Strategy
+We follow a feature-branch workflow to ensure code stability and organized development.
+
+1.  **Master Branch**: The `master` branch should always be stable and buildable.
+2.  **Feature Branches**: Create a new branch for each specific feature or fix.
+    *   Format: `feature/feature-name` or `fix/issue-description`
+    *   Example: `feature/crd-browser`, `fix/pod-navigation`
+3.  **Commit Messages**: Use descriptive commit messages explaining *what* and *why*.
+4.  **Merging**: When a feature is complete:
+    *   Ensure `make dev` passes (fmt, vet, tidy)
+    *   Merge into `master` (squash merge preferred for cleaner history)
+
 ## Code Architecture
 
 ### High-Level Structure
