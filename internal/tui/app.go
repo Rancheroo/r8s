@@ -55,6 +55,8 @@ type App struct {
 	deployments []rancher.Deployment
 	services    []rancher.Service
 
+	projectNamespaceCounts map[string]int
+
 	// UI state
 	table    table.Model
 	error    string
@@ -174,6 +176,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case projectsMsg:
 		a.loading = false
 		a.projects = msg.projects
+		a.projectNamespaceCounts = msg.namespaceCounts
 		a.error = ""
 		a.updateTable()
 
@@ -329,7 +332,7 @@ func (a *App) updateProjectsTable() {
 		rows = append(rows, table.NewRow(table.RowData{
 			"name":       displayName,
 			"state":      stateStyled,
-			"namespaces": "-", // TODO: fetch namespace count
+			"namespaces": fmt.Sprintf("%d", a.projectNamespaceCounts[project.ID]),
 			"age":        age,
 		}))
 	}
@@ -544,7 +547,8 @@ type clustersMsg struct {
 }
 
 type projectsMsg struct {
-	projects []rancher.Project
+	projects        []rancher.Project
+	namespaceCounts map[string]int
 }
 
 type namespacesMsg struct {
@@ -836,7 +840,23 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 		// Prepend the system project to the list
 		projects := append([]rancher.Project{systemProject}, collection.Data...)
 
-		return projectsMsg{projects: projects}
+		// Fetch namespaces to count them
+		nsCollection, err := a.client.ListNamespaces(clusterID)
+		counts := make(map[string]int)
+
+		if err == nil {
+			// Calculate counts
+			unassignedID := clusterID + ":__UNASSIGNED__"
+			for _, ns := range nsCollection.Data {
+				if ns.ProjectID == "" || ns.ProjectID == "null" {
+					counts[unassignedID]++
+				} else {
+					counts[ns.ProjectID]++
+				}
+			}
+		}
+
+		return projectsMsg{projects: projects, namespaceCounts: counts}
 	}
 }
 
