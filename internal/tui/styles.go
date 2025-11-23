@@ -63,6 +63,14 @@ var (
 
 	stateCompleted = lipgloss.NewStyle().
 			Foreground(colorGray)
+
+	// Caption style for CRD details
+	captionStyle = lipgloss.NewStyle().
+			Foreground(colorWhite).
+			Background(colorDarkGray).
+			Padding(1, 2).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(colorCyan)
 )
 
 // GetStateStyle returns the appropriate style for a resource state

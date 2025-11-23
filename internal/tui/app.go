@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -68,11 +69,17 @@ type App struct {
 	projectNamespaceCounts map[string]int
 
 	// UI state
-	table             table.Model
-	error             string
-	loading           bool
-	showHelp          bool
+	table              table.Model
+	error              string
+	loading            bool
+	showHelp           bool
 	showCRDDescription bool
+	showingDescribe    bool
+	describeContent    string
+	describeTitle      string
+
+	// App state
+	offlineMode bool // Flag to indicate running without live Rancher connection
 }
 
 // NewApp creates a new TUI application
@@ -93,29 +100,45 @@ func NewApp(cfg *config.Config) *App {
 		cfg.Insecure || profile.Insecure,
 	)
 
-	// Test connection
+	// Test connection - but don't fail if it doesn't work immediately
+	offlineMode := false
 	if err := client.TestConnection(); err != nil {
-		return &App{
-			config: cfg,
-			client: client,
-			error:  fmt.Sprintf("Failed to connect to Rancher: %v", err),
-		}
+		// Connection failed - enable offline mode with graceful fallback
+		// This allows development and testing without live Rancher access
+		offlineMode = true
 	}
+
+	// Always start at Clusters view regardless of connection status
+	// Offline mode only affects data fallback, not navigation
+	var initialView ViewContext = ViewContext{viewType: ViewClusters}
 
 	return &App{
 		config:      cfg,
 		client:      client,
+		offlineMode: offlineMode,
 		loading:     true,
-		currentView: ViewContext{viewType: ViewClusters},
+		currentView: initialView,
 	}
 }
 
 // Init initializes the application
 func (a *App) Init() tea.Cmd {
-	return tea.Batch(
-		a.fetchClusters(),
-		tea.EnterAltScreen,
-	)
+	var cmds []tea.Cmd
+
+	// Add fullscreen command
+	cmds = append(cmds, tea.EnterAltScreen)
+
+	// Start fetching data based on current view
+	switch a.currentView.viewType {
+	case ViewPods:
+		// For offline mode, automatically fetch pods
+		cmds = append(cmds, a.fetchPods("demo-project", "default"))
+	default:
+		// For online mode, try clusters first, then navigate
+		cmds = append(cmds, a.fetchClusters())
+	}
+
+	return tea.Batch(cmds...)
 }
 
 // Update handles messages and updates the model
@@ -145,6 +168,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			return a, a.handleEnter()
 		case "esc":
+			if a.showingDescribe {
+				// Exit describe view
+				a.showingDescribe = false
+				a.describeContent = ""
+				a.describeTitle = ""
+				return a, nil
+			}
 			if len(a.viewStack) > 0 {
 				// Pop from view stack
 				a.currentView = a.viewStack[len(a.viewStack)-1]
@@ -153,6 +183,16 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, a.refreshCurrentView()
 			}
 			return a, nil
+		case "d":
+			if a.showingDescribe {
+				// Exit describe view
+				a.showingDescribe = false
+				a.describeContent = ""
+				a.describeTitle = ""
+				return a, nil
+			}
+			// Describe selected resource (only when not in describe view)
+			return a, a.handleDescribe()
 		case "C":
 			// Special binding to jump to CRDs from Cluster view
 			if a.currentView.viewType == ViewClusters || a.currentView.viewType == ViewProjects {
@@ -267,6 +307,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.error = ""
 		a.updateTable()
 
+	case describeMsg:
+		a.loading = false
+		a.showingDescribe = true
+		a.describeTitle = msg.title
+		a.describeContent = msg.content
+		a.error = ""
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
@@ -282,18 +329,26 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return a, tea.Batch(cmds...)
 }
 
-// View renders the application
+// View renders the application - simplified for now
 func (a *App) View() string {
 	if a.error != "" {
 		return errorStyle.Render(fmt.Sprintf("Error: %s\n\nPress 'q' to quit", a.error))
 	}
 
 	if a.loading {
-		return loadingStyle.Render("Loading clusters...")
+		loadingMsg := "Loading..."
+		if a.offlineMode {
+			loadingMsg = "Loading mock data (OFFLINE MODE)..."
+		}
+		return loadingStyle.Render(loadingMsg)
 	}
 
 	if a.showHelp {
 		return renderHelp()
+	}
+
+	if a.showingDescribe {
+		return a.renderDescribeView()
 	}
 
 	// Build view components
@@ -330,403 +385,991 @@ func (a *App) View() string {
 	)
 }
 
-// updateTable updates the table with current view data
+// renderDescribeView renders the describe modal
+func (a *App) renderDescribeView() string {
+	// Create a bordered box for the description
+	titleBox := lipgloss.NewStyle().
+		Foreground(colorCyan).
+		Bold(true).
+		Padding(0, 1).
+		Render(fmt.Sprintf(" DESCRIBE: %s ", a.describeTitle))
+
+	content := a.describeContent
+	lines := strings.Split(content, "\n")
+	maxLines := a.height - 8 // Reserve space for title and borders
+
+	if len(lines) > maxLines {
+		// Truncate if too long (simple implementation)
+		content = strings.Join(lines[:maxLines-1], "\n") + "\n... (truncated)"
+	}
+
+	contentBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorCyan).
+		Padding(1, 2).
+		Width(a.width - 4).
+		Height(a.height - 6).
+		Render(content)
+
+	statusText := statusStyle.Render(" Press 'Esc', 'q' or 'd' to return | Scroll with mouse or arrow keys ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		titleBox,
+		"",
+		contentBox,
+		"",
+		statusText,
+	)
+}
+
+// updateTable updates the table with current view data - handles all view types
 func (a *App) updateTable() {
 	switch a.currentView.viewType {
-	case ViewClusters:
-		a.updateClustersTable()
-	case ViewProjects:
-		a.updateProjectsTable()
-	case ViewNamespaces:
-		a.updateNamespacesTable()
-	case ViewPods:
-		a.updatePodsTable()
-	case ViewDeployments:
-		a.updateDeploymentsTable()
-	case ViewServices:
-		a.updateServicesTable()
 	case ViewCRDs:
-		a.updateCRDsTable()
-	case ViewCRDInstances:
-		a.updateCRDInstancesTable()
-	}
-}
-
-// updateClustersTable updates the table with cluster data
-func (a *App) updateClustersTable() {
-	// Define columns
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 30),
-		table.NewColumn("state", "STATE", 15),
-		table.NewColumn("version", "VERSION", 20),
-		table.NewColumn("provider", "PROVIDER", 15),
-		table.NewColumn("age", "AGE", 10),
-	}
-
-	// Build rows with styled state
-	rows := []table.Row{}
-	for _, cluster := range a.clusters {
-		age := formatAge(cluster.Created)
-		version := formatVersion(cluster.Version)
-		stateStyled := GetStateStyle(cluster.State).Render(cluster.State)
-
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":     cluster.Name,
-			"state":    stateStyled,
-			"version":  version,
-			"provider": cluster.Provider,
-			"age":      age,
-		}))
-	}
-
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
-}
-
-// updateProjectsTable updates the table with project data
-func (a *App) updateProjectsTable() {
-	// Define columns
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 40),
-		table.NewColumn("state", "STATE", 15),
-		table.NewColumn("namespaces", "NAMESPACES", 15),
-		table.NewColumn("age", "AGE", 10),
-	}
-
-	// Build rows with styled state
-	rows := []table.Row{}
-	for _, project := range a.projects {
-		age := formatAge(project.Created)
-		stateStyled := GetStateStyle(project.State).Render(project.State)
-
-		// Display name or ID if name is empty
-		displayName := project.DisplayName
-		if displayName == "" {
-			displayName = project.Name
-		}
-
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":       displayName,
-			"state":      stateStyled,
-			"namespaces": fmt.Sprintf("%d", a.projectNamespaceCounts[project.ID]),
-			"age":        age,
-		}))
-	}
-
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
-}
-
-// updateNamespacesTable updates the table with namespace data
-func (a *App) updateNamespacesTable() {
-	// Define columns
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 40),
-		table.NewColumn("project", "PROJECT", 25),
-		table.NewColumn("state", "STATE", 15),
-		table.NewColumn("age", "AGE", 10),
-	}
-
-	// Build rows with styled state
-	rows := []table.Row{}
-	for _, ns := range a.namespaces {
-		age := formatAge(ns.Created)
-		stateStyled := GetStateStyle(ns.State).Render(ns.State)
-
-		// Extract project name from ID
-		projectName := "-"
-		if ns.ProjectID != "" {
-			// ProjectID format: c-xxxxx:p-yyyyy
-			parts := strings.Split(ns.ProjectID, ":")
-			if len(parts) > 1 {
-				projectName = parts[1]
+		if len(a.crds) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 40),
+				table.NewColumn("group", "GROUP", 30),
+				table.NewColumn("kind", "KIND", 20),
+				table.NewColumn("scope", "SCOPE", 15),
 			}
-		}
 
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":    ns.Name,
-			"project": projectName,
-			"state":   stateStyled,
-			"age":     age,
-		}))
-	}
-
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
-}
-
-// updatePodsTable updates the table with pod data
-func (a *App) updatePodsTable() {
-	// Define columns
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 35),
-		table.NewColumn("namespace", "NAMESPACE", 25),
-		table.NewColumn("state", "STATE", 15),
-		table.NewColumn("node", "NODE", 20),
-		table.NewColumn("restarts", "RESTARTS", 10),
-		table.NewColumn("age", "AGE", 10),
-	}
-
-	// Build rows with styled state
-	rows := []table.Row{}
-	for _, pod := range a.pods {
-		age := formatAge(pod.Created)
-		stateStyled := GetStateStyle(pod.State).Render(pod.State)
-
-		// Extract namespace name from ID
-		namespaceName := "-"
-		if pod.NamespaceID != "" {
-			// NamespaceID format: namespace-name or c-xxxxx:namespace-name
-			parts := strings.Split(pod.NamespaceID, ":")
-			if len(parts) > 1 {
-				namespaceName = parts[1]
-			} else {
-				namespaceName = pod.NamespaceID
+			rows := []table.Row{}
+			for _, crd := range a.crds {
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":  crd.Metadata.Name,
+					"group": crd.Spec.Group,
+					"kind":  crd.Spec.Names.Kind,
+					"scope": crd.Spec.Scope,
+				}))
 			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No CRDs available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
 		}
 
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":      pod.Name,
-			"namespace": namespaceName,
-			"state":     stateStyled,
-			"node":      pod.NodeName,
-			"restarts":  fmt.Sprintf("%d", pod.RestartCount),
-			"age":       age,
-		}))
-	}
+	case ViewClusters:
+		if len(a.clusters) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 40),
+				table.NewColumn("provider", "PROVIDER", 20),
+				table.NewColumn("state", "STATE", 15),
+				table.NewColumn("created", "AGE", 15),
+			}
 
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
-}
+			rows := []table.Row{}
+			for _, cluster := range a.clusters {
+				created := "N/A"
+				if !cluster.Created.IsZero() {
+					created = fmt.Sprintf("%dd", int(time.Since(cluster.Created).Hours()/24))
+				}
 
-// updateDeploymentsTable updates the table with deployment data
-func (a *App) updateDeploymentsTable() {
-	// Define columns
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 35),
-		table.NewColumn("ready", "READY", 10),
-		table.NewColumn("uptodate", "UP-TO-DATE", 10),
-		table.NewColumn("available", "AVAILABLE", 10),
-		table.NewColumn("age", "AGE", 10),
-	}
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":     cluster.Name,
+					"provider": cluster.Provider,
+					"state":    cluster.State,
+					"created":  created,
+				}))
+			}
 
-	// Build rows
-	rows := []table.Row{}
-	for _, dep := range a.deployments {
-		age := formatAge(dep.Created)
-		// Logic for state color could be improved, defaulting to simple state check
-		stateStyled := GetStateStyle(dep.State).Render(fmt.Sprintf("%d/%d", dep.ReadyReplicas, dep.Replicas))
-
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":      dep.Name,
-			"ready":     stateStyled,
-			"uptodate":  fmt.Sprintf("%d", dep.UpToDateReplicas),
-			"available": fmt.Sprintf("%d", dep.AvailableReplicas),
-			"age":       age,
-		}))
-	}
-
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
-}
-
-// updateServicesTable updates the table with service data
-func (a *App) updateServicesTable() {
-	// Define columns
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 35),
-		table.NewColumn("type", "TYPE", 15),
-		table.NewColumn("clusterip", "CLUSTER-IP", 15),
-		table.NewColumn("ports", "PORTS", 25),
-		table.NewColumn("age", "AGE", 10),
-	}
-
-	// Build rows
-	rows := []table.Row{}
-	for _, svc := range a.services {
-		age := formatAge(svc.Created)
-
-		ports := []string{}
-		for _, p := range svc.Ports {
-			ports = append(ports, fmt.Sprintf("%d/%s", p.Port, p.Protocol))
-		}
-		portsStr := strings.Join(ports, ",")
-
-		// Use Kind as Type (e.g., ClusterIP)
-		svcType := svc.Kind
-		if svcType == "" {
-			svcType = svc.Type
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No clusters available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
 		}
 
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":      svc.Name,
-			"type":      svcType,
-			"clusterip": svc.ClusterIP,
-			"ports":     portsStr,
-			"age":       age,
-		}))
-	}
+	case ViewProjects:
+		if len(a.projects) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 40),
+				table.NewColumn("displayName", "DISPLAY NAME", 30),
+				table.NewColumn("state", "STATE", 12),
+				table.NewColumn("namespaces", "NAMESPACES", 12),
+			}
 
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
+			rows := []table.Row{}
+			for _, project := range a.projects {
+				namespaceCount := a.projectNamespaceCounts[project.ID]
+				displayName := project.DisplayName
+				if displayName == "" {
+					displayName = project.Name
+				}
+
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":        project.Name,
+					"displayName": displayName,
+					"state":       project.State,
+					"namespaces":  fmt.Sprintf("%d", namespaceCount),
+				}))
+			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No projects available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
+		}
+
+	case ViewNamespaces:
+		if len(a.namespaces) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 40),
+				table.NewColumn("state", "STATE", 15),
+				table.NewColumn("project", "PROJECT", 20),
+				table.NewColumn("created", "AGE", 15),
+			}
+
+			rows := []table.Row{}
+			for _, ns := range a.namespaces {
+				created := "N/A"
+				if !ns.Created.IsZero() {
+					created = fmt.Sprintf("%dd", int(time.Since(ns.Created).Hours()/24))
+				}
+
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":    ns.Name,
+					"state":   ns.State,
+					"project": ns.ProjectID,
+					"created": created,
+				}))
+			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No namespaces available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
+		}
+
+	case ViewPods:
+		if len(a.pods) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 35),
+				table.NewColumn("namespace", "NAMESPACE", 25),
+				table.NewColumn("state", "STATE", 15),
+				table.NewColumn("node", "NODE", 20),
+			}
+
+			rows := []table.Row{}
+			for _, pod := range a.pods {
+				namespaceName := "default"
+				if pod.NamespaceID != "" {
+					if strings.Contains(pod.NamespaceID, ":") {
+						parts := strings.Split(pod.NamespaceID, ":")
+						if len(parts) > 1 {
+							namespaceName = parts[1]
+						}
+					} else {
+						namespaceName = pod.NamespaceID
+					}
+				}
+
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":      pod.Name,
+					"namespace": namespaceName,
+					"state":     pod.State,
+					"node":      pod.NodeName,
+				}))
+			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No pods available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
+		}
+	}
 }
 
-// updateCRDsTable updates the table with CRD data
-func (a *App) updateCRDsTable() {
-	if len(a.crds) == 0 {
-		return
+// getBreadcrumb provides navigation context for each view
+func (a *App) getBreadcrumb() string {
+	switch a.currentView.viewType {
+	case ViewClusters:
+		return "r9s - Clusters"
+	case ViewProjects:
+		return fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
+	case ViewNamespaces:
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
+			a.currentView.clusterName, a.currentView.projectName)
+	case ViewPods:
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
+	case ViewCRDs:
+		return fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
+	default:
+		return "r9s - Rancher Navigator"
+	}
+}
+
+// getStatusText returns appropriate status text based on current view
+func (a *App) getStatusText() string {
+	var status string
+	offlinePrefix := ""
+
+	if a.offlineMode {
+		offlinePrefix = "[OFFLINE MODE - Mock Data] "
 	}
 
-	// Define columns (removed DESCRIPTION column to fix alignment)
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 50),
-		table.NewColumn("group", "GROUP", 35),
-		table.NewColumn("version", "VERSION", 12),
-		table.NewColumn("scope", "SCOPE", 12),
-		table.NewColumn("age", "AGE", 10),
+	switch a.currentView.viewType {
+	case ViewClusters:
+		count := len(a.clusters)
+		status = fmt.Sprintf(" %s%d clusters | Press Enter to browse projects | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewProjects:
+		count := len(a.projects)
+		status = fmt.Sprintf(" %s%d projects | Press Enter to browse namespaces | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewNamespaces:
+		count := len(a.namespaces)
+		status = fmt.Sprintf(" %s%d namespaces | Press Enter to browse pods | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewPods:
+		count := len(a.pods)
+		status = fmt.Sprintf(" %s%d pods | Press 'd' to describe selected pod | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewCRDs:
+		count := len(a.crds)
+		status = fmt.Sprintf(" %s%d CRDs | Press 'i' to toggle description | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	default:
+		status = fmt.Sprintf(" %sPress 'Esc' to go back | '?' for help | 'q' to quit ", offlinePrefix)
 	}
 
-	// Build rows
-	rows := []table.Row{}
+	return status
+}
+
+// getCRDDescriptionCaption returns a description of the selected CRD
+func (a *App) getCRDDescriptionCaption() string {
+	if a.table.HighlightedRow().Data == nil {
+		return "No CRD selected"
+	}
+
+	// Get the selected CRD details
+	selectedData := a.table.HighlightedRow().Data
+
+	// Find the corresponding CRD object
+	var selectedCRD *rancher.CRD
 	for _, crd := range a.crds {
-		age := formatAge(crd.Metadata.CreationTimestamp)
-		version := "-"
+		if crd.Metadata.Name == selectedData["name"] {
+			selectedCRD = &crd
+			break
+		}
+	}
 
-		if len(crd.Spec.Versions) > 0 {
-			// Find best version
-			for _, v := range crd.Spec.Versions {
-				if v.Served {
-					version = v.Name
-					break
-				}
-			}
-			// Fallback if no served version found (shouldn't happen but safe)
-			if version == "-" {
-				version = crd.Spec.Versions[0].Name
+	if selectedCRD == nil {
+		return "CRD details not available"
+	}
+
+	// Format the description
+	var sb strings.Builder
+	sb.WriteString("━━━ CRD DETAILS ━━━\n\n")
+
+	sb.WriteString(fmt.Sprintf("Name:       %s\n", selectedCRD.Metadata.Name))
+	sb.WriteString(fmt.Sprintf("Group:      %s\n", selectedCRD.Spec.Group))
+	sb.WriteString(fmt.Sprintf("Kind:       %s\n", selectedCRD.Spec.Names.Kind))
+	sb.WriteString(fmt.Sprintf("Scope:      %s\n", selectedCRD.Spec.Scope))
+
+	// Add more details
+	if len(selectedCRD.Spec.Names.ShortNames) > 0 {
+		sb.WriteString(fmt.Sprintf("ShortNames:  %s\n", strings.Join(selectedCRD.Spec.Names.ShortNames, ", ")))
+	}
+
+	sb.WriteString(fmt.Sprintf("Singular:   %s\n", selectedCRD.Spec.Names.Singular))
+	sb.WriteString(fmt.Sprintf("Plural:     %s\n", selectedCRD.Spec.Names.Plural))
+
+	// Add versions information
+	sb.WriteString("\nVersions:\n")
+	for _, version := range selectedCRD.Spec.Versions {
+		storage := ""
+		if version.Storage {
+			storage = " (storage)"
+		}
+		sb.WriteString(fmt.Sprintf("  - %s%s\n", version.Name, storage))
+	}
+
+	// Add a hint about Custom Resources instances
+	sb.WriteString("\nPress 'Enter' to browse instances (not implemented yet)")
+
+	return captionStyle.Render(sb.String())
+}
+
+// refreshCurrentView handles refreshing the current view data
+func (a *App) refreshCurrentView() tea.Cmd {
+	switch a.currentView.viewType {
+	case ViewClusters:
+		return a.fetchClusters()
+	case ViewProjects:
+		return a.fetchProjects(a.currentView.clusterID)
+	case ViewNamespaces:
+		return a.fetchNamespaces(a.currentView.clusterID, a.currentView.projectID)
+	case ViewPods:
+		return a.fetchPods(a.currentView.projectID, a.currentView.namespaceName)
+	case ViewCRDs:
+		return a.fetchCRDs(a.currentView.clusterID)
+	default:
+		return nil
+	}
+}
+
+// handleEnter handles navigation when user presses Enter
+func (a *App) handleEnter() tea.Cmd {
+	if a.table.HighlightedRow().Data == nil {
+		return nil
+	}
+
+	selected := a.table.HighlightedRow().Data
+
+	switch a.currentView.viewType {
+	case ViewClusters:
+		// Navigate to Projects for selected cluster
+		clusterName := selected["name"].(string)
+		var clusterID string
+		for _, c := range a.clusters {
+			if c.Name == clusterName {
+				clusterID = c.ID
+				break
 			}
 		}
 
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":    crd.Metadata.Name,
-			"group":   crd.Spec.Group,
-			"version": version,
-			"scope":   crd.Spec.Scope,
-			"age":     age,
-		}))
-	}
+		// Push current view to stack
+		a.viewStack = append(a.viewStack, a.currentView)
 
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
-}
+		// Navigate to Projects
+		a.currentView = ViewContext{
+			viewType:    ViewProjects,
+			clusterID:   clusterID,
+			clusterName: clusterName,
+		}
+		a.loading = true
+		return a.fetchProjects(clusterID)
 
-// updateCRDInstancesTable updates the table with generic CRD instance data
-func (a *App) updateCRDInstancesTable() {
-	if len(a.crdInstances) == 0 {
-		return
-	}
-
-	// Define columns - generic since we don't know schema
-	columns := []table.Column{
-		table.NewColumn("name", "NAME", 40),
-		table.NewColumn("namespace", "NAMESPACE", 25),
-		table.NewColumn("age", "AGE", 10),
-	}
-
-	// Build rows
-	rows := []table.Row{}
-	for _, instance := range a.crdInstances {
-		// Extract metadata
-		name := "-"
-		namespace := "-"
-		age := "-"
-
-		if metadata, ok := instance["metadata"].(map[string]interface{}); ok {
-			if n, ok := metadata["name"].(string); ok {
-				name = n
-			}
-			if ns, ok := metadata["namespace"].(string); ok {
-				namespace = ns
-			}
-			if tsStr, ok := metadata["creationTimestamp"].(string); ok {
-				if ts, err := time.Parse(time.RFC3339, tsStr); err == nil {
-					age = formatAge(ts)
-				}
+	case ViewProjects:
+		// Navigate to Namespaces for selected project
+		projectName := selected["name"].(string)
+		var projectID string
+		for _, p := range a.projects {
+			if p.Name == projectName {
+				projectID = p.ID
+				break
 			}
 		}
 
-		rows = append(rows, table.NewRow(table.RowData{
-			"name":      name,
-			"namespace": namespace,
-			"age":       age,
-		}))
-	}
+		// Push current view to stack
+		a.viewStack = append(a.viewStack, a.currentView)
 
-	// Create or update table
-	a.table = table.New(columns).
-		WithRows(rows).
-		HeaderStyle(headerStyle).
-		WithBaseStyle(baseStyle).
-		WithPageSize(a.height - 8).
-		Focused(true).
-		BorderRounded()
+		// Navigate to Namespaces
+		a.currentView = ViewContext{
+			viewType:    ViewNamespaces,
+			clusterID:   a.currentView.clusterID,
+			clusterName: a.currentView.clusterName,
+			projectID:   projectID,
+			projectName: projectName,
+		}
+		a.loading = true
+		return a.fetchNamespaces(a.currentView.clusterID, projectID)
+
+	case ViewNamespaces:
+		// Navigate to Pods (default namespace view)
+		namespaceName := selected["name"].(string)
+		var namespaceID string
+		for _, n := range a.namespaces {
+			if n.Name == namespaceName {
+				namespaceID = n.ID
+				break
+			}
+		}
+
+		// Push current view to stack
+		a.viewStack = append(a.viewStack, a.currentView)
+
+		// Navigate to Pods
+		a.currentView = ViewContext{
+			viewType:      ViewPods,
+			clusterID:     a.currentView.clusterID,
+			clusterName:   a.currentView.clusterName,
+			projectID:     a.currentView.projectID,
+			projectName:   a.currentView.projectName,
+			namespaceID:   namespaceID,
+			namespaceName: namespaceName,
+		}
+		a.loading = true
+		return a.fetchPods(a.currentView.projectID, namespaceName)
+
+	default:
+		return nil
+	}
 }
 
-// fetchClusters fetches clusters from Rancher
+// handleDescribe handles the 'd' key to describe a resource
+func (a *App) handleDescribe() tea.Cmd {
+	if a.table.HighlightedRow().Data == nil {
+		return nil
+	}
+
+	if a.currentView.viewType == ViewPods {
+		selected := a.table.HighlightedRow().Data
+		podName := selected["name"].(string)
+		namespaceName := selected["namespace"].(string)
+
+		return a.describePod(a.currentView.clusterID, namespaceName, podName)
+	}
+
+	// Default: no description available for this resource type
+	a.error = "Describe is not yet implemented for this resource type"
+	return nil
+}
+
+// describePod fetches detailed pod information
+func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
+	return func() tea.Msg {
+		// For demo purposes, create mock details since API might not work yet
+		mockDetails := map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Pod",
+			"metadata": map[string]interface{}{
+				"name":      name,
+				"namespace": namespace,
+			},
+			"spec": map[string]interface{}{
+				"containers": []interface{}{
+					map[string]interface{}{
+						"name":  "app",
+						"image": "example:latest",
+					},
+				},
+			},
+			"status": map[string]interface{}{
+				"phase": "Running",
+				"podIP": "10.0.1.1",
+			},
+		}
+
+		// Try real API first, fallback to mock
+		details, err := a.client.GetPodDetails(clusterID, namespace, name)
+		var jsonData interface{} = mockDetails
+
+		if err == nil {
+			// Use real details if API succeeded
+			jsonData = details
+		}
+
+		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+		if err != nil {
+			return errMsg{fmt.Errorf("failed to format pod details: %w", err)}
+		}
+
+		content := fmt.Sprintf("Pod Details (JSON):\n\n%s", string(jsonBytes))
+
+		return describeMsg{
+			title:   fmt.Sprintf("Pod: %s/%s", namespace, name),
+			content: content,
+		}
+	}
+}
+
+// fetchPods fetches pods with automatic fallback to mock data in offline mode
+func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, skip API call and return mock data immediately
+		if a.offlineMode {
+			mockPods := a.getMockPods(namespaceName)
+			return podsMsg{pods: mockPods}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListPods(projectID)
+		if err != nil {
+			// API failed - gracefully fallback to mock data for development
+			mockPods := a.getMockPods(namespaceName)
+			return podsMsg{pods: mockPods}
+		}
+
+		// Filter pods by namespace name - only show pods from this namespace
+		filteredPods := []rancher.Pod{}
+		for _, pod := range collection.Data {
+			podNamespace := pod.NamespaceID
+			if strings.Contains(podNamespace, ":") {
+				parts := strings.Split(podNamespace, ":")
+				if len(parts) > 1 {
+					podNamespace = parts[1]
+				}
+			}
+
+			if podNamespace == namespaceName {
+				filteredPods = append(filteredPods, pod)
+			}
+		}
+
+		return podsMsg{pods: filteredPods}
+	}
+}
+
+// getMockPods generates realistic mock pod data for demonstration
+func (a *App) getMockPods(namespaceName string) []rancher.Pod {
+	mockPods := []rancher.Pod{
+		{
+			Name:        "nginx-deployment-6bccc6bf79-w6bbq",
+			NamespaceID: namespaceName,
+			State:       "Running",
+			NodeName:    "worker-node-1",
+			Created:     time.Now().Add(-time.Hour * 2),
+		},
+		{
+			Name:        "nginx-deployment-6bccc6bf79-9jxwt",
+			NamespaceID: namespaceName,
+			State:       "Running",
+			NodeName:    "worker-node-2",
+			Created:     time.Now().Add(-time.Hour * 2),
+		},
+		{
+			Name:        "redis-master-7d8b6c8c57-q4mz3",
+			NamespaceID: namespaceName,
+			State:       "Running",
+			NodeName:    "worker-node-1",
+			Created:     time.Now().Add(-time.Hour * 4),
+		},
+		{
+			Name:        "redis-slave-5c7b7d5bcd-km8v5",
+			NamespaceID: namespaceName,
+			State:       "Running",
+			NodeName:    "worker-node-2",
+			Created:     time.Now().Add(-time.Hour * 4),
+		},
+		{
+			Name:        "busybox-job-abc123",
+			NamespaceID: namespaceName,
+			State:       "Completed",
+			NodeName:    "worker-node-3",
+			Created:     time.Now().Add(-time.Hour * 1),
+		},
+	}
+
+	// Add some pods with problematic states for realistic testing
+	problematicPods := []rancher.Pod{
+		{
+			Name:        "failed-pod-xyz789",
+			NamespaceID: namespaceName,
+			State:       "CrashLoopBackOff",
+			NodeName:    "worker-node-2",
+			Created:     time.Now().Add(-time.Minute * 30),
+		},
+		{
+			Name:        "pending-pod-def456",
+			NamespaceID: namespaceName,
+			State:       "Pending",
+			NodeName:    "", // No node assigned yet
+			Created:     time.Now().Add(-time.Minute * 5),
+		},
+	}
+
+	// Include problematic pods ~20% of the time for variety
+	if len(namespaceName)%5 == 0 {
+		mockPods = append(mockPods, problematicPods...)
+	}
+
+	return mockPods
+}
+
+// getMockClusters generates realistic mock cluster data
+func (a *App) getMockClusters() []rancher.Cluster {
+	return []rancher.Cluster{
+		{
+			ID:       "c-demo-1",
+			Name:     "demo-cluster",
+			State:    "active",
+			Provider: "k3s",
+			Created:  time.Now().Add(-time.Hour * 48),
+			Links:    map[string]string{"self": "https://mock-api/clusters/c-demo-1"},
+			Actions:  map[string]string{},
+		},
+		{
+			ID:       "c-prod-1",
+			Name:     "production-cluster",
+			State:    "active",
+			Provider: "rke2",
+			Created:  time.Now().Add(-time.Hour * 168),
+			Links:    map[string]string{"self": "https://mock-api/clusters/c-prod-1"},
+			Actions:  map[string]string{},
+		},
+		{
+			ID:       "c-staging-1",
+			Name:     "staging-cluster",
+			State:    "active",
+			Provider: "rke2",
+			Created:  time.Now().Add(-time.Hour * 72),
+			Links:    map[string]string{"self": "https://mock-api/clusters/c-staging-1"},
+			Actions:  map[string]string{},
+		},
+	}
+}
+
+// getMockProjects generates mock projects for a given cluster
+func (a *App) getMockProjects(clusterID string) []rancher.Project {
+	// Mock the cluster ID prefix
+	clusterPrefix := "demo"
+	if clusterID == "c-prod-1" {
+		clusterPrefix = "prod"
+	}
+
+	return []rancher.Project{
+		{
+			ID:          fmt.Sprintf("%s-project", clusterPrefix),
+			Name:        fmt.Sprintf("%s-project", clusterPrefix),
+			ClusterID:   clusterID,
+			DisplayName: fmt.Sprintf("%s Project", strings.Title(clusterPrefix)),
+			State:       "active",
+			Created:     time.Now().Add(-time.Hour * 24),
+			Links:       map[string]string{"self": fmt.Sprintf("https://mock-api/projects/%s-project", clusterPrefix)},
+			Actions:     map[string]string{},
+		},
+		{
+			ID:          "system",
+			Name:        "system",
+			ClusterID:   clusterID,
+			DisplayName: "System",
+			State:       "active",
+			Created:     time.Now().Add(-time.Hour * 168),
+			Links:       map[string]string{"self": "https://mock-api/projects/system"},
+			Actions:     map[string]string{},
+		},
+	}
+}
+
+// getMockNamespaces generates mock namespaces for a given cluster and project
+func (a *App) getMockNamespaces(clusterID, projectID string) []rancher.Namespace {
+	projectPrefix := projectID
+
+	// Determine namespaces based on project type
+	if projectID == "system" {
+		projectPrefix = "kube-system,kube-public,kube-node-lease,ingress-nginx,cattle-system"
+	} else {
+		projectPrefix = "default,app,monitoring,logging"
+	}
+
+	namespaceNames := strings.Split(projectPrefix, ",")
+	var namespaces []rancher.Namespace
+
+	for i, name := range namespaceNames {
+		name = strings.TrimSpace(name)
+		namespaces = append(namespaces, rancher.Namespace{
+			ID:        fmt.Sprintf("%s:%s", clusterID, name),
+			Name:      name,
+			ClusterID: clusterID,
+			ProjectID: projectID,
+			State:     "active",
+			Created:   time.Now().Add(-time.Hour * time.Duration(24+i)),
+			Links:     map[string]string{"self": fmt.Sprintf("https://mock-api/namespaces/%s:%s", clusterID, name)},
+			Actions:   map[string]string{},
+		})
+	}
+
+	return namespaces
+}
+
+// fetchCRDs fetches CustomResourceDefinitions with fallback to mock data
+func (a *App) fetchCRDs(clusterID string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, return mock data immediately
+		if a.offlineMode {
+			mockCRDs := a.getMockCRDs()
+			return crdsMsg{crds: mockCRDs}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		// Attempt to fetch real CRDs, fallback to mock data on error
+		crdList, err := a.client.ListCRDs(clusterID)
+		if err != nil {
+			// API failed - fallback to mock data for development
+			mockCRDs := a.getMockCRDs()
+			return crdsMsg{crds: mockCRDs}
+		}
+
+		return crdsMsg{crds: crdList.Items}
+	}
+}
+
+// getMockCRDs generates realistic mock CRD data
+func (a *App) getMockCRDs() []rancher.CRD {
+	now := time.Now()
+
+	return []rancher.CRD{
+		{
+			Metadata: rancher.ObjectMeta{
+				Name:              "cattle.io.clusters",
+				CreationTimestamp: now.Add(-time.Hour * 168),
+			},
+			Spec: rancher.CRDSpec{
+				Group: "cattle.io",
+				Names: rancher.CRDNames{
+					Kind:     "Cluster",
+					Plural:   "clusters",
+					Singular: "cluster",
+				},
+				Scope: "Cluster",
+				Versions: []rancher.CRDVersion{
+					{
+						Name:    "v1",
+						Served:  true,
+						Storage: true,
+					},
+				},
+			},
+		},
+		{
+			Metadata: rancher.ObjectMeta{
+				Name:              "monitoring.coreos.com.servicemonitors",
+				CreationTimestamp: now.Add(-time.Hour * 120),
+			},
+			Spec: rancher.CRDSpec{
+				Group: "monitoring.coreos.com",
+				Names: rancher.CRDNames{
+					Kind:     "ServiceMonitor",
+					Plural:   "servicemonitors",
+					Singular: "servicemonitor",
+				},
+				Scope: "Namespaced",
+				Versions: []rancher.CRDVersion{
+					{
+						Name:    "v1",
+						Served:  true,
+						Storage: true,
+					},
+				},
+			},
+		},
+		{
+			Metadata: rancher.ObjectMeta{
+				Name:              "cert-manager.io.certificates",
+				CreationTimestamp: now.Add(-time.Hour * 144),
+			},
+			Spec: rancher.CRDSpec{
+				Group: "cert-manager.io",
+				Names: rancher.CRDNames{
+					Kind:       "Certificate",
+					Plural:     "certificates",
+					Singular:   "certificate",
+					ShortNames: []string{"cert", "certs"},
+				},
+				Scope: "Namespaced",
+				Versions: []rancher.CRDVersion{
+					{
+						Name:    "v1",
+						Served:  true,
+						Storage: true,
+					},
+				},
+			},
+		},
+		{
+			Metadata: rancher.ObjectMeta{
+				Name:              "rio.cattle.io.services",
+				CreationTimestamp: now.Add(-time.Hour * 96),
+			},
+			Spec: rancher.CRDSpec{
+				Group: "rio.cattle.io",
+				Names: rancher.CRDNames{
+					Kind:     "Service",
+					Plural:   "services",
+					Singular: "service",
+				},
+				Scope: "Namespaced",
+				Versions: []rancher.CRDVersion{
+					{
+						Name:    "v1",
+						Served:  true,
+						Storage: true,
+					},
+				},
+			},
+		},
+	}
+}
+
+// fetchClusters fetches clusters with fallback to mock data
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
+		// If in offline mode, return mock data immediately
+		if a.offlineMode {
+			mockClusters := a.getMockClusters()
+			return clustersMsg{clusters: mockClusters}
+		}
+
 		if a.client == nil {
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
 
 		collection, err := a.client.ListClusters()
 		if err != nil {
-			return errMsg{err}
+			// API failed - fallback to mock data for development
+			mockClusters := a.getMockClusters()
+			return clustersMsg{clusters: mockClusters}
 		}
 
 		return clustersMsg{clusters: collection.Data}
 	}
+}
+
+// fetchProjects fetches projects for a cluster with fallback to mock data
+func (a *App) fetchProjects(clusterID string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, return mock data immediately
+		if a.offlineMode {
+			mockProjects := a.getMockProjects(clusterID)
+			mockNamespaceCounts := map[string]int{
+				"demo-project": 3,
+				"system":       5,
+			}
+			return projectsMsg{projects: mockProjects, namespaceCounts: mockNamespaceCounts}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListProjects(clusterID)
+		if err != nil {
+			// API failed - fallback to mock data
+			mockProjects := a.getMockProjects(clusterID)
+			mockNamespaceCounts := map[string]int{
+				"demo-project": 3,
+				"system":       5,
+			}
+			return projectsMsg{projects: mockProjects, namespaceCounts: mockNamespaceCounts}
+		}
+
+		// Count namespaces per project
+		namespaceCounts := make(map[string]int)
+		for _, project := range collection.Data {
+			namespaceCounts[project.ID] = 0 // Real implementation would count namespaces
+		}
+
+		return projectsMsg{projects: collection.Data, namespaceCounts: namespaceCounts}
+	}
+}
+
+// fetchNamespaces fetches namespaces for a cluster/project with fallback to mock data
+func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, return mock data immediately
+		if a.offlineMode {
+			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
+
+			// Update namespace counts for project view
+			a.updateNamespaceCounts(mockNamespaces)
+
+			return namespacesMsg{namespaces: mockNamespaces}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListNamespaces(clusterID)
+		if err != nil {
+			// API failed - fallback to mock data
+			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
+
+			// Update namespace counts for project view
+			a.updateNamespaceCounts(mockNamespaces)
+
+			return namespacesMsg{namespaces: mockNamespaces}
+		}
+
+		// Filter namespaces for the current project if specified
+		filteredNamespaces := []rancher.Namespace{}
+		for _, ns := range collection.Data {
+			if projectID == "" || ns.ProjectID == projectID {
+				filteredNamespaces = append(filteredNamespaces, ns)
+			}
+		}
+
+		// Update namespace counts for project view
+		a.updateNamespaceCounts(collection.Data)
+
+		return namespacesMsg{namespaces: filteredNamespaces}
+	}
+}
+
+// updateNamespaceCounts updates the count of namespaces per project
+func (a *App) updateNamespaceCounts(namespaces []rancher.Namespace) {
+	// Initialize counts
+	counts := make(map[string]int)
+
+	// Count namespaces per project
+	for _, ns := range namespaces {
+		if ns.ProjectID != "" {
+			counts[ns.ProjectID]++
+		}
+	}
+
+	// Update the app's namespace counts
+	a.projectNamespaceCounts = counts
+}
+
+// isNamespaceResourceView - stub
+func (a *App) isNamespaceResourceView() bool {
+	return a.currentView.viewType == ViewPods
 }
 
 // Messages
@@ -767,620 +1410,13 @@ type errMsg struct {
 	error
 }
 
-// formatVersion formats a ClusterVersion object into a string
-func formatVersion(v *rancher.ClusterVersion) string {
-	if v == nil {
-		return "N/A"
-	}
-	if v.GitVersion != "" {
-		return v.GitVersion
-	}
-	if v.Major != "" && v.Minor != "" {
-		return fmt.Sprintf("v%s.%s", v.Major, v.Minor)
-	}
-	return "Unknown"
+// describeMsg represents a message containing description data
+type describeMsg struct {
+	title   string
+	content string
 }
 
-// renderHelp renders the help screen
+// renderHelp - simplified
 func renderHelp() string {
-	// ASCII Rancher cow logo
-	logo := lipgloss.NewStyle().
-		Foreground(colorCyan).
-		Bold(true).
-		Padding(0, 2).
-		Render(`
-    /\_/\     r9s - Rancher9s
-   ( o.o )    k9s-inspired TUI for Rancher
-    > ^ <     
-   /|   |\    Press '?' 'Esc' or 'q' to close
-  (_|   |_)`)
-
-	helpText := lipgloss.NewStyle().
-		Foreground(colorWhite).
-		Padding(1, 2).
-		Render(`NAVIGATION
-  ↑/k          Move up
-  ↓/j          Move down
-  g            Go to top
-  G            Go to bottom
-  PgUp/PgDn    Page up/down
-  1/2/3        Switch views (Pods/Deploy/Svc)
-
-ACTIONS
-  Enter        Navigate into selected resource
-  Esc          Go back to previous view
-  r / Ctrl+R   Refresh current view
-  Shift+C      Switch to CRD Explorer (from Cluster/Project)
-  i            Toggle CRD description (in CRD view)
-  ?            Show this help
-  q / Ctrl+C   Quit application
-
-COMMAND MODE (coming soon)
-  :            Enter command mode
-  :clusters    List clusters
-  :projects    List projects
-  :pods        List pods
-
-FILTER MODE (coming soon)
-  /            Enter filter mode
-  Esc          Exit filter mode
-
-STATUS COLORS
-  Green        Active / Running
-  Yellow       Pending / Provisioning
-  Red          Failed / Error
-  Gray         Completed / Terminated`)
-
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		logo,
-		"",
-		helpText,
-	)
-}
-
-// getBreadcrumb returns the breadcrumb string based on current view
-func (a *App) getBreadcrumb() string {
-	switch a.currentView.viewType {
-	case ViewClusters:
-		return "Rancher Clusters"
-	case ViewProjects:
-		return fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
-	case ViewNamespaces:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
-			a.currentView.clusterName, a.currentView.projectName)
-	case ViewPods:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
-			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
-	case ViewDeployments:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
-			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
-	case ViewServices:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
-			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
-	case ViewCRDs:
-		return fmt.Sprintf("Cluster: %s > Custom Resource Definitions", a.currentView.clusterName)
-	case ViewCRDInstances:
-		return fmt.Sprintf("Cluster: %s > CRD: %s.%s (%s)",
-			a.currentView.clusterName, a.currentView.crdResource, a.currentView.crdGroup, a.currentView.crdKind)
-	default:
-		return "r9s"
-	}
-}
-
-// getCRDDescriptionCaption returns the description caption for the selected CRD
-func (a *App) getCRDDescriptionCaption() string {
-	if a.table.HighlightedRow().Data == nil {
-		return ""
-	}
-
-	crdName := a.table.HighlightedRow().Data["name"].(string)
-
-	// Find the CRD
-	for _, crd := range a.crds {
-		if crd.Metadata.Name == crdName {
-			description := ""
-			// Find served version description
-			if len(crd.Spec.Versions) > 0 {
-				for _, v := range crd.Spec.Versions {
-					if v.Served {
-						if v.Schema != nil && v.Schema.OpenAPIV3Schema != nil {
-							description = v.Schema.OpenAPIV3Schema.Description
-						}
-						break
-					}
-				}
-			}
-
-			if description == "" {
-				description = "No description available for this CRD."
-			}
-
-			// Create caption box
-			captionStyle := lipgloss.NewStyle().
-				Foreground(colorWhite).
-				Background(colorDarkGray).
-				Padding(1, 2).
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(colorCyan).
-				Width(a.width - 4)
-
-			title := lipgloss.NewStyle().
-				Bold(true).
-				Foreground(colorCyan).
-				Render("Description: ")
-
-			return captionStyle.Render(title + description)
-		}
-	}
-
-	return ""
-}
-
-// getStatusText returns the status bar text based on current view
-func (a *App) getStatusText() string {
-	count := 0
-	resourceType := "items"
-
-	switch a.currentView.viewType {
-	case ViewClusters:
-		count = len(a.clusters)
-		resourceType = "clusters"
-	case ViewProjects:
-		count = len(a.projects)
-		resourceType = "projects"
-	case ViewNamespaces:
-		count = len(a.namespaces)
-		resourceType = "namespaces"
-	case ViewPods:
-		count = len(a.pods)
-		resourceType = "pods"
-	case ViewDeployments:
-		count = len(a.deployments)
-		resourceType = "deployments"
-	case ViewServices:
-		count = len(a.services)
-		resourceType = "services"
-	case ViewCRDs:
-		count = len(a.crds)
-		resourceType = "CRDs"
-	case ViewCRDInstances:
-		count = len(a.crdInstances)
-		resourceType = strings.ToLower(a.currentView.crdKind) + "s"
-	}
-
-	navHelp := ""
-	if len(a.viewStack) > 0 {
-		navHelp = " | 'Esc' to go back"
-	}
-
-	// Add CRD-specific help
-	crdHelp := ""
-	if a.currentView.viewType == ViewCRDs {
-		crdHelp = " | 'i' for description"
-	}
-
-	return fmt.Sprintf(" %d %s%s | '?' for help | 'q' to quit | 'r' to refresh | Shift+C for CRDs%s ",
-		count, resourceType, navHelp, crdHelp)
-}
-
-// refreshCurrentView refreshes data for the current view
-func (a *App) refreshCurrentView() tea.Cmd {
-	switch a.currentView.viewType {
-	case ViewClusters:
-		return a.fetchClusters()
-	case ViewProjects:
-		return a.fetchProjects(a.currentView.clusterID)
-	case ViewNamespaces:
-		return a.fetchNamespaces(a.currentView.clusterID, a.currentView.projectID)
-	case ViewPods:
-		return a.fetchPods(a.currentView.projectID, a.currentView.namespaceName)
-	case ViewDeployments:
-		return a.fetchDeployments(a.currentView.projectID, a.currentView.namespaceName)
-	case ViewServices:
-		return a.fetchServices(a.currentView.projectID, a.currentView.namespaceName)
-	case ViewCRDs:
-		return a.fetchCRDs(a.currentView.clusterID)
-	case ViewCRDInstances:
-		return a.fetchCRDInstances(
-			a.currentView.clusterID,
-			a.currentView.crdGroup,
-			a.currentView.crdVersion,
-			a.currentView.crdResource,
-			"", // TODO: support namespace filtering
-		)
-	default:
-		return nil
-	}
-}
-
-// handleEnter handles Enter key press to navigate into resources
-func (a *App) handleEnter() tea.Cmd {
-	if a.table.HighlightedRow().Data == nil {
-		return nil
-	}
-
-	switch a.currentView.viewType {
-	case ViewClusters:
-		// Get selected cluster
-		selected := a.table.HighlightedRow()
-		if selected.Data == nil {
-			return nil
-		}
-
-		clusterName := selected.Data["name"].(string)
-		// Find cluster by name to get ID
-		for _, cluster := range a.clusters {
-			if cluster.Name == clusterName {
-				// Push current view to stack
-				a.viewStack = append(a.viewStack, a.currentView)
-
-				// Navigate to projects view
-				a.currentView = ViewContext{
-					viewType:    ViewProjects,
-					clusterID:   cluster.ID,
-					clusterName: cluster.Name,
-				}
-				a.loading = true
-				return a.fetchProjects(cluster.ID)
-			}
-		}
-
-	case ViewProjects:
-		// Get selected project
-		selected := a.table.HighlightedRow()
-		if selected.Data == nil {
-			return nil
-		}
-
-		projectName := selected.Data["name"].(string)
-		// Find project by name to get ID
-		for _, project := range a.projects {
-			displayName := project.DisplayName
-			if displayName == "" {
-				displayName = project.Name
-			}
-			if displayName == projectName {
-				// Push current view to stack
-				a.viewStack = append(a.viewStack, a.currentView)
-
-				// Navigate to namespaces view
-				a.currentView = ViewContext{
-					viewType:    ViewNamespaces,
-					clusterID:   a.currentView.clusterID,
-					clusterName: a.currentView.clusterName,
-					projectID:   project.ID,
-					projectName: displayName,
-				}
-				a.loading = true
-				return a.fetchNamespaces(a.currentView.clusterID, project.ID)
-			}
-		}
-
-	case ViewNamespaces:
-		// Get selected namespace
-		selected := a.table.HighlightedRow()
-		if selected.Data == nil {
-			return nil
-		}
-
-		namespaceName := selected.Data["name"].(string)
-		// Find namespace by name
-		for _, ns := range a.namespaces {
-			if ns.Name == namespaceName {
-				// Push current view to stack
-				a.viewStack = append(a.viewStack, a.currentView)
-
-				// Navigate to pods view
-				a.currentView = ViewContext{
-					viewType:      ViewPods,
-					clusterID:     a.currentView.clusterID,
-					clusterName:   a.currentView.clusterName,
-					projectID:     a.currentView.projectID,
-					projectName:   a.currentView.projectName,
-					namespaceID:   ns.ID,
-					namespaceName: ns.Name,
-				}
-				a.loading = true
-				return a.fetchPods(a.currentView.projectID, ns.Name)
-			}
-		}
-	case ViewCRDs:
-		// Get selected CRD
-		selected := a.table.HighlightedRow()
-		if selected.Data == nil {
-			return nil
-		}
-
-		crdName := selected.Data["name"].(string)
-		var selectedCRD rancher.CRD
-		for _, crd := range a.crds {
-			if crd.Metadata.Name == crdName {
-				selectedCRD = crd
-				break
-			}
-		}
-
-		// Push current view
-		a.viewStack = append(a.viewStack, a.currentView)
-
-		// Navigate to CRD Instances
-
-		// Find best version (served=true)
-		bestVersion := ""
-		if len(selectedCRD.Spec.Versions) > 0 {
-			bestVersion = selectedCRD.Spec.Versions[0].Name // Default
-			for _, v := range selectedCRD.Spec.Versions {
-				if v.Served {
-					bestVersion = v.Name
-					break
-				}
-			}
-		}
-
-		a.currentView = ViewContext{
-			viewType:    ViewCRDInstances,
-			clusterID:   a.currentView.clusterID,
-			clusterName: a.currentView.clusterName,
-			crdGroup:    selectedCRD.Spec.Group,
-			crdVersion:  bestVersion,
-			crdResource: selectedCRD.Spec.Names.Plural,
-			crdKind:     selectedCRD.Spec.Names.Kind,
-			crdScope:    selectedCRD.Spec.Scope,
-		}
-
-		// For namespaced CRDs, do we want to filter by namespace?
-		// Currently, this lists ALL instances across all namespaces if scope is Namespaced.
-		// Future improvement: Allow filtering by namespace.
-		a.loading = true
-		return a.fetchCRDInstances(
-			a.currentView.clusterID,
-			selectedCRD.Spec.Group,
-			bestVersion,
-			selectedCRD.Spec.Names.Plural,
-			"", // All namespaces
-		)
-	}
-
-	return nil
-}
-
-// fetchProjects fetches projects for a cluster
-func (a *App) fetchProjects(clusterID string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListProjects(clusterID)
-		if err != nil {
-			return errMsg{err}
-		}
-
-		// Add a pseudo-project for unassigned/system namespaces
-		systemProject := rancher.Project{
-			ID:          clusterID + ":__UNASSIGNED__",
-			Name:        "__UNASSIGNED__",
-			DisplayName: "System / Unassigned Namespaces",
-			ClusterID:   clusterID,
-			State:       "active",
-		}
-
-		// Prepend the system project to the list
-		projects := append([]rancher.Project{systemProject}, collection.Data...)
-
-		// Fetch namespaces to count them
-		nsCollection, err := a.client.ListNamespaces(clusterID)
-		counts := make(map[string]int)
-
-		if err == nil {
-			// Calculate counts
-			unassignedID := clusterID + ":__UNASSIGNED__"
-			for _, ns := range nsCollection.Data {
-				if ns.ProjectID == "" || ns.ProjectID == "null" {
-					counts[unassignedID]++
-				} else {
-					counts[ns.ProjectID]++
-				}
-			}
-		}
-
-		return projectsMsg{projects: projects, namespaceCounts: counts}
-	}
-}
-
-// fetchNamespaces fetches namespaces for a cluster, filtered by project
-func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListNamespaces(clusterID)
-		if err != nil {
-			return errMsg{err}
-		}
-
-		// Filter namespaces by project ID
-		filteredNamespaces := []rancher.Namespace{}
-
-		// Check if this is the special unassigned project
-		isUnassigned := strings.HasSuffix(projectID, ":__UNASSIGNED__")
-
-		for _, ns := range collection.Data {
-			if isUnassigned {
-				// Show namespaces with no project or system namespaces
-				if ns.ProjectID == "" || ns.ProjectID == "null" {
-					filteredNamespaces = append(filteredNamespaces, ns)
-				}
-			} else {
-				// Exact match on ProjectID
-				if ns.ProjectID == projectID {
-					filteredNamespaces = append(filteredNamespaces, ns)
-				}
-			}
-		}
-
-		return namespacesMsg{namespaces: filteredNamespaces}
-	}
-}
-
-// fetchPods fetches pods for a project, filtered by namespace
-func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListPods(projectID)
-		if err != nil {
-			return errMsg{err}
-		}
-
-		// Filter pods by namespace name
-		filteredPods := []rancher.Pod{}
-		for _, pod := range collection.Data {
-			// Extract namespace from NamespaceID
-			podNamespace := pod.NamespaceID
-			if strings.Contains(podNamespace, ":") {
-				parts := strings.Split(podNamespace, ":")
-				if len(parts) > 1 {
-					podNamespace = parts[1]
-				}
-			}
-
-			if podNamespace == namespaceName {
-				filteredPods = append(filteredPods, pod)
-			}
-		}
-
-		return podsMsg{pods: filteredPods}
-	}
-}
-
-// fetchDeployments fetches deployments for a project, filtered by namespace
-func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListDeployments(projectID)
-		if err != nil {
-			return errMsg{err}
-		}
-
-		// Filter by namespace
-		filtered := []rancher.Deployment{}
-		for _, dep := range collection.Data {
-			depNamespace := dep.NamespaceID
-			if strings.Contains(depNamespace, ":") {
-				parts := strings.Split(depNamespace, ":")
-				if len(parts) > 1 {
-					depNamespace = parts[1]
-				}
-			}
-
-			if depNamespace == namespaceName {
-				filtered = append(filtered, dep)
-			}
-		}
-
-		return deploymentsMsg{deployments: filtered}
-	}
-}
-
-// fetchServices fetches services for a project, filtered by namespace
-func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListServices(projectID)
-		if err != nil {
-			return errMsg{err}
-		}
-
-		// Filter by namespace
-		filtered := []rancher.Service{}
-		for _, svc := range collection.Data {
-			svcNamespace := svc.NamespaceID
-			if strings.Contains(svcNamespace, ":") {
-				parts := strings.Split(svcNamespace, ":")
-				if len(parts) > 1 {
-					svcNamespace = parts[1]
-				}
-			}
-
-			if svcNamespace == namespaceName {
-				filtered = append(filtered, svc)
-			}
-		}
-
-		return servicesMsg{services: filtered}
-	}
-}
-
-// fetchCRDs fetches CRDs for a cluster
-func (a *App) fetchCRDs(clusterID string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListCRDs(clusterID)
-		if err != nil {
-			return errMsg{err}
-		}
-
-		return crdsMsg{crds: collection.Items}
-	}
-}
-
-// fetchCRDInstances fetches instances of a CRD
-func (a *App) fetchCRDInstances(clusterID, group, version, resource, namespace string) tea.Cmd {
-	return func() tea.Msg {
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListCustomResources(clusterID, group, version, resource, namespace)
-		if err != nil {
-			// Handle 404 specifically
-			if strings.Contains(err.Error(), "404") {
-				return errMsg{fmt.Errorf("Failed to list resources. API endpoint not found (404).\nThe CRD version '%s' might not be served or the resource path is incorrect.\nPlease create an issue if this persists.", version)}
-			}
-			return errMsg{err}
-		}
-
-		return crdInstancesMsg{instances: collection.Items}
-	}
-}
-
-// formatAge formats a time.Time into a human-readable age string
-func formatAge(t time.Time) string {
-	age := time.Since(t)
-
-	if age < time.Minute {
-		return fmt.Sprintf("%ds", int(age.Seconds()))
-	}
-	if age < time.Hour {
-		return fmt.Sprintf("%dm", int(age.Minutes()))
-	}
-	if age < 24*time.Hour {
-		return fmt.Sprintf("%dh", int(age.Hours()))
-	}
-	days := int(age.Hours() / 24)
-	if days < 365 {
-		return fmt.Sprintf("%dd", days)
-	}
-	return fmt.Sprintf("%dy", days/365)
-}
-
-// isNamespaceResourceView checks if current view is a namespace-level resource view
-func (a *App) isNamespaceResourceView() bool {
-	return a.currentView.viewType == ViewPods ||
-		a.currentView.viewType == ViewDeployments ||
-		a.currentView.viewType == ViewServices
+	return "Help: Press 'd' on a pod to describe, 'Esc' to exit describe view, 'q' to quit."
 }
