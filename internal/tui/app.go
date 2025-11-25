@@ -429,19 +429,24 @@ func (a *App) updateTable() {
 	case ViewCRDs:
 		if len(a.crds) > 0 {
 			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("group", "GROUP", 30),
-				table.NewColumn("kind", "KIND", 20),
-				table.NewColumn("scope", "SCOPE", 15),
+				table.NewColumn("name", "NAME", 35),
+				table.NewColumn("group", "GROUP", 25),
+				table.NewColumn("kind", "KIND", 18),
+				table.NewColumn("scope", "SCOPE", 12),
+				table.NewColumn("instances", "INSTANCES", 10),
 			}
 
 			rows := []table.Row{}
 			for _, crd := range a.crds {
+				// Get instance count for this CRD
+				instanceCount := a.getCRDInstanceCount(crd.Spec.Group, crd.Spec.Names.Plural)
+
 				rows = append(rows, table.NewRow(table.RowData{
-					"name":  crd.Metadata.Name,
-					"group": crd.Spec.Group,
-					"kind":  crd.Spec.Names.Kind,
-					"scope": crd.Spec.Scope,
+					"name":      crd.Metadata.Name,
+					"group":     crd.Spec.Group,
+					"kind":      crd.Spec.Names.Kind,
+					"scope":     crd.Spec.Scope,
+					"instances": fmt.Sprintf("%d", instanceCount),
 				}))
 			}
 
@@ -1646,6 +1651,13 @@ func (a *App) updateNamespaceCounts(namespaces []rancher.Namespace) {
 
 	// Update the app's namespace counts
 	a.projectNamespaceCounts = counts
+}
+
+// getCRDInstanceCount returns the count of instances for a given CRD
+func (a *App) getCRDInstanceCount(group, resource string) int {
+	// Generate mock instances and return count
+	mockInstances := a.getMockCRDInstances(group, resource)
+	return len(mockInstances)
 }
 
 // isNamespaceResourceView - stub
