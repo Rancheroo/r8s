@@ -71,6 +71,16 @@ var (
 			Padding(1, 2).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(colorCyan)
+
+	// Offline warning banner style
+	offlineWarningStyle = lipgloss.NewStyle().
+				Foreground(colorWhite).
+				Background(colorRed).
+				Bold(true).
+				Blink(true).
+				Padding(0, 2).
+				Width(100).
+				Align(lipgloss.Center)
 )
 
 // GetStateStyle returns the appropriate style for a resource state

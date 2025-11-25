@@ -359,30 +359,28 @@ func (a *App) View() string {
 	// Render table
 	tableView := a.table.View()
 
+	// Build the view with optional offline warning banner
+	var components []string
+	components = append(components, breadcrumb)
+
+	// Add offline warning banner if in offline mode
+	if a.offlineMode {
+		warningBanner := offlineWarningStyle.Render("⚠️  OFFLINE MODE - DISPLAYING MOCK DATA  ⚠️")
+		components = append(components, "", warningBanner)
+	}
+
+	components = append(components, "", tableView)
+
 	// Add description caption if in CRD view and toggled on
 	if a.currentView.viewType == ViewCRDs && a.showCRDDescription {
 		caption := a.getCRDDescriptionCaption()
-		return lipgloss.JoinVertical(
-			lipgloss.Left,
-			breadcrumb,
-			"",
-			tableView,
-			"",
-			caption,
-			"",
-			status,
-		)
+		components = append(components, "", caption)
 	}
 
+	components = append(components, "", status)
+
 	// Join all components
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		breadcrumb,
-		"",
-		tableView,
-		"",
-		status,
-	)
+	return lipgloss.JoinVertical(lipgloss.Left, components...)
 }
 
 // renderDescribeView renders the describe modal
