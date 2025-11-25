@@ -6,9 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
+
+// Debug flag - set via environment variable R9S_DEBUG
+var debugMode = os.Getenv("R9S_DEBUG") == "1"
 
 // Client represents a Rancher API client
 type Client struct {
@@ -91,7 +95,19 @@ func (c *Client) get(path string, result interface{}) error {
 	}
 
 	if result != nil {
-		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+		// Read body for debugging
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		// Debug logging if enabled
+		if debugMode {
+			fmt.Printf("\n[DEBUG] API Response for %s:\n%s\n", path, string(body))
+		}
+
+		// Decode the body
+		if err := json.Unmarshal(body, result); err != nil {
 			return fmt.Errorf("failed to decode response: %w", err)
 		}
 	}

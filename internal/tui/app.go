@@ -612,11 +612,14 @@ func (a *App) updateTable() {
 					}
 				}
 
+				// Get node name with fallback support
+				nodeName := a.getPodNodeName(pod)
+
 				rows = append(rows, table.NewRow(table.RowData{
 					"name":      pod.Name,
 					"namespace": namespaceName,
 					"state":     pod.State,
-					"node":      pod.NodeName,
+					"node":      nodeName,
 				}))
 			}
 
@@ -1920,10 +1923,25 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 			return projectsMsg{projects: mockProjects, namespaceCounts: mockNamespaceCounts}
 		}
 
-		// Count namespaces per project
+		// Count namespaces per project by fetching all namespaces
 		namespaceCounts := make(map[string]int)
+
+		// Fetch namespaces to get accurate counts
+		nsCollection, err := a.client.ListNamespaces(clusterID)
+		if err == nil {
+			// Count namespaces by project ID
+			for _, ns := range nsCollection.Data {
+				if ns.ProjectID != "" {
+					namespaceCounts[ns.ProjectID]++
+				}
+			}
+		}
+
+		// Ensure all projects have an entry (even if 0)
 		for _, project := range collection.Data {
-			namespaceCounts[project.ID] = 0 // Real implementation would count namespaces
+			if _, exists := namespaceCounts[project.ID]; !exists {
+				namespaceCounts[project.ID] = 0
+			}
 		}
 
 		return projectsMsg{projects: collection.Data, namespaceCounts: namespaceCounts}
@@ -2034,6 +2052,25 @@ func (a *App) isNamespaceResourceView() bool {
 	return a.currentView.viewType == ViewPods ||
 		a.currentView.viewType == ViewDeployments ||
 		a.currentView.viewType == ViewServices
+}
+
+// getPodNodeName extracts the node name from a Pod with fallback support
+func (a *App) getPodNodeName(pod rancher.Pod) string {
+	// Try each field in order of preference
+	if pod.NodeName != "" {
+		return pod.NodeName
+	}
+	if pod.NodeID != "" {
+		return pod.NodeID
+	}
+	if pod.Node != "" {
+		return pod.Node
+	}
+	if pod.HostnameI != "" {
+		return pod.HostnameI
+	}
+	// No node information available
+	return ""
 }
 
 // Messages

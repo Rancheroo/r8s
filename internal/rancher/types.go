@@ -187,7 +187,10 @@ type Pod struct {
 	Type         string            `json:"type"`
 	Name         string            `json:"name"`
 	NamespaceID  string            `json:"namespaceId"`
-	NodeName     string            `json:"nodeName"`
+	NodeName     string            `json:"nodeName"` // Try this first
+	NodeID       string            `json:"nodeId"`   // Fallback 1
+	Node         string            `json:"node"`     // Fallback 2
+	HostnameI    string            `json:"hostname"` // Fallback 3
 	State        string            `json:"state"`
 	PodIP        string            `json:"podIP"`
 	RestartCount int               `json:"restartCount"`
