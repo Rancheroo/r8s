@@ -1401,7 +1401,7 @@ func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.
 	}
 }
 
-// getMockCRDInstances generates mock CRD instance data
+// getMockCRDInstances generates mock CRD instance data with varied counts
 func (a *App) getMockCRDInstances(group, resource string) []map[string]interface{} {
 	now := time.Now()
 
@@ -1409,6 +1409,7 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 	switch group {
 	case "cert-manager.io":
 		if resource == "certificates" {
+			// 5 certificate instances - common in production
 			return []map[string]interface{}{
 				{
 					"metadata": map[string]interface{}{
@@ -1419,17 +1420,10 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 					"spec": map[string]interface{}{
 						"secretName": "wildcard-tls",
 						"dnsNames":   []string{"*.example.com"},
-						"issuerRef": map[string]interface{}{
-							"name": "letsencrypt-prod",
-							"kind": "ClusterIssuer",
-						},
 					},
 					"status": map[string]interface{}{
 						"conditions": []interface{}{
-							map[string]interface{}{
-								"type":   "Ready",
-								"status": "True",
-							},
+							map[string]interface{}{"type": "Ready", "status": "True"},
 						},
 					},
 				},
@@ -1442,17 +1436,58 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 					"spec": map[string]interface{}{
 						"secretName": "api-tls",
 						"dnsNames":   []string{"api.example.com"},
-						"issuerRef": map[string]interface{}{
-							"name": "letsencrypt-prod",
-							"kind": "ClusterIssuer",
-						},
 					},
 					"status": map[string]interface{}{
 						"conditions": []interface{}{
-							map[string]interface{}{
-								"type":   "Ready",
-								"status": "True",
-							},
+							map[string]interface{}{"type": "Ready", "status": "True"},
+						},
+					},
+				},
+				{
+					"metadata": map[string]interface{}{
+						"name":              "web-cert",
+						"namespace":         "web",
+						"creationTimestamp": now.Add(-time.Hour * 200).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"secretName": "web-tls",
+						"dnsNames":   []string{"web.example.com"},
+					},
+					"status": map[string]interface{}{
+						"conditions": []interface{}{
+							map[string]interface{}{"type": "Ready", "status": "True"},
+						},
+					},
+				},
+				{
+					"metadata": map[string]interface{}{
+						"name":              "grafana-cert",
+						"namespace":         "monitoring",
+						"creationTimestamp": now.Add(-time.Hour * 96).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"secretName": "grafana-tls",
+						"dnsNames":   []string{"grafana.example.com"},
+					},
+					"status": map[string]interface{}{
+						"conditions": []interface{}{
+							map[string]interface{}{"type": "Ready", "status": "True"},
+						},
+					},
+				},
+				{
+					"metadata": map[string]interface{}{
+						"name":              "prometheus-cert",
+						"namespace":         "monitoring",
+						"creationTimestamp": now.Add(-time.Hour * 144).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"secretName": "prometheus-tls",
+						"dnsNames":   []string{"prometheus.example.com"},
+					},
+					"status": map[string]interface{}{
+						"conditions": []interface{}{
+							map[string]interface{}{"type": "Ready", "status": "True"},
 						},
 					},
 				},
@@ -1460,76 +1495,73 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 		}
 	case "monitoring.coreos.com":
 		if resource == "servicemonitors" {
+			// 7 service monitor instances - monitoring setup
+			instances := []map[string]interface{}{}
+			services := []string{"kube-state-metrics", "prometheus-operator", "node-exporter",
+				"grafana", "alertmanager", "prometheus", "blackbox-exporter"}
+
+			for i, svc := range services {
+				instances = append(instances, map[string]interface{}{
+					"metadata": map[string]interface{}{
+						"name":              svc,
+						"namespace":         "monitoring",
+						"creationTimestamp": now.Add(-time.Hour * time.Duration(24*(i+1))).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"selector": map[string]interface{}{
+							"matchLabels": map[string]string{"app": svc},
+						},
+						"endpoints": []interface{}{
+							map[string]interface{}{"port": "metrics", "interval": "30s"},
+						},
+					},
+				})
+			}
+			return instances
+		}
+	case "cattle.io":
+		if resource == "clusters" {
+			// 3 cluster instances - common setup
 			return []map[string]interface{}{
 				{
 					"metadata": map[string]interface{}{
-						"name":              "kube-state-metrics",
-						"namespace":         "monitoring",
-						"creationTimestamp": now.Add(-time.Hour * 72).Format(time.RFC3339),
+						"name":              "production",
+						"creationTimestamp": now.Add(-time.Hour * 720).Format(time.RFC3339),
 					},
-					"spec": map[string]interface{}{
-						"selector": map[string]interface{}{
-							"matchLabels": map[string]string{
-								"app": "kube-state-metrics",
-							},
-						},
-						"endpoints": []interface{}{
-							map[string]interface{}{
-								"port":     "http-metrics",
-								"interval": "30s",
-							},
-						},
-					},
+					"spec": map[string]interface{}{"displayName": "Production Cluster"},
 				},
 				{
 					"metadata": map[string]interface{}{
-						"name":              "prometheus-operator",
-						"namespace":         "monitoring",
-						"creationTimestamp": now.Add(-time.Hour * 168).Format(time.RFC3339),
+						"name":              "staging",
+						"creationTimestamp": now.Add(-time.Hour * 480).Format(time.RFC3339),
 					},
-					"spec": map[string]interface{}{
-						"selector": map[string]interface{}{
-							"matchLabels": map[string]string{
-								"app": "prometheus-operator",
-							},
-						},
-						"endpoints": []interface{}{
-							map[string]interface{}{
-								"port":     "https",
-								"interval": "30s",
-							},
-						},
+					"spec": map[string]interface{}{"displayName": "Staging Cluster"},
+				},
+				{
+					"metadata": map[string]interface{}{
+						"name":              "development",
+						"creationTimestamp": now.Add(-time.Hour * 240).Format(time.RFC3339),
 					},
+					"spec": map[string]interface{}{"displayName": "Development Cluster"},
 				},
 			}
 		}
+	case "rio.cattle.io":
+		// Few instances - less common CRD
+		return []map[string]interface{}{
+			{
+				"metadata": map[string]interface{}{
+					"name":              fmt.Sprintf("%s-1", resource),
+					"namespace":         "default",
+					"creationTimestamp": now.Add(-time.Hour * 24).Format(time.RFC3339),
+				},
+				"spec": map[string]interface{}{"field": "value"},
+			},
+		}
 	}
 
-	// Default generic instances
-	return []map[string]interface{}{
-		{
-			"metadata": map[string]interface{}{
-				"name":              fmt.Sprintf("%s-example-1", resource),
-				"namespace":         "default",
-				"creationTimestamp": now.Add(-time.Hour * 24).Format(time.RFC3339),
-			},
-			"spec": map[string]interface{}{
-				"field1": "value1",
-				"field2": "value2",
-			},
-		},
-		{
-			"metadata": map[string]interface{}{
-				"name":              fmt.Sprintf("%s-example-2", resource),
-				"namespace":         "kube-system",
-				"creationTimestamp": now.Add(-time.Hour * 72).Format(time.RFC3339),
-			},
-			"spec": map[string]interface{}{
-				"field1": "value3",
-				"field2": "value4",
-			},
-		},
-	}
+	// Default: 0 instances for unknown CRDs
+	return []map[string]interface{}{}
 }
 
 // fetchClusters fetches clusters with fallback to mock data
