@@ -1687,7 +1687,40 @@ func (a *App) updateNamespaceCounts(namespaces []rancher.Namespace) {
 
 // getCRDInstanceCount returns the count of instances for a given CRD
 func (a *App) getCRDInstanceCount(group, resource string) int {
-	// Generate mock instances and return count
+	// If in offline mode, use mock data
+	if a.offlineMode {
+		mockInstances := a.getMockCRDInstances(group, resource)
+		return len(mockInstances)
+	}
+
+	// Try to fetch real instance count from API
+	if a.client != nil && a.currentView.clusterID != "" {
+		// Get the storage version for this CRD
+		var version string
+		for _, crd := range a.crds {
+			if crd.Spec.Group == group && crd.Spec.Names.Plural == resource {
+				for _, v := range crd.Spec.Versions {
+					if v.Storage {
+						version = v.Name
+						break
+					}
+				}
+				if version == "" && len(crd.Spec.Versions) > 0 {
+					version = crd.Spec.Versions[0].Name
+				}
+				break
+			}
+		}
+
+		if version != "" {
+			instanceList, err := a.client.ListCustomResources(a.currentView.clusterID, group, version, resource, "")
+			if err == nil {
+				return len(instanceList.Items)
+			}
+		}
+	}
+
+	// Fallback to mock data count
 	mockInstances := a.getMockCRDInstances(group, resource)
 	return len(mockInstances)
 }
