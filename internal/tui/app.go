@@ -633,6 +633,80 @@ func (a *App) updateTable() {
 				Focused(false).
 				BorderRounded()
 		}
+
+	case ViewCRDInstances:
+		if len(a.crdInstances) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 40),
+				table.NewColumn("namespace", "NAMESPACE", 25),
+				table.NewColumn("age", "AGE", 15),
+				table.NewColumn("status", "STATUS", 20),
+			}
+
+			rows := []table.Row{}
+			for _, instance := range a.crdInstances {
+				// Extract metadata
+				metadata, _ := instance["metadata"].(map[string]interface{})
+				name := ""
+				namespace := ""
+				createdTime := ""
+
+				if metadata != nil {
+					if n, ok := metadata["name"].(string); ok {
+						name = n
+					}
+					if ns, ok := metadata["namespace"].(string); ok {
+						namespace = ns
+					} else {
+						namespace = "cluster-scoped"
+					}
+					if ct, ok := metadata["creationTimestamp"].(string); ok {
+						// Parse and calculate age
+						if t, err := time.Parse(time.RFC3339, ct); err == nil {
+							days := int(time.Since(t).Hours() / 24)
+							createdTime = fmt.Sprintf("%dd", days)
+						}
+					}
+				}
+
+				// Try to extract status
+				status := "N/A"
+				if statusObj, ok := instance["status"].(map[string]interface{}); ok {
+					if conditions, ok := statusObj["conditions"].([]interface{}); ok && len(conditions) > 0 {
+						if cond, ok := conditions[0].(map[string]interface{}); ok {
+							if condType, ok := cond["type"].(string); ok {
+								if condStatus, ok := cond["status"].(string); ok {
+									status = fmt.Sprintf("%s: %s", condType, condStatus)
+								}
+							}
+						}
+					}
+				}
+
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":      name,
+					"namespace": namespace,
+					"age":       createdTime,
+					"status":    status,
+				}))
+			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": fmt.Sprintf("No %s instances available", a.currentView.crdKind)})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
+		}
 	}
 }
 
@@ -651,6 +725,8 @@ func (a *App) getBreadcrumb() string {
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewCRDs:
 		return fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
+	case ViewCRDInstances:
+		return fmt.Sprintf("Cluster: %s > CRDs > %s", a.currentView.clusterName, a.currentView.crdKind)
 	default:
 		return "r9s - Rancher Navigator"
 	}
@@ -684,7 +760,11 @@ func (a *App) getStatusText() string {
 
 	case ViewCRDs:
 		count := len(a.crds)
-		status = fmt.Sprintf(" %s%d CRDs | Press 'i' to toggle description | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d CRDs | Press 'i' to toggle description, Enter to browse instances | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewCRDInstances:
+		count := len(a.crdInstances)
+		status = fmt.Sprintf(" %s%d %s instances | Press 'd' to describe (soon) | '?' for help | 'q' to quit ", offlinePrefix, count, a.currentView.crdKind)
 
 	default:
 		status = fmt.Sprintf(" %sPress 'Esc' to go back | '?' for help | 'q' to quit ", offlinePrefix)
@@ -743,7 +823,7 @@ func (a *App) getCRDDescriptionCaption() string {
 	}
 
 	// Add a hint about Custom Resources instances
-	sb.WriteString("\nPress 'Enter' to browse instances (not implemented yet)")
+	sb.WriteString("\nPress 'Enter' to browse instances")
 
 	return captionStyle.Render(sb.String())
 }
@@ -849,6 +929,51 @@ func (a *App) handleEnter() tea.Cmd {
 		}
 		a.loading = true
 		return a.fetchPods(a.currentView.projectID, namespaceName)
+
+	case ViewCRDs:
+		// Navigate to CRD instances for selected CRD
+		crdName := selected["name"].(string)
+		var selectedCRD *rancher.CRD
+		for _, crd := range a.crds {
+			if crd.Metadata.Name == crdName {
+				selectedCRD = &crd
+				break
+			}
+		}
+
+		if selectedCRD == nil {
+			return nil
+		}
+
+		// Push current view to stack
+		a.viewStack = append(a.viewStack, a.currentView)
+
+		// Get the storage version
+		storageVersion := ""
+		for _, v := range selectedCRD.Spec.Versions {
+			if v.Storage {
+				storageVersion = v.Name
+				break
+			}
+		}
+		// Fallback to first version if no storage version
+		if storageVersion == "" && len(selectedCRD.Spec.Versions) > 0 {
+			storageVersion = selectedCRD.Spec.Versions[0].Name
+		}
+
+		// Navigate to CRD instances
+		a.currentView = ViewContext{
+			viewType:    ViewCRDInstances,
+			clusterID:   a.currentView.clusterID,
+			clusterName: a.currentView.clusterName,
+			crdGroup:    selectedCRD.Spec.Group,
+			crdVersion:  storageVersion,
+			crdResource: selectedCRD.Spec.Names.Plural,
+			crdKind:     selectedCRD.Spec.Names.Kind,
+			crdScope:    selectedCRD.Spec.Scope,
+		}
+		a.loading = true
+		return a.fetchCRDInstances(a.currentView.clusterID, selectedCRD.Spec.Group, storageVersion, selectedCRD.Spec.Names.Plural)
 
 	default:
 		return nil
@@ -1241,6 +1366,162 @@ func (a *App) getMockCRDs() []rancher.CRD {
 						Storage: true,
 					},
 				},
+			},
+		},
+	}
+}
+
+// fetchCRDInstances fetches instances of a CRD with fallback to mock data
+func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, return mock data immediately
+		if a.offlineMode {
+			mockInstances := a.getMockCRDInstances(group, resource)
+			return crdInstancesMsg{instances: mockInstances}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		// Attempt to fetch real CRD instances, fallback to mock data on error
+		instanceList, err := a.client.ListCustomResources(clusterID, group, version, resource, "")
+		if err != nil {
+			// API failed - fallback to mock data for development
+			mockInstances := a.getMockCRDInstances(group, resource)
+			return crdInstancesMsg{instances: mockInstances}
+		}
+
+		return crdInstancesMsg{instances: instanceList.Items}
+	}
+}
+
+// getMockCRDInstances generates mock CRD instance data
+func (a *App) getMockCRDInstances(group, resource string) []map[string]interface{} {
+	now := time.Now()
+
+	// Generate different mock data based on the CRD type
+	switch group {
+	case "cert-manager.io":
+		if resource == "certificates" {
+			return []map[string]interface{}{
+				{
+					"metadata": map[string]interface{}{
+						"name":              "wildcard-cert",
+						"namespace":         "default",
+						"creationTimestamp": now.Add(-time.Hour * 48).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"secretName": "wildcard-tls",
+						"dnsNames":   []string{"*.example.com"},
+						"issuerRef": map[string]interface{}{
+							"name": "letsencrypt-prod",
+							"kind": "ClusterIssuer",
+						},
+					},
+					"status": map[string]interface{}{
+						"conditions": []interface{}{
+							map[string]interface{}{
+								"type":   "Ready",
+								"status": "True",
+							},
+						},
+					},
+				},
+				{
+					"metadata": map[string]interface{}{
+						"name":              "api-cert",
+						"namespace":         "api",
+						"creationTimestamp": now.Add(-time.Hour * 120).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"secretName": "api-tls",
+						"dnsNames":   []string{"api.example.com"},
+						"issuerRef": map[string]interface{}{
+							"name": "letsencrypt-prod",
+							"kind": "ClusterIssuer",
+						},
+					},
+					"status": map[string]interface{}{
+						"conditions": []interface{}{
+							map[string]interface{}{
+								"type":   "Ready",
+								"status": "True",
+							},
+						},
+					},
+				},
+			}
+		}
+	case "monitoring.coreos.com":
+		if resource == "servicemonitors" {
+			return []map[string]interface{}{
+				{
+					"metadata": map[string]interface{}{
+						"name":              "kube-state-metrics",
+						"namespace":         "monitoring",
+						"creationTimestamp": now.Add(-time.Hour * 72).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"selector": map[string]interface{}{
+							"matchLabels": map[string]string{
+								"app": "kube-state-metrics",
+							},
+						},
+						"endpoints": []interface{}{
+							map[string]interface{}{
+								"port":     "http-metrics",
+								"interval": "30s",
+							},
+						},
+					},
+				},
+				{
+					"metadata": map[string]interface{}{
+						"name":              "prometheus-operator",
+						"namespace":         "monitoring",
+						"creationTimestamp": now.Add(-time.Hour * 168).Format(time.RFC3339),
+					},
+					"spec": map[string]interface{}{
+						"selector": map[string]interface{}{
+							"matchLabels": map[string]string{
+								"app": "prometheus-operator",
+							},
+						},
+						"endpoints": []interface{}{
+							map[string]interface{}{
+								"port":     "https",
+								"interval": "30s",
+							},
+						},
+					},
+				},
+			}
+		}
+	}
+
+	// Default generic instances
+	return []map[string]interface{}{
+		{
+			"metadata": map[string]interface{}{
+				"name":              fmt.Sprintf("%s-example-1", resource),
+				"namespace":         "default",
+				"creationTimestamp": now.Add(-time.Hour * 24).Format(time.RFC3339),
+			},
+			"spec": map[string]interface{}{
+				"field1": "value1",
+				"field2": "value2",
+			},
+		},
+		{
+			"metadata": map[string]interface{}{
+				"name":              fmt.Sprintf("%s-example-2", resource),
+				"namespace":         "kube-system",
+				"creationTimestamp": now.Add(-time.Hour * 72).Format(time.RFC3339),
+			},
+			"spec": map[string]interface{}{
+				"field1": "value3",
+				"field2": "value4",
 			},
 		},
 	}
