@@ -258,3 +258,36 @@ func extractClusterID(projectID string) string {
 	}
 	return projectID
 }
+
+// GetPodDetails returns detailed information about a specific pod (via K8s proxy)
+func (c *Client) GetPodDetails(clusterID, namespace, name string) (*Pod, error) {
+	var result Pod
+	path := "/k8s/clusters/" + clusterID + "/api/v1/namespaces/" + namespace + "/pods/" + name
+
+	if err := c.getViaRoot(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// GetDeploymentDetails returns detailed information about a specific deployment (via K8s proxy)
+func (c *Client) GetDeploymentDetails(clusterID, namespace, name string) (*Deployment, error) {
+	var result Deployment
+	path := "/k8s/clusters/" + clusterID + "/apis/apps/v1/namespaces/" + namespace + "/deployments/" + name
+
+	if err := c.getViaRoot(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// GetServiceDetails returns detailed information about a specific service (via K8s proxy)
+func (c *Client) GetServiceDetails(clusterID, namespace, name string) (*Service, error) {
+	var result Service
+	path := "/k8s/clusters/" + clusterID + "/api/v1/namespaces/" + namespace + "/services/" + name
+
+	if err := c.getViaRoot(path, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}

@@ -639,6 +639,117 @@ func (a *App) updateTable() {
 				BorderRounded()
 		}
 
+	case ViewDeployments:
+		if len(a.deployments) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 35),
+				table.NewColumn("namespace", "NAMESPACE", 20),
+				table.NewColumn("ready", "READY", 12),
+				table.NewColumn("uptodate", "UP-TO-DATE", 12),
+				table.NewColumn("available", "AVAILABLE", 12),
+			}
+
+			rows := []table.Row{}
+			for _, deployment := range a.deployments {
+				namespaceName := "default"
+				if deployment.NamespaceID != "" {
+					if strings.Contains(deployment.NamespaceID, ":") {
+						parts := strings.Split(deployment.NamespaceID, ":")
+						if len(parts) > 1 {
+							namespaceName = parts[1]
+						}
+					} else {
+						namespaceName = deployment.NamespaceID
+					}
+				}
+
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":      deployment.Name,
+					"namespace": namespaceName,
+					"ready":     fmt.Sprintf("%d/%d", deployment.ReadyReplicas, deployment.Replicas),
+					"uptodate":  fmt.Sprintf("%d", deployment.UpToDateReplicas),
+					"available": fmt.Sprintf("%d", deployment.AvailableReplicas),
+				}))
+			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No deployments available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
+		}
+
+	case ViewServices:
+		if len(a.services) > 0 {
+			columns := []table.Column{
+				table.NewColumn("name", "NAME", 30),
+				table.NewColumn("namespace", "NAMESPACE", 20),
+				table.NewColumn("type", "TYPE", 15),
+				table.NewColumn("cluster_ip", "CLUSTER-IP", 18),
+				table.NewColumn("ports", "PORT(S)", 20),
+			}
+
+			rows := []table.Row{}
+			for _, service := range a.services {
+				namespaceName := "default"
+				if service.NamespaceID != "" {
+					if strings.Contains(service.NamespaceID, ":") {
+						parts := strings.Split(service.NamespaceID, ":")
+						if len(parts) > 1 {
+							namespaceName = parts[1]
+						}
+					} else {
+						namespaceName = service.NamespaceID
+					}
+				}
+
+				// Format ports
+				var portStrings []string
+				for _, port := range service.Ports {
+					portStr := fmt.Sprintf("%d/%s", port.Port, port.Protocol)
+					if port.NodePort > 0 {
+						portStr = fmt.Sprintf("%d:%d/%s", port.Port, port.NodePort, port.Protocol)
+					}
+					portStrings = append(portStrings, portStr)
+				}
+				portsDisplay := strings.Join(portStrings, ",")
+
+				rows = append(rows, table.NewRow(table.RowData{
+					"name":       service.Name,
+					"namespace":  namespaceName,
+					"type":       service.Kind,
+					"cluster_ip": service.ClusterIP,
+					"ports":      portsDisplay,
+				}))
+			}
+
+			a.table = table.New(columns).
+				WithRows(rows).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(true).
+				BorderRounded()
+		} else {
+			a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+				WithRows([]table.Row{table.NewRow(table.RowData{"message": "No services available"})}).
+				HeaderStyle(headerStyle).
+				WithBaseStyle(baseStyle).
+				WithPageSize(a.height - 8).
+				Focused(false).
+				BorderRounded()
+		}
+
 	case ViewCRDInstances:
 		if len(a.crdInstances) > 0 {
 			columns := []table.Column{
@@ -728,6 +839,12 @@ func (a *App) getBreadcrumb() string {
 	case ViewPods:
 		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
+	case ViewDeployments:
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
+	case ViewServices:
+		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewCRDs:
 		return fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
 	case ViewCRDInstances:
@@ -761,7 +878,15 @@ func (a *App) getStatusText() string {
 
 	case ViewPods:
 		count := len(a.pods)
-		status = fmt.Sprintf(" %s%d pods | Press 'd' to describe selected pod | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d pods | Press '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewDeployments:
+		count := len(a.deployments)
+		status = fmt.Sprintf(" %s%d deployments | Press '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+
+	case ViewServices:
+		count := len(a.services)
+		status = fmt.Sprintf(" %s%d services | Press '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
 
 	case ViewCRDs:
 		count := len(a.crds)
@@ -844,6 +969,10 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchNamespaces(a.currentView.clusterID, a.currentView.projectID)
 	case ViewPods:
 		return a.fetchPods(a.currentView.projectID, a.currentView.namespaceName)
+	case ViewDeployments:
+		return a.fetchDeployments(a.currentView.projectID, a.currentView.namespaceName)
+	case ViewServices:
+		return a.fetchServices(a.currentView.projectID, a.currentView.namespaceName)
 	case ViewCRDs:
 		return a.fetchCRDs(a.currentView.clusterID)
 	default:
@@ -1092,6 +1221,86 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 	}
 }
 
+// fetchDeployments fetches deployments with automatic fallback to mock data
+func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, skip API call and return mock data immediately
+		if a.offlineMode {
+			mockDeployments := a.getMockDeployments(namespaceName)
+			return deploymentsMsg{deployments: mockDeployments}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListDeployments(projectID)
+		if err != nil {
+			// API failed - gracefully fallback to mock data
+			mockDeployments := a.getMockDeployments(namespaceName)
+			return deploymentsMsg{deployments: mockDeployments}
+		}
+
+		// Filter deployments by namespace name
+		filteredDeployments := []rancher.Deployment{}
+		for _, deployment := range collection.Data {
+			deploymentNamespace := deployment.NamespaceID
+			if strings.Contains(deploymentNamespace, ":") {
+				parts := strings.Split(deploymentNamespace, ":")
+				if len(parts) > 1 {
+					deploymentNamespace = parts[1]
+				}
+			}
+
+			if deploymentNamespace == namespaceName {
+				filteredDeployments = append(filteredDeployments, deployment)
+			}
+		}
+
+		return deploymentsMsg{deployments: filteredDeployments}
+	}
+}
+
+// fetchServices fetches services with automatic fallback to mock data
+func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
+	return func() tea.Msg {
+		// If in offline mode, skip API call and return mock data immediately
+		if a.offlineMode {
+			mockServices := a.getMockServices(namespaceName)
+			return servicesMsg{services: mockServices}
+		}
+
+		if a.client == nil {
+			return errMsg{fmt.Errorf("client not initialized")}
+		}
+
+		collection, err := a.client.ListServices(projectID)
+		if err != nil {
+			// API failed - gracefully fallback to mock data
+			mockServices := a.getMockServices(namespaceName)
+			return servicesMsg{services: mockServices}
+		}
+
+		// Filter services by namespace name
+		filteredServices := []rancher.Service{}
+		for _, service := range collection.Data {
+			serviceNamespace := service.NamespaceID
+			if strings.Contains(serviceNamespace, ":") {
+				parts := strings.Split(serviceNamespace, ":")
+				if len(parts) > 1 {
+					serviceNamespace = parts[1]
+				}
+			}
+
+			if serviceNamespace == namespaceName {
+				filteredServices = append(filteredServices, service)
+			}
+		}
+
+		return servicesMsg{services: filteredServices}
+	}
+}
+
 // getMockPods generates realistic mock pod data for demonstration
 func (a *App) getMockPods(namespaceName string) []rancher.Pod {
 	mockPods := []rancher.Pod{
@@ -1156,6 +1365,103 @@ func (a *App) getMockPods(namespaceName string) []rancher.Pod {
 	}
 
 	return mockPods
+}
+
+// getMockDeployments generates realistic mock deployment data
+func (a *App) getMockDeployments(namespaceName string) []rancher.Deployment {
+	return []rancher.Deployment{
+		{
+			Name:              "nginx-deployment",
+			NamespaceID:       namespaceName,
+			State:             "active",
+			Replicas:          3,
+			AvailableReplicas: 3,
+			ReadyReplicas:     3,
+			UpToDateReplicas:  3,
+			Created:           time.Now().Add(-time.Hour * 24),
+		},
+		{
+			Name:              "redis-deployment",
+			NamespaceID:       namespaceName,
+			State:             "active",
+			Replicas:          2,
+			AvailableReplicas: 2,
+			ReadyReplicas:     2,
+			UpToDateReplicas:  2,
+			Created:           time.Now().Add(-time.Hour * 48),
+		},
+		{
+			Name:              "api-server",
+			NamespaceID:       namespaceName,
+			State:             "active",
+			Replicas:          5,
+			AvailableReplicas: 5,
+			ReadyReplicas:     5,
+			UpToDateReplicas:  5,
+			Created:           time.Now().Add(-time.Hour * 72),
+		},
+		{
+			Name:              "worker-deployment",
+			NamespaceID:       namespaceName,
+			State:             "updating",
+			Replicas:          4,
+			AvailableReplicas: 3,
+			ReadyReplicas:     3,
+			UpToDateReplicas:  1,
+			Created:           time.Now().Add(-time.Hour * 12),
+		},
+	}
+}
+
+// getMockServices generates realistic mock service data
+func (a *App) getMockServices(namespaceName string) []rancher.Service {
+	return []rancher.Service{
+		{
+			Name:        "nginx-service",
+			NamespaceID: namespaceName,
+			State:       "active",
+			ClusterIP:   "10.43.100.50",
+			Kind:        "ClusterIP",
+			Ports: []rancher.ServicePort{
+				{Name: "http", Protocol: "TCP", Port: 80, TargetPort: 8080},
+			},
+			Created: time.Now().Add(-time.Hour * 24),
+		},
+		{
+			Name:        "redis-service",
+			NamespaceID: namespaceName,
+			State:       "active",
+			ClusterIP:   "10.43.100.51",
+			Kind:        "ClusterIP",
+			Ports: []rancher.ServicePort{
+				{Name: "redis", Protocol: "TCP", Port: 6379, TargetPort: 6379},
+			},
+			Created: time.Now().Add(-time.Hour * 48),
+		},
+		{
+			Name:        "api-service",
+			NamespaceID: namespaceName,
+			State:       "active",
+			ClusterIP:   "10.43.100.52",
+			Kind:        "NodePort",
+			Ports: []rancher.ServicePort{
+				{Name: "api", Protocol: "TCP", Port: 8080, TargetPort: 8080, NodePort: 30080},
+			},
+			Created: time.Now().Add(-time.Hour * 72),
+		},
+		{
+			Name:        "loadbalancer-service",
+			NamespaceID: namespaceName,
+			State:       "active",
+			ClusterIP:   "10.43.100.53",
+			Kind:        "LoadBalancer",
+			Ports: []rancher.ServicePort{
+				{Name: "http", Protocol: "TCP", Port: 80, TargetPort: 8080},
+				{Name: "https", Protocol: "TCP", Port: 443, TargetPort: 8443},
+			},
+			Created: time.Now().Add(-time.Hour * 96),
+		},
+	}
 }
 
 // getMockClusters generates realistic mock cluster data
@@ -1725,9 +2031,11 @@ func (a *App) getCRDInstanceCount(group, resource string) int {
 	return len(mockInstances)
 }
 
-// isNamespaceResourceView - stub
+// isNamespaceResourceView returns true if the current view is a namespace-scoped resource view
 func (a *App) isNamespaceResourceView() bool {
-	return a.currentView.viewType == ViewPods
+	return a.currentView.viewType == ViewPods ||
+		a.currentView.viewType == ViewDeployments ||
+		a.currentView.viewType == ViewServices
 }
 
 // Messages
