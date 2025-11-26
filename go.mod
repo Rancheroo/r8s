@@ -1,6 +1,6 @@
 module github.com/4realtech/r9s
 
-go 1.25
+go 1.23
 
 require (
 	github.com/charmbracelet/bubbletea v1.2.4

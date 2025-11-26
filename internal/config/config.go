@@ -1,3 +1,6 @@
+// Package config handles application configuration management, including multi-profile
+// support, credential handling, and configuration file persistence. It uses YAML for
+// configuration storage and supports both bearer token and API key/secret authentication.
 package config
 
 import (

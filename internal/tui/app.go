@@ -1,3 +1,7 @@
+// Package tui implements the terminal user interface for r9s using the Bubble Tea framework.
+// It provides an interactive, keyboard-driven interface for navigating Rancher clusters, projects,
+// namespaces, and Kubernetes resources. The package handles view rendering, state management,
+// and user input processing.
 package tui
 
 import (
@@ -2066,8 +2070,8 @@ func (a *App) getPodNodeName(pod rancher.Pod) string {
 	if pod.Node != "" {
 		return pod.Node
 	}
-	if pod.HostnameI != "" {
-		return pod.HostnameI
+	if pod.Hostname != "" {
+		return pod.Hostname
 	}
 	// No node information available
 	return ""

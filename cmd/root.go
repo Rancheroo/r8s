@@ -1,3 +1,5 @@
+// Package cmd implements the CLI commands and flags for r9s using the Cobra framework.
+// It provides the root command, version information, and configuration management.
 package cmd
 
 import (

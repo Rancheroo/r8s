@@ -1,3 +1,7 @@
+// Package rancher provides the HTTP API client for communicating with Rancher servers.
+// It handles authentication via bearer tokens, makes RESTful API calls to Rancher v3 endpoints,
+// and provides access to Kubernetes resources through Rancher's proxy. The client is safe for
+// concurrent use.
 package rancher
 
 import (
