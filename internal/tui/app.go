@@ -1398,7 +1398,7 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 	}
 }
 
-// fetchServices fetches services with automatic fallback to mock data
+// fetchServices fetches services from the Rancher API
 func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
 		// If in offline mode, skip API call and return mock data immediately
@@ -1413,9 +1413,8 @@ func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 
 		collection, err := a.client.ListServices(projectID)
 		if err != nil {
-			// API failed - gracefully fallback to mock data
-			mockServices := a.getMockServices(namespaceName)
-			return servicesMsg{services: mockServices}
+			// In online mode, return the error - don't fallback to mock data
+			return errMsg{fmt.Errorf("failed to fetch services: %w", err)}
 		}
 
 		// Filter services by namespace name

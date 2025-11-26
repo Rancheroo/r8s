@@ -207,7 +207,27 @@ type DeploymentCollection struct {
 	Data []Deployment `json:"data"`
 }
 
-// Deployment represents a Kubernetes deployment
+// Deployment represents a Kubernetes deployment from the Rancher API.
+//
+// Rancher API Field Mapping:
+// The API may return replica count data in different formats depending on
+// the Rancher version and API endpoint used:
+//
+//  1. Nested "scale" object (preferred):
+//     - scale.scale: Desired replica count
+//     - scale.ready: Ready replica count
+//     - scale.total: Total replica count
+//
+//  2. Direct fields (fallback):
+//     - replicas: Desired replica count
+//     - readyReplicas: Ready replica count
+//     - availableReplicas: Available replica count
+//     - updatedReplicas OR upToDateReplicas: Updated replica count
+//
+// The TUI display logic in app.go uses a multi-tier fallback strategy:
+// First tries the Scale object, then falls back to direct fields, and
+// tries both field name variations for updated replicas. This ensures
+// compatibility across different Rancher API versions and response formats.
 type Deployment struct {
 	ID          string `json:"id"`
 	Type        string `json:"type"`
