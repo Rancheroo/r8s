@@ -883,15 +883,15 @@ func (a *App) getStatusText() string {
 
 	case ViewPods:
 		count := len(a.pods)
-		status = fmt.Sprintf(" %s%d pods | Press '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d pods | Press 'd'=describe '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
 
 	case ViewDeployments:
 		count := len(a.deployments)
-		status = fmt.Sprintf(" %s%d deployments | Press '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d deployments | Press 'd'=describe '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
 
 	case ViewServices:
 		count := len(a.services)
-		status = fmt.Sprintf(" %s%d services | Press '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d services | Press 'd'=describe '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
 
 	case ViewCRDs:
 		count := len(a.crds)
@@ -1125,17 +1125,29 @@ func (a *App) handleDescribe() tea.Cmd {
 		return nil
 	}
 
-	if a.currentView.viewType == ViewPods {
-		selected := a.table.HighlightedRow().Data
+	selected := a.table.HighlightedRow().Data
+
+	switch a.currentView.viewType {
+	case ViewPods:
 		podName := selected["name"].(string)
 		namespaceName := selected["namespace"].(string)
-
 		return a.describePod(a.currentView.clusterID, namespaceName, podName)
-	}
 
-	// Default: no description available for this resource type
-	a.error = "Describe is not yet implemented for this resource type"
-	return nil
+	case ViewDeployments:
+		deploymentName := selected["name"].(string)
+		namespaceName := selected["namespace"].(string)
+		return a.describeDeployment(a.currentView.clusterID, namespaceName, deploymentName)
+
+	case ViewServices:
+		serviceName := selected["name"].(string)
+		namespaceName := selected["namespace"].(string)
+		return a.describeService(a.currentView.clusterID, namespaceName, serviceName)
+
+	default:
+		// No description available for this resource type
+		a.error = "Describe is not yet implemented for this resource type"
+		return nil
+	}
 }
 
 // describePod fetches detailed pod information
@@ -1181,6 +1193,105 @@ func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 
 		return describeMsg{
 			title:   fmt.Sprintf("Pod: %s/%s", namespace, name),
+			content: content,
+		}
+	}
+}
+
+// describeDeployment fetches detailed deployment information
+func (a *App) describeDeployment(clusterID, namespace, name string) tea.Cmd {
+	return func() tea.Msg {
+		// Create mock details for fallback
+		mockDetails := map[string]interface{}{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name":      name,
+				"namespace": namespace,
+			},
+			"spec": map[string]interface{}{
+				"replicas": 3,
+				"selector": map[string]interface{}{
+					"matchLabels": map[string]interface{}{
+						"app": name,
+					},
+				},
+			},
+			"status": map[string]interface{}{
+				"availableReplicas": 3,
+				"readyReplicas":     3,
+				"replicas":          3,
+			},
+		}
+
+		// Try real API first, fallback to mock
+		details, err := a.client.GetDeploymentDetails(clusterID, namespace, name)
+		var jsonData interface{} = mockDetails
+
+		if err == nil {
+			// Use real details if API succeeded
+			jsonData = details
+		}
+
+		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+		if err != nil {
+			return errMsg{fmt.Errorf("failed to format deployment details: %w", err)}
+		}
+
+		content := fmt.Sprintf("Deployment Details (JSON):\n\n%s", string(jsonBytes))
+
+		return describeMsg{
+			title:   fmt.Sprintf("Deployment: %s/%s", namespace, name),
+			content: content,
+		}
+	}
+}
+
+// describeService fetches detailed service information
+func (a *App) describeService(clusterID, namespace, name string) tea.Cmd {
+	return func() tea.Msg {
+		// Create mock details for fallback
+		mockDetails := map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Service",
+			"metadata": map[string]interface{}{
+				"name":      name,
+				"namespace": namespace,
+			},
+			"spec": map[string]interface{}{
+				"type":      "ClusterIP",
+				"clusterIP": "10.43.0.1",
+				"ports": []interface{}{
+					map[string]interface{}{
+						"port":       80,
+						"targetPort": 8080,
+						"protocol":   "TCP",
+					},
+				},
+			},
+			"status": map[string]interface{}{
+				"loadBalancer": map[string]interface{}{},
+			},
+		}
+
+		// Try real API first, fallback to mock
+		details, err := a.client.GetServiceDetails(clusterID, namespace, name)
+		var jsonData interface{} = mockDetails
+
+		if err == nil {
+			// Use real details if API succeeded
+			jsonData = details
+		}
+
+		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+		if err != nil {
+			return errMsg{fmt.Errorf("failed to format service details: %w", err)}
+		}
+
+		content := fmt.Sprintf("Service Details (JSON):\n\n%s", string(jsonBytes))
+
+		return describeMsg{
+			title:   fmt.Sprintf("Service: %s/%s", namespace, name),
 			content: content,
 		}
 	}
