@@ -1,6 +1,9 @@
 package rancher
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Sort represents Rancher API sort options
 type Sort struct {
@@ -218,15 +221,17 @@ type DeploymentCollection struct {
 //     - scale.ready: Ready replica count
 //     - scale.total: Total replica count
 //
-//  2. Direct fields (fallback):
+//  2. Scale as number (alternative):
+//     - scale: Just the desired replica count as a number
+//
+//  3. Direct fields (fallback):
 //     - replicas: Desired replica count
 //     - readyReplicas: Ready replica count
 //     - availableReplicas: Available replica count
 //     - updatedReplicas OR upToDateReplicas: Updated replica count
 //
-// The TUI display logic in app.go uses a multi-tier fallback strategy:
-// First tries the Scale object, then falls back to direct fields, and
-// tries both field name variations for updated replicas. This ensures
+// The custom UnmarshalJSON method handles both object and number formats for scale.
+// The TUI display logic in app.go uses a multi-tier fallback strategy to ensure
 // compatibility across different Rancher API versions and response formats.
 type Deployment struct {
 	ID          string `json:"id"`
@@ -234,9 +239,14 @@ type Deployment struct {
 	Name        string `json:"name"`
 	NamespaceID string `json:"namespaceId"`
 	State       string `json:"state"`
-	// Replica counts from the workload resource
-	Scale *DeploymentScale `json:"scale,omitempty"`
-	// Alternative: Try direct fields if scale is not available
+
+	// Use RawMessage to handle both number and object formats
+	ScaleRaw json.RawMessage `json:"scale,omitempty"`
+
+	// Parsed scale data (populated after unmarshaling by UnmarshalJSON)
+	Scale *DeploymentScale `json:"-"`
+
+	// Alternative: Direct fields if scale is not available
 	Replicas          int               `json:"replicas"`
 	AvailableReplicas int               `json:"availableReplicas"`
 	ReadyReplicas     int               `json:"readyReplicas"`
@@ -247,6 +257,45 @@ type Deployment struct {
 	Annotations       map[string]string `json:"annotations,omitempty"`
 	Links             map[string]string `json:"links"`
 	Actions           map[string]string `json:"actions"`
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for Deployment.
+// It handles the scale field which can be either a number or an object.
+func (d *Deployment) UnmarshalJSON(data []byte) error {
+	// Define a temporary type to avoid recursion
+	type Alias Deployment
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(d),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// Parse the scale field
+	if len(d.ScaleRaw) > 0 {
+		// Try to unmarshal as object first
+		var scaleObj DeploymentScale
+		if err := json.Unmarshal(d.ScaleRaw, &scaleObj); err == nil {
+			d.Scale = &scaleObj
+		} else {
+			// Try as number
+			var scaleNum int
+			if err := json.Unmarshal(d.ScaleRaw, &scaleNum); err == nil {
+				// Convert number to Scale object
+				d.Scale = &DeploymentScale{
+					Scale: scaleNum,
+					Ready: scaleNum, // Assume ready = scale for number format
+					Total: scaleNum,
+				}
+			}
+			// If both fail, Scale remains nil and fallback fields will be used
+		}
+	}
+
+	return nil
 }
 
 // DeploymentScale represents the scale information for a deployment
