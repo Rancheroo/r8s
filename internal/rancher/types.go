@@ -209,20 +209,31 @@ type DeploymentCollection struct {
 
 // Deployment represents a Kubernetes deployment
 type Deployment struct {
-	ID                string            `json:"id"`
-	Type              string            `json:"type"`
-	Name              string            `json:"name"`
-	NamespaceID       string            `json:"namespaceId"`
-	State             string            `json:"state"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	NamespaceID string `json:"namespaceId"`
+	State       string `json:"state"`
+	// Replica counts from the workload resource
+	Scale *DeploymentScale `json:"scale,omitempty"`
+	// Alternative: Try direct fields if scale is not available
 	Replicas          int               `json:"replicas"`
 	AvailableReplicas int               `json:"availableReplicas"`
 	ReadyReplicas     int               `json:"readyReplicas"`
 	UpToDateReplicas  int               `json:"updatedReplicas"`
+	UpdatedReplicas   int               `json:"upToDateReplicas"` // Alternative field name
 	Created           time.Time         `json:"created"`
 	Labels            map[string]string `json:"labels,omitempty"`
 	Annotations       map[string]string `json:"annotations,omitempty"`
 	Links             map[string]string `json:"links"`
 	Actions           map[string]string `json:"actions"`
+}
+
+// DeploymentScale represents the scale information for a deployment
+type DeploymentScale struct {
+	Scale int `json:"scale"` // Desired replicas
+	Ready int `json:"ready"` // Ready replicas
+	Total int `json:"total"` // Total replicas
 }
 
 // ServiceCollection represents a collection of services

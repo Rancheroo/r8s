@@ -668,12 +668,34 @@ func (a *App) updateTable() {
 					}
 				}
 
+				// Get replica counts - prefer Scale field, fallback to direct fields
+				var totalReplicas, readyReplicas, updatedReplicas, availableReplicas int
+
+				if deployment.Scale != nil {
+					// Use Scale field if available
+					totalReplicas = deployment.Scale.Scale
+					readyReplicas = deployment.Scale.Ready
+					availableReplicas = deployment.Scale.Ready // Scale.Ready represents available
+					updatedReplicas = deployment.Scale.Ready   // Assume updated = ready
+				} else {
+					// Fallback to direct fields
+					totalReplicas = deployment.Replicas
+					readyReplicas = deployment.ReadyReplicas
+					availableReplicas = deployment.AvailableReplicas
+					// Try both possible field names for updated replicas
+					if deployment.UpToDateReplicas > 0 {
+						updatedReplicas = deployment.UpToDateReplicas
+					} else {
+						updatedReplicas = deployment.UpdatedReplicas
+					}
+				}
+
 				rows = append(rows, table.NewRow(table.RowData{
 					"name":      deployment.Name,
 					"namespace": namespaceName,
-					"ready":     fmt.Sprintf("%d/%d", deployment.ReadyReplicas, deployment.Replicas),
-					"uptodate":  fmt.Sprintf("%d", deployment.UpToDateReplicas),
-					"available": fmt.Sprintf("%d", deployment.AvailableReplicas),
+					"ready":     fmt.Sprintf("%d/%d", readyReplicas, totalReplicas),
+					"uptodate":  fmt.Sprintf("%d", updatedReplicas),
+					"available": fmt.Sprintf("%d", availableReplicas),
 				}))
 			}
 
