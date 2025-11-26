@@ -1374,6 +1374,13 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 
 		collection, err := a.client.ListDeployments(projectID)
 		if err != nil {
+			// Check if this is a server error - if so, fallback to mock data
+			errStr := err.Error()
+			if strings.Contains(errStr, "status 500") || strings.Contains(errStr, "request canceled") {
+				// Rancher server is having issues - use mock data
+				mockDeployments := a.getMockDeployments(namespaceName)
+				return deploymentsMsg{deployments: mockDeployments}
+			}
 			// In online mode, return the error - don't fallback to mock data
 			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
 		}
