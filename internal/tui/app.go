@@ -1359,7 +1359,7 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 	}
 }
 
-// fetchDeployments fetches deployments with automatic fallback to mock data
+// fetchDeployments fetches deployments from the Rancher API
 func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
 		// If in offline mode, skip API call and return mock data immediately
@@ -1374,9 +1374,8 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 
 		collection, err := a.client.ListDeployments(projectID)
 		if err != nil {
-			// API failed - gracefully fallback to mock data
-			mockDeployments := a.getMockDeployments(namespaceName)
-			return deploymentsMsg{deployments: mockDeployments}
+			// In online mode, return the error - don't fallback to mock data
+			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
 		}
 
 		// Filter deployments by namespace name
