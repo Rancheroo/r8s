@@ -2,6 +2,7 @@ package bundle
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -51,10 +52,22 @@ func Load(opts ImportOptions) (*Bundle, error) {
 
 	// Parse kubectl resources (ignore errors - these are optional)
 	// Storing as interface{} to avoid import cycle - will be type-asserted in datasource
-	crds, _ := ParseCRDs(extractPath)
-	deployments, _ := ParseDeployments(extractPath)
-	services, _ := ParseServices(extractPath)
-	namespaces, _ := ParseNamespaces(extractPath)
+	crds, err := ParseCRDs(extractPath)
+	if err != nil {
+		log.Printf("Warning: Failed to parse CRDs from bundle: %v", err)
+	}
+	deployments, err := ParseDeployments(extractPath)
+	if err != nil {
+		log.Printf("Warning: Failed to parse Deployments from bundle: %v", err)
+	}
+	services, err := ParseServices(extractPath)
+	if err != nil {
+		log.Printf("Warning: Failed to parse Services from bundle: %v", err)
+	}
+	namespaces, err := ParseNamespaces(extractPath)
+	if err != nil {
+		log.Printf("Warning: Failed to parse Namespaces from bundle: %v", err)
+	}
 
 	// Get bundle file size
 	stat, _ := os.Stat(opts.Path)

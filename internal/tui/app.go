@@ -1744,12 +1744,13 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 		// Try to get deployments from data source first
 		if a.dataSource != nil {
 			deployments, err := a.dataSource.GetDeployments(projectID, namespaceName)
-			if err == nil && len(deployments) > 0 {
+			if err == nil {
+				// Return even if empty - empty list is valid bundle data
 				return deploymentsMsg{deployments: deployments}
 			}
 		}
 
-		// Fallback to mock data
+		// Fallback to mock data only on error
 		mockDeployments := a.getMockDeployments(namespaceName)
 		return deploymentsMsg{deployments: mockDeployments}
 	}
@@ -1761,12 +1762,13 @@ func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 		// Try to get services from data source first
 		if a.dataSource != nil {
 			services, err := a.dataSource.GetServices(projectID, namespaceName)
-			if err == nil && len(services) > 0 {
+			if err == nil {
+				// Return even if empty - empty list is valid bundle data
 				return servicesMsg{services: services}
 			}
 		}
 
-		// Fallback to mock data
+		// Fallback to mock data only on error
 		mockServices := a.getMockServices(namespaceName)
 		return servicesMsg{services: mockServices}
 	}
@@ -2037,12 +2039,13 @@ func (a *App) fetchCRDs(clusterID string) tea.Cmd {
 		// Try to get CRDs from data source first
 		if a.dataSource != nil {
 			crds, err := a.dataSource.GetCRDs(clusterID)
-			if err == nil && len(crds) > 0 {
+			if err == nil {
+				// Return even if empty - empty list is valid bundle data
 				return crdsMsg{crds: crds}
 			}
 		}
 
-		// Fallback to mock data
+		// Fallback to mock data only on error
 		mockCRDs := a.getMockCRDs()
 		return crdsMsg{crds: mockCRDs}
 	}
@@ -2416,14 +2419,15 @@ func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 		// Try to get namespaces from data source first
 		if a.dataSource != nil {
 			namespaces, err := a.dataSource.GetNamespaces(clusterID, projectID)
-			if err == nil && len(namespaces) > 0 {
+			if err == nil {
+				// Return even if empty - empty list is valid bundle data
 				// Update namespace counts for project view
 				a.updateNamespaceCounts(namespaces)
 				return namespacesMsg{namespaces: namespaces}
 			}
 		}
 
-		// Fallback to mock data
+		// Fallback to mock data only on error
 		mockNamespaces := a.getMockNamespaces(clusterID, projectID)
 		a.updateNamespaceCounts(mockNamespaces)
 		return namespacesMsg{namespaces: mockNamespaces}
