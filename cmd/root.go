@@ -100,6 +100,8 @@ var configCmd = &cobra.Command{
 		fmt.Println("  init   - Initialize a new config file")
 		fmt.Println("  view   - View current configuration")
 		fmt.Println("  edit   - Edit configuration in $EDITOR")
+		fmt.Println("")
+		fmt.Println("Run 'r8s config <command> --help' for more information")
 	},
 }
 

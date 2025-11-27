@@ -170,6 +170,69 @@ func createDefaultConfig(cfgFile string) (*Config, error) {
 	return cfg, nil
 }
 
+// InitConfig creates a new configuration file with helpful template
+// This is exported for use by the config init command
+func InitConfig(cfgFile string) error {
+	// Determine config file path
+	if cfgFile == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("failed to get home directory: %w", err)
+		}
+		cfgFile = filepath.Join(home, ".r8s", "config.yaml")
+	}
+
+	// Check if file already exists
+	if _, err := os.Stat(cfgFile); err == nil {
+		return fmt.Errorf("config file already exists at %s", cfgFile)
+	}
+
+	// Create config directory
+	dir := filepath.Dir(cfgFile)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	// Create template config with helpful comments
+	template := `# r8s Configuration File
+# Edit this file to add your Rancher credentials
+
+currentProfile: default
+profiles:
+  - name: default
+    url: https://rancher.example.com
+    # Use bearerToken OR accessKey/secretKey (not both)
+    bearerToken: ""  # Format: token-xxxxx:yyyyyyyy
+    # accessKey: ""
+    # secretKey: ""
+    insecure: false  # Set to true to skip TLS verification
+
+# Optional settings
+refreshInterval: 5s
+logLevel: info
+`
+
+	if err := os.WriteFile(cfgFile, []byte(template), 0600); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
+}
+
+// GetConfigPath returns the path to the config file
+func GetConfigPath(cfgFile string) string {
+	if cfgFile != "" {
+		return cfgFile
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	return filepath.Join(home, ".r8s", "config.yaml")
+}
+
 // Save saves the configuration to file
 func (c *Config) Save(cfgFile string) error {
 	if cfgFile == "" {
