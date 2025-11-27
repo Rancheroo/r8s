@@ -72,16 +72,26 @@ go build -o bin/r8s main.go
 
 ## 🚀 Quick Start
 
-### 1. First Run - Create Configuration
-
-On first run, r8s creates a default config template:
+### Step 1: Build r8s
 
 ```bash
-./bin/r8s
-# Creates ~/.r8s/config.yaml
+git clone https://github.com/Rancheroo/r8s.git
+cd r8s
+make build
 ```
 
-### 2. Get Rancher API Credentials
+### Step 2: Initialize Configuration
+
+```bash
+# Create config file with template
+./bin/r8s config init
+
+# Output:
+# ✓ Created config file at /home/user/.r8s/config.yaml
+# Next steps: Edit the config file and add your Rancher credentials
+```
+
+### Step 3: Get Rancher API Credentials
 
 #### Option A: Create API Key in Rancher UI
 
@@ -100,9 +110,19 @@ On first run, r8s creates a default config template:
 
 If you already have a bearer token, use that directly.
 
-### 3. Configure r8s
+### Step 4: Add Your Credentials
 
-Edit `~/.r8s/config.yaml`:
+Edit the config file created in Step 2:
+
+```bash
+# Option 1: Edit in your preferred editor
+r8s config edit
+
+# Option 2: Edit manually
+vim ~/.r8s/config.yaml
+```
+
+Update with your credentials:
 
 ```yaml
 current_profile: production
@@ -126,15 +146,34 @@ profiles:
     bearer_token: token-yyyyy:staging-secret
 ```
 
-### 4. Launch r8s
+### Step 5: Verify Configuration
 
 ```bash
-# Start with default profile
-./bin/r8s
+# View your config (tokens are masked for security)
+r8s config view
 
-# Or specify a profile
-./bin/r8s --profile development
+# Output shows:
+# Current Profile: default
+# Profiles (1):
+#   default:
+#     URL: https://rancher.example.com
+#     Token: ******** (configured)
 ```
+
+### Step 6: Launch r8s
+
+```bash
+# Start TUI with default profile
+r8s tui
+
+# Or use demo mode (no config needed)
+r8s tui --mockdata
+
+# Or specify a different profile
+r8s tui --profile development
+```
+
+**That's it!** You're now browsing your Rancher clusters.
 
 ---
 
@@ -284,6 +323,24 @@ This allows:
 ---
 
 ## 🔧 Configuration
+
+### Configuration Commands
+
+r8s provides helpful commands for managing your configuration:
+
+```bash
+# Initialize new config file
+r8s config init
+
+# View current configuration (tokens masked)
+r8s config view
+
+# Edit config in your $EDITOR
+r8s config edit
+
+# Validate config syntax
+r8s config validate
+```
 
 ### Config File Location
 
