@@ -48,7 +48,7 @@ func TestNewApp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app := NewApp(tt.config)
+			app := NewApp(tt.config, "") // Empty bundle path for live mode
 
 			if app == nil {
 				t.Fatal("NewApp returned nil")
@@ -527,7 +527,7 @@ func createTestApp(t *testing.T) *App {
 		},
 	}
 
-	app := NewApp(cfg)
+	app := NewApp(cfg, "") // Empty bundle path for live mode tests
 	if app == nil {
 		t.Fatal("Failed to create test app")
 	}

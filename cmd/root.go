@@ -13,11 +13,12 @@ import (
 )
 
 var (
-	cfgFile     string
-	profile     string
-	insecure    bool
-	contextName string
-	namespace   string
+	cfgFile       string
+	profile       string
+	insecure      bool
+	contextName   string
+	namespace     string
+	tuiBundlePath string // Path to bundle for TUI offline mode
 
 	versionInfo struct {
 		Version string
@@ -51,8 +52,8 @@ along with interactive navigation of projects, namespaces, and Rancher resources
 			cfg.Namespace = namespace
 		}
 
-		// Create and start TUI
-		app := tui.NewApp(cfg)
+		// Create and start TUI with bundle path if provided
+		app := tui.NewApp(cfg, tuiBundlePath)
 		p := tea.NewProgram(
 			app,
 			tea.WithAltScreen(),
@@ -79,6 +80,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip TLS certificate verification")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
+	rootCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to bundle for offline mode")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)

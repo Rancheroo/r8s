@@ -56,10 +56,11 @@ type ViewContext struct {
 
 // App represents the main TUI application
 type App struct {
-	config *config.Config
-	client *rancher.Client
-	width  int
-	height int
+	config     *config.Config
+	client     *rancher.Client
+	dataSource DataSource // Abstracted data source (live or bundle)
+	width      int
+	height     int
 
 	// Navigation state
 	viewStack   []ViewContext
@@ -102,11 +103,13 @@ type App struct {
 	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
 
 	// App state
-	offlineMode bool // Flag to indicate running without live Rancher connection
+	offlineMode bool   // Flag to indicate running without live Rancher connection
+	bundleMode  bool   // Flag to indicate bundle mode
+	bundlePath  string // Path to loaded bundle
 }
 
 // NewApp creates a new TUI application
-func NewApp(cfg *config.Config) *App {
+func NewApp(cfg *config.Config, bundlePath string) *App {
 	// Get current profile
 	profile, err := cfg.GetCurrentProfile()
 	if err != nil {
@@ -116,29 +119,51 @@ func NewApp(cfg *config.Config) *App {
 		}
 	}
 
-	// Create Rancher client
-	client := rancher.NewClient(
-		profile.URL,
-		profile.GetToken(),
-		cfg.Insecure || profile.Insecure,
-	)
+	// Determine data source based on bundle path
+	var dataSource DataSource
+	var client *rancher.Client
+	var bundleMode bool
+	var offlineMode bool
 
-	// Test connection - but don't fail if it doesn't work immediately
-	offlineMode := false
-	if err := client.TestConnection(); err != nil {
-		// Connection failed - enable offline mode with graceful fallback
-		// This allows development and testing without live Rancher access
+	if bundlePath != "" {
+		// Bundle mode - load bundle as data source
+		ds, err := NewBundleDataSource(bundlePath)
+		if err != nil {
+			return &App{
+				config: cfg,
+				error:  fmt.Sprintf("Failed to load bundle: %v", err),
+			}
+		}
+		dataSource = ds
+		bundleMode = true
 		offlineMode = true
+	} else {
+		// Live mode - use Rancher client
+		client = rancher.NewClient(
+			profile.URL,
+			profile.GetToken(),
+			cfg.Insecure || profile.Insecure,
+		)
+
+		// Test connection
+		if err := client.TestConnection(); err != nil {
+			// Connection failed - enable offline mode with graceful fallback
+			offlineMode = true
+		}
+
+		dataSource = NewLiveDataSource(client, offlineMode)
 	}
 
 	// Always start at Clusters view regardless of connection status
-	// Offline mode only affects data fallback, not navigation
 	var initialView ViewContext = ViewContext{viewType: ViewClusters}
 
 	return &App{
 		config:      cfg,
 		client:      client,
+		dataSource:  dataSource,
 		offlineMode: offlineMode,
+		bundleMode:  bundleMode,
+		bundlePath:  bundlePath,
 		loading:     true,
 		currentView: initialView,
 	}
