@@ -179,6 +179,34 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return a, nil
 		}
 
+		// FIX BUG #7: Handle search input BEFORE regular hotkeys
+		// This prevents hotkeys from triggering when typing in search mode
+		if a.searchMode && a.currentView.viewType == ViewLogs {
+			switch msg.String() {
+			case "esc":
+				a.searchMode = false
+				a.searchQuery = ""
+				a.searchMatches = nil
+				a.currentMatch = -1
+				return a, nil
+			case "enter":
+				a.searchMode = false
+				a.performSearch()
+				return a, nil
+			case "backspace":
+				if len(a.searchQuery) > 0 {
+					a.searchQuery = a.searchQuery[:len(a.searchQuery)-1]
+				}
+				return a, nil
+			default:
+				// Add character to search query
+				if len(msg.String()) == 1 {
+					a.searchQuery += msg.String()
+				}
+				return a, nil
+			}
+		}
+
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return a, tea.Quit
@@ -198,8 +226,23 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.describeTitle = ""
 				return a, nil
 			}
+			// FIX 5: Check search mode BEFORE view stack (priority fix)
+			if a.searchMode {
+				// Exit search mode without exiting view
+				a.searchMode = false
+				a.searchQuery = ""
+				a.searchMatches = nil
+				a.currentMatch = -1
+				return a, nil
+			}
 			if len(a.viewStack) > 0 {
 				// Pop from view stack
+				// FIX 6: Clean search state when exiting view
+				a.searchMode = false
+				a.searchQuery = ""
+				a.searchMatches = nil
+				a.currentMatch = -1
+
 				a.currentView = a.viewStack[len(a.viewStack)-1]
 				a.viewStack = a.viewStack[:len(a.viewStack)-1]
 				a.loading = true
@@ -337,6 +380,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Next match in search
 			if a.currentView.viewType == ViewLogs && len(a.searchMatches) > 0 {
 				a.currentMatch = (a.currentMatch + 1) % len(a.searchMatches)
+				a.logViewport.SetContent(a.renderLogsWithColors())
 				a.logViewport.GotoTop()
 				for i := 0; i < a.searchMatches[a.currentMatch]; i++ {
 					a.logViewport.LineDown(1)
@@ -350,36 +394,10 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if a.currentMatch < 0 {
 					a.currentMatch = len(a.searchMatches) - 1
 				}
+				a.logViewport.SetContent(a.renderLogsWithColors())
 				a.logViewport.GotoTop()
 				for i := 0; i < a.searchMatches[a.currentMatch]; i++ {
 					a.logViewport.LineDown(1)
-				}
-				return a, nil
-			}
-		}
-
-		// Handle search input when in search mode
-		if a.searchMode {
-			switch msg.String() {
-			case "esc":
-				a.searchMode = false
-				a.searchQuery = ""
-				a.searchMatches = nil
-				a.currentMatch = -1
-				return a, nil
-			case "enter":
-				a.searchMode = false
-				a.performSearch()
-				return a, nil
-			case "backspace":
-				if len(a.searchQuery) > 0 {
-					a.searchQuery = a.searchQuery[:len(a.searchQuery)-1]
-				}
-				return a, nil
-			default:
-				// Add character to search query
-				if len(msg.String()) == 1 {
-					a.searchQuery += msg.String()
 				}
 				return a, nil
 			}
@@ -451,9 +469,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.logs = msg.logs
 		a.error = ""
 
-		// Initialize viewport for logs view
+		// Initialize viewport for logs view with colored content
 		a.logViewport = viewport.New(a.width-4, a.height-6)
-		a.logViewport.SetContent(strings.Join(a.logs, "\n"))
+		a.logViewport.SetContent(a.renderLogsWithColors())
 
 	case errMsg:
 		a.loading = false
@@ -586,8 +604,10 @@ func (a *App) renderLogsView() string {
 	if a.searchMode {
 		statusText = fmt.Sprintf(" Search: %s_ | Press 'Enter' to search, 'Esc' to cancel ", a.searchQuery)
 	} else if len(a.searchMatches) > 0 {
-		statusText = fmt.Sprintf(" %d log lines | Match %d/%d | Press 'n'=next 'N'=prev '/' =new search | 'Esc' to go back | 'q' to quit ",
-			len(a.logs), a.currentMatch+1, len(a.searchMatches))
+		// Show visible log count (respecting filters) in search results
+		visibleLogs := a.getVisibleLogs()
+		statusText = fmt.Sprintf(" %d lines | Match %d/%d | 'n'=next 'N'=prev '/'=new Esc=clear | q=quit ",
+			len(visibleLogs), a.currentMatch+1, len(a.searchMatches))
 	} else {
 		statusText = a.getStatusText()
 	}
@@ -1115,7 +1135,9 @@ func (a *App) getStatusText() string {
 		status = fmt.Sprintf(" %s%d %s instances | Press 'd' to describe (soon) | '?' for help | 'q' to quit ", offlinePrefix, count, a.currentView.crdKind)
 
 	case ViewLogs:
-		count := len(a.logs)
+		// FIX 4: Show visible log count instead of total count
+		visibleLogs := a.getVisibleLogs()
+		count := len(visibleLogs)
 		// Build dynamic status based on active features
 		parts := []string{fmt.Sprintf("%d lines", count)}
 
@@ -1531,24 +1553,59 @@ func (a *App) describeService(clusterID, namespace, name string) tea.Cmd {
 // fetchLogs fetches logs for a pod with mock data fallback
 func (a *App) fetchLogs(clusterID, namespace, podName string) tea.Cmd {
 	return func() tea.Msg {
-		// Generate realistic mock logs
+		// Generate realistic mock logs - larger dataset for better search testing
 		mockLogs := []string{
-			"2025-11-27T16:30:00Z [INFO] Application starting...",
-			"2025-11-27T16:30:01Z [INFO] Connecting to database at db:5432",
-			"2025-11-27T16:30:02Z [INFO] Database connection established",
-			"2025-11-27T16:30:03Z [INFO] Loading configuration from /app/config.yaml",
-			"2025-11-27T16:30:04Z [INFO] Server listening on port 8080",
-			"2025-11-27T16:30:15Z [DEBUG] Health check endpoint accessed",
-			"2025-11-27T16:30:20Z [INFO] Processing request GET /api/users",
-			"2025-11-27T16:30:21Z [DEBUG] Query execution time: 15ms",
-			"2025-11-27T16:30:22Z [INFO] Request completed successfully (200 OK)",
-			"2025-11-27T16:31:00Z [WARN] Slow query detected: SELECT * FROM large_table (500ms)",
-			"2025-11-27T16:31:15Z [INFO] Processing request POST /api/orders",
-			"2025-11-27T16:31:16Z [INFO] Order created successfully: order-12345",
-			"2025-11-27T16:32:00Z [ERROR] Connection timeout to external service api.example.com",
-			"2025-11-27T16:32:01Z [INFO] Retrying connection (attempt 1/3)",
-			"2025-11-27T16:32:02Z [INFO] Connection successful",
-			fmt.Sprintf("2025-11-27T16:32:30Z [INFO] Mock logs for pod: %s", podName),
+			"I1127 00:44:40.476206 [INFO] Kubelet starting up...",
+			"I1127 00:44:40.478859 [INFO] None policy: Start",
+			"I1127 00:44:40.478889 [INFO] Starting memory manager with policy=None",
+			"I1127 00:44:40.479426 [INFO] Initialized iptables rules for IPv6",
+			"I1127 00:44:40.479451 [INFO] Starting to sync pod status with apiserver",
+			"I1127 00:44:40.479482 [INFO] Starting kubelet main sync loop",
+			"E1127 00:44:40.479579 [ERROR] Skipping pod synchronization - PLEG is not healthy",
+			"W1127 00:44:40.483015 [WARN] Failed to list RuntimeClass: connection refused",
+			"E1127 00:44:40.483087 [ERROR] Unhandled error in reflector: connection refused",
+			"I1127 00:44:40.545805 [INFO] Attempting to connect to API server",
+			"E1127 00:44:40.545850 [ERROR] Error getting current node from lister: node not found",
+			"I1127 00:44:40.586619 [INFO] Failed to read data from checkpoint - checkpoint not found",
+			"I1127 00:44:40.586837 [INFO] Eviction manager: starting control loop",
+			"I1127 00:44:40.588489 [INFO] Starting Kubelet Plugin Manager",
+			"E1127 00:44:40.590954 [ERROR] Eviction manager: failed to check container filesystem",
+			"I1127 00:44:40.688184 [INFO] Attempting to register node w-guard-wg-cp-svtk6-lqtxw",
+			"E1127 00:44:40.688785 [ERROR] Unable to register node with API server: connection refused",
+			"W1127 00:44:40.810298 [WARN] No need to create mirror pod - failed to get node info",
+			"I1127 00:44:40.838155 [INFO] VerifyControllerAttachedVolume started for volume file3",
+			"I1127 00:44:40.838373 [INFO] VerifyControllerAttachedVolume started for volume file5",
+			"I1127 00:44:40.838450 [INFO] VerifyControllerAttachedVolume started for volume file6",
+			"I1127 00:44:40.890508 [INFO] Attempting to register node (retry 2)",
+			"E1127 00:44:40.890971 [ERROR] Unable to register node with API server: connection refused",
+			"E1127 00:44:41.066666 [ERROR] Failed to ensure lease exists - will retry with backoff",
+			"W1127 00:44:41.110927 [WARN] Nameserver limits exceeded - some nameservers omitted",
+			"I1127 00:44:41.292845 [INFO] Attempting to register node (retry 3)",
+			"E1127 00:44:41.293183 [ERROR] Unable to register node with API server: connection refused",
+			"W1127 00:44:41.420049 [WARN] Failed to list Services: connection refused",
+			"W1127 00:44:41.455586 [WARN] Failed to list RuntimeClass: connection refused",
+			"I1127 00:44:42.000000 [INFO] Health check passed for container app-main",
+			"I1127 00:44:42.500000 [INFO] Processing HTTP request GET /api/v1/pods",
+			"I1127 00:44:42.501234 [INFO] Query execution completed in 15ms",
+			"I1127 00:44:42.550000 [INFO] Response sent: 200 OK",
+			"W1127 00:44:43.000000 [WARN] Slow query detected: SELECT * FROM pods (duration: 500ms)",
+			"I1127 00:44:43.100000 [INFO] Cache invalidated for namespace default",
+			"I1127 00:44:43.200000 [INFO] Syncing pod state with etcd",
+			"E1127 00:44:43.300000 [ERROR] Connection timeout to metrics server",
+			"I1127 00:44:43.400000 [INFO] Retrying connection to metrics server (attempt 1/3)",
+			"W1127 00:44:43.500000 [WARN] High memory usage detected: 85% of limit",
+			"I1127 00:44:43.600000 [INFO] Garbage collection triggered",
+			"I1127 00:44:43.700000 [INFO] Freed 150MB of memory",
+			"I1127 00:44:44.000000 [INFO] Pod nginx-deployment-abc123 started successfully",
+			"I1127 00:44:44.100000 [INFO] Container nginx pulling image nginx:1.21",
+			"I1127 00:44:44.200000 [INFO] Image pull successful",
+			"I1127 00:44:44.300000 [INFO] Container nginx started",
+			"E1127 00:44:44.400000 [ERROR] Failed to mount volume pvc-data: volume not found",
+			"W1127 00:44:44.500000 [WARN] Retrying volume mount with exponential backoff",
+			"I1127 00:44:44.800000 [INFO] Volume pvc-data mounted successfully on retry",
+			"I1127 00:44:45.000000 [INFO] Readiness probe succeeded for container nginx",
+			fmt.Sprintf("I1127 00:44:45.500000 [INFO] Mock logs for pod: %s", podName),
+			"I1127 00:44:45.600000 [INFO] All health checks passing",
 		}
 
 		// In offline mode or if API fails, return mock logs
@@ -2483,6 +2540,7 @@ func (a *App) getPodNodeName(pod rancher.Pod) string {
 }
 
 // performSearch searches through logs for the query and populates search matches
+// FIX 2: Search through visible (filtered) logs instead of all logs
 func (a *App) performSearch() {
 	if a.searchQuery == "" {
 		return
@@ -2492,9 +2550,12 @@ func (a *App) performSearch() {
 	a.searchMatches = nil
 	a.currentMatch = -1
 
-	// Search through logs (case-insensitive)
+	// Get visible logs (respects active filter)
+	visibleLogs := a.getVisibleLogs()
+
+	// Search through visible logs (case-insensitive)
 	query := strings.ToLower(a.searchQuery)
-	for i, line := range a.logs {
+	for i, line := range visibleLogs {
 		if strings.Contains(strings.ToLower(line), query) {
 			a.searchMatches = append(a.searchMatches, i)
 		}
@@ -2503,6 +2564,7 @@ func (a *App) performSearch() {
 	// Jump to first match if found
 	if len(a.searchMatches) > 0 {
 		a.currentMatch = 0
+		a.logViewport.SetContent(a.renderLogsWithColors())
 		a.logViewport.GotoTop()
 		for i := 0; i < a.searchMatches[0]; i++ {
 			a.logViewport.LineDown(1)
@@ -2546,12 +2608,18 @@ func (a *App) cycleContainer() tea.Cmd {
 	return nil
 }
 
-// applyLogFilter applies the current log level filter to the logs
+// applyLogFilter applies the current log level filter to the logs with colors
 func (a *App) applyLogFilter() {
+	// Use colored rendering for all content
+	a.logViewport.SetContent(a.renderLogsWithColors())
+}
+
+// getVisibleLogs returns the currently visible logs based on active filters
+// FIX 3: Helper function to get logs respecting current filter state
+func (a *App) getVisibleLogs() []string {
 	if a.filterLevel == "" {
-		// No filter - show all logs
-		a.logViewport.SetContent(strings.Join(a.logs, "\n"))
-		return
+		// No filter - return all logs
+		return a.logs
 	}
 
 	// Filter logs by level
@@ -2573,12 +2641,7 @@ func (a *App) applyLogFilter() {
 		}
 	}
 
-	// Update viewport with filtered content
-	if len(filteredLogs) > 0 {
-		a.logViewport.SetContent(strings.Join(filteredLogs, "\n"))
-	} else {
-		a.logViewport.SetContent("No logs match the current filter")
-	}
+	return filteredLogs
 }
 
 // Messages
@@ -2628,6 +2691,53 @@ type describeMsg struct {
 // logsMsg represents a message containing log data
 type logsMsg struct {
 	logs []string
+}
+
+// colorizeLogLine applies color styling based on log level
+func (a *App) colorizeLogLine(line string, lineIndex int) string {
+	lineUpper := strings.ToUpper(line)
+
+	// Check if this is the current search match
+	isCurrentMatch := false
+	if len(a.searchMatches) > 0 && a.currentMatch >= 0 && a.currentMatch < len(a.searchMatches) {
+		if lineIndex == a.searchMatches[a.currentMatch] {
+			isCurrentMatch = true
+		}
+	}
+
+	// If current search match, highlight the entire line
+	if isCurrentMatch {
+		return searchMatchStyle.Render(line)
+	}
+
+	// Otherwise, colorize by log level
+	if strings.Contains(lineUpper, "[ERROR]") || strings.Contains(lineUpper, " E ") {
+		return logErrorStyle.Render(line)
+	}
+	if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, " W ") {
+		return logWarnStyle.Render(line)
+	}
+	if strings.Contains(lineUpper, "[INFO]") || strings.Contains(lineUpper, " I ") {
+		return logInfoStyle.Render(line)
+	}
+	if strings.Contains(lineUpper, "[DEBUG]") || strings.Contains(lineUpper, " D ") {
+		return logDebugStyle.Render(line)
+	}
+
+	// Default: no special styling
+	return line
+}
+
+// renderLogsWithColors renders logs with color coding and search highlighting
+func (a *App) renderLogsWithColors() string {
+	visibleLogs := a.getVisibleLogs()
+	coloredLines := make([]string, len(visibleLogs))
+
+	for i, line := range visibleLogs {
+		coloredLines[i] = a.colorizeLogLine(line, i)
+	}
+
+	return strings.Join(coloredLines, "\n")
 }
 
 // renderHelp - simplified

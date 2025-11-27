@@ -87,6 +87,25 @@ var (
 				Foreground(colorWhite).
 				Background(lipgloss.Color("62")). // Dark blue background
 				Bold(true)
+
+	// Log level styles
+	logErrorStyle = lipgloss.NewStyle().
+			Foreground(colorRed).
+			Bold(true)
+
+	logWarnStyle = lipgloss.NewStyle().
+			Foreground(colorYellow)
+
+	logInfoStyle = lipgloss.NewStyle().
+			Foreground(colorCyan)
+
+	logDebugStyle = lipgloss.NewStyle().
+			Foreground(colorGray)
+
+	// Search match highlighting
+	searchMatchStyle = lipgloss.NewStyle().
+				Background(colorYellow).
+				Foreground(lipgloss.Color("0")) // Black text on yellow background
 )
 
 // GetStateStyle returns the appropriate style for a resource state
