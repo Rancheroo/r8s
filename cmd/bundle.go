@@ -50,7 +50,13 @@ func init() {
 
 func runImport(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Importing bundle: %s\n", bundlePath)
-	fmt.Printf("Size limit: %dMB\n\n", bundleMaxSize)
+
+	// Display size limit (show default if 0 or negative)
+	if bundleMaxSize <= 0 {
+		fmt.Printf("Size limit: 10MB (default)\n\n")
+	} else {
+		fmt.Printf("Size limit: %dMB\n\n", bundleMaxSize)
+	}
 
 	// Create import options
 	opts := bundle.ImportOptions{
