@@ -15,8 +15,8 @@ import (
 	"time"
 )
 
-// Debug flag - set via environment variable R9S_DEBUG
-var debugMode = os.Getenv("R9S_DEBUG") == "1"
+// Debug flag - set via environment variable R8S_DEBUG
+var debugMode = os.Getenv("R8S_DEBUG") == "1"
 
 // Client represents a Rancher API client
 type Client struct {

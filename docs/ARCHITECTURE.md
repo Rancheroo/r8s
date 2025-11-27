@@ -1,6 +1,6 @@
-# r9s Architecture
+# r8s Architecture
 
-This document provides a comprehensive overview of r9s's technical architecture, design decisions, and implementation details.
+This document provides a comprehensive overview of r8s's technical architecture, design decisions, and implementation details.
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ This document provides a comprehensive overview of r9s's technical architecture,
 
 ## Overview
 
-r9s is a terminal user interface (TUI) application for navigating and managing Rancher-based Kubernetes clusters. It follows the Model-Update-View pattern popularized by The Elm Architecture, implemented via the Bubble Tea framework.
+r8s is a terminal user interface (TUI) application for navigating and managing Rancher-based Kubernetes clusters. It follows the Model-Update-View pattern popularized by The Elm Architecture, implemented via the Bubble Tea framework.
 
 ### Key Principles
 
@@ -56,7 +56,7 @@ r9s is a terminal user interface (TUI) application for navigating and managing R
 ## Project Structure
 
 ```
-r9s/
+r8s/
 ├── main.go                      # Application entry point
 ├── cmd/
 │   └── root.go                 # CLI root command
@@ -115,7 +115,7 @@ type Profile struct {
 ```
 
 **Responsibilities:**
-- Load/parse YAML configuration from `~/.r9s/config.yaml`
+- Load/parse YAML configuration from `~/.r8s/config.yaml`
 - Validate configuration structure
 - Provide current profile access
 - Support multiple Rancher environments
@@ -270,7 +270,7 @@ fetchClusters() called
 
 ### View Stack Navigation
 
-r9s uses a stack-based navigation system:
+r8s uses a stack-based navigation system:
 
 ```go
 type ViewContext struct {
@@ -589,7 +589,7 @@ go test -race ./...
 
 ## Conclusion
 
-r9s's architecture prioritizes:
+r8s's architecture prioritizes:
 - **Maintainability**: Clear separation of concerns
 - **Testability**: Comprehensive test coverage
 - **User Experience**: Responsive, intuitive UI

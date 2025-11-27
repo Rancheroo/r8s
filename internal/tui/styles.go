@@ -81,6 +81,12 @@ var (
 				Padding(0, 2).
 				Width(100).
 				Align(lipgloss.Center)
+
+	// Highlighted row style for table selection
+	highlightedStyle = lipgloss.NewStyle().
+				Foreground(colorWhite).
+				Background(lipgloss.Color("62")). // Dark blue background
+				Bold(true)
 )
 
 // GetStateStyle returns the appropriate style for a resource state
