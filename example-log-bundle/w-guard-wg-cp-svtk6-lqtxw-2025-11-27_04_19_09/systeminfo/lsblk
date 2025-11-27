@@ -1,0 +1,15 @@
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+loop0     7:0    0 63.9M  1 loop /snap/core20/2318
+loop1     7:1    0 38.8M  1 loop /snap/snapd/21759
+loop2     7:2    0   87M  1 loop /snap/lxd/28373
+loop3     7:3    0 91.4M  1 loop /snap/lxd/36558
+loop4     7:4    0 63.8M  1 loop /snap/core20/2682
+loop5     7:5    0 50.9M  1 loop /snap/snapd/25577
+vda     252:0    0   80G  0 disk 
+|-vda1  252:1    0 79.9G  0 part /var/lib/kubelet/pods/a52ccb46-9718-4580-8ab2-a939bb44e215/volume-subpaths/tigera-ca-bundle/calico-kube-controllers/1
+|                                /var/lib/kubelet/pods/d0d6cf87-a11e-427b-8f84-1f9df48af193/volume-subpaths/tigera-ca-bundle/calico-node/6
+|                                /var/lib/kubelet/pods/eba859a8-6221-4657-9274-ecd117a4c29a/volume-subpaths/tigera-ca-bundle/calico-typha/1
+|                                /
+|-vda14 252:14   0    4M  0 part 
+`-vda15 252:15   0  106M  0 part /boot/efi
+vdb     252:16   0  528K  1 disk 

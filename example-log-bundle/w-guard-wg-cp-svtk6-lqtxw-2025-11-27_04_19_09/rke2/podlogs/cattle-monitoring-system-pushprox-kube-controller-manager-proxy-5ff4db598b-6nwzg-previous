@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "pushprox-proxy" in pod "pushprox-kube-controller-manager-proxy-5ff4db598b-6nwzg" not found

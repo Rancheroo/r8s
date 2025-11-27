@@ -1,0 +1,36 @@
+2025-11-21 04:28:55.027 [INFO][1] typha/sync_server.go 422: Accepted from 172.236.228.229:60176 port=5473
+2025-11-21 04:28:55.027 [INFO][1] typha/sync_server.go 431: New connection connID=0x3 port=5473
+2025-11-21 04:28:55.027 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.236.228.229:60176 connID=0x3
+2025-11-21 04:28:55.028 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.236.228.229:60176 connID=0x3 error=tls: first record does not look like a TLS handshake thread="read"
+2025-11-21 04:28:55.028 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.236.228.229:60176 connID=0x3 thread="read"
+2025-11-21 04:28:55.028 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.236.228.229:60176 connID=0x3 error=context canceled
+2025-11-21 04:28:55.028 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.236.228.229:60176 connID=0x3
+2025-11-21 04:28:55.028 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.236.228.229:60176 connID=0x3
+2025-11-21 04:28:55.028 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:28:55.329 [INFO][1] typha/sync_server.go 422: Accepted from 172.236.228.229:60184 port=5473
+2025-11-21 04:28:55.329 [INFO][1] typha/sync_server.go 431: New connection connID=0x4 port=5473
+2025-11-21 04:28:55.329 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.236.228.229:60184 connID=0x4
+2025-11-21 04:28:55.482 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.236.228.229:60184 connID=0x4 error=tls: client didn't provide a certificate thread="read"
+2025-11-21 04:28:55.482 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.236.228.229:60184 connID=0x4 thread="read"
+2025-11-21 04:28:55.483 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.236.228.229:60184 connID=0x4 error=context canceled
+2025-11-21 04:28:55.483 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.236.228.229:60184 connID=0x4
+2025-11-21 04:28:55.483 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.236.228.229:60184 connID=0x4
+2025-11-21 04:28:55.483 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 422: Accepted from 172.236.228.224:20594 port=5473
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 431: New connection connID=0x5 port=5473
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.236.228.224:20594 connID=0x5
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.236.228.224:20594 connID=0x5 error=tls: first record does not look like a TLS handshake thread="read"
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.236.228.224:20594 connID=0x5 thread="read"
+2025-11-25 04:17:04.542 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.236.228.224:20594 connID=0x5 error=context canceled
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.236.228.224:20594 connID=0x5
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.236.228.224:20594 connID=0x5
+2025-11-25 04:17:04.542 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-25 04:17:04.843 [INFO][1] typha/sync_server.go 422: Accepted from 172.236.228.224:20610 port=5473
+2025-11-25 04:17:04.843 [INFO][1] typha/sync_server.go 431: New connection connID=0x6 port=5473
+2025-11-25 04:17:04.843 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.236.228.224:20610 connID=0x6
+2025-11-25 04:17:04.997 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.236.228.224:20610 connID=0x6 error=tls: client didn't provide a certificate thread="read"
+2025-11-25 04:17:04.997 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.236.228.224:20610 connID=0x6 thread="read"
+2025-11-25 04:17:04.997 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.236.228.224:20610 connID=0x6 error=context canceled
+2025-11-25 04:17:04.998 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.236.228.224:20610 connID=0x6
+2025-11-25 04:17:04.998 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.236.228.224:20610 connID=0x6
+2025-11-25 04:17:04.998 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled

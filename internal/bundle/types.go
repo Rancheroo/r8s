@@ -23,6 +23,12 @@ type Bundle struct {
 	// LogFiles contains inventory of all log files in the bundle
 	LogFiles []LogFileInfo
 
+	// kubectl resources parsed from bundle
+	CRDs        []interface{} // Will be []rancher.CRD when imported
+	Deployments []interface{} // Will be []rancher.Deployment
+	Services    []interface{} // Will be []rancher.Service
+	Namespaces  []interface{} // Will be []rancher.Namespace
+
 	// Loaded indicates whether the bundle has been successfully loaded
 	Loaded bool
 

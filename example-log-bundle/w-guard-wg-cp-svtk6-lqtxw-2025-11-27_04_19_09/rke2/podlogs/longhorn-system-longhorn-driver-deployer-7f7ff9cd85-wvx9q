@@ -1,0 +1,33 @@
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+waiting
+W1126 01:25:48.129056       1 client_config.go:667] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+time="2025-11-26T01:26:23Z" level=info msg="Deploying CSI driver" func=app.deployDriver file="driver.go:193"
+time="2025-11-26T01:26:23Z" level=info msg="proc cmdline detection pod discover-proc-kubelet-cmdline in phase: Pending" func=app.getProcCmdline file="get_proc_arg.go:146"
+time="2025-11-26T01:26:24Z" level=info msg="proc cmdline detection pod discover-proc-kubelet-cmdline in phase: Pending" func=app.getProcCmdline file="get_proc_arg.go:146"
+time="2025-11-26T01:26:25Z" level=info msg="proc cmdline detection pod discover-proc-kubelet-cmdline in phase: Running" func=app.getProcCmdline file="get_proc_arg.go:146"
+time="2025-11-26T01:26:26Z" level=info msg="proc cmdline detection pod discover-proc-kubelet-cmdline in phase: Running" func=app.getProcCmdline file="get_proc_arg.go:146"
+time="2025-11-26T01:26:27Z" level=info msg="proc cmdline detection pod discover-proc-kubelet-cmdline in phase: Running" func=app.getProcCmdline file="get_proc_arg.go:146"
+time="2025-11-26T01:26:28Z" level=info msg="Proc found: kubelet" func=app.getPodLogAsString file="get_proc_arg.go:223"
+time="2025-11-26T01:26:28Z" level=info msg="Try to find arg [--root-dir] in cmdline: [kubelet --volume-plugin-dir=/var/lib/kubelet/volumeplugins --file-check-frequency=5s --sync-frequency=30s --cloud-provider=external --config-dir=/var/lib/rancher/rke2/agent/etc/kubelet.conf.d --containerd=/run/k3s/containerd/containerd.sock --hostname-override=w-guard-wg-wk-pfvjr-g4m8r --kubeconfig=/var/lib/rancher/rke2/agent/kubelet.kubeconfig --node-ip=209.38.91.232 --node-labels=rke.cattle.io/machine=40f9fdc3-0abb-4aae-ac66-2e2b928cc47c --read-only-port=0 ]" func=app.getArgFromCmdline file="get_proc_arg.go:229"
+time="2025-11-26T01:26:28Z" level=warning msg="Cmdline of proc kubelet found: \"kubelet\x00--volume-plugin-dir=/var/lib/kubelet/volumeplugins\x00--file-check-frequency=5s\x00--sync-frequency=30s\x00--cloud-provider=external\x00--config-dir=/var/lib/rancher/rke2/agent/etc/kubelet.conf.d\x00--containerd=/run/k3s/containerd/containerd.sock\x00--hostname-override=w-guard-wg-wk-pfvjr-g4m8r\x00--kubeconfig=/var/lib/rancher/rke2/agent/kubelet.kubeconfig\x00--node-ip=209.38.91.232\x00--node-labels=rke.cattle.io/machine=40f9fdc3-0abb-4aae-ac66-2e2b928cc47c\x00--read-only-port=0\x00\". But arg \"--root-dir\" not found. Hence default value will be used: \"/var/lib/kubelet\"" func=app.detectKubeletRootDir file="get_proc_arg.go:97"
+time="2025-11-26T01:26:28Z" level=info msg="Detected root dir path: /var/lib/kubelet" func=app.deployCSIDriver file="driver.go:301"
+time="2025-11-26T01:26:28Z" level=info msg="Upgrading Longhorn related components for CSI v1.1.0" func=app.upgradeLonghornRelatedComponents file="upgrader.go:21"
+time="2025-11-26T01:26:28Z" level=info msg="Creating CSI Driver driver.longhorn.io" func=csi.deploy file="deployment_util.go:193"
+time="2025-11-26T01:26:28Z" level=info msg="Creating deployment csi-attacher" func=csi.deploy file="deployment_util.go:193"
+time="2025-11-26T01:26:28Z" level=info msg="Creating deployment csi-provisioner" func=csi.deploy file="deployment_util.go:193"
+time="2025-11-26T01:26:28Z" level=info msg="Creating deployment csi-resizer" func=csi.deploy file="deployment_util.go:193"
+time="2025-11-26T01:26:28Z" level=info msg="Creating deployment csi-snapshotter" func=csi.deploy file="deployment_util.go:193"
+time="2025-11-26T01:26:28Z" level=info msg="Updating DaemonSet template for storage network &{{ } {storage-network  longhorn-system  9b243130-8fa8-41eb-b559-1506699ff60b 2644784 1 2025-11-26 01:25:43 +0000 UTC <nil> <nil> map[] map[longhorn.io/configmap-resource-version:2644279] [] [] [{longhorn-manager Update longhorn.io/v1beta2 2025-11-26 01:25:43 +0000 UTC FieldsV1 {\"f:metadata\":{\"f:annotations\":{\".\":{},\"f:longhorn.io/configmap-resource-version\":{}}},\"f:value\":{}} }]}  {false}}" func=types.UpdateDaemonSetTemplateBasedOnStorageNetwork file="deploy.go:103" daemonSet=longhorn-csi-plugin
+time="2025-11-26T01:26:28Z" level=debug msg="Updating template k8s.v1.cni.cncf.io/networks annotation" func=types.UpdateDaemonSetTemplateBasedOnStorageNetwork.func1 file="deploy.go:117" daemonSet=longhorn-csi-plugin newValue= oldValue=
+time="2025-11-26T01:26:28Z" level=info msg="Creating daemon set longhorn-csi-plugin" func=csi.deploy file="deployment_util.go:193"
+time="2025-11-26T01:26:28Z" level=info msg="CSI deployment done" func=app.deployCSIDriver file="driver.go:340"

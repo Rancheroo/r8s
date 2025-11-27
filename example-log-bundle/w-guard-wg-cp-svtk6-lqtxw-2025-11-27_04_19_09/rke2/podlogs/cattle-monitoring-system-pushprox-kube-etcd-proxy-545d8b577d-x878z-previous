@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "pushprox-proxy" in pod "pushprox-kube-etcd-proxy-545d8b577d-x878z" not found

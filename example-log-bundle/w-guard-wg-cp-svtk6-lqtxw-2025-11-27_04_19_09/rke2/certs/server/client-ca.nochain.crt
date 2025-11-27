@@ -1,0 +1,34 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 0 (0x0)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN = rke2-client-ca@1763599467
+        Validity
+            Not Before: Nov 20 00:44:27 2025 GMT
+            Not After : Nov 18 00:44:27 2035 GMT
+        Subject: CN = rke2-client-ca@1763599467
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:47:65:f0:34:66:bb:d4:cd:da:34:81:fc:ff:12:
+                    ba:52:c3:e4:7c:da:d1:4c:58:cd:af:39:27:0a:37:
+                    23:99:fe:e9:8f:4a:fb:d4:38:b2:56:5d:48:44:aa:
+                    ad:db:3c:f8:90:54:27:e8:1f:da:e6:99:c2:5e:52:
+                    96:ce:36:5d:44
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment, Certificate Sign
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Subject Key Identifier: 
+                5D:05:0E:97:4D:C5:6B:02:2E:C7:74:6A:73:59:D0:C2:D4:DA:FF:CB
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:46:02:21:00:9a:e2:b4:46:49:bf:c3:7a:b4:e7:51:e8:06:
+        30:3b:01:11:70:85:f1:f7:c2:ce:ed:a9:78:f8:79:1e:bb:57:
+        05:02:21:00:89:bc:5e:64:0d:12:66:07:9f:5f:12:4b:12:16:
+        0d:b4:66:22:47:5a:c8:6f:df:49:18:eb:81:6d:2f:55:64:c2

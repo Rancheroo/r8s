@@ -1,0 +1,95 @@
+ts=2025-11-26T01:27:46.154878672Z level=info caller=/workspace/cmd/operator/main.go:214 msg="Starting Prometheus Operator" version="(version=0.80.1, branch=, revision=4126d60)" build_context="(go=go1.23.6, platform=linux/amd64, user=, date=20250219-10:04:50, tags=unknown)" feature_gates="PrometheusAgentDaemonSet=false,PrometheusTopologySharding=false"
+ts=2025-11-26T01:27:46.155368572Z level=info caller=/workspace/internal/goruntime/cpu.go:27 msg="Leaving GOMAXPROCS=2: CPU quota undefined"
+ts=2025-11-26T01:27:46.155456261Z level=info caller=/workspace/cmd/operator/main.go:227 msg="namespaces filtering configuration " config="{allow_list=\"\",deny_list=\"\",prometheus_allow_list=\"\",alertmanager_allow_list=\"\",alertmanagerconfig_allow_list=\"\",thanosruler_allow_list=\"\"}"
+ts=2025-11-26T01:27:46.210832761Z level=info caller=/workspace/cmd/operator/main.go:268 msg="connection established" kubernetes_version=1.32.7+rke2r1
+ts=2025-11-26T01:27:46.26106184Z level=info caller=/workspace/cmd/operator/main.go:353 msg="Kubernetes API capabilities" endpointslices=true
+ts=2025-11-26T01:27:46.355816936Z level=warn caller=/workspace/pkg/server/server.go:164 msg="server TLS client verification disabled" client_ca_file=/etc/tls/private/tls-ca.crt err="stat /etc/tls/private/tls-ca.crt: no such file or directory"
+ts=2025-11-26T01:27:46.35763612Z level=info caller=/workspace/pkg/server/server.go:301 msg="starting secure server" address=[::]:10250 http2=false
+ts=2025-11-26T01:27:46.357880493Z level=info caller=/go/pkg/mod/k8s.io/apiserver@v0.32.1/pkg/server/dynamiccertificates/tlsconfig.go:243 msg="Starting DynamicServingCertificateController"
+ts=2025-11-26T01:27:46.358269647Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.358542384Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.358762667Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for alertmanager"
+ts=2025-11-26T01:27:46.358933237Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for thanos"
+ts=2025-11-26T01:27:46.359130511Z level=info caller=/workspace/pkg/kubelet/controller.go:207 msg="Starting controller" component=kubelet_endpoints kubelet_object=kube-system/rancher-monitoring-kubelet
+ts=2025-11-26T01:27:46.360621626Z level=info caller=/go/pkg/mod/k8s.io/apiserver@v0.32.1/pkg/server/dynamiccertificates/dynamic_serving_content.go:135 msg="Starting controller" name=servingCert::/cert/cert::/cert/key
+ts=2025-11-26T01:27:46.460061778Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for thanos"
+ts=2025-11-26T01:27:46.460151725Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for thanos"
+ts=2025-11-26T01:27:46.559503054Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.559727834Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.559766837Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.559853748Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.559890357Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.559947982Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.559988322Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.560063549Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.560232959Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.56026638Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.560412792Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for thanos"
+ts=2025-11-26T01:27:46.560493345Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for alertmanager"
+ts=2025-11-26T01:27:46.560576694Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for thanos"
+ts=2025-11-26T01:27:46.560620579Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for thanos"
+ts=2025-11-26T01:27:46.560744394Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for thanos"
+ts=2025-11-26T01:27:46.560841582Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for thanos"
+ts=2025-11-26T01:27:46.560921411Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.561023206Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.56106546Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.561189732Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.561257848Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for alertmanager"
+ts=2025-11-26T01:27:46.561301971Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for alertmanager"
+ts=2025-11-26T01:27:46.56136142Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for alertmanager"
+ts=2025-11-26T01:27:46.561452948Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.561479767Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for thanos"
+ts=2025-11-26T01:27:46.561532829Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for thanos"
+ts=2025-11-26T01:27:46.56160816Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.561669786Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for thanos"
+ts=2025-11-26T01:27:46.561714397Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for thanos"
+ts=2025-11-26T01:27:46.561766423Z level=info caller=/workspace/pkg/thanos/operator.go:296 msg="successfully synced all caches" component=thanos-controller
+ts=2025-11-26T01:27:46.561779043Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.561925497Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.562022333Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.562049963Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.562199111Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.562227935Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.562375931Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.562404241Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.562552263Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheusagent"
+ts=2025-11-26T01:27:46.562578172Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for alertmanager"
+ts=2025-11-26T01:27:46.562593279Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.562692095Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.562754825Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheusagent"
+ts=2025-11-26T01:27:46.562796133Z level=info caller=/workspace/pkg/prometheus/agent/operator.go:471 msg="successfully synced all caches" component=prometheusagent-controller
+ts=2025-11-26T01:27:46.562835774Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.562927502Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.563079697Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.5631095Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.563200703Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.563230176Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.563321182Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.563347619Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.563485936Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.563516023Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.56359953Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for prometheus"
+ts=2025-11-26T01:27:46.563627468Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for prometheus"
+ts=2025-11-26T01:27:46.563691345Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for alertmanager"
+ts=2025-11-26T01:27:46.563640978Z level=info caller=/workspace/pkg/prometheus/server/operator.go:417 msg="successfully synced all caches" component=prometheus-controller
+ts=2025-11-26T01:27:46.5637606Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for alertmanager"
+ts=2025-11-26T01:27:46.563957658Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for alertmanager"
+ts=2025-11-26T01:27:46.564015527Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for alertmanager"
+ts=2025-11-26T01:27:46.56405859Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:313 msg="Waiting for caches to sync for alertmanager"
+ts=2025-11-26T01:27:46.564134263Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/tools/cache/shared_informer.go:320 msg="Caches are synced for alertmanager"
+ts=2025-11-26T01:27:46.564164384Z level=info caller=/workspace/pkg/alertmanager/operator.go:325 msg="successfully synced all caches" component=alertmanager-controller
+ts=2025-11-26T01:27:46.564372072Z level=info caller=/workspace/pkg/alertmanager/operator.go:663 msg="StatefulSet not found" component=alertmanager-controller key=cattle-monitoring-system/alertmanager-rancher-monitoring-alertmanager
+ts=2025-11-26T01:27:46.56499152Z level=info caller=/workspace/pkg/alertmanager/operator.go:544 msg="sync alertmanager" component=alertmanager-controller key=cattle-monitoring-system/rancher-monitoring-alertmanager
+ts=2025-11-26T01:27:46.570398032Z level=info caller=/workspace/pkg/prometheus/server/operator.go:766 msg="sync prometheus" component=prometheus-controller key=cattle-monitoring-system/rancher-monitoring-prometheus
+ts=2025-11-26T01:27:46.681540978Z level=info caller=/workspace/pkg/alertmanager/operator.go:663 msg="StatefulSet not found" component=alertmanager-controller key=cattle-monitoring-system/alertmanager-rancher-monitoring-alertmanager
+ts=2025-11-26T01:27:46.718598885Z level=info caller=/workspace/pkg/alertmanager/operator.go:544 msg="sync alertmanager" component=alertmanager-controller key=cattle-monitoring-system/rancher-monitoring-alertmanager
+ts=2025-11-26T01:27:46.880385329Z level=info caller=/workspace/pkg/alertmanager/operator.go:544 msg="sync alertmanager" component=alertmanager-controller key=cattle-monitoring-system/rancher-monitoring-alertmanager
+ts=2025-11-26T01:27:47.0438342Z level=info caller=/go/pkg/mod/k8s.io/client-go@v0.32.1/rest/warnings.go:70 msg="spec.template.spec.containers[2].ports[0]: duplicate port definition with spec.template.spec.initContainers[0].ports[0]"
+ts=2025-11-26T01:27:47.044895459Z level=info caller=/workspace/pkg/prometheus/server/operator.go:766 msg="sync prometheus" component=prometheus-controller key=cattle-monitoring-system/rancher-monitoring-prometheus
+ts=2025-11-26T01:27:47.466898499Z level=info caller=/workspace/pkg/alertmanager/operator.go:544 msg="sync alertmanager" component=alertmanager-controller key=cattle-monitoring-system/rancher-monitoring-alertmanager
+ts=2025-11-26T01:27:47.82638478Z level=info caller=/workspace/pkg/prometheus/server/operator.go:766 msg="sync prometheus" component=prometheus-controller key=cattle-monitoring-system/rancher-monitoring-prometheus
+ts=2025-11-26T01:27:48.088641112Z level=info caller=/workspace/pkg/prometheus/server/operator.go:766 msg="sync prometheus" component=prometheus-controller key=cattle-monitoring-system/rancher-monitoring-prometheus
+ts=2025-11-26T02:24:57.066719307Z level=info caller=/workspace/pkg/alertmanager/operator.go:544 msg="sync alertmanager" component=alertmanager-controller key=cattle-monitoring-system/rancher-monitoring-alertmanager
+ts=2025-11-26T02:24:57.072537414Z level=info caller=/workspace/pkg/prometheus/server/operator.go:766 msg="sync prometheus" component=prometheus-controller key=cattle-monitoring-system/rancher-monitoring-prometheus
+ts=2025-11-26T02:26:19.099412214Z level=info caller=/workspace/pkg/alertmanager/operator.go:544 msg="sync alertmanager" component=alertmanager-controller key=cattle-monitoring-system/rancher-monitoring-alertmanager
+ts=2025-11-26T02:26:19.117016483Z level=info caller=/workspace/pkg/prometheus/server/operator.go:766 msg="sync prometheus" component=prometheus-controller key=cattle-monitoring-system/rancher-monitoring-prometheus

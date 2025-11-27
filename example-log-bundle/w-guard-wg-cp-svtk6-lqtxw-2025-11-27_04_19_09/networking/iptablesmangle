@@ -1,0 +1,45 @@
+Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 223M   50G cali-PREROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:6gwbT8clXdHdC1b1 */
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 223M   65G cali-POSTROUTING  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:O3lYWMrLQYEMJtB5 */
+
+Chain KUBE-IPTABLES-HINT (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-KUBELET-CANARY (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-PROXY-CANARY (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain cali-POSTROUTING (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+ 5213  477K RETURN     all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:NX-7roTexQ3fGRfU */
+ 223M   65G MARK       all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:JkYr4aB8O4_N8NBS */ MARK and 0xffe4ffff
+  27M   16G cali-to-host-endpoint  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:nO0nbHA3Or7V6l7t */ ctstate DNAT
+  850  934K RETURN     all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:mgxNjIoKySH7TEGH */ /* Host endpoint policy accepted packet. */
+
+Chain cali-PREROUTING (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+ 222M   50G ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:6BJqBjBC7crtA-7- */ ctstate RELATED,ESTABLISHED
+    0     0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:KX7AGNd6rMcDUai6 */
+1385K   83M cali-from-host-endpoint  all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:wNH7KsA3ILKJBsY9 */
+    0     0 ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:Cg96MgVuoPm7UMRo */ /* Host endpoint policy accepted packet. */
+
+Chain cali-from-host-endpoint (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain cali-to-host-endpoint (1 references)
+ pkts bytes target     prot opt in     out     source               destination         

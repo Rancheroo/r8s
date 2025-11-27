@@ -49,11 +49,33 @@ func Load(opts ImportOptions) (*Bundle, error) {
 		return nil, fmt.Errorf("failed to inventory log files: %w", err)
 	}
 
+	// Parse kubectl resources (ignore errors - these are optional)
+	// Storing as interface{} to avoid import cycle - will be type-asserted in datasource
+	crds, _ := ParseCRDs(extractPath)
+	deployments, _ := ParseDeployments(extractPath)
+	services, _ := ParseServices(extractPath)
+	namespaces, _ := ParseNamespaces(extractPath)
+
 	// Get bundle file size
 	stat, _ := os.Stat(opts.Path)
 	bundleSize := int64(0)
 	if stat != nil {
 		bundleSize = stat.Size()
+	}
+
+	// Convert to []interface{} to avoid import cycle
+	var crdsI, deploymentsI, servicesI, namespacesI []interface{}
+	for i := range crds {
+		crdsI = append(crdsI, crds[i])
+	}
+	for i := range deployments {
+		deploymentsI = append(deploymentsI, deployments[i])
+	}
+	for i := range services {
+		servicesI = append(servicesI, services[i])
+	}
+	for i := range namespaces {
+		namespacesI = append(namespacesI, namespaces[i])
 	}
 
 	// Create bundle structure
@@ -63,6 +85,10 @@ func Load(opts ImportOptions) (*Bundle, error) {
 		Manifest:    manifest,
 		Pods:        pods,
 		LogFiles:    logFiles,
+		CRDs:        crdsI,
+		Deployments: deploymentsI,
+		Services:    servicesI,
+		Namespaces:  namespacesI,
 		Loaded:      true,
 		Size:        bundleSize,
 	}

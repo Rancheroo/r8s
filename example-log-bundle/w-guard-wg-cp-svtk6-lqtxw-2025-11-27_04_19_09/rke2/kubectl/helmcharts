@@ -1,0 +1,9 @@
+NAMESPACE     NAME                           REPO   CHART   VERSION   TARGETNAMESPACE   BOOTSTRAP   FAILED   JOB
+kube-system   rke2-calico                                                               true        False    helm-install-rke2-calico
+kube-system   rke2-calico-crd                                                           true        False    helm-install-rke2-calico-crd
+kube-system   rke2-coredns                                                              true        False    helm-install-rke2-coredns
+kube-system   rke2-ingress-nginx                                                                    False    helm-install-rke2-ingress-nginx
+kube-system   rke2-metrics-server                                                                   False    helm-install-rke2-metrics-server
+kube-system   rke2-runtimeclasses                                                                   False    helm-install-rke2-runtimeclasses
+kube-system   rke2-snapshot-controller                                                              False    helm-install-rke2-snapshot-controller
+kube-system   rke2-snapshot-controller-crd                                                          False    helm-install-rke2-snapshot-controller-crd

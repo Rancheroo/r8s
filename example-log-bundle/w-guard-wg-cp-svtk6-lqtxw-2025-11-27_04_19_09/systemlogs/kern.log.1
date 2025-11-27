@@ -1,0 +1,682 @@
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] Linux version 5.15.0-113-generic (buildd@lcy02-amd64-072) (gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #123-Ubuntu SMP Mon Jun 10 08:16:17 UTC 2024 (Ubuntu 5.15.0-113.123-generic 5.15.152)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-5.15.0-113-generic root=UUID=4640e7ac-ce2d-448f-999c-1735c8212d93 ro console=tty1 console=ttyS0 net.ifnames=0 biosdevname=0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] KERNEL supported cpus:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000]   Intel GenuineIntel
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000]   AMD AuthenticAMD
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000]   Hygon HygonGenuine
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000]   Centaur CentaurHauls
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000]   zhaoxin   Shanghai  
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-provided physical RAM map:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x000000000009fc00-0x000000000009ffff] reserved
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x00000000000f0000-0x00000000000fffff] reserved
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x0000000000100000-0x00000000bffd7fff] usable
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x00000000bffd8000-0x00000000bfffffff] reserved
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x00000000feffc000-0x00000000feffffff] reserved
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] BIOS-e820: [mem 0x0000000100000000-0x000000013fffffff] usable
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] NX (Execute Disable) protection: active
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] SMBIOS 2.8 present.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] DMI: DigitalOcean Droplet/Droplet, BIOS 20171212 12/12/2017
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] Hypervisor detected: KVM
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] kvm-clock: Using msrs 4b564d01 and 4b564d00
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000000] kvm-clock: cpu 0, msr 116c01001, primary cpu clock
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000002] kvm-clock: using sched offset of 1720397185 cycles
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000012] clocksource: kvm-clock: mask: 0xffffffffffffffff max_cycles: 0x1cd42e4dffb, max_idle_ns: 881590591483 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000033] tsc: Detected 1999.999 MHz processor
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000965] e820: update [mem 0x00000000-0x00000fff] usable ==> reserved
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000969] e820: remove [mem 0x000a0000-0x000fffff] usable
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.000979] last_pfn = 0x140000 max_arch_pfn = 0x400000000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.001087] x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WP  UC- WT  
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.001121] last_pfn = 0xbffd8 max_arch_pfn = 0x400000000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.012723] found SMP MP-table at [mem 0x000f5c60-0x000f5c6f]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013073] RAMDISK: [mem 0x3435f000-0x361a6fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013096] ACPI: Early table checksum verification disabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013139] ACPI: RSDP 0x00000000000F5A30 000014 (v00 BOCHS )
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013161] ACPI: RSDT 0x00000000BFFE1986 000038 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013182] ACPI: FACP 0x00000000BFFE176A 000074 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013197] ACPI: DSDT 0x00000000BFFE0040 00172A (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013203] ACPI: FACS 0x00000000BFFE0000 000040
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013208] ACPI: APIC 0x00000000BFFE17DE 000080 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013214] ACPI: HPET 0x00000000BFFE185E 000038 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013220] ACPI: SRAT 0x00000000BFFE1896 0000C8 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013225] ACPI: WAET 0x00000000BFFE195E 000028 (v01 BOCHS  BXPC     00000001 BXPC 00000001)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013230] ACPI: Reserving FACP table memory at [mem 0xbffe176a-0xbffe17dd]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013232] ACPI: Reserving DSDT table memory at [mem 0xbffe0040-0xbffe1769]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013234] ACPI: Reserving FACS table memory at [mem 0xbffe0000-0xbffe003f]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013235] ACPI: Reserving APIC table memory at [mem 0xbffe17de-0xbffe185d]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013237] ACPI: Reserving HPET table memory at [mem 0xbffe185e-0xbffe1895]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013238] ACPI: Reserving SRAT table memory at [mem 0xbffe1896-0xbffe195d]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013239] ACPI: Reserving WAET table memory at [mem 0xbffe195e-0xbffe1985]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013476] SRAT: PXM 0 -> APIC 0x00 -> Node 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013480] SRAT: PXM 0 -> APIC 0x01 -> Node 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013484] ACPI: SRAT: Node 0 PXM 0 [mem 0x00000000-0x0009ffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013491] ACPI: SRAT: Node 0 PXM 0 [mem 0x00100000-0xbfffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013493] ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000-0x13fffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013496] NUMA: Node 0 [mem 0x00000000-0x0009ffff] + [mem 0x00100000-0xbfffffff] -> [mem 0x00000000-0xbfffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013500] NUMA: Node 0 [mem 0x00000000-0xbfffffff] + [mem 0x100000000-0x13fffffff] -> [mem 0x00000000-0x13fffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.013509] NODE_DATA(0) allocated [mem 0x13ffd6000-0x13fffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014378] Zone ranges:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014389]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014396]   DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014399]   Normal   [mem 0x0000000100000000-0x000000013fffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014401]   Device   empty
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014403] Movable zone start for each node
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014406] Early memory node ranges
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014407]   node   0: [mem 0x0000000000001000-0x000000000009efff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014409]   node   0: [mem 0x0000000000100000-0x00000000bffd7fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014411]   node   0: [mem 0x0000000100000000-0x000000013fffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014417] Initmem setup node 0 [mem 0x0000000000001000-0x000000013fffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014743] On node 0, zone DMA: 1 pages in unavailable ranges
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.014975] On node 0, zone DMA: 97 pages in unavailable ranges
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.081877] On node 0, zone Normal: 40 pages in unavailable ranges
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.082920] ACPI: PM-Timer IO Port: 0x608
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.082959] ACPI: LAPIC_NMI (acpi_id[0xff] dfl dfl lint[0x1])
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083006] IOAPIC[0]: apic_id 0, version 17, address 0xfec00000, GSI 0-23
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083014] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083017] ACPI: INT_SRC_OVR (bus 0 bus_irq 5 global_irq 5 high level)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083027] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083039] ACPI: INT_SRC_OVR (bus 0 bus_irq 10 global_irq 10 high level)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083041] ACPI: INT_SRC_OVR (bus 0 bus_irq 11 global_irq 11 high level)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083046] ACPI: Using ACPI (MADT) for SMP configuration information
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083049] ACPI: HPET id: 0x8086a201 base: 0xfed00000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083061] TSC deadline timer available
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083064] smpboot: Allowing 2 CPUs, 0 hotplug CPUs
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083115] PM: hibernation: Registered nosave memory: [mem 0x00000000-0x00000fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083117] PM: hibernation: Registered nosave memory: [mem 0x0009f000-0x0009ffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083119] PM: hibernation: Registered nosave memory: [mem 0x000a0000-0x000effff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083121] PM: hibernation: Registered nosave memory: [mem 0x000f0000-0x000fffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083122] PM: hibernation: Registered nosave memory: [mem 0xbffd8000-0xbfffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083124] PM: hibernation: Registered nosave memory: [mem 0xc0000000-0xfeffbfff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083125] PM: hibernation: Registered nosave memory: [mem 0xfeffc000-0xfeffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083126] PM: hibernation: Registered nosave memory: [mem 0xff000000-0xfffbffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083127] PM: hibernation: Registered nosave memory: [mem 0xfffc0000-0xffffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083130] [mem 0xc0000000-0xfeffbfff] available for PCI devices
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083132] Booting paravirtualized kernel on KVM
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083136] clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645519600211568 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.083165] setup_percpu: NR_CPUS:8192 nr_cpumask_bits:2 nr_cpu_ids:2 nr_node_ids:1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085417] percpu: Embedded 62 pages/cpu s217088 r8192 d28672 u1048576
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085433] pcpu-alloc: s217088 r8192 d28672 u1048576 alloc=1*2097152
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085436] pcpu-alloc: [0] 0 1 
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085471] kvm-guest: stealtime: cpu 0, msr 13bc34080
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085477] kvm-guest: PV spinlocks disabled, no host support
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085491] Built 1 zonelists, mobility grouping on.  Total pages: 1031896
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085501] Policy zone: Normal
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085504] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.15.0-113-generic root=UUID=4640e7ac-ce2d-448f-999c-1735c8212d93 ro console=tty1 console=ttyS0 net.ifnames=0 biosdevname=0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.085872] Unknown kernel command line parameters "BOOT_IMAGE=/boot/vmlinuz-5.15.0-113-generic biosdevname=0", will be passed to user space.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.090119] Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.092196] Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.092312] mem auto-init: stack:off, heap alloc:on, heap free:off
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.170699] Memory: 3965728K/4193752K available (16393K kernel code, 4395K rwdata, 10952K rodata, 3368K init, 18700K bss, 227764K reserved, 0K cma-reserved)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.171149] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=2, Nodes=1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.171186] Kernel/User page tables isolation: enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.171293] ftrace: allocating 50718 entries in 199 pages
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.207836] ftrace: allocated 199 pages with 5 groups
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.208663] rcu: Hierarchical RCU implementation.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.208667] rcu: 	RCU restricting CPUs from NR_CPUS=8192 to nr_cpu_ids=2.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.208669] 	Rude variant of Tasks RCU enabled.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.208671] 	Tracing variant of Tasks RCU enabled.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.208672] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.208674] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=2
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.214046] NR_IRQS: 524544, nr_irqs: 440, preallocated irqs: 16
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.214286] random: crng init done
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.240986] Console: colour VGA+ 80x25
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.294619] printk: console [tty1] enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.474126] printk: console [ttyS0] enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.475503] ACPI: Core revision 20210730
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.476991] clocksource: hpet: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604467 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.479753] APIC: Switch to symmetric I/O mode setup
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.481540] x2apic enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.482801] Switched APIC routing to physical x2apic.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.485708] ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.487492] clocksource: tsc-early: mask: 0xffffffffffffffff max_cycles: 0x39a85afc727, max_idle_ns: 881590685098 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.490672] Calibrating delay loop (skipped) preset value.. 3999.99 BogoMIPS (lpj=7999996)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.494994] Last level iTLB entries: 4KB 0, 2MB 0, 4MB 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.496567] Last level dTLB entries: 4KB 0, 2MB 0, 4MB 0, 1GB 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.498675] Spectre V1 : Mitigation: usercopy/swapgs barriers and __user pointer sanitization
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.501074] Spectre V2 : Mitigation: Retpolines
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.502667] Spectre V2 : Spectre v2 / SpectreRSB mitigation: Filling RSB on context switch
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.505030] Spectre V2 : Spectre v2 / SpectreRSB : Filling RSB on VMEXIT
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.506667] Spectre V2 : Enabling Restricted Speculation for firmware calls
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.508624] Spectre V2 : mitigation: Enabling conditional Indirect Branch Prediction Barrier
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.510668] Speculative Store Bypass: Mitigation: Speculative Store Bypass disabled via prctl and seccomp
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.514674] MDS: Mitigation: Clear CPU buffers
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.516008] MMIO Stale Data: Vulnerable: Clear CPU buffers attempted, no microcode
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.518241] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.518668] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.520563] x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.522671] x86/fpu: xstate_offset[2]:  576, xstate_sizes[2]:  256
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.524448] x86/fpu: Enabled xstate features 0x7, context size is 832 bytes, using 'standard' format.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.552284] Freeing SMP alternatives memory: 44K
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.553723] pid_max: default: 32768 minimum: 301
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.554699] LSM: Security Framework initializing
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.556098] landlock: Up and running.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.557263] Yama: becoming mindful.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.559013] AppArmor: AppArmor initialized
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.560417] Mount-cache hash table entries: 8192 (order: 4, 65536 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.562734] Mountpoint-cache hash table entries: 8192 (order: 4, 65536 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.565693] smpboot: CPU0: Intel DO-Regular (family: 0x6, model: 0x4f, stepping: 0x1)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.566666] Performance Events: unsupported p6 CPU model 79 no PMU driver, software events only.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.566695] signal: max sigframe size: 1776
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.568087] rcu: Hierarchical SRCU implementation.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.570250] NMI watchdog: Perf NMI watchdog permanently disabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.570787] smp: Bringing up secondary CPUs ...
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.572470] x86: Booting SMP configuration:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.573772] .... node  #0, CPUs:      #1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.268389] kvm-clock: cpu 1, msr 116c01041, secondary cpu clock
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.575189] kvm-guest: stealtime: cpu 1, msr 13bd34080
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.578715] smp: Brought up 1 node, 2 CPUs
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.580045] smpboot: Max logical packages: 1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.581366] smpboot: Total of 2 processors activated (7999.99 BogoMIPS)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.583268] devtmpfs: initialized
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.583846] x86/mm: Memory block size: 128MB
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.586760] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.589546] futex hash table entries: 512 (order: 3, 32768 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.590769] pinctrl core: initialized pinctrl subsystem
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.592603] PM: RTC time: 00:42:53, date: 2025-11-20
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.594384] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.595256] DMA: preallocated 512 KiB GFP_KERNEL pool for atomic allocations
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.597724] DMA: preallocated 512 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.599128] DMA: preallocated 512 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.601428] audit: initializing netlink subsys (disabled)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.602916] thermal_sys: Registered thermal governor 'fair_share'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.602917] thermal_sys: Registered thermal governor 'bang_bang'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.604686] thermal_sys: Registered thermal governor 'step_wise'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.606433] thermal_sys: Registered thermal governor 'user_space'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.606674] thermal_sys: Registered thermal governor 'power_allocator'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.608438] EISA bus registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.610681] audit: type=2000 audit(1763599373.431:1): state=initialized audit_enabled=0 res=1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.613131] cpuidle: using governor ladder
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.614397] cpuidle: using governor menu
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.614796] ACPI: bus type PCI registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.616055] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.618193] PCI: Using configuration type 1 for base access
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.620208] kprobes: kprobe jump-optimization is enabled. All kprobes are optimized if possible.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.622752] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.626958] ACPI: Added _OSI(Module Device)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.628065] ACPI: Added _OSI(Processor Device)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.629426] ACPI: Added _OSI(3.0 _SCP Extensions)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.630692] ACPI: Added _OSI(Processor Aggregator Device)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.632286] ACPI: Added _OSI(Linux-Dell-Video)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.633659] ACPI: Added _OSI(Linux-Lenovo-NV-HDMI-Audio)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.634672] ACPI: Added _OSI(Linux-HPI-Hybrid-Graphics)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.637067] ACPI: 1 ACPI AML tables successfully acquired and loaded
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.639984] ACPI: Interpreter enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.641171] ACPI: PM: (supports S0 S5)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.642362] ACPI: Using IOAPIC for interrupt routing
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.642700] PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.645269] PCI: Using E820 reservations for host bridge windows
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.646858] ACPI: Enabled 2 GPEs in block 00 to 0F
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.650797] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.652599] acpi PNP0A03:00: _OSC: OS supports [ASPM ClockPM Segments MSI EDR HPX-Type3]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.654683] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.658142] acpiphp: Slot [3] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.658701] acpiphp: Slot [4] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.659947] acpiphp: Slot [5] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.661213] acpiphp: Slot [6] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.662477] acpiphp: Slot [7] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.662700] acpiphp: Slot [8] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.663952] acpiphp: Slot [9] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.665220] acpiphp: Slot [10] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.666502] acpiphp: Slot [11] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.666700] acpiphp: Slot [12] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.667985] acpiphp: Slot [13] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.669267] acpiphp: Slot [14] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.670539] acpiphp: Slot [15] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.670705] acpiphp: Slot [16] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.671982] acpiphp: Slot [17] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.673259] acpiphp: Slot [18] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.674527] acpiphp: Slot [19] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.674700] acpiphp: Slot [20] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.675976] acpiphp: Slot [21] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.677242] acpiphp: Slot [22] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.678522] acpiphp: Slot [23] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.678697] acpiphp: Slot [24] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.679975] acpiphp: Slot [25] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.681245] acpiphp: Slot [26] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.682700] acpiphp: Slot [27] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.683976] acpiphp: Slot [28] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.685258] acpiphp: Slot [29] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.686521] acpiphp: Slot [30] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.686698] acpiphp: Slot [31] registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.688029] PCI host bridge to bus 0000:00
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.689291] pci_bus 0000:00: root bus resource [bus 00-ff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.690672] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.692602] pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.694535] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.694672] pci_bus 0000:00: root bus resource [mem 0xc0000000-0xfebfffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.696823] pci_bus 0000:00: root bus resource [mem 0x140000000-0x1bfffffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.698843] pci 0000:00:00.0: [8086:1237] type 00 class 0x060000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.702755] pci 0000:00:01.0: [8086:7000] type 00 class 0x060100
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.705732] pci 0000:00:01.1: [8086:7010] type 00 class 0x010180
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.710515] pci 0000:00:01.1: reg 0x20: [io  0xc1e0-0xc1ef]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.712206] pci 0000:00:01.1: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.714245] pci 0000:00:01.1: legacy IDE quirk: reg 0x14: [io  0x03f6]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.714677] pci 0000:00:01.1: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.716731] pci 0000:00:01.1: legacy IDE quirk: reg 0x1c: [io  0x0376]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.718962] pci 0000:00:01.2: [8086:7020] type 00 class 0x0c0300
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.724175] pci 0000:00:01.2: reg 0x20: [io  0xc180-0xc19f]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.728465] pci 0000:00:01.3: [8086:7113] type 00 class 0x068000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.731195] pci 0000:00:01.3: quirk: [io  0x0600-0x063f] claimed by PIIX4 ACPI
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.733301] pci 0000:00:01.3: quirk: [io  0x0700-0x070f] claimed by PIIX4 SMB
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.735978] pci 0000:00:02.0: [1af4:1050] type 00 class 0x030000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.739788] pci 0000:00:02.0: reg 0x10: [mem 0xfe000000-0xfe7fffff pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.747653] pci 0000:00:02.0: reg 0x18: [mem 0xfe800000-0xfe803fff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.751815] pci 0000:00:02.0: reg 0x20: [mem 0xfebf0000-0xfebf0fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.759732] pci 0000:00:02.0: reg 0x30: [mem 0xfebe0000-0xfebeffff pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.762104] pci 0000:00:02.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.766999] pci 0000:00:03.0: [1af4:1000] type 00 class 0x020000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.770428] pci 0000:00:03.0: reg 0x10: [io  0xc1a0-0xc1bf]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.772505] pci 0000:00:03.0: reg 0x14: [mem 0xfebf1000-0xfebf1fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.779913] pci 0000:00:03.0: reg 0x20: [mem 0xfe804000-0xfe807fff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.788102] pci 0000:00:04.0: [1af4:1000] type 00 class 0x020000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.791510] pci 0000:00:04.0: reg 0x10: [io  0xc1c0-0xc1df]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.794674] pci 0000:00:04.0: reg 0x14: [mem 0xfebf2000-0xfebf2fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.802675] pci 0000:00:04.0: reg 0x20: [mem 0xfe808000-0xfe80bfff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.811705] pci 0000:00:05.0: [1af4:1004] type 00 class 0x010000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.814675] pci 0000:00:05.0: reg 0x10: [io  0xc100-0xc13f]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.818482] pci 0000:00:05.0: reg 0x14: [mem 0xfebf3000-0xfebf3fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.823652] pci 0000:00:05.0: reg 0x20: [mem 0xfe80c000-0xfe80ffff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.832518] pci 0000:00:06.0: [1af4:1001] type 00 class 0x010000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.835392] pci 0000:00:06.0: reg 0x10: [io  0xc000-0xc07f]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.838674] pci 0000:00:06.0: reg 0x14: [mem 0xfebf4000-0xfebf4fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.846677] pci 0000:00:06.0: reg 0x20: [mem 0xfe810000-0xfe813fff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.857475] pci 0000:00:07.0: [1af4:1001] type 00 class 0x010000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.860102] pci 0000:00:07.0: reg 0x10: [io  0xc080-0xc0ff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.862675] pci 0000:00:07.0: reg 0x14: [mem 0xfebf5000-0xfebf5fff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.870677] pci 0000:00:07.0: reg 0x20: [mem 0xfe814000-0xfe817fff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.878471] pci 0000:00:08.0: [1af4:1002] type 00 class 0x00ff00
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.880292] pci 0000:00:08.0: reg 0x10: [io  0xc140-0xc17f]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.889578] pci 0000:00:08.0: reg 0x20: [mem 0xfe818000-0xfe81bfff 64bit pref]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.914488] ACPI: PCI: Interrupt link LNKA configured for IRQ 10
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.914893] ACPI: PCI: Interrupt link LNKB configured for IRQ 10
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.917134] ACPI: PCI: Interrupt link LNKC configured for IRQ 11
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.918862] ACPI: PCI: Interrupt link LNKD configured for IRQ 11
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.921021] ACPI: PCI: Interrupt link LNKS configured for IRQ 9
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.923454] iommu: Default domain type: Translated 
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.924457] iommu: DMA domain TLB invalidation policy: lazy mode 
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.927373] SCSI subsystem initialized
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.928841] libata version 3.00 loaded.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.928841] pci 0000:00:02.0: vgaarb: setting as boot VGA device
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.928841] pci 0000:00:02.0: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.930679] pci 0000:00:02.0: vgaarb: bridge control possible
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.932797] vgaarb: loaded
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.934116] ACPI: bus type USB registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.934736] usbcore: registered new interface driver usbfs
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.937850] usbcore: registered new interface driver hub
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.938693] usbcore: registered new device driver usb
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.940759] pps_core: LinuxPPS API ver. 1 registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.942568] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.942692] PTP clock support registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.944268] EDAC MC: Ver: 3.0.0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.947257] NetLabel: Initializing
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.948678] NetLabel:  domain hash size = 128
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.950364] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.950742] NetLabel:  unlabeled traffic allowed by default
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.952814] PCI: Using ACPI for IRQ routing
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.952814] PCI: pci_cache_line_size set to 64 bytes
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.955069] e820: reserve RAM buffer [mem 0x0009fc00-0x0009ffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.955084] e820: reserve RAM buffer [mem 0xbffd8000-0xbfffffff]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.955120] hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.956918] hpet0: 3 comparators, 64-bit 100.000000 MHz counter
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.962113] clocksource: Switched to clocksource kvm-clock
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.995577] VFS: Disk quotas dquot_6.6.0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.996962] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    0.999275] AppArmor: AppArmor Filesystem Enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.000779] pnp: PnP ACPI init
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.002274] pnp: PnP ACPI: found 4 devices
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.011401] clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xffffff, max_idle_ns: 2085701024 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.014099] NET: Registered PF_INET protocol family
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.016379] IP idents hash table entries: 65536 (order: 7, 524288 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.022266] tcp_listen_portaddr_hash hash table entries: 2048 (order: 3, 32768 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.025113] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.027617] TCP established hash table entries: 32768 (order: 6, 262144 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.030464] TCP bind hash table entries: 32768 (order: 7, 524288 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.032726] TCP: Hash tables configured (established 32768 bind 32768)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.035285] MPTCP token hash table entries: 4096 (order: 4, 98304 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.037531] UDP hash table entries: 2048 (order: 4, 65536 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.039533] UDP-Lite hash table entries: 2048 (order: 4, 65536 bytes, linear)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.041669] NET: Registered PF_UNIX/PF_LOCAL protocol family
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.043384] NET: Registered PF_XDP protocol family
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.044921] pci_bus 0000:00: resource 4 [io  0x0000-0x0cf7 window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.046737] pci_bus 0000:00: resource 5 [io  0x0d00-0xffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.048565] pci_bus 0000:00: resource 6 [mem 0x000a0000-0x000bffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.050573] pci_bus 0000:00: resource 7 [mem 0xc0000000-0xfebfffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.052600] pci_bus 0000:00: resource 8 [mem 0x140000000-0x1bfffffff window]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.054731] pci 0000:00:01.0: PIIX3: Enabling Passive Release
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.056441] pci 0000:00:00.0: Limiting direct PCI/PCI transfers
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.058198] pci 0000:00:01.0: Activating ISA DMA hang workarounds
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.082158] ACPI: \_SB_.LNKD: Enabled at IRQ 11
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.106395] pci 0000:00:01.2: quirk_usb_early_handoff+0x0/0x160 took 45312 usecs
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.108794] PCI: CLS 0 bytes, default 64
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.110052] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.110227] Trying to unpack rootfs image as initramfs...
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.112014] software IO TLB: mapped [mem 0x00000000bbfd8000-0x00000000bffd8000] (64MB)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.116374] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x39a85afc727, max_idle_ns: 881590685098 ns
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.119825] Initialise system trusted keyrings
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.121279] Key type blacklist registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.122716] workingset: timestamp_bits=36 max_order=20 bucket_order=0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.126216] zbud: loaded
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.127457] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.129409] fuse: init (API version 7.34)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.130970] integrity: Platform Keyring initialized
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.143683] Key type asymmetric registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.145062] Asymmetric key parser 'x509' registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.146613] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 243)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.149126] io scheduler mq-deadline registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.151123] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.153278] input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.155600] ACPI: button: Power Button [PWRF]
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.179459] ACPI: \_SB_.LNKB: Enabled at IRQ 10
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.204609] ACPI: \_SB_.LNKC: Enabled at IRQ 11
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.259990] ACPI: \_SB_.LNKA: Enabled at IRQ 10
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.334480] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.361767] 00:00: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.365752] Linux agpgart interface v0.103
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.369814] loop: module loaded
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.371108] ata_piix 0000:00:01.1: version 2.13
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.372321] scsi host0: ata_piix
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.373575] scsi host1: ata_piix
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.374713] ata1: PATA max MWDMA2 cmd 0x1f0 ctl 0x3f6 bmdma 0xc1e0 irq 14
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.376657] ata2: PATA max MWDMA2 cmd 0x170 ctl 0x376 bmdma 0xc1e8 irq 15
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.379406] tun: Universal TUN/TAP device driver, 1.6
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.381002] PPP generic driver version 2.4.2
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.382399] VFIO - User Level meta-driver version: 0.3
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.384581] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.386520] ehci-pci: EHCI PCI platform driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.387995] ehci-platform: EHCI generic platform driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.389576] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.391413] ohci-pci: OHCI PCI platform driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.392836] ohci-platform: OHCI generic platform driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.394411] uhci_hcd: USB Universal Host Controller Interface driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.418658] uhci_hcd 0000:00:01.2: UHCI Host Controller
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.420239] uhci_hcd 0000:00:01.2: new USB bus registered, assigned bus number 1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.422429] uhci_hcd 0000:00:01.2: detected 2 ports
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.424043] uhci_hcd 0000:00:01.2: irq 11, io base 0x0000c180
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.426013] usb usb1: New USB device found, idVendor=1d6b, idProduct=0001, bcdDevice= 5.15
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.428528] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.430703] usb usb1: Product: UHCI Host Controller
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.432189] usb usb1: Manufacturer: Linux 5.15.0-113-generic uhci_hcd
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.434096] usb usb1: SerialNumber: 0000:00:01.2
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.435740] hub 1-0:1.0: USB hub found
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.437872] hub 1-0:1.0: 2 ports detected
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.439489] i8042: PNP: PS/2 Controller [PNP0303:KBD,PNP0f13:MOU] at 0x60,0x64 irq 1,12
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.440946] Freeing initrd memory: 31008K
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.443063] serio: i8042 KBD port at 0x60,0x64 irq 1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.444806] serio: i8042 AUX port at 0x60,0x64 irq 12
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.446478] mousedev: PS/2 mouse device common for all mice
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.448309] rtc_cmos 00:03: RTC can wake from S4
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.450521] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.453587] rtc_cmos 00:03: registered as rtc0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.455110] rtc_cmos 00:03: setting system clock to 2025-11-20T00:42:54 UTC (1763599374)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.457574] rtc_cmos 00:03: alarms up to one day, y3k, 242 bytes nvram
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.459500] i2c_dev: i2c /dev entries driver
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.460890] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.464506] device-mapper: uevent: version 1.0.3
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.466025] device-mapper: ioctl: 4.45.0-ioctl (2021-03-22) initialised: dm-devel@redhat.com
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.468569] platform eisa.0: Probing EISA bus 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.469980] platform eisa.0: EISA: Cannot allocate resource for mainboard
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.471950] platform eisa.0: Cannot allocate resource for EISA slot 1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.473838] platform eisa.0: Cannot allocate resource for EISA slot 2
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.475738] platform eisa.0: Cannot allocate resource for EISA slot 3
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.477614] platform eisa.0: Cannot allocate resource for EISA slot 4
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.479527] platform eisa.0: Cannot allocate resource for EISA slot 5
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.481395] platform eisa.0: Cannot allocate resource for EISA slot 6
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.483284] platform eisa.0: Cannot allocate resource for EISA slot 7
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.485160] platform eisa.0: Cannot allocate resource for EISA slot 8
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.487058] platform eisa.0: EISA: Detected 0 cards
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.488556] intel_pstate: CPU model not supported
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.490083] ledtrig-cpu: registered to indicate activity on CPUs
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.492016] drop_monitor: Initializing network drop monitor service
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.494617] NET: Registered PF_INET6 protocol family
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.505022] Segment Routing with IPv6
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.506297] In-situ OAM (IOAM) with IPv6
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.507837] NET: Registered PF_PACKET protocol family
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.509518] Key type dns_resolver registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.511300] No MBM correction factor available
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.512832] IPI shorthand broadcast: enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.514272] sched_clock: Marking stable (1248413476, 264389136)->(1616683049, -103880437)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.517033] registered taskstats version 1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.518462] Loading compiled-in X.509 certificates
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.521019] Loaded X.509 cert 'Build time autogenerated kernel key: 385507740c8b7f78c0c9158cc40420d3a55ea602'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.524755] Loaded X.509 cert 'Canonical Ltd. Live Patch Signing: 14df34d1a87cf37625abec039ef2bf521249b969'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.528227] Loaded X.509 cert 'Canonical Ltd. Kernel Module Signing: 88f752e560a1e0737e31163a466ad7b70a850c19'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.531144] blacklist: Loading compiled-in revocation X.509 certificates
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.533155] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing: 61482aa2830d0ab2ad5af10b7250da9033ddcef0'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.536106] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2017): 242ade75ac4a15e50d50c84b0d45ff3eae707a03'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.539543] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (ESM 2018): 365188c1d374d6b07c3c8f240f8ef722433d6a8b'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.542734] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2019): c0746fd6c5da3ae827864651ad66ae47fe24b3e8'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.546181] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v1): a8d54bbb3825cfb94fa13c9f8a594a195c107b8d'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.549326] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v2): 4cf046892d6fd3c9a5b03f98d845f90851dc6a8c'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.552316] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v3): 100437bb6de6e469b581e61cd66bce3ef4ed53af'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.555417] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (Ubuntu Core 2019): c1d57b8f6b743f23ee41f4f7ee292f06eecadfb9'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.559423] zswap: loaded using pool lzo/zbud
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.561428] Key type .fscrypt registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.562941] Key type fscrypt-provisioning registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.569404] Key type encrypted registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.570898] AppArmor: AppArmor sha1 policy hashing enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.572875] ima: No TPM chip found, activating TPM-bypass!
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.574902] Loading compiled-in module X.509 certificates
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.577808] Loaded X.509 cert 'Build time autogenerated kernel key: 385507740c8b7f78c0c9158cc40420d3a55ea602'
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.580971] ima: Allocated hash algorithm: sha1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.582353] ima: No architecture policies found
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.583768] evm: Initialising EVM extended attributes:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.585312] evm: security.selinux
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.586388] evm: security.SMACK64
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.587461] evm: security.SMACK64EXEC
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.588631] evm: security.SMACK64TRANSMUTE
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.589901] evm: security.SMACK64MMAP
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.598874] evm: security.apparmor
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.599989] evm: security.ima
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.600994] evm: security.capability
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.602124] evm: HMAC attrs: 0x1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.603704] PM:   Magic number: 1:216:709
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.605438] RAS: Correctable Errors collector initialized.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.615139] Freeing unused decrypted memory: 2036K
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.618933] Freeing unused kernel image (initmem) memory: 3368K
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.620788] Write protecting the kernel read-only data: 30720k
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.624560] Freeing unused kernel image (text/rodata gap) memory: 2036K
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.627835] Freeing unused kernel image (rodata/data gap) memory: 1336K
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.689117] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.691030] x86/mm: Checking user space page tables
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.749109] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.751031] Run /init as init process
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752520]   with arguments:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752523]     /init
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752524]   with environment:
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752525]     HOME=/
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752526]     TERM=linux
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752528]     BOOT_IMAGE=/boot/vmlinuz-5.15.0-113-generic
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.752529]     biosdevname=0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.917697] input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input4
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.921773] input: VirtualPS/2 VMware VMMouse as /devices/platform/i8042/serio1/input/input3
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.922762] virtio_blk virtio4: [vda] 167772160 512-byte logical blocks (85.9 GB/80.0 GiB)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.938963] scsi host2: Virtio SCSI HBA
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.941711] GPT:Primary header thinks Alt. header is not at the end of the disk.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.944418] GPT:4612095 != 167772159
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.945814] GPT:Alternate GPT header not at the end of the disk.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.948005] GPT:4612095 != 167772159
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.949408] GPT: Use GNU Parted to correct GPT errors.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.951288]  vda: vda1 vda14 vda15
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.953040] cryptd: max_cpu_qlen set to 1000
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.969550] virtio_blk virtio5: [vdb] 1056 512-byte logical blocks (541 kB/528 KiB)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    1.998951] AVX2 version of gcm_enc/dec engaged.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.016806] AES CTR mode by8 optimization enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.038402] [drm] pci: virtio-vga detected at 0000:00:02.0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.040499] virtio-pci 0000:00:02.0: vgaarb: deactivate vga console
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.056573] Console: switching to colour dummy device 80x25
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.058872] [drm] features: -virgl +edid -resource_blob -host_visible
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.062420] [drm] number of scanouts: 1
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.063517] [drm] number of cap sets: 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.066853] [drm] Initialized virtio_gpu 0.1.0 0 for virtio0 on minor 0
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.085765] virtio_gpu virtio0: [drm] drm_plane_enable_fb_damage_clips() not called
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.085818] Console: switching to colour frame buffer device 128x48
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.096626] virtio_gpu virtio0: [drm] fb0: virtio_gpudrmfb frame buffer device
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.320405] raid6: avx2x4   gen() 22601 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.388409] raid6: avx2x4   xor()  8336 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.456412] raid6: avx2x2   gen() 26293 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.524409] raid6: avx2x2   xor() 18096 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.592405] raid6: avx2x1   gen() 22787 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.660417] raid6: avx2x1   xor() 14576 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.728405] raid6: sse2x4   gen() 12101 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.796407] raid6: sse2x4   xor()  5992 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.864427] raid6: sse2x2   gen()  9484 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    2.932406] raid6: sse2x2   xor()  7251 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.000408] raid6: sse2x1   gen()  6213 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.068419] raid6: sse2x1   xor()  5137 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.069393] raid6: using algorithm avx2x2 gen() 26293 MB/s
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.070618] raid6: .... xor() 18096 MB/s, rmw enabled
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.071740] raid6: using avx2x2 recovery algorithm
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.074112] xor: automatically using best checksumming function   avx       
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.076619] async_tx: api initialized (async)
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.154155] Btrfs loaded, crc32c=crc32c-intel, zoned=yes, fsverity=yes
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.184353] EXT4-fs (vda1): mounted filesystem with ordered data mode. Opts: (null). Quota mode: none.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.783528] EXT4-fs (vda1): re-mounted. Opts: discard,errors=remount-ro. Quota mode: none.
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.800569] alua: device handler registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.801683] emc: device handler registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.802975] rdac: device handler registered
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.898634] loop0: detected capacity change from 0 to 130960
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.907018] loop1: detected capacity change from 0 to 79520
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    3.909928] loop2: detected capacity change from 0 to 178240
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.525876] audit: type=1400 audit(1763599377.568:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe" pid=481 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.528504] audit: type=1400 audit(1763599377.568:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe//kmod" pid=481 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.528639] audit: type=1400 audit(1763599377.572:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name="lsb_release" pid=480 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.654362] audit: type=1400 audit(1763599377.696:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ubuntu_pro_apt_news" pid=508 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.710704] audit: type=1400 audit(1763599377.752:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=507 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.712642] audit: type=1400 audit(1763599377.756:7): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/lib/NetworkManager/nm-dhcp-helper" pid=507 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.714233] audit: type=1400 audit(1763599377.756:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/lib/connman/scripts/dhclient-script" pid=507 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.717625] audit: type=1400 audit(1763599377.760:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/{,usr/}sbin/dhclient" pid=507 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    4.810011] audit: type=1400 audit(1763599377.852:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/bin/man" pid=510 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    5.680592] kauditd_printk_skb: 15 callbacks suppressed
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    5.680597] audit: type=1400 audit(1763599378.724:26): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine" pid=523 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    5.682435] audit: type=1400 audit(1763599378.724:27): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=523 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    6.065326] ISO 9660 Extensions: RRIP_1991A
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    6.119515] audit: type=1400 audit(1763599379.160:28): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.activate" pid=525 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    6.166289] audit: type=1400 audit(1763599379.208:29): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.benchmark" pid=526 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    6.600235] audit: type=1400 audit(1763599379.640:30): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.buginfo" pid=542 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    6.767749] audit: type=1400 audit(1763599379.808:31): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.check-kernel" pid=544 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    7.318649] audit: type=1400 audit(1763599380.360:32): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.hook.configure" pid=560 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    7.389169] audit: type=1400 audit(1763599380.432:33): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.daemon" pid=551 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    7.535638] audit: type=1400 audit(1763599380.576:34): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.hook.install" pid=567 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [    7.729265] audit: type=1400 audit(1763599380.772:35): apparmor="STATUS" operation="profile_load" profile="unconfined" name="snap.lxd.hook.remove" pid=568 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [   21.469904] EXT4-fs (vda1): resizing filesystem from 548091 to 20943099 blocks
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [   21.525524] EXT4-fs (vda1): resized filesystem to 20943099
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [   22.377763] loop3: detected capacity change from 0 to 8
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [   22.665756] kauditd_printk_skb: 5 callbacks suppressed
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [   22.665759] audit: type=1400 audit(1763599395.737:41): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=841 comm="apparmor_parser"
+Nov 20 00:43:15 w-guard-wg-cp-svtk6-lqtxw kernel: [   22.684345] audit: type=1400 audit(1763599395.753:42): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=841 comm="apparmor_parser"
+Nov 20 00:44:27 w-guard-wg-cp-svtk6-lqtxw kernel: [   94.558565] bridge: filtering via arp/ip/ip6tables is no longer available by default. Update your scripts to load br_netfilter if you need this.
+Nov 20 00:44:27 w-guard-wg-cp-svtk6-lqtxw kernel: [   94.560185] Bridge firewalling registered
+Nov 20 00:44:37 w-guard-wg-cp-svtk6-lqtxw kernel: [  104.108725] overlayfs: idmapped layers are currently not supported
+Nov 20 00:44:51 w-guard-wg-cp-svtk6-lqtxw kernel: [  118.119566] audit: type=1400 audit(1763599491.307:43): apparmor="STATUS" operation="profile_load" profile="unconfined" name="cri-containerd.apparmor.d" pid=9000 comm="apparmor_parser"
+Nov 20 00:46:28 w-guard-wg-cp-svtk6-lqtxw kernel: [  215.178105] wireguard: WireGuard 1.0.0 loaded. See www.wireguard.com for information.
+Nov 20 00:46:28 w-guard-wg-cp-svtk6-lqtxw kernel: [  215.178125] wireguard: Copyright (C) 2015-2019 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
+Nov 20 00:46:28 w-guard-wg-cp-svtk6-lqtxw kernel: [  215.589531] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:46:28 w-guard-wg-cp-svtk6-lqtxw kernel: [  215.589562] IPv6: ADDRCONF(NETDEV_CHANGE): cali622a93eb23b: link becomes ready
+Nov 20 00:46:37 w-guard-wg-cp-svtk6-lqtxw kernel: [  224.434730] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:46:37 w-guard-wg-cp-svtk6-lqtxw kernel: [  224.434761] IPv6: ADDRCONF(NETDEV_CHANGE): cali4e366eba6b4: link becomes ready
+Nov 20 00:46:39 w-guard-wg-cp-svtk6-lqtxw kernel: [  226.426452] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:46:39 w-guard-wg-cp-svtk6-lqtxw kernel: [  226.426483] IPv6: ADDRCONF(NETDEV_CHANGE): cali4611030f6e0: link becomes ready
+Nov 20 00:46:41 w-guard-wg-cp-svtk6-lqtxw kernel: [  228.440582] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:46:41 w-guard-wg-cp-svtk6-lqtxw kernel: [  228.440626] IPv6: ADDRCONF(NETDEV_CHANGE): cali487c13e4b5e: link becomes ready
+Nov 20 00:47:19 w-guard-wg-cp-svtk6-lqtxw kernel: [  265.877503] IPv6: ADDRCONF(NETDEV_CHANGE): calif098e5c4ce2: link becomes ready
+Nov 20 00:47:26 w-guard-wg-cp-svtk6-lqtxw kernel: [  272.994082] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:47:26 w-guard-wg-cp-svtk6-lqtxw kernel: [  272.994122] IPv6: ADDRCONF(NETDEV_CHANGE): caliaa8e6ebcdce: link becomes ready
+Nov 20 00:47:56 w-guard-wg-cp-svtk6-lqtxw kernel: [  303.211118] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:47:56 w-guard-wg-cp-svtk6-lqtxw kernel: [  303.211153] IPv6: ADDRCONF(NETDEV_CHANGE): calide0290a6f15: link becomes ready
+Nov 20 00:48:01 w-guard-wg-cp-svtk6-lqtxw kernel: [  308.683197] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:48:01 w-guard-wg-cp-svtk6-lqtxw kernel: [  308.683243] IPv6: ADDRCONF(NETDEV_CHANGE): calife3696cd08c: link becomes ready
+Nov 20 00:48:09 w-guard-wg-cp-svtk6-lqtxw kernel: [  316.202391] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:48:09 w-guard-wg-cp-svtk6-lqtxw kernel: [  316.202427] IPv6: ADDRCONF(NETDEV_CHANGE): cali40a2bb3ea25: link becomes ready
+Nov 20 00:48:40 w-guard-wg-cp-svtk6-lqtxw kernel: [  347.590601] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:48:40 w-guard-wg-cp-svtk6-lqtxw kernel: [  347.590637] IPv6: ADDRCONF(NETDEV_CHANGE): cali80706680e2e: link becomes ready
+Nov 20 00:48:44 w-guard-wg-cp-svtk6-lqtxw kernel: [  351.305428] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:48:44 w-guard-wg-cp-svtk6-lqtxw kernel: [  351.305461] IPv6: ADDRCONF(NETDEV_CHANGE): cali436ce3cef50: link becomes ready
+Nov 20 00:48:58 w-guard-wg-cp-svtk6-lqtxw kernel: [  365.050633] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:48:58 w-guard-wg-cp-svtk6-lqtxw kernel: [  365.050683] IPv6: ADDRCONF(NETDEV_CHANGE): calicff72b3391d: link becomes ready
+Nov 20 00:50:03 w-guard-wg-cp-svtk6-lqtxw kernel: [  430.682215] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+Nov 20 00:50:03 w-guard-wg-cp-svtk6-lqtxw kernel: [  430.682252] IPv6: ADDRCONF(NETDEV_CHANGE): cali6c12df98eb6: link becomes ready
+Nov 20 01:45:22 w-guard-wg-cp-svtk6-lqtxw kernel: [ 3748.973727] hrtimer: interrupt took 1838205 ns
+Nov 20 06:45:35 w-guard-wg-cp-svtk6-lqtxw kernel: [21762.381062] audit: type=1400 audit(1763621135.884:44): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="lsb_release" pid=232127 comm="apparmor_parser"
+Nov 20 06:45:35 w-guard-wg-cp-svtk6-lqtxw kernel: [21762.452448] audit: type=1400 audit(1763621135.956:45): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="nvidia_modprobe" pid=232147 comm="apparmor_parser"
+Nov 20 06:45:35 w-guard-wg-cp-svtk6-lqtxw kernel: [21762.453818] audit: type=1400 audit(1763621135.956:46): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="nvidia_modprobe//kmod" pid=232147 comm="apparmor_parser"
+Nov 20 06:45:36 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.427830] audit: type=1400 audit(1763621136.932:47): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="nvidia_modprobe" pid=232203 comm="apparmor_parser"
+Nov 20 06:45:36 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.435855] audit: type=1400 audit(1763621136.940:48): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="nvidia_modprobe//kmod" pid=232203 comm="apparmor_parser"
+Nov 20 06:45:36 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.435904] audit: type=1400 audit(1763621136.940:49): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="lsb_release" pid=232202 comm="apparmor_parser"
+Nov 20 06:45:37 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.618635] audit: type=1400 audit(1763621137.120:50): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="ubuntu_pro_apt_news" pid=232205 comm="apparmor_parser"
+Nov 20 06:45:37 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.869334] audit: type=1400 audit(1763621137.372:51): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=232204 comm="apparmor_parser"
+Nov 20 06:45:37 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.872708] audit: type=1400 audit(1763621137.376:52): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/NetworkManager/nm-dhcp-helper" pid=232204 comm="apparmor_parser"
+Nov 20 06:45:37 w-guard-wg-cp-svtk6-lqtxw kernel: [21763.875374] audit: type=1400 audit(1763621137.376:53): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/connman/scripts/dhclient-script" pid=232204 comm="apparmor_parser"
+Nov 20 06:59:27 w-guard-wg-cp-svtk6-lqtxw kernel: [22593.801732] kauditd_printk_skb: 16 callbacks suppressed
+Nov 20 06:59:27 w-guard-wg-cp-svtk6-lqtxw kernel: [22593.801738] audit: type=1400 audit(1763621967.279:70): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=266504 comm="apparmor_parser"
+Nov 20 06:59:27 w-guard-wg-cp-svtk6-lqtxw kernel: [22593.803930] audit: type=1400 audit(1763621967.279:71): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=266504 comm="apparmor_parser"
+Nov 20 06:59:33 w-guard-wg-cp-svtk6-lqtxw kernel: [22599.849488] loop3: detected capacity change from 0 to 8
+Nov 20 06:59:33 w-guard-wg-cp-svtk6-lqtxw kernel: [22600.414857] audit: type=1400 audit(1763621973.891:72): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=266715 comm="apparmor_parser"
+Nov 20 06:59:33 w-guard-wg-cp-svtk6-lqtxw kernel: [22600.430178] audit: type=1400 audit(1763621973.907:73): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=266715 comm="apparmor_parser"
+Nov 20 06:59:34 w-guard-wg-cp-svtk6-lqtxw kernel: [22601.196284] audit: type=1400 audit(1763621974.671:74): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine" pid=266806 comm="apparmor_parser"
+Nov 20 06:59:34 w-guard-wg-cp-svtk6-lqtxw kernel: [22601.215095] audit: type=1400 audit(1763621974.691:75): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=266806 comm="apparmor_parser"
+Nov 20 06:59:34 w-guard-wg-cp-svtk6-lqtxw kernel: [22601.277029] audit: type=1400 audit(1763621974.755:76): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap-update-ns.lxd" pid=266808 comm="apparmor_parser"
+Nov 20 06:59:35 w-guard-wg-cp-svtk6-lqtxw kernel: [22601.644778] audit: type=1400 audit(1763621975.119:77): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.activate" pid=266809 comm="apparmor_parser"
+Nov 20 06:59:35 w-guard-wg-cp-svtk6-lqtxw kernel: [22602.162649] audit: type=1400 audit(1763621975.639:78): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.benchmark" pid=266810 comm="apparmor_parser"
+Nov 20 06:59:36 w-guard-wg-cp-svtk6-lqtxw kernel: [22602.784582] audit: type=1400 audit(1763621976.259:79): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.buginfo" pid=266811 comm="apparmor_parser"
+Nov 20 06:59:36 w-guard-wg-cp-svtk6-lqtxw kernel: [22603.315309] audit: type=1400 audit(1763621976.791:80): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.check-kernel" pid=266835 comm="apparmor_parser"
+Nov 20 06:59:37 w-guard-wg-cp-svtk6-lqtxw kernel: [22603.902217] audit: type=1400 audit(1763621977.379:81): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.daemon" pid=266836 comm="apparmor_parser"
+Nov 20 06:59:39 w-guard-wg-cp-svtk6-lqtxw kernel: [22605.713277] kauditd_printk_skb: 3 callbacks suppressed
+Nov 20 06:59:39 w-guard-wg-cp-svtk6-lqtxw kernel: [22605.713281] audit: type=1400 audit(1763621979.191:85): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.lxc" pid=266842 comm="apparmor_parser"
+Nov 20 06:59:39 w-guard-wg-cp-svtk6-lqtxw kernel: [22606.249331] audit: type=1400 audit(1763621979.727:86): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.lxc-to-lxd" pid=266843 comm="apparmor_parser"
+Nov 20 06:59:40 w-guard-wg-cp-svtk6-lqtxw kernel: [22606.760773] audit: type=1400 audit(1763621980.235:87): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.lxd" pid=266850 comm="apparmor_parser"
+Nov 20 06:59:40 w-guard-wg-cp-svtk6-lqtxw kernel: [22607.302700] audit: type=1400 audit(1763621980.779:88): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.migrate" pid=266851 comm="apparmor_parser"
+Nov 20 06:59:41 w-guard-wg-cp-svtk6-lqtxw kernel: [22608.032344] audit: type=1400 audit(1763621981.507:89): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.user-daemon" pid=266879 comm="apparmor_parser"
+Nov 20 06:59:47 w-guard-wg-cp-svtk6-lqtxw kernel: [22613.623063] loop3: detected capacity change from 0 to 8
+Nov 20 06:59:47 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.004613] audit: type=1400 audit(1763621987.479:90): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=266984 comm="apparmor_parser"
+Nov 20 06:59:47 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.007031] audit: type=1400 audit(1763621987.483:91): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=266984 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.943542] audit: type=1400 audit(1763621988.419:92): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap-update-ns.lxd" pid=267076 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.954651] audit: type=1400 audit(1763621988.431:93): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.activate" pid=267077 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.955164] audit: type=1400 audit(1763621988.431:94): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine" pid=267074 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.972340] audit: type=1400 audit(1763621988.447:95): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=267074 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.980085] audit: type=1400 audit(1763621988.455:96): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.benchmark" pid=267078 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.990474] audit: type=1400 audit(1763621988.467:97): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.check-kernel" pid=267080 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22614.993654] audit: type=1400 audit(1763621988.471:98): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.buginfo" pid=267079 comm="apparmor_parser"
+Nov 20 06:59:48 w-guard-wg-cp-svtk6-lqtxw kernel: [22615.003993] audit: type=1400 audit(1763621988.479:99): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.daemon" pid=267081 comm="apparmor_parser"
+Nov 20 07:00:03 w-guard-wg-cp-svtk6-lqtxw kernel: [22629.896862] loop3: detected capacity change from 0 to 187192
+Nov 20 07:00:05 w-guard-wg-cp-svtk6-lqtxw kernel: [22632.437093] kauditd_printk_skb: 8 callbacks suppressed
+Nov 20 07:00:05 w-guard-wg-cp-svtk6-lqtxw kernel: [22632.437099] audit: type=1400 audit(1763622005.910:108): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine" pid=267711 comm="apparmor_parser"
+Nov 20 07:00:05 w-guard-wg-cp-svtk6-lqtxw kernel: [22632.437107] audit: type=1400 audit(1763622005.910:109): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/snap/snapd/21759/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=267711 comm="apparmor_parser"
+Nov 20 07:00:06 w-guard-wg-cp-svtk6-lqtxw kernel: [22633.225124] audit: type=1400 audit(1763622006.698:110): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.activate" pid=267717 comm="apparmor_parser"
+Nov 20 07:00:07 w-guard-wg-cp-svtk6-lqtxw kernel: [22633.659563] audit: type=1400 audit(1763622007.134:111): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.benchmark" pid=267756 comm="apparmor_parser"
+Nov 20 07:00:07 w-guard-wg-cp-svtk6-lqtxw kernel: [22634.310117] audit: type=1400 audit(1763622007.786:112): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.buginfo" pid=267758 comm="apparmor_parser"
+Nov 20 07:00:08 w-guard-wg-cp-svtk6-lqtxw kernel: [22635.073432] audit: type=1400 audit(1763622008.546:113): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.check-kernel" pid=267759 comm="apparmor_parser"
+Nov 20 07:00:09 w-guard-wg-cp-svtk6-lqtxw kernel: [22636.182711] audit: type=1400 audit(1763622009.658:114): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.daemon" pid=267761 comm="apparmor_parser"
+Nov 20 07:00:10 w-guard-wg-cp-svtk6-lqtxw kernel: [22637.282181] audit: type=1400 audit(1763622010.758:115): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.hook.configure" pid=267771 comm="apparmor_parser"
+Nov 20 07:00:11 w-guard-wg-cp-svtk6-lqtxw kernel: [22638.038595] audit: type=1400 audit(1763622011.514:116): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.hook.install" pid=267779 comm="apparmor_parser"
+Nov 20 07:00:12 w-guard-wg-cp-svtk6-lqtxw kernel: [22638.777162] audit: type=1400 audit(1763622012.250:117): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.hook.remove" pid=267828 comm="apparmor_parser"
+Nov 20 07:00:12 w-guard-wg-cp-svtk6-lqtxw kernel: [22639.369120] audit: type=1400 audit(1763622012.842:118): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.lxc" pid=267834 comm="apparmor_parser"
+Nov 20 07:00:13 w-guard-wg-cp-svtk6-lqtxw kernel: [22640.012188] audit: type=1400 audit(1763622013.486:119): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.lxc-to-lxd" pid=267843 comm="apparmor_parser"
+Nov 20 07:00:13 w-guard-wg-cp-svtk6-lqtxw kernel: [22640.469142] audit: type=1400 audit(1763622013.942:120): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.lxd" pid=267854 comm="apparmor_parser"
+Nov 20 07:00:14 w-guard-wg-cp-svtk6-lqtxw kernel: [22640.938314] audit: type=1400 audit(1763622014.414:121): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.migrate" pid=267860 comm="apparmor_parser"
+Nov 20 07:00:15 w-guard-wg-cp-svtk6-lqtxw kernel: [22641.618081] audit: type=1400 audit(1763622015.090:122): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.user-daemon" pid=267872 comm="apparmor_parser"
+Nov 20 07:00:15 w-guard-wg-cp-svtk6-lqtxw kernel: [22641.629442] audit: type=1400 audit(1763622015.102:123): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap-update-ns.lxd" pid=267899 comm="apparmor_parser"
+Nov 20 16:24:59 w-guard-wg-cp-svtk6-lqtxw kernel: [56525.432674] loop4: detected capacity change from 0 to 130608
+Nov 21 06:20:00 w-guard-wg-cp-svtk6-lqtxw kernel: [106625.564431] loop5: detected capacity change from 0 to 104296
+Nov 21 06:20:01 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.045840] audit: type=1400 audit(1763706001.777:124): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/snap/snapd/25577/usr/lib/snapd/snap-confine" pid=1079790 comm="apparmor_parser"
+Nov 21 06:20:01 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.048856] audit: type=1400 audit(1763706001.781:125): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/snap/snapd/25577/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=1079790 comm="apparmor_parser"
+Nov 21 06:20:01 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.187155] audit: type=1400 audit(1763706001.921:126): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap-update-ns.lxd" pid=1079839 comm="apparmor_parser"
+Nov 21 06:20:01 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.235061] audit: type=1400 audit(1763706001.969:127): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.activate" pid=1079840 comm="apparmor_parser"
+Nov 21 06:20:02 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.267918] audit: type=1400 audit(1763706002.001:128): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.benchmark" pid=1079841 comm="apparmor_parser"
+Nov 21 06:20:02 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.294121] audit: type=1400 audit(1763706002.025:129): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.buginfo" pid=1079842 comm="apparmor_parser"
+Nov 21 06:20:02 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.318970] audit: type=1400 audit(1763706002.053:130): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.check-kernel" pid=1079843 comm="apparmor_parser"
+Nov 21 06:20:02 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.349949] audit: type=1400 audit(1763706002.081:131): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.daemon" pid=1079844 comm="apparmor_parser"
+Nov 21 06:20:02 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.374584] audit: type=1400 audit(1763706002.105:132): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.hook.configure" pid=1079845 comm="apparmor_parser"
+Nov 21 06:20:02 w-guard-wg-cp-svtk6-lqtxw kernel: [106627.389911] audit: type=1400 audit(1763706002.121:133): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="snap.lxd.hook.install" pid=1079846 comm="apparmor_parser"
+Nov 21 06:20:08 w-guard-wg-cp-svtk6-lqtxw kernel: [106633.692953] loop6: detected capacity change from 0 to 8
+Nov 21 06:20:11 w-guard-wg-cp-svtk6-lqtxw kernel: [106636.662016] kauditd_printk_skb: 6 callbacks suppressed
+Nov 21 06:20:11 w-guard-wg-cp-svtk6-lqtxw kernel: [106636.662022] audit: type=1400 audit(1763706011.393:140): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/snap/snapd/25577/usr/lib/snapd/snap-confine" pid=1080147 comm="apparmor_parser"
+Nov 21 06:20:11 w-guard-wg-cp-svtk6-lqtxw kernel: [106636.676933] audit: type=1400 audit(1763706011.409:141): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/snap/snapd/25577/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=1080147 comm="apparmor_parser"
+Nov 21 06:20:11 w-guard-wg-cp-svtk6-lqtxw kernel: [106636.704597] audit: type=1400 audit(1763706011.437:142): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap-update-ns.lxd" pid=1080149 comm="apparmor_parser"
+Nov 21 06:20:11 w-guard-wg-cp-svtk6-lqtxw kernel: [106636.934274] audit: type=1400 audit(1763706011.665:143): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.activate" pid=1080150 comm="apparmor_parser"
+Nov 21 06:20:11 w-guard-wg-cp-svtk6-lqtxw kernel: [106637.166801] audit: type=1400 audit(1763706011.897:144): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.benchmark" pid=1080173 comm="apparmor_parser"
+Nov 21 06:20:12 w-guard-wg-cp-svtk6-lqtxw kernel: [106637.408456] audit: type=1400 audit(1763706012.141:145): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.buginfo" pid=1080174 comm="apparmor_parser"
+Nov 21 06:20:12 w-guard-wg-cp-svtk6-lqtxw kernel: [106637.639116] audit: type=1400 audit(1763706012.373:146): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.check-kernel" pid=1080175 comm="apparmor_parser"
+Nov 21 06:20:12 w-guard-wg-cp-svtk6-lqtxw kernel: [106637.901294] audit: type=1400 audit(1763706012.633:147): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.daemon" pid=1080176 comm="apparmor_parser"
+Nov 21 06:20:12 w-guard-wg-cp-svtk6-lqtxw kernel: [106638.141378] audit: type=1400 audit(1763706012.873:148): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.hook.configure" pid=1080177 comm="apparmor_parser"
+Nov 21 06:20:13 w-guard-wg-cp-svtk6-lqtxw kernel: [106638.323639] audit: type=1400 audit(1763706013.057:149): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="snap.lxd.hook.install" pid=1080178 comm="apparmor_parser"

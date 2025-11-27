@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "pushprox-client" in pod "pushprox-kube-controller-manager-client-8shtq" not found

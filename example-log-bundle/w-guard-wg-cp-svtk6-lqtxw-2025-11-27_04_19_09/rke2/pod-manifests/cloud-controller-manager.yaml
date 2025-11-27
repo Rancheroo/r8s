@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    component: cloud-controller-manager
+    tier: control-plane
+  name: cloud-controller-manager
+  namespace: kube-system
+  uid: 69c43ac7e7614048bdb9cebe8c47f266
+spec:
+  containers:
+  - args:
+    - --allocate-node-cidrs=true
+    - --authentication-kubeconfig=/var/lib/rancher/rke2/server/cred/cloud-controller.kubeconfig
+    - --authorization-kubeconfig=/var/lib/rancher/rke2/server/cred/cloud-controller.kubeconfig
+    - --bind-address=127.0.0.1
+    - --cloud-config=/var/lib/rancher/rke2/server/etc/cloud-config.yaml
+    - --cloud-provider=rke2
+    - --cluster-cidr=10.42.0.0/16
+    - --configure-cloud-routes=false
+    - --controllers=*,-route,-service
+    - --kubeconfig=/var/lib/rancher/rke2/server/cred/cloud-controller.kubeconfig
+    - --leader-elect-resource-name=rke2-cloud-controller-manager
+    - --node-status-update-frequency=1m0s
+    - --profiling=false
+    command:
+    - cloud-controller-manager
+    env:
+    - name: FILE_HASH
+      value: 59b7d0941685165d97452606a01d8156f266badf47c2c72ceb495395e6433f34
+    - name: NO_PROXY
+      value: .svc,.cluster.local,10.42.0.0/16,10.43.0.0/16
+    image: index.docker.io/rancher/rke2-cloud-provider:v1.32.5-rc1.0.20250516182639-8e8f2a4726fd-build20250612
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: localhost
+        path: /healthz
+        port: 10258
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+    name: cloud-controller-manager
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    securityContext:
+      privileged: false
+    startupProbe:
+      failureThreshold: 24
+      httpGet:
+        host: localhost
+        path: /healthz
+        port: 10258
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+    volumeMounts:
+    - mountPath: /etc/ssl/certs
+      name: dir0
+    - mountPath: /etc/ca-certificates
+      name: dir1
+    - mountPath: /usr/local/share/ca-certificates
+      name: dir2
+    - mountPath: /usr/share/ca-certificates
+      name: dir3
+    - mountPath: /var/lib/rancher/rke2/server/cred/cloud-controller.kubeconfig
+      name: file0
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/server/etc/cloud-config.yaml
+      name: file1
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/server/tls/client-rke2-cloud-controller.crt
+      name: file2
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/server/tls/client-rke2-cloud-controller.key
+      name: file3
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/server/tls/server-ca.crt
+      name: file4
+      readOnly: true
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  volumes:
+  - hostPath:
+      path: /etc/ssl/certs
+      type: DirectoryOrCreate
+    name: dir0
+  - hostPath:
+      path: /etc/ca-certificates
+      type: DirectoryOrCreate
+    name: dir1
+  - hostPath:
+      path: /usr/local/share/ca-certificates
+      type: DirectoryOrCreate
+    name: dir2
+  - hostPath:
+      path: /usr/share/ca-certificates
+      type: DirectoryOrCreate
+    name: dir3
+  - hostPath:
+      path: /var/lib/rancher/rke2/server/cred/cloud-controller.kubeconfig
+      type: File
+    name: file0
+  - hostPath:
+      path: /var/lib/rancher/rke2/server/etc/cloud-config.yaml
+      type: File
+    name: file1
+  - hostPath:
+      path: /var/lib/rancher/rke2/server/tls/client-rke2-cloud-controller.crt
+      type: File
+    name: file2
+  - hostPath:
+      path: /var/lib/rancher/rke2/server/tls/client-rke2-cloud-controller.key
+      type: File
+    name: file3
+  - hostPath:
+      path: /var/lib/rancher/rke2/server/tls/server-ca.crt
+      type: File
+    name: file4
+status: {}

@@ -20,6 +20,18 @@ type DataSource interface {
 	// GetContainers returns available containers for a pod
 	GetContainers(namespace, pod string) ([]string, error)
 
+	// GetCRDs returns CRDs for the given cluster
+	GetCRDs(clusterID string) ([]rancher.CRD, error)
+
+	// GetDeployments returns deployments for the given project and namespace
+	GetDeployments(projectID, namespace string) ([]rancher.Deployment, error)
+
+	// GetServices returns services for the given project and namespace
+	GetServices(projectID, namespace string) ([]rancher.Service, error)
+
+	// GetNamespaces returns namespaces for the given cluster and project
+	GetNamespaces(clusterID, projectID string) ([]rancher.Namespace, error)
+
 	// IsOffline returns true if this is an offline data source
 	IsOffline() bool
 
@@ -83,6 +95,113 @@ func (ds *LiveDataSource) GetLogs(clusterID, namespace, pod, container string, p
 func (ds *LiveDataSource) GetContainers(namespace, pod string) ([]string, error) {
 	// For now, return default container
 	return []string{"app"}, nil
+}
+
+// GetCRDs fetches CRDs from the Rancher API
+func (ds *LiveDataSource) GetCRDs(clusterID string) ([]rancher.CRD, error) {
+	if ds.offlineMode {
+		return nil, fmt.Errorf("offline mode")
+	}
+
+	crdList, err := ds.client.ListCRDs(clusterID)
+	if err != nil {
+		return nil, err
+	}
+	return crdList.Items, nil
+}
+
+// GetDeployments fetches deployments from the Rancher API
+func (ds *LiveDataSource) GetDeployments(projectID, namespace string) ([]rancher.Deployment, error) {
+	if ds.offlineMode {
+		return nil, fmt.Errorf("offline mode")
+	}
+
+	collection, err := ds.client.ListDeployments(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by namespace if specified
+	if namespace == "" {
+		return collection.Data, nil
+	}
+
+	var filtered []rancher.Deployment
+	for _, deployment := range collection.Data {
+		deploymentNamespace := deployment.NamespaceID
+		if strings.Contains(deploymentNamespace, ":") {
+			parts := strings.Split(deploymentNamespace, ":")
+			if len(parts) > 1 {
+				deploymentNamespace = parts[1]
+			}
+		}
+
+		if deploymentNamespace == namespace {
+			filtered = append(filtered, deployment)
+		}
+	}
+
+	return filtered, nil
+}
+
+// GetServices fetches services from the Rancher API
+func (ds *LiveDataSource) GetServices(projectID, namespace string) ([]rancher.Service, error) {
+	if ds.offlineMode {
+		return nil, fmt.Errorf("offline mode")
+	}
+
+	collection, err := ds.client.ListServices(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by namespace if specified
+	if namespace == "" {
+		return collection.Data, nil
+	}
+
+	var filtered []rancher.Service
+	for _, service := range collection.Data {
+		serviceNamespace := service.NamespaceID
+		if strings.Contains(serviceNamespace, ":") {
+			parts := strings.Split(serviceNamespace, ":")
+			if len(parts) > 1 {
+				serviceNamespace = parts[1]
+			}
+		}
+
+		if serviceNamespace == namespace {
+			filtered = append(filtered, service)
+		}
+	}
+
+	return filtered, nil
+}
+
+// GetNamespaces fetches namespaces from the Rancher API
+func (ds *LiveDataSource) GetNamespaces(clusterID, projectID string) ([]rancher.Namespace, error) {
+	if ds.offlineMode {
+		return nil, fmt.Errorf("offline mode")
+	}
+
+	collection, err := ds.client.ListNamespaces(clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by project if specified
+	if projectID == "" {
+		return collection.Data, nil
+	}
+
+	var filtered []rancher.Namespace
+	for _, namespace := range collection.Data {
+		if namespace.ProjectID == projectID {
+			filtered = append(filtered, namespace)
+		}
+	}
+
+	return filtered, nil
 }
 
 // IsOffline returns true if in offline mode
@@ -188,6 +307,56 @@ func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, erro
 // IsOffline returns true (bundle mode is always offline)
 func (ds *BundleDataSource) IsOffline() bool {
 	return true
+}
+
+// GetCRDs returns CRDs from the bundle
+func (ds *BundleDataSource) GetCRDs(clusterID string) ([]rancher.CRD, error) {
+	var crds []rancher.CRD
+	for _, item := range ds.bundle.CRDs {
+		if crd, ok := item.(rancher.CRD); ok {
+			crds = append(crds, crd)
+		}
+	}
+	return crds, nil
+}
+
+// GetDeployments returns deployments from the bundle
+func (ds *BundleDataSource) GetDeployments(projectID, namespace string) ([]rancher.Deployment, error) {
+	var deployments []rancher.Deployment
+	for _, item := range ds.bundle.Deployments {
+		if deployment, ok := item.(rancher.Deployment); ok {
+			// Filter by namespace if specified
+			if namespace == "" || deployment.NamespaceID == namespace {
+				deployments = append(deployments, deployment)
+			}
+		}
+	}
+	return deployments, nil
+}
+
+// GetServices returns services from the bundle
+func (ds *BundleDataSource) GetServices(projectID, namespace string) ([]rancher.Service, error) {
+	var services []rancher.Service
+	for _, item := range ds.bundle.Services {
+		if service, ok := item.(rancher.Service); ok {
+			// Filter by namespace if specified
+			if namespace == "" || service.NamespaceID == namespace {
+				services = append(services, service)
+			}
+		}
+	}
+	return services, nil
+}
+
+// GetNamespaces returns namespaces from the bundle
+func (ds *BundleDataSource) GetNamespaces(clusterID, projectID string) ([]rancher.Namespace, error) {
+	var namespaces []rancher.Namespace
+	for _, item := range ds.bundle.Namespaces {
+		if namespace, ok := item.(rancher.Namespace); ok {
+			namespaces = append(namespaces, namespace)
+		}
+	}
+	return namespaces, nil
 }
 
 // GetMode returns the display string for bundle mode

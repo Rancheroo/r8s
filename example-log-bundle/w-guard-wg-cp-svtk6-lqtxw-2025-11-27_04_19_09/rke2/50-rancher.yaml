@@ -1,0 +1,30 @@
+{
+  "cni": "calico",
+  "disable-kube-proxy": false,
+  "etcd-expose-metrics": false,
+  "etcd-snapshot-retention": 5,
+  "etcd-snapshot-schedule-cron": "0 */5 * * *",
+  "kube-controller-manager-arg": [
+    "cert-dir=/var/lib/rancher/rke2/server/tls/kube-controller-manager",
+    "secure-port=10257"
+  ],
+  "kube-controller-manager-extra-mount": [
+    "/var/lib/rancher/rke2/server/tls/kube-controller-manager:/var/lib/rancher/rke2/server/tls/kube-controller-manager"
+  ],
+  "kube-scheduler-arg": [
+    "cert-dir=/var/lib/rancher/rke2/server/tls/kube-scheduler",
+    "secure-port=10259"
+  ],
+  "kube-scheduler-extra-mount": [
+    "/var/lib/rancher/rke2/server/tls/kube-scheduler:/var/lib/rancher/rke2/server/tls/kube-scheduler"
+  ],
+  "node-label": [
+    "rke.cattle.io/machine=6421af65-5a82-4c9e-92ed-981603e02c95"
+  ],
+  "node-taint": [
+    "node-role.kubernetes.io/control-plane:NoSchedule",
+    "node-role.kubernetes.io/etcd:NoExecute"
+  ],
+  "private-registry": "/etc/rancher/rke2/registries.yaml",
+  "protect-kernel-defaults": false,
+}

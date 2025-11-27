@@ -1,0 +1,4 @@
+0:	from all lookup local
+99:	not from all fwmark 0x200000/0x200000 lookup 1
+32766:	from all lookup main
+32767:	from all lookup default

@@ -1738,88 +1738,37 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 	}
 }
 
-// fetchDeployments fetches deployments from the Rancher API
+// fetchDeployments fetches deployments using the data source
 func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, skip API call and return mock data immediately
-		if a.offlineMode {
-			mockDeployments := a.getMockDeployments(namespaceName)
-			return deploymentsMsg{deployments: mockDeployments}
-		}
-
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListDeployments(projectID)
-		if err != nil {
-			// Check if this is a server error - if so, fallback to mock data
-			errStr := err.Error()
-			if strings.Contains(errStr, "status 500") || strings.Contains(errStr, "request canceled") {
-				// Rancher server is having issues - use mock data
-				mockDeployments := a.getMockDeployments(namespaceName)
-				return deploymentsMsg{deployments: mockDeployments}
-			}
-			// In online mode, return the error - don't fallback to mock data
-			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
-		}
-
-		// Filter deployments by namespace name
-		filteredDeployments := []rancher.Deployment{}
-		for _, deployment := range collection.Data {
-			deploymentNamespace := deployment.NamespaceID
-			if strings.Contains(deploymentNamespace, ":") {
-				parts := strings.Split(deploymentNamespace, ":")
-				if len(parts) > 1 {
-					deploymentNamespace = parts[1]
-				}
-			}
-
-			if deploymentNamespace == namespaceName {
-				filteredDeployments = append(filteredDeployments, deployment)
+		// Try to get deployments from data source first
+		if a.dataSource != nil {
+			deployments, err := a.dataSource.GetDeployments(projectID, namespaceName)
+			if err == nil && len(deployments) > 0 {
+				return deploymentsMsg{deployments: deployments}
 			}
 		}
 
-		return deploymentsMsg{deployments: filteredDeployments}
+		// Fallback to mock data
+		mockDeployments := a.getMockDeployments(namespaceName)
+		return deploymentsMsg{deployments: mockDeployments}
 	}
 }
 
-// fetchServices fetches services from the Rancher API
+// fetchServices fetches services using the data source
 func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, skip API call and return mock data immediately
-		if a.offlineMode {
-			mockServices := a.getMockServices(namespaceName)
-			return servicesMsg{services: mockServices}
-		}
-
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListServices(projectID)
-		if err != nil {
-			// In online mode, return the error - don't fallback to mock data
-			return errMsg{fmt.Errorf("failed to fetch services: %w", err)}
-		}
-
-		// Filter services by namespace name
-		filteredServices := []rancher.Service{}
-		for _, service := range collection.Data {
-			serviceNamespace := service.NamespaceID
-			if strings.Contains(serviceNamespace, ":") {
-				parts := strings.Split(serviceNamespace, ":")
-				if len(parts) > 1 {
-					serviceNamespace = parts[1]
-				}
-			}
-
-			if serviceNamespace == namespaceName {
-				filteredServices = append(filteredServices, service)
+		// Try to get services from data source first
+		if a.dataSource != nil {
+			services, err := a.dataSource.GetServices(projectID, namespaceName)
+			if err == nil && len(services) > 0 {
+				return servicesMsg{services: services}
 			}
 		}
 
-		return servicesMsg{services: filteredServices}
+		// Fallback to mock data
+		mockServices := a.getMockServices(namespaceName)
+		return servicesMsg{services: mockServices}
 	}
 }
 
@@ -2082,28 +2031,20 @@ func (a *App) getMockNamespaces(clusterID, projectID string) []rancher.Namespace
 	return namespaces
 }
 
-// fetchCRDs fetches CustomResourceDefinitions with fallback to mock data
+// fetchCRDs fetches CustomResourceDefinitions using the data source
 func (a *App) fetchCRDs(clusterID string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
-			mockCRDs := a.getMockCRDs()
-			return crdsMsg{crds: mockCRDs}
+		// Try to get CRDs from data source first
+		if a.dataSource != nil {
+			crds, err := a.dataSource.GetCRDs(clusterID)
+			if err == nil && len(crds) > 0 {
+				return crdsMsg{crds: crds}
+			}
 		}
 
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		// Attempt to fetch real CRDs, fallback to mock data on error
-		crdList, err := a.client.ListCRDs(clusterID)
-		if err != nil {
-			// API failed - fallback to mock data for development
-			mockCRDs := a.getMockCRDs()
-			return crdsMsg{crds: mockCRDs}
-		}
-
-		return crdsMsg{crds: crdList.Items}
+		// Fallback to mock data
+		mockCRDs := a.getMockCRDs()
+		return crdsMsg{crds: mockCRDs}
 	}
 }
 
@@ -2469,46 +2410,23 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 	}
 }
 
-// fetchNamespaces fetches namespaces for a cluster/project with fallback to mock data
+// fetchNamespaces fetches namespaces using the data source
 func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
-			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
-
-			// Update namespace counts for project view
-			a.updateNamespaceCounts(mockNamespaces)
-
-			return namespacesMsg{namespaces: mockNamespaces}
-		}
-
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListNamespaces(clusterID)
-		if err != nil {
-			// API failed - fallback to mock data
-			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
-
-			// Update namespace counts for project view
-			a.updateNamespaceCounts(mockNamespaces)
-
-			return namespacesMsg{namespaces: mockNamespaces}
-		}
-
-		// Filter namespaces for the current project if specified
-		filteredNamespaces := []rancher.Namespace{}
-		for _, ns := range collection.Data {
-			if projectID == "" || ns.ProjectID == projectID {
-				filteredNamespaces = append(filteredNamespaces, ns)
+		// Try to get namespaces from data source first
+		if a.dataSource != nil {
+			namespaces, err := a.dataSource.GetNamespaces(clusterID, projectID)
+			if err == nil && len(namespaces) > 0 {
+				// Update namespace counts for project view
+				a.updateNamespaceCounts(namespaces)
+				return namespacesMsg{namespaces: namespaces}
 			}
 		}
 
-		// Update namespace counts for project view
-		a.updateNamespaceCounts(collection.Data)
-
-		return namespacesMsg{namespaces: filteredNamespaces}
+		// Fallback to mock data
+		mockNamespaces := a.getMockNamespaces(clusterID, projectID)
+		a.updateNamespaceCounts(mockNamespaces)
+		return namespacesMsg{namespaces: mockNamespaces}
 	}
 }
 

@@ -1,0 +1,17 @@
+I1126 01:26:40.309410       1 main.go:115] "Version" version="v"
+I1126 01:26:40.309780       1 envvar.go:172] "Feature gate default state" feature="ClientsPreferCBOR" enabled=false
+I1126 01:26:40.309796       1 envvar.go:172] "Feature gate default state" feature="InformerResourceVersion" enabled=false
+I1126 01:26:40.309799       1 envvar.go:172] "Feature gate default state" feature="InOrderInformers" enabled=true
+I1126 01:26:40.309803       1 envvar.go:172] "Feature gate default state" feature="WatchListClient" enabled=false
+I1126 01:26:40.309806       1 envvar.go:172] "Feature gate default state" feature="ClientsAllowCBOR" enabled=false
+I1126 01:26:44.290414       1 common.go:143] "Probing CSI driver for readiness"
+I1126 01:26:44.294097       1 main.go:176] "CSI driver name" driver="driver.longhorn.io"
+I1126 01:26:44.294255       1 main.go:206] "ServeMux listening" driver="driver.longhorn.io" address=":8000" metricsPath="/metrics"
+I1126 01:26:44.296516       1 main.go:260] "CSI driver supports ControllerPublishUnpublish, using real CSI handler" driver="driver.longhorn.io"
+I1126 01:26:44.297616       1 leaderelection.go:257] attempting to acquire leader lease longhorn-system/external-attacher-leader-driver-longhorn-io...
+I1126 01:26:44.313088       1 leaderelection.go:271] successfully acquired lease longhorn-system/external-attacher-leader-driver-longhorn-io
+I1126 01:26:44.313631       1 leader_election.go:194] "became leader, starting"
+I1126 01:26:44.313660       1 controller.go:129] "Starting CSI attacher"
+I1126 01:26:44.317052       1 reflector.go:430] "Caches populated" type="*v1.VolumeAttachment" reflector="k8s.io/client-go/informers/factory.go:160"
+I1126 01:26:44.317060       1 reflector.go:430] "Caches populated" type="*v1.PersistentVolume" reflector="k8s.io/client-go/informers/factory.go:160"
+I1126 01:26:44.317529       1 reflector.go:430] "Caches populated" type="*v1.CSINode" reflector="k8s.io/client-go/informers/factory.go:160"

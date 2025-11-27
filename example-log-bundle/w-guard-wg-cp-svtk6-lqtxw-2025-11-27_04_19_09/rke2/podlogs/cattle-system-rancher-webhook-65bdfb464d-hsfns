@@ -1,0 +1,44 @@
+W1120 06:24:51.959826       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:24:51.987803       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:24:56.930256       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:24:56.949007       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:25:02.034367       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:25:02.042122       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:25:07.015569       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+W1120 06:25:07.034120       1 gvks.go:80] Failed to read API for groups: map[metrics.k8s.io/v1beta1:stale GroupVersion discovery: metrics.k8s.io/v1beta1]
+time="2025-11-20T10:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-20T10:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-20T20:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-20T20:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-21T06:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-21T06:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-21T16:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-21T16:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-22T02:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-22T02:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-22T12:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-22T12:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-22T22:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-22T22:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-23T08:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-23T08:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-23T18:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-23T18:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-24T04:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-24T04:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-24T14:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-24T14:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-25T00:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-25T00:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-25T10:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-25T10:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-25T20:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-25T20:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+W1126 01:27:37.224864       1 gvks.go:80] Failed to read API for groups: map[custom.metrics.k8s.io/v1beta1:stale GroupVersion discovery: custom.metrics.k8s.io/v1beta1]
+W1126 01:27:37.227153       1 gvks.go:80] Failed to read API for groups: map[custom.metrics.k8s.io/v1beta1:stale GroupVersion discovery: custom.metrics.k8s.io/v1beta1]
+time="2025-11-26T06:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-26T06:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-26T16:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-26T16:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"
+time="2025-11-27T02:49:05Z" level=info msg="Sleeping for 15 seconds then applying webhook config"
+time="2025-11-27T02:49:05Z" level=info msg="Updating TLS secret for cattle-system/cattle-webhook-tls (count: 1): map[listener.cattle.io/cn-rancher-webhook.cattle-system.svc:rancher-webhook.cattle-system.svc listener.cattle.io/fingerprint:SHA1=9CBD1CA009E6A61E58332BFF7DC49BA562BB158B]"

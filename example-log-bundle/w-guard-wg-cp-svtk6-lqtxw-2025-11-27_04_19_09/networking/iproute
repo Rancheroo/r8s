@@ -1,0 +1,75 @@
+10.42.20.64 dev wireguard.cali table 1 scope link 
+10.42.20.64/26 dev wireguard.cali table 1 scope link 
+10.42.20.68 dev wireguard.cali table 1 scope link 
+10.42.60.64 dev wireguard.cali table 1 scope link 
+10.42.60.64/26 dev wireguard.cali table 1 scope link 
+10.42.60.65 dev wireguard.cali table 1 scope link 
+throw 10.42.207.0/26 table 1 
+10.42.236.192 dev wireguard.cali table 1 scope link 
+10.42.236.192/26 dev wireguard.cali table 1 scope link 
+10.42.236.193 dev wireguard.cali table 1 scope link 
+default via 134.199.160.1 dev eth0 proto static 
+10.42.20.64 dev vxlan.calico scope link 
+10.42.20.64/26 via 10.42.20.64 dev vxlan.calico onlink 
+10.42.20.68 dev vxlan.calico scope link 
+10.42.60.64 dev vxlan.calico scope link 
+10.42.60.64/26 via 10.42.60.64 dev vxlan.calico onlink 
+10.42.60.65 dev vxlan.calico scope link 
+10.42.207.0 dev cali622a93eb23b scope link 
+blackhole 10.42.207.0/26 proto 80 
+10.42.207.3 dev cali4e366eba6b4 scope link 
+10.42.207.4 dev cali4611030f6e0 scope link 
+10.42.207.10 dev cali40a2bb3ea25 scope link 
+10.42.207.12 dev cali436ce3cef50 scope link 
+10.42.207.13 dev calicff72b3391d scope link 
+10.42.207.14 dev cali6c12df98eb6 scope link 
+10.42.236.192 dev vxlan.calico scope link 
+10.42.236.192/26 via 10.42.236.192 dev vxlan.calico onlink 
+10.42.236.193 dev vxlan.calico scope link 
+10.49.0.0/16 dev eth0 proto kernel scope link src 10.49.0.6 
+10.126.0.0/20 dev eth1 proto kernel scope link src 10.126.0.13 
+134.199.160.0/20 dev eth0 proto kernel scope link src 134.199.165.191 
+local 10.42.207.1 dev vxlan.calico table local proto kernel scope host src 10.42.207.1 
+local 10.42.207.2 dev wireguard.cali table local proto kernel scope host src 10.42.207.2 
+local 10.49.0.6 dev eth0 table local proto kernel scope host src 10.49.0.6 
+broadcast 10.49.255.255 dev eth0 table local proto kernel scope link src 10.49.0.6 
+local 10.126.0.13 dev eth1 table local proto kernel scope host src 10.126.0.13 
+broadcast 10.126.15.255 dev eth1 table local proto kernel scope link src 10.126.0.13 
+local 127.0.0.0/8 dev lo table local proto kernel scope host src 127.0.0.1 
+local 127.0.0.1 dev lo table local proto kernel scope host src 127.0.0.1 
+broadcast 127.255.255.255 dev lo table local proto kernel scope link src 127.0.0.1 
+local 134.199.165.191 dev eth0 table local proto kernel scope host src 134.199.165.191 
+broadcast 134.199.175.255 dev eth0 table local proto kernel scope link src 134.199.165.191 
+::1 dev lo proto kernel metric 256 pref medium
+fe80::/64 dev eth1 proto kernel metric 256 pref medium
+fe80::/64 dev eth0 proto kernel metric 256 pref medium
+fe80::/64 dev cali622a93eb23b proto kernel metric 256 pref medium
+fe80::/64 dev vxlan.calico proto kernel metric 256 pref medium
+fe80::/64 dev cali4e366eba6b4 proto kernel metric 256 pref medium
+fe80::/64 dev cali4611030f6e0 proto kernel metric 256 pref medium
+fe80::/64 dev cali40a2bb3ea25 proto kernel metric 256 pref medium
+fe80::/64 dev cali436ce3cef50 proto kernel metric 256 pref medium
+fe80::/64 dev calicff72b3391d proto kernel metric 256 pref medium
+fe80::/64 dev cali6c12df98eb6 proto kernel metric 256 pref medium
+local ::1 dev lo table local proto kernel metric 0 pref medium
+local fe80::24b4:e3ff:fea7:e083 dev eth1 table local proto kernel metric 0 pref medium
+local fe80::648f:29ff:fe7f:519 dev vxlan.calico table local proto kernel metric 0 pref medium
+local fe80::9ce7:baff:fed9:f850 dev eth0 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali622a93eb23b table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali4e366eba6b4 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali4611030f6e0 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali40a2bb3ea25 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali436ce3cef50 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev calicff72b3391d table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali6c12df98eb6 table local proto kernel metric 0 pref medium
+multicast ff00::/8 dev eth1 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev eth0 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali622a93eb23b table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev vxlan.calico table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev wireguard.cali table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali4e366eba6b4 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali4611030f6e0 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali40a2bb3ea25 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali436ce3cef50 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev calicff72b3391d table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali6c12df98eb6 table local proto kernel metric 256 pref medium

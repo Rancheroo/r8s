@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "csi-resizer" in pod "csi-resizer-567484d9f7-7dgfs" not found

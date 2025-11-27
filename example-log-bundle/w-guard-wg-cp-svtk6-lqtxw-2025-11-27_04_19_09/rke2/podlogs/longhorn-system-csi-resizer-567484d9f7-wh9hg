@@ -1,0 +1,11 @@
+I1126 01:26:40.866879       1 main.go:116] "Version" version="v"
+I1126 01:26:40.866992       1 feature_gate.go:385] feature gates: {map[RecoverVolumeExpansionFailure:false]}
+I1126 01:26:40.867331       1 envvar.go:172] "Feature gate default state" feature="InOrderInformers" enabled=true
+I1126 01:26:40.867354       1 envvar.go:172] "Feature gate default state" feature="WatchListClient" enabled=false
+I1126 01:26:40.867360       1 envvar.go:172] "Feature gate default state" feature="ClientsAllowCBOR" enabled=false
+I1126 01:26:40.867366       1 envvar.go:172] "Feature gate default state" feature="ClientsPreferCBOR" enabled=false
+I1126 01:26:40.867371       1 envvar.go:172] "Feature gate default state" feature="InformerResourceVersion" enabled=false
+I1126 01:26:45.790812       1 common.go:143] "Probing CSI driver for readiness"
+I1126 01:26:45.797616       1 main.go:171] "CSI driver name" driverName="driver.longhorn.io"
+I1126 01:26:45.801093       1 leaderelection.go:257] attempting to acquire leader lease longhorn-system/external-resizer-driver-longhorn-io...
+I1126 01:26:45.801679       1 main.go:216] "ServeMux listening" address=":8000"

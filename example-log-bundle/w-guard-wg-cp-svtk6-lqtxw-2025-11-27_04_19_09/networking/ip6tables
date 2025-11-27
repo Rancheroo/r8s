@@ -1,0 +1,46 @@
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+6903K 2109M KUBE-FIREWALL  all      *      *       ::/0                 ::/0                
+ 556K   44M KUBE-PROXY-FIREWALL  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes load balancer firewall */
+6903K 2109M KUBE-NODEPORTS  all      *      *       ::/0                 ::/0                 /* kubernetes health check service ports */
+ 556K   44M KUBE-EXTERNAL-SERVICES  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes externally-visible service portals */
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-PROXY-FIREWALL  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes load balancer firewall */
+    0     0 KUBE-FORWARD  all      *      *       ::/0                 ::/0                 /* kubernetes forwarding rules */
+    0     0 KUBE-SERVICES  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes service portals */
+    0     0 KUBE-EXTERNAL-SERVICES  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes externally-visible service portals */
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+6904K 2109M KUBE-FIREWALL  all      *      *       ::/0                 ::/0                
+ 556K   44M KUBE-PROXY-FIREWALL  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes load balancer firewall */
+ 556K   44M KUBE-SERVICES  all      *      *       ::/0                 ::/0                 ctstate NEW /* kubernetes service portals */
+
+Chain KUBE-EXTERNAL-SERVICES (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-FIREWALL (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-FORWARD (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 DROP       all      *      *       ::/0                 ::/0                 ctstate INVALID nfacct-name  ct_state_invalid_dropped_pkts
+    0     0 ACCEPT     all      *      *       ::/0                 ::/0                 /* kubernetes forwarding rules */
+    0     0 ACCEPT     all      *      *       ::/0                 ::/0                 /* kubernetes forwarding conntrack rule */ ctstate RELATED,ESTABLISHED
+
+Chain KUBE-KUBELET-CANARY (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-NODEPORTS (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-PROXY-CANARY (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-PROXY-FIREWALL (3 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-SERVICES (2 references)
+ pkts bytes target     prot opt in     out     source               destination         

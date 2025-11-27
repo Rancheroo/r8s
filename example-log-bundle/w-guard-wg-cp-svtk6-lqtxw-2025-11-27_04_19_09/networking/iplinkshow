@@ -1,0 +1,76 @@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    RX:   bytes   packets errors dropped  missed   mcast           
+    40802941009 184943151      0       0       0       0 
+    TX:   bytes   packets errors dropped carrier collsns           
+    40802941009 184943151      0       0       0       0 
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 9e:e7:ba:d9:f8:50 brd ff:ff:ff:ff:ff:ff
+    RX:   bytes  packets errors dropped  missed   mcast           
+     4428660401 15795388      0       0       0       0 
+    TX:   bytes  packets errors dropped carrier collsns           
+    11986741403 16585478      0       0       0       0 
+    altname enp0s3
+    altname ens3
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 26:b4:e3:a7:e0:83 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+    2235042786 2444771      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     559539993 1741242      0       0       0       0 
+    altname enp0s4
+    altname ens4
+4: cali622a93eb23b@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-cdc790f6-335f-d4a0-287e-4747aa88f073
+    RX:  bytes packets errors dropped  missed   mcast           
+      36035942  413930      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     241400362  443143      0       0       0       0 
+5: vxlan.calico: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 66:8f:29:7f:05:19 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+             0       0      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+         13367     125      0     183       0       0 
+8: wireguard.cali: <POINTOPOINT,NOARP,UP,LOWER_UP> mtu 1440 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/none 
+    RX:  bytes packets errors dropped  missed   mcast           
+    2132357232 2399400      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     486386032 1694674      0       0       0       0 
+9: cali4e366eba6b4@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1440 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-f25037b5-c1c3-df3b-7b9c-58f9975a95bc
+    RX:  bytes packets errors dropped  missed   mcast           
+     104076661  915410      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     105450156 1102174      0       0       0       0 
+10: cali4611030f6e0@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1440 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-5879c741-37ec-9dd8-d4b6-0bdb9a8adaa1
+    RX:  bytes packets errors dropped  missed   mcast           
+     147877973 1044723      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     428186785 1017845      0       0       0       0 
+16: cali40a2bb3ea25@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1440 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-b18b9f10-268b-906a-b718-3cf081387d04
+    RX:  bytes  packets errors dropped  missed   mcast           
+    1456700357 11184711      0       0       0       0 
+    TX:  bytes  packets errors dropped carrier collsns           
+    6177447291 11181418      0       0       0       0 
+18: cali436ce3cef50@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1440 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-3a0b2d26-568e-df7f-5528-4c9796e67427
+    RX:  bytes packets errors dropped  missed   mcast           
+    1958428436 9066334      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+    6529555916 8961301      0       0       0       0 
+19: calicff72b3391d@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1440 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-34757bd3-7073-44ff-3535-926b8305baf9
+    RX:  bytes packets errors dropped  missed   mcast           
+     311831654 1361424      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     413473677 1678140      0       0       0       0 
+20: cali6c12df98eb6@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1440 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-8ad0a15d-7fb2-be4e-1bae-250cfa5ae7cf
+    RX:  bytes packets errors dropped  missed   mcast           
+     241071578 1220601      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     407921703 1122874      0       0       0       0 

@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "calico-kube-controllers" in pod "calico-kube-controllers-8889b866f-jtlsb" not found

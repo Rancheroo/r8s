@@ -1,0 +1,270 @@
+2025-11-21 03:10:22.918 [INFO][1] typha/sync_server.go 422: Accepted from 2.57.121.22:64700 port=5473
+2025-11-21 03:10:22.922 [INFO][1] typha/sync_server.go 431: New connection connID=0xb port=5473
+2025-11-21 03:10:22.925 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=2.57.121.22:64700 connID=0xb
+2025-11-21 03:10:22.927 [INFO][1] typha/sync_server.go 855: Failed to read from client client=2.57.121.22:64700 connID=0xb error=tls: first record does not look like a TLS handshake thread="read"
+2025-11-21 03:10:22.927 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=2.57.121.22:64700 connID=0xb thread="read"
+2025-11-21 03:10:22.927 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=2.57.121.22:64700 connID=0xb error=context canceled
+2025-11-21 03:10:22.928 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=2.57.121.22:64700 connID=0xb
+2025-11-21 03:10:22.928 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=2.57.121.22:64700 connID=0xb
+2025-11-21 03:10:22.929 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 03:48:07.847 [INFO][1] typha/sync_server.go 422: Accepted from 66.175.213.4:38046 port=5473
+2025-11-21 03:48:07.847 [INFO][1] typha/sync_server.go 431: New connection connID=0xc port=5473
+2025-11-21 03:48:07.847 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=66.175.213.4:38046 connID=0xc
+2025-11-21 03:48:08.065 [INFO][1] typha/sync_server.go 855: Failed to read from client client=66.175.213.4:38046 connID=0xc error=remote error: tls: unexpected message thread="read"
+2025-11-21 03:48:08.065 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=66.175.213.4:38046 connID=0xc thread="read"
+2025-11-21 03:48:08.065 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=66.175.213.4:38046 connID=0xc error=context canceled
+2025-11-21 03:48:08.065 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=66.175.213.4:38046 connID=0xc
+2025-11-21 03:48:08.066 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=66.175.213.4:38046 connID=0xc
+2025-11-21 03:48:08.066 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:17:14.501 [INFO][1] typha/sync_server.go 422: Accepted from 172.236.228.86:3156 port=5473
+2025-11-21 04:17:14.501 [INFO][1] typha/sync_server.go 431: New connection connID=0xd port=5473
+2025-11-21 04:17:14.502 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.236.228.86:3156 connID=0xd
+2025-11-21 04:17:14.502 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.236.228.86:3156 connID=0xd error=tls: first record does not look like a TLS handshake thread="read"
+2025-11-21 04:17:14.502 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.236.228.86:3156 connID=0xd thread="read"
+2025-11-21 04:17:14.503 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.236.228.86:3156 connID=0xd error=context canceled
+2025-11-21 04:17:14.503 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.236.228.86:3156 connID=0xd
+2025-11-21 04:17:14.503 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.236.228.86:3156 connID=0xd
+2025-11-21 04:17:14.503 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:17:14.816 [INFO][1] typha/sync_server.go 422: Accepted from 172.236.228.86:3158 port=5473
+2025-11-21 04:17:14.816 [INFO][1] typha/sync_server.go 431: New connection connID=0xe port=5473
+2025-11-21 04:17:14.817 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.236.228.86:3158 connID=0xe
+2025-11-21 04:17:14.982 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.236.228.86:3158 connID=0xe error=tls: client didn't provide a certificate thread="read"
+2025-11-21 04:17:14.982 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.236.228.86:3158 connID=0xe thread="read"
+2025-11-21 04:17:14.983 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.236.228.86:3158 connID=0xe error=context canceled
+2025-11-21 04:17:14.983 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.236.228.86:3158 connID=0xe
+2025-11-21 04:17:14.983 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.236.228.86:3158 connID=0xe
+2025-11-21 04:17:14.983 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:34:27.546 [INFO][1] typha/sync_server.go 422: Accepted from 172.104.210.105:43562 port=5473
+2025-11-21 04:34:27.546 [INFO][1] typha/sync_server.go 431: New connection connID=0xf port=5473
+2025-11-21 04:34:27.546 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.104.210.105:43562 connID=0xf
+2025-11-21 04:34:35.059 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.104.210.105:43562 connID=0xf error=read tcp 134.199.165.191:5473->172.104.210.105:43562: read: connection reset by peer thread="read"
+2025-11-21 04:34:35.059 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.104.210.105:43562 connID=0xf thread="read"
+2025-11-21 04:34:35.059 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.104.210.105:43562 connID=0xf error=context canceled
+2025-11-21 04:34:35.060 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.104.210.105:43562 connID=0xf
+2025-11-21 04:34:35.060 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.104.210.105:43562 connID=0xf
+2025-11-21 04:34:35.060 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:34:35.283 [INFO][1] typha/sync_server.go 422: Accepted from 172.104.210.105:43563 port=5473
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 431: New connection connID=0x10 port=5473
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.104.210.105:43563 connID=0x10
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.104.210.105:43563 connID=0x10 error=tls: first record does not look like a TLS handshake thread="read"
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.104.210.105:43563 connID=0x10 thread="read"
+2025-11-21 04:34:35.284 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.104.210.105:43563 connID=0x10 error=context canceled
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.104.210.105:43563 connID=0x10
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.104.210.105:43563 connID=0x10
+2025-11-21 04:34:35.284 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:34:35.821 [INFO][1] typha/sync_server.go 422: Accepted from 172.104.210.105:43564 port=5473
+2025-11-21 04:34:35.822 [INFO][1] typha/sync_server.go 431: New connection connID=0x11 port=5473
+2025-11-21 04:34:35.822 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.104.210.105:43564 connID=0x11
+2025-11-21 04:34:36.072 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.104.210.105:43564 connID=0x11 error=read tcp 134.199.165.191:5473->172.104.210.105:43564: read: connection reset by peer thread="read"
+2025-11-21 04:34:36.072 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.104.210.105:43564 connID=0x11 thread="read"
+2025-11-21 04:34:36.072 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.104.210.105:43564 connID=0x11 error=context canceled
+2025-11-21 04:34:36.072 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.104.210.105:43564 connID=0x11
+2025-11-21 04:34:36.073 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.104.210.105:43564 connID=0x11
+2025-11-21 04:34:36.073 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:34:40.068 [INFO][1] typha/sync_server.go 422: Accepted from 172.234.217.192:17324 port=5473
+2025-11-21 04:34:40.069 [INFO][1] typha/sync_server.go 431: New connection connID=0x12 port=5473
+2025-11-21 04:34:40.069 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=172.234.217.192:17324 connID=0x12
+2025-11-21 04:34:40.265 [INFO][1] typha/sync_server.go 855: Failed to read from client client=172.234.217.192:17324 connID=0x12 error=tls: client didn't provide a certificate thread="read"
+2025-11-21 04:34:40.265 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=172.234.217.192:17324 connID=0x12 thread="read"
+2025-11-21 04:34:40.265 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=172.234.217.192:17324 connID=0x12 error=context canceled
+2025-11-21 04:34:40.265 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=172.234.217.192:17324 connID=0x12
+2025-11-21 04:34:40.265 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=172.234.217.192:17324 connID=0x12
+2025-11-21 04:34:40.265 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:49.549 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:59042 port=5473
+2025-11-21 04:38:49.550 [INFO][1] typha/sync_server.go 431: New connection connID=0x13 port=5473
+2025-11-21 04:38:49.550 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:59042 connID=0x13
+2025-11-21 04:38:49.736 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:59042 connID=0x13 error=read tcp 134.199.165.191:5473->212.102.40.218:59042: read: connection reset by peer thread="read"
+2025-11-21 04:38:49.736 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:59042 connID=0x13 thread="read"
+2025-11-21 04:38:49.737 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:59042 connID=0x13 error=context canceled
+2025-11-21 04:38:49.737 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:59042 connID=0x13
+2025-11-21 04:38:49.737 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:59042 connID=0x13
+2025-11-21 04:38:49.737 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:49.919 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:15220 port=5473
+2025-11-21 04:38:49.919 [INFO][1] typha/sync_server.go 431: New connection connID=0x14 port=5473
+2025-11-21 04:38:49.919 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:15220 connID=0x14
+2025-11-21 04:38:50.105 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:15220 connID=0x14 error=read tcp 134.199.165.191:5473->212.102.40.218:15220: read: connection reset by peer thread="read"
+2025-11-21 04:38:50.106 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:15220 connID=0x14 thread="read"
+2025-11-21 04:38:50.106 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:15220 connID=0x14 error=context canceled
+2025-11-21 04:38:50.106 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:15220 connID=0x14
+2025-11-21 04:38:50.106 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:15220 connID=0x14
+2025-11-21 04:38:50.106 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:50.287 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:32980 port=5473
+2025-11-21 04:38:50.287 [INFO][1] typha/sync_server.go 431: New connection connID=0x15 port=5473
+2025-11-21 04:38:50.287 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:32980 connID=0x15
+2025-11-21 04:38:50.288 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:32980 connID=0x15 error=tls: no cipher suite supported by both client and server thread="read"
+2025-11-21 04:38:50.288 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:32980 connID=0x15 thread="read"
+2025-11-21 04:38:50.288 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:32980 connID=0x15 error=context canceled
+2025-11-21 04:38:50.288 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:32980 connID=0x15
+2025-11-21 04:38:50.289 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:32980 connID=0x15
+2025-11-21 04:38:50.289 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:50.654 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:51174 port=5473
+2025-11-21 04:38:50.654 [INFO][1] typha/sync_server.go 431: New connection connID=0x16 port=5473
+2025-11-21 04:38:50.655 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:51174 connID=0x16
+2025-11-21 04:38:50.853 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:51174 connID=0x16 error=read tcp 134.199.165.191:5473->212.102.40.218:51174: read: connection reset by peer thread="read"
+2025-11-21 04:38:50.853 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:51174 connID=0x16 thread="read"
+2025-11-21 04:38:50.853 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:51174 connID=0x16 error=context canceled
+2025-11-21 04:38:50.853 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:51174 connID=0x16
+2025-11-21 04:38:50.853 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:51174 connID=0x16
+2025-11-21 04:38:50.853 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:51.040 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:9064 port=5473
+2025-11-21 04:38:51.040 [INFO][1] typha/sync_server.go 431: New connection connID=0x17 port=5473
+2025-11-21 04:38:51.046 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:9064 connID=0x17
+2025-11-21 04:38:51.233 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:9064 connID=0x17 error=read tcp 134.199.165.191:5473->212.102.40.218:9064: read: connection reset by peer thread="read"
+2025-11-21 04:38:51.233 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:9064 connID=0x17 thread="read"
+2025-11-21 04:38:51.233 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:9064 connID=0x17 error=context canceled
+2025-11-21 04:38:51.233 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:9064 connID=0x17
+2025-11-21 04:38:51.234 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:9064 connID=0x17
+2025-11-21 04:38:51.234 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:51.418 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:28244 port=5473
+2025-11-21 04:38:51.418 [INFO][1] typha/sync_server.go 431: New connection connID=0x18 port=5473
+2025-11-21 04:38:51.419 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:28244 connID=0x18
+2025-11-21 04:38:51.419 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:28244 connID=0x18 error=tls: client offered only unsupported versions: [302 301] thread="read"
+2025-11-21 04:38:51.420 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:28244 connID=0x18 thread="read"
+2025-11-21 04:38:51.420 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:28244 connID=0x18 error=context canceled
+2025-11-21 04:38:51.420 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:28244 connID=0x18
+2025-11-21 04:38:51.420 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:28244 connID=0x18
+2025-11-21 04:38:51.420 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:51.791 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:46554 port=5473
+2025-11-21 04:38:51.791 [INFO][1] typha/sync_server.go 431: New connection connID=0x19 port=5473
+2025-11-21 04:38:51.791 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:46554 connID=0x19
+2025-11-21 04:38:51.982 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:46554 connID=0x19 error=read tcp 134.199.165.191:5473->212.102.40.218:46554: read: connection reset by peer thread="read"
+2025-11-21 04:38:51.982 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:46554 connID=0x19 thread="read"
+2025-11-21 04:38:51.982 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:46554 connID=0x19 error=context canceled
+2025-11-21 04:38:51.982 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:46554 connID=0x19
+2025-11-21 04:38:51.982 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:46554 connID=0x19
+2025-11-21 04:38:51.982 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:52.168 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:64934 port=5473
+2025-11-21 04:38:52.168 [INFO][1] typha/sync_server.go 431: New connection connID=0x1a port=5473
+2025-11-21 04:38:52.168 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:64934 connID=0x1a
+2025-11-21 04:38:52.359 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:64934 connID=0x1a error=read tcp 134.199.165.191:5473->212.102.40.218:64934: read: connection reset by peer thread="read"
+2025-11-21 04:38:52.360 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:64934 connID=0x1a thread="read"
+2025-11-21 04:38:52.360 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:64934 connID=0x1a error=context canceled
+2025-11-21 04:38:52.360 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:64934 connID=0x1a
+2025-11-21 04:38:52.360 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:64934 connID=0x1a
+2025-11-21 04:38:52.360 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:52.542 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:21574 port=5473
+2025-11-21 04:38:52.542 [INFO][1] typha/sync_server.go 431: New connection connID=0x1b port=5473
+2025-11-21 04:38:52.542 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:21574 connID=0x1b
+2025-11-21 04:38:52.751 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:21574 connID=0x1b error=read tcp 134.199.165.191:5473->212.102.40.218:21574: read: connection reset by peer thread="read"
+2025-11-21 04:38:52.751 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:21574 connID=0x1b thread="read"
+2025-11-21 04:38:52.751 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:21574 connID=0x1b error=context canceled
+2025-11-21 04:38:52.751 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:21574 connID=0x1b
+2025-11-21 04:38:52.751 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:21574 connID=0x1b
+2025-11-21 04:38:52.751 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:52.936 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:38834 port=5473
+2025-11-21 04:38:52.936 [INFO][1] typha/sync_server.go 431: New connection connID=0x1c port=5473
+2025-11-21 04:38:52.937 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:38834 connID=0x1c
+2025-11-21 04:38:53.127 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:38834 connID=0x1c error=read tcp 134.199.165.191:5473->212.102.40.218:38834: read: connection reset by peer thread="read"
+2025-11-21 04:38:53.127 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:38834 connID=0x1c error=context canceled
+2025-11-21 04:38:53.128 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:38834 connID=0x1c
+2025-11-21 04:38:53.128 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:38834 connID=0x1c
+2025-11-21 04:38:53.128 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:38:53.128 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:38834 connID=0x1c thread="read"
+2025-11-21 04:44:08.485 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:31106 port=5473
+2025-11-21 04:44:08.485 [INFO][1] typha/sync_server.go 431: New connection connID=0x1d port=5473
+2025-11-21 04:44:08.485 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:31106 connID=0x1d
+2025-11-21 04:44:08.677 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:31106 connID=0x1d error=read tcp 134.199.165.191:5473->212.102.40.218:31106: read: connection reset by peer thread="read"
+2025-11-21 04:44:08.677 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:31106 connID=0x1d thread="read"
+2025-11-21 04:44:08.678 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:31106 connID=0x1d error=context canceled
+2025-11-21 04:44:08.678 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:31106 connID=0x1d
+2025-11-21 04:44:08.678 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:31106 connID=0x1d
+2025-11-21 04:44:08.678 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:08.862 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:46978 port=5473
+2025-11-21 04:44:08.862 [INFO][1] typha/sync_server.go 431: New connection connID=0x1e port=5473
+2025-11-21 04:44:08.862 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:46978 connID=0x1e
+2025-11-21 04:44:09.050 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:46978 connID=0x1e error=read tcp 134.199.165.191:5473->212.102.40.218:46978: read: connection reset by peer thread="read"
+2025-11-21 04:44:09.051 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:46978 connID=0x1e error=context canceled
+2025-11-21 04:44:09.051 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:46978 connID=0x1e
+2025-11-21 04:44:09.051 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:46978 connID=0x1e
+2025-11-21 04:44:09.051 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:09.051 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:46978 connID=0x1e thread="read"
+2025-11-21 04:44:09.234 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:62880 port=5473
+2025-11-21 04:44:09.234 [INFO][1] typha/sync_server.go 431: New connection connID=0x1f port=5473
+2025-11-21 04:44:09.234 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:62880 connID=0x1f
+2025-11-21 04:44:09.235 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:62880 connID=0x1f error=tls: no cipher suite supported by both client and server thread="read"
+2025-11-21 04:44:09.235 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:62880 connID=0x1f thread="read"
+2025-11-21 04:44:09.235 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:62880 connID=0x1f error=context canceled
+2025-11-21 04:44:09.235 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:62880 connID=0x1f
+2025-11-21 04:44:09.235 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:62880 connID=0x1f
+2025-11-21 04:44:09.235 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:09.602 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:17148 port=5473
+2025-11-21 04:44:09.602 [INFO][1] typha/sync_server.go 431: New connection connID=0x20 port=5473
+2025-11-21 04:44:09.602 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:17148 connID=0x20
+2025-11-21 04:44:09.787 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:17148 connID=0x20 error=read tcp 134.199.165.191:5473->212.102.40.218:17148: read: connection reset by peer thread="read"
+2025-11-21 04:44:09.787 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:17148 connID=0x20 thread="read"
+2025-11-21 04:44:09.788 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:17148 connID=0x20 error=context canceled
+2025-11-21 04:44:09.788 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:17148 connID=0x20
+2025-11-21 04:44:09.788 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:17148 connID=0x20
+2025-11-21 04:44:09.788 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:09.972 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:32426 port=5473
+2025-11-21 04:44:09.973 [INFO][1] typha/sync_server.go 431: New connection connID=0x21 port=5473
+2025-11-21 04:44:09.973 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:32426 connID=0x21
+2025-11-21 04:44:10.161 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:32426 connID=0x21 error=read tcp 134.199.165.191:5473->212.102.40.218:32426: read: connection reset by peer thread="read"
+2025-11-21 04:44:10.161 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:32426 connID=0x21 thread="read"
+2025-11-21 04:44:10.162 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:32426 connID=0x21 error=context canceled
+2025-11-21 04:44:10.162 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:32426 connID=0x21
+2025-11-21 04:44:10.162 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:32426 connID=0x21
+2025-11-21 04:44:10.162 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:47872 port=5473
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 431: New connection connID=0x22 port=5473
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:47872 connID=0x22
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:47872 connID=0x22 error=tls: client offered only unsupported versions: [302 301] thread="read"
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:47872 connID=0x22 thread="read"
+2025-11-21 04:44:10.345 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:47872 connID=0x22 error=context canceled
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:47872 connID=0x22
+2025-11-21 04:44:10.345 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:47872 connID=0x22
+2025-11-21 04:44:10.346 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:11.720 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:63052 port=5473
+2025-11-21 04:44:11.720 [INFO][1] typha/sync_server.go 431: New connection connID=0x23 port=5473
+2025-11-21 04:44:11.720 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:63052 connID=0x23
+2025-11-21 04:44:11.906 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:63052 connID=0x23 error=read tcp 134.199.165.191:5473->212.102.40.218:63052: read: connection reset by peer thread="read"
+2025-11-21 04:44:11.907 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:63052 connID=0x23 error=context canceled
+2025-11-21 04:44:11.907 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:63052 connID=0x23
+2025-11-21 04:44:11.907 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:63052 connID=0x23
+2025-11-21 04:44:11.907 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:11.908 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:63052 connID=0x23 thread="read"
+2025-11-21 04:44:12.092 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:59272 port=5473
+2025-11-21 04:44:12.092 [INFO][1] typha/sync_server.go 431: New connection connID=0x24 port=5473
+2025-11-21 04:44:12.093 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:59272 connID=0x24
+2025-11-21 04:44:12.283 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:59272 connID=0x24 error=read tcp 134.199.165.191:5473->212.102.40.218:59272: read: connection reset by peer thread="read"
+2025-11-21 04:44:12.284 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:59272 connID=0x24 thread="read"
+2025-11-21 04:44:12.284 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:59272 connID=0x24 error=context canceled
+2025-11-21 04:44:12.284 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:59272 connID=0x24
+2025-11-21 04:44:12.284 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:59272 connID=0x24
+2025-11-21 04:44:12.284 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:12.469 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:14018 port=5473
+2025-11-21 04:44:12.469 [INFO][1] typha/sync_server.go 431: New connection connID=0x25 port=5473
+2025-11-21 04:44:12.470 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:14018 connID=0x25
+2025-11-21 04:44:12.662 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:14018 connID=0x25 error=read tcp 134.199.165.191:5473->212.102.40.218:14018: read: connection reset by peer thread="read"
+2025-11-21 04:44:12.662 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:14018 connID=0x25 thread="read"
+2025-11-21 04:44:12.662 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:14018 connID=0x25 error=context canceled
+2025-11-21 04:44:12.662 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:14018 connID=0x25
+2025-11-21 04:44:12.662 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:14018 connID=0x25
+2025-11-21 04:44:12.662 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-21 04:44:12.843 [INFO][1] typha/sync_server.go 422: Accepted from 212.102.40.218:30046 port=5473
+2025-11-21 04:44:12.843 [INFO][1] typha/sync_server.go 431: New connection connID=0x26 port=5473
+2025-11-21 04:44:12.844 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=212.102.40.218:30046 connID=0x26
+2025-11-21 04:44:13.030 [INFO][1] typha/sync_server.go 855: Failed to read from client client=212.102.40.218:30046 connID=0x26 error=read tcp 134.199.165.191:5473->212.102.40.218:30046: read: connection reset by peer thread="read"
+2025-11-21 04:44:13.030 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=212.102.40.218:30046 connID=0x26 thread="read"
+2025-11-21 04:44:13.031 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=212.102.40.218:30046 connID=0x26 error=context canceled
+2025-11-21 04:44:13.031 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=212.102.40.218:30046 connID=0x26
+2025-11-21 04:44:13.031 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=212.102.40.218:30046 connID=0x26
+2025-11-21 04:44:13.031 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-25 04:16:03.956 [INFO][1] typha/sync_server.go 422: Accepted from 45.79.181.223:42532 port=5473
+2025-11-25 04:16:03.960 [INFO][1] typha/sync_server.go 431: New connection connID=0x27 port=5473
+2025-11-25 04:16:03.963 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=45.79.181.223:42532 connID=0x27
+2025-11-25 04:16:03.965 [INFO][1] typha/sync_server.go 855: Failed to read from client client=45.79.181.223:42532 connID=0x27 error=tls: first record does not look like a TLS handshake thread="read"
+2025-11-25 04:16:03.965 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=45.79.181.223:42532 connID=0x27 thread="read"
+2025-11-25 04:16:03.966 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=45.79.181.223:42532 connID=0x27 error=context canceled
+2025-11-25 04:16:03.967 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=45.79.181.223:42532 connID=0x27
+2025-11-25 04:16:03.967 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=45.79.181.223:42532 connID=0x27
+2025-11-25 04:16:03.967 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-11-25 04:16:04.379 [INFO][1] typha/sync_server.go 422: Accepted from 45.79.181.223:42540 port=5473
+2025-11-25 04:16:04.379 [INFO][1] typha/sync_server.go 431: New connection connID=0x28 port=5473
+2025-11-25 04:16:04.379 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=45.79.181.223:42540 connID=0x28
+2025-11-25 04:16:04.598 [INFO][1] typha/sync_server.go 855: Failed to read from client client=45.79.181.223:42540 connID=0x28 error=tls: client didn't provide a certificate thread="read"
+2025-11-25 04:16:04.599 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=45.79.181.223:42540 connID=0x28 thread="read"
+2025-11-25 04:16:04.599 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=45.79.181.223:42540 connID=0x28 error=context canceled
+2025-11-25 04:16:04.599 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=45.79.181.223:42540 connID=0x28
+2025-11-25 04:16:04.599 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=45.79.181.223:42540 connID=0x28
+2025-11-25 04:16:04.599 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled

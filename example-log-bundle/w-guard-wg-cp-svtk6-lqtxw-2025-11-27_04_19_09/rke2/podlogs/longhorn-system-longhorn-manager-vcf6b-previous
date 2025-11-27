@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "pre-pull-share-manager-image" in pod "longhorn-manager-vcf6b" not found

@@ -1,0 +1,5 @@
+NAME                        STATUS   ROLES                       AGE    VERSION          INTERNAL-IP       EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+w-guard-wg-cp-svtk6-lqtxw   Ready    control-plane,etcd,master   7d3h   v1.32.7+rke2r1   134.199.165.191   <none>        Ubuntu 22.04.4 LTS   5.15.0-113-generic   containerd://2.0.5-k3s2
+w-guard-wg-wk-pfvjr-4xgxg   Ready    worker                      7d3h   v1.32.7+rke2r1   134.199.144.255   <none>        Ubuntu 22.04.4 LTS   5.15.0-113-generic   containerd://2.0.5-k3s2
+w-guard-wg-wk-pfvjr-ch7xq   Ready    worker                      7d3h   v1.32.7+rke2r1   170.64.187.24     <none>        Ubuntu 22.04.4 LTS   5.15.0-113-generic   containerd://2.0.5-k3s2
+w-guard-wg-wk-pfvjr-g4m8r   Ready    worker                      7d3h   v1.32.7+rke2r1   209.38.91.232     <none>        Ubuntu 22.04.4 LTS   5.15.0-113-generic   containerd://2.0.5-k3s2

@@ -1,0 +1,14 @@
+I1126 01:26:40.959523       1 feature_gate.go:385] feature gates: {map[]}
+I1126 01:26:40.959703       1 csi-provisioner.go:168] "Version" version="v"
+I1126 01:26:40.959715       1 csi-provisioner.go:191] Building kube configs for running in cluster...
+I1126 01:26:40.960737       1 envvar.go:172] "Feature gate default state" feature="InOrderInformers" enabled=true
+I1126 01:26:40.960806       1 envvar.go:172] "Feature gate default state" feature="WatchListClient" enabled=false
+I1126 01:26:40.960813       1 envvar.go:172] "Feature gate default state" feature="ClientsAllowCBOR" enabled=false
+I1126 01:26:40.960819       1 envvar.go:172] "Feature gate default state" feature="ClientsPreferCBOR" enabled=false
+I1126 01:26:40.960825       1 envvar.go:172] "Feature gate default state" feature="InformerResourceVersion" enabled=false
+I1126 01:26:45.793835       1 common.go:143] "Probing CSI driver for readiness"
+I1126 01:26:45.803544       1 csi-provisioner.go:246] Detected CSI driver driver.longhorn.io
+I1126 01:26:45.805558       1 csi-provisioner.go:315] CSI driver supports PUBLISH_UNPUBLISH_VOLUME, watching VolumeAttachments
+I1126 01:26:45.806220       1 controller.go:758] "Using saving PVs to API server in background"
+I1126 01:26:45.806894       1 leaderelection.go:257] attempting to acquire leader lease longhorn-system/driver-longhorn-io...
+I1126 01:26:45.807440       1 csi-provisioner.go:608] ServeMux listening at ":8000"
