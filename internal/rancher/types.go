@@ -1,3 +1,7 @@
+// Package rancher defines the data structures for Rancher API responses and Kubernetes
+// resources. It includes types for clusters, projects, namespaces, pods, deployments,
+// services, and CustomResourceDefinitions (CRDs). These types are used for JSON
+// unmarshaling of Rancher v3 API responses and Kubernetes API proxy responses.
 package rancher
 
 import (
