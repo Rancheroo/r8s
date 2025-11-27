@@ -1153,35 +1153,35 @@ func (a *App) getStatusText() string {
 	switch a.currentView.viewType {
 	case ViewClusters:
 		count := len(a.clusters)
-		status = fmt.Sprintf(" %s%d clusters | Press Enter to browse projects | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d clusters | Enter=projects 'C'=CRDs 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewProjects:
 		count := len(a.projects)
-		status = fmt.Sprintf(" %s%d projects | Press Enter to browse namespaces | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d projects | Enter=namespaces 'C'=CRDs 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewNamespaces:
 		count := len(a.namespaces)
-		status = fmt.Sprintf(" %s%d namespaces | Press Enter to browse pods | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d namespaces | Enter=pods 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewPods:
 		count := len(a.pods)
-		status = fmt.Sprintf(" %s%d pods | Press 'd'=describe '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d pods | 'l'=logs 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewDeployments:
 		count := len(a.deployments)
-		status = fmt.Sprintf(" %s%d deployments | Press 'd'=describe '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d deployments | 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewServices:
 		count := len(a.services)
-		status = fmt.Sprintf(" %s%d services | Press 'd'=describe '1'=Pods '2'=Deployments '3'=Services | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d services | 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewCRDs:
 		count := len(a.crds)
-		status = fmt.Sprintf(" %s%d CRDs | Press 'i' to toggle description, Enter to browse instances | '?' for help | 'q' to quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%d CRDs | 'i'=toggle description Enter=instances 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewCRDInstances:
 		count := len(a.crdInstances)
-		status = fmt.Sprintf(" %s%d %s instances | Press 'd' to describe (soon) | '?' for help | 'q' to quit ", offlinePrefix, count, a.currentView.crdKind)
+		status = fmt.Sprintf(" %s%d %s instances | 'd'=describe(soon) 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count, a.currentView.crdKind)
 
 	case ViewLogs:
 		// FIX 4: Show visible log count instead of total count
@@ -2733,7 +2733,48 @@ func (a *App) renderLogsWithColors() string {
 	return strings.Join(coloredLines, "\n")
 }
 
-// renderHelp - simplified
+// renderHelp shows comprehensive keybinding reference
 func renderHelp() string {
-	return "Help: Press 'd' on a pod to describe, 'Esc' to exit describe view, 'q' to quit."
+	help := `r8s HELP - KEYBINDINGS
+
+NAVIGATION
+  ↑/↓, j/k    Move selection up/down
+  Enter       Navigate into selection
+  Esc         Go back one level
+  
+ACTIONS
+  l           View logs (Pod view)
+  d           Describe resource (Pods/Deployments/Services)
+  r           Refresh current view
+  
+VIEW SWITCHING (Namespace Context)
+  1           Switch to Pods
+  2           Switch to Deployments
+  3           Switch to Services
+  
+CLUSTER VIEWS
+  C           Jump to CRDs (from Cluster/Project view)
+  i           Toggle CRD description (in CRD view)
+  
+LOG VIEWING (when viewing logs)
+  /           Start search
+  n           Next search match
+  N           Previous search match
+  t           Toggle tail mode (auto-scroll)
+  c           Cycle containers (multi-container pods)
+  
+LOG FILTERS (in log view)
+  Ctrl+E      Filter to ERROR only
+  Ctrl+W      Filter to WARN and ERROR
+  Ctrl+A      Show all logs (clear filter)
+  Ctrl+P      Toggle previous container logs
+  
+GENERAL
+  ?           Show/hide this help
+  q           Quit application
+  Ctrl+C      Force quit
+  
+Press Esc or ? to close this help`
+
+	return helpStyle.Render(help)
 }

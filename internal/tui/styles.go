@@ -106,6 +106,15 @@ var (
 	searchMatchStyle = lipgloss.NewStyle().
 				Background(colorYellow).
 				Foreground(lipgloss.Color("0")) // Black text on yellow background
+
+	// Help screen style
+	helpStyle = lipgloss.NewStyle().
+			Foreground(colorWhite).
+			Background(colorDarkGray).
+			Padding(2, 4).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(colorCyan).
+			Width(80)
 )
 
 // GetStateStyle returns the appropriate style for a resource state
