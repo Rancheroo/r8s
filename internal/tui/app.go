@@ -101,6 +101,7 @@ type App struct {
 	containers       []string // Available containers for current pod
 	tailMode         bool     // Auto-refresh tail mode
 	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
+	showPrevious     bool     // Show previous logs (for crashed containers)
 
 	// App state
 	offlineMode bool   // Flag to indicate running without live Rancher connection
@@ -391,6 +392,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.filterLevel = ""
 				a.applyLogFilter()
 				return a, nil
+			}
+		case "ctrl+p":
+			// Toggle previous logs in logs view
+			if a.currentView.viewType == ViewLogs {
+				a.showPrevious = !a.showPrevious
+				a.loading = true
+				return a, a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName)
 			}
 		case "/":
 			// Enter search mode in logs view
@@ -1172,12 +1180,15 @@ func (a *App) getStatusText() string {
 		if a.filterLevel != "" {
 			parts = append(parts, fmt.Sprintf("Filter: %s", a.filterLevel))
 		}
+		if a.showPrevious {
+			parts = append(parts, "PREVIOUS LOGS")
+		}
 		if len(a.containers) > 1 {
 			parts = append(parts, fmt.Sprintf("Container: %s", a.currentContainer))
 		}
 
 		statusInfo := strings.Join(parts, " | ")
-		status = fmt.Sprintf(" %s%s | 't'=tail 'c'=container Ctrl+E/W/A=filter '/'=search | Esc=back q=quit ", offlinePrefix, statusInfo)
+		status = fmt.Sprintf(" %s%s | 't'=tail Ctrl+P=prev Ctrl+E/W/A=filter '/'=search | Esc=back q=quit ", offlinePrefix, statusInfo)
 
 	default:
 		status = fmt.Sprintf(" %sPress 'Esc' to go back | '?' for help | 'q' to quit ", offlinePrefix)
