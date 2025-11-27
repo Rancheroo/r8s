@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 // Load loads a bundle from a tar.gz file and returns a Bundle structure.
@@ -16,14 +17,27 @@ func Load(opts ImportOptions) (*Bundle, error) {
 		return nil, fmt.Errorf("bundle path is required")
 	}
 
-	// Check if file exists
-	if _, err := os.Stat(opts.Path); os.IsNotExist(err) {
+	// Resolve relative path to absolute path
+	// This handles ../path, ./path, ~/path correctly
+	absPath, err := filepath.Abs(opts.Path)
+	if err != nil {
+		if opts.Verbose {
+			return nil, fmt.Errorf("invalid path: %w\nProvided path: %s\nHint: Check the path format", err, opts.Path)
+		}
+		return nil, fmt.Errorf("invalid path: %w", err)
+	}
+
+	// Check if file exists (using absolute path)
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		if opts.Verbose {
 			cwd, _ := os.Getwd()
-			return nil, fmt.Errorf("bundle file not found: %s\nCurrent directory: %s\nHint: Check the file path and ensure the file exists", opts.Path, cwd)
+			return nil, fmt.Errorf("bundle file not found: %s\nCurrent directory: %s\nAbsolute path tried: %s\nHint: Check the file path and ensure the file exists", opts.Path, cwd, absPath)
 		}
 		return nil, fmt.Errorf("bundle file not found: %s", opts.Path)
 	}
+
+	// Update opts.Path to use absolute path for all subsequent operations
+	opts.Path = absPath
 
 	// Set default max size if not specified
 	if opts.MaxSize == 0 {

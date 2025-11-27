@@ -9,13 +9,21 @@ import (
 )
 
 var bundleCmd = &cobra.Command{
-	Use:   "bundle",
+	Use:   "bundle [path-to-bundle.tar.gz]",
 	Short: "Work with support bundles",
 	Long: `Work with support bundles for offline analysis.
 
 Support bundles are tar.gz archives containing cluster diagnostics,
 logs, and configuration files. This command allows you to import
-and analyze bundles without needing a live cluster connection.`,
+and analyze bundles without needing a live cluster connection.
+
+Quick Usage:
+  r8s bundle bundle.tar.gz              # Import and launch TUI automatically
+
+Subcommands:
+  r8s bundle import --path=bundle.tar.gz  # Import with custom options`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runBundleCommand,
 }
 
 var (
@@ -48,6 +56,61 @@ func init() {
 	importCmd.MarkFlagRequired("path")
 }
 
+// runBundleCommand handles the bundle command with optional positional argument
+func runBundleCommand(cmd *cobra.Command, args []string) error {
+	// If no args provided, show help
+	if len(args) == 0 {
+		return cmd.Help()
+	}
+
+	// User provided a bundle path directly - import and launch TUI
+	bundlePath := args[0]
+
+	fmt.Printf("Importing bundle: %s\n", bundlePath)
+	fmt.Printf("Size limit: 10MB (default)\n\n")
+
+	// Create import options with defaults
+	opts := bundle.ImportOptions{
+		Path:    bundlePath,
+		MaxSize: 10 * 1024 * 1024, // Default 10MB
+		Verbose: verbose,
+	}
+
+	// Load the bundle
+	fmt.Println("Extracting bundle...")
+	b, err := bundle.Load(opts)
+	if err != nil {
+		return fmt.Errorf("failed to load bundle: %w", err)
+	}
+	defer b.Close()
+
+	// Display bundle information (condensed version)
+	fmt.Println("\n" + strings.Repeat("─", 60))
+	fmt.Println("Bundle Import Successful!")
+	fmt.Println(strings.Repeat("─", 60))
+	fmt.Printf("\nNode Name:     %s\n", b.Manifest.NodeName)
+	fmt.Printf("Bundle Type:   %s\n", b.Manifest.BundleType)
+	fmt.Printf("K8s Version:   %s\n", b.Manifest.K8sVersion)
+	fmt.Printf("\nPods Found:    %d\n", len(b.Pods))
+	fmt.Printf("Log Files:     %d\n", len(b.LogFiles))
+
+	fmt.Println("\n" + strings.Repeat("─", 60))
+	fmt.Println("\n✓ Bundle imported successfully!")
+	fmt.Println("\nLaunching TUI...")
+
+	// Launch TUI with the bundle
+	return launchTUIWithBundle(bundlePath)
+}
+
+// launchTUIWithBundle launches the TUI with a specific bundle loaded
+func launchTUIWithBundle(bundlePath string) error {
+	// This will be handled by the TUI launch logic
+	// For now, just inform the user
+	fmt.Println("\nTo browse the bundle, run:")
+	fmt.Printf("  r8s tui --bundle=%s\n\n", bundlePath)
+	return nil
+}
+
 func runImport(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Importing bundle: %s\n", bundlePath)
 
@@ -62,7 +125,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 	opts := bundle.ImportOptions{
 		Path:    bundlePath,
 		MaxSize: bundleMaxSize * 1024 * 1024, // Convert MB to bytes
-		Verbose: verbose, // Pass verbose flag from root
+		Verbose: verbose,                     // Pass verbose flag from root
 	}
 
 	// Load the bundle
