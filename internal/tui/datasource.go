@@ -223,10 +223,11 @@ type BundleDataSource struct {
 }
 
 // NewBundleDataSource creates a new bundle data source
-func NewBundleDataSource(bundlePath string) (*BundleDataSource, error) {
+func NewBundleDataSource(bundlePath string, verbose bool) (*BundleDataSource, error) {
 	opts := bundle.ImportOptions{
 		Path:    bundlePath,
 		MaxSize: 100 * 1024 * 1024, // 100MB for TUI mode
+		Verbose: verbose,
 	}
 
 	b, err := bundle.Load(opts)

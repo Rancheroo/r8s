@@ -152,6 +152,9 @@ type ImportOptions struct {
 
 	// ExtractTo specifies a custom extraction directory (empty = temp)
 	ExtractTo string
+
+	// Verbose enables detailed error messages for debugging
+	Verbose bool
 }
 
 // DefaultMaxBundleSize is 10MB by default to prevent OOM with huge bundles.

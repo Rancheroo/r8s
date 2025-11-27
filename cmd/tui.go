@@ -63,8 +63,9 @@ KEYBOARD SHORTCUTS:
 			cfg.Namespace = namespace
 		}
 
-		// Set mock mode in config
+		// Set mock mode and verbose in config
 		cfg.MockMode = mockData
+		cfg.Verbose = verbose
 
 		// Create and start TUI with bundle path if provided
 		app := tui.NewApp(cfg, tuiBundlePath)

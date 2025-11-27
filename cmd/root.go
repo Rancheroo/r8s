@@ -15,6 +15,7 @@ var (
 	contextName   string
 	namespace     string
 	tuiBundlePath string // Path to bundle for TUI offline mode
+	verbose       bool   // Enable verbose error output
 
 	versionInfo struct {
 		Version string
@@ -69,6 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.r8s/config.yaml)")
 	rootCmd.PersistentFlags().StringVar(&profile, "profile", "", "Rancher profile to use (default is from config)")
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip TLS certificate verification")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose error output for debugging")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
 

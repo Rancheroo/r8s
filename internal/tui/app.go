@@ -128,7 +128,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 
 	if bundlePath != "" {
 		// Bundle mode - load bundle as data source
-		ds, err := NewBundleDataSource(bundlePath)
+		ds, err := NewBundleDataSource(bundlePath, cfg.Verbose)
 		if err != nil {
 			return &App{
 				config: cfg,

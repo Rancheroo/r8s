@@ -10,11 +10,18 @@ import (
 func Load(opts ImportOptions) (*Bundle, error) {
 	// Validate options
 	if opts.Path == "" {
+		if opts.Verbose {
+			return nil, fmt.Errorf("bundle path is required\nHint: Use --bundle=/path/to/bundle.tar.gz")
+		}
 		return nil, fmt.Errorf("bundle path is required")
 	}
 
 	// Check if file exists
 	if _, err := os.Stat(opts.Path); os.IsNotExist(err) {
+		if opts.Verbose {
+			cwd, _ := os.Getwd()
+			return nil, fmt.Errorf("bundle file not found: %s\nCurrent directory: %s\nHint: Check the file path and ensure the file exists", opts.Path, cwd)
+		}
 		return nil, fmt.Errorf("bundle file not found: %s", opts.Path)
 	}
 
@@ -26,6 +33,9 @@ func Load(opts ImportOptions) (*Bundle, error) {
 	// Extract the bundle
 	extractPath, err := Extract(opts.Path, opts)
 	if err != nil {
+		if opts.Verbose {
+			return nil, fmt.Errorf("failed to extract bundle: %w\nBundle path: %s\nHint: Ensure the file is a valid .tar.gz archive", err, opts.Path)
+		}
 		return nil, fmt.Errorf("failed to extract bundle: %w", err)
 	}
 
@@ -33,6 +43,9 @@ func Load(opts ImportOptions) (*Bundle, error) {
 	manifest, err := ParseManifest(extractPath)
 	if err != nil {
 		Cleanup(extractPath)
+		if opts.Verbose {
+			return nil, fmt.Errorf("failed to parse bundle manifest: %w\nExtract path: %s\nExpected: metadata.json with bundle info\nHint: This may not be a valid RKE2 support bundle", err, extractPath)
+		}
 		return nil, fmt.Errorf("failed to parse bundle manifest: %w", err)
 	}
 
@@ -40,6 +53,9 @@ func Load(opts ImportOptions) (*Bundle, error) {
 	pods, err := InventoryPods(extractPath)
 	if err != nil {
 		Cleanup(extractPath)
+		if opts.Verbose {
+			return nil, fmt.Errorf("failed to inventory pods: %w\nExtract path: %s\nSearched: rke2/podlogs/ directory\nHint: Bundle may not contain pod logs", err, extractPath)
+		}
 		return nil, fmt.Errorf("failed to inventory pods: %w", err)
 	}
 
@@ -47,6 +63,9 @@ func Load(opts ImportOptions) (*Bundle, error) {
 	logFiles, err := InventoryLogFiles(extractPath)
 	if err != nil {
 		Cleanup(extractPath)
+		if opts.Verbose {
+			return nil, fmt.Errorf("failed to inventory log files: %w\nExtract path: %s\nSearched: rke2/podlogs/ directory\nFound pods: %d\nHint: Check bundle structure", err, extractPath, len(pods))
+		}
 		return nil, fmt.Errorf("failed to inventory log files: %w", err)
 	}
 

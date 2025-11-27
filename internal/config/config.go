@@ -24,6 +24,7 @@ type Config struct {
 	Context   string
 	Namespace string
 	MockMode  bool // Enable demo mode with mock data
+	Verbose   bool // Enable verbose error output for debugging
 }
 
 // Profile represents a Rancher connection profile
