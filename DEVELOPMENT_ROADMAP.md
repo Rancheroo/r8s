@@ -302,11 +302,100 @@ Completed Items:
 
 ---
 
-### **Phase 6: Advanced Features** 🚀 FUTURE ENHANCEMENTS
+### **Phase 6: Log Bundle Support** 🔴 HIGH VALUE - NEW FEATURE
+**Duration:** 6 weeks  
+**Goal:** Offline troubleshooting via support bundles
+
+**See:** [LOG_BUNDLE_ANALYSIS.md](LOG_BUNDLE_ANALYSIS.md) for complete analysis
+
+#### 6.1 Bundle Analysis Summary
+**Bundle Type:** Rancher/RKE2 cluster support bundles  
+**Example Size:** 337 files (etcd, journald, networking, rke2, systeminfo, systemlogs)  
+**Key Value:** Enable troubleshooting without live cluster access
+
+#### 6.2 Implementation Phases
+
+**Week 1: Foundation**
+- [ ] Create `internal/logbundle/` package
+- [ ] Implement tar.gz extraction
+- [ ] Basic bundle manifest detection
+- [ ] Simple file browser view
+- [ ] Add `--bundle=/path/to.tar.gz` CLI flag
+
+**Week 2: Kubernetes Resources**
+- [ ] Parse kubectl/ output files (30 resource types)
+- [ ] Build resource index
+- [ ] Pods, Deployments, Services tables
+- [ ] Events viewer (critical for debugging)
+- [ ] Resource relationship navigation
+
+**Week 3: Log Viewer**
+- [ ] Parse 160+ pod log files
+- [ ] Full-text search index (bleve)
+- [ ] Current vs Previous log toggle
+- [ ] Multi-log search across namespaces
+- [ ] Error/Warning highlighting
+
+**Week 4: Health Analysis**
+- [ ] etcd health scoring
+- [ ] Pod status analysis (CrashLoopBackOff detection)
+- [ ] Resource usage warnings
+- [ ] Certificate expiry checking
+- [ ] Automated problem detection
+
+**Week 5: System & Network**
+- [ ] Parse systeminfo files (30 files)
+- [ ] Parse networking configs (iptables, routes, CNI)
+- [ ] System resource display
+- [ ] Network troubleshooting view
+
+**Week 6: Polish & Advanced**
+- [ ] Overview dashboard with health summary
+- [ ] Export capabilities
+- [ ] Performance optimization
+- [ ] Documentation
+
+#### 6.3 UX Design Highlights
+
+**Dual-Mode Operation:**
+```
+r8s
+├── 🌐 Live Mode (existing) → Rancher API
+└── 📦 Bundle Mode (new)    → Offline bundles
+```
+
+**Bundle Dashboard:**
+- Health summary (Red/Yellow/Green indicators)
+- Quick stats (pods, deployments, events)
+- Problem highlights
+- Direct navigation to issues
+
+**Advanced Log Viewer:**
+- Search across 160+ log files in <1s
+- Current vs Previous comparison (crash analysis)
+- Grouped by namespace
+- Link logs to resources
+
+#### 6.4 Success Metrics
+- Bundle load time: <10s
+- Log search: <1s across all files
+- Memory usage: <200MB
+- Test coverage: 70%+
+
+**Deliverables:**
+- Full offline bundle browsing
+- Kubernetes resource inspection
+- Advanced log search and analysis
+- Automated health/problem detection
+- Production-ready code with tests
+
+---
+
+### **Phase 7: Advanced Features** 🚀 FUTURE ENHANCEMENTS
 **Duration:** Ongoing  
 **Goal:** Power-user features and extensibility
 
-#### 6.1 Command Mode
+#### 7.1 Command Mode
 **Effort:** High | **Impact:** High | **Risk:** Medium
 
 ```
@@ -316,9 +405,10 @@ Vim-style command mode:
 :goto cluster/production
 :help describe
 :export json > /tmp/resource.json
+:bundle load /path/to/bundle.tar.gz
 ```
 
-#### 6.2 Plugin System
+#### 7.2 Plugin System
 **Effort:** Very High | **Impact:** High | **Risk:** High
 
 ```
@@ -329,7 +419,7 @@ Extension points:
 - Custom formatters
 ```
 
-#### 6.3 Log Streaming
+#### 7.3 Log Streaming (Live Mode)
 **Effort:** Medium | **Impact:** High | **Risk:** Medium
 
 ```
@@ -340,7 +430,7 @@ Features:
 - Log export
 ```
 
-#### 6.4 Resource Metrics
+#### 7.4 Resource Metrics (Live Mode)
 **Effort:** High | **Impact:** Medium | **Risk:** Medium
 
 ```
@@ -349,6 +439,17 @@ Features:
 - Historical metrics
 - Alerting thresholds
 - Performance dashboards
+```
+
+#### 7.5 Bundle Enhancements
+**Effort:** Medium | **Impact:** Medium | **Risk:** Low
+
+```
+Features:
+- Multi-node bundle correlation
+- Bundle comparison (before/after)
+- Generate bundles from Live Mode
+- Export HTML reports from bundles
 ```
 
 ---
@@ -369,18 +470,29 @@ Features:
 - [ ] Add YAML format support
 - [ ] Performance benchmarks
 
-### Medium Term (Next Month)
+### Medium Term (Next 1-2 Months)
 - [ ] Search and filter functionality
 - [ ] Enhanced error handling
 - [ ] Comprehensive documentation
 - [ ] Performance optimization
 - [ ] Configuration enhancements
+- [ ] Begin log bundle support (Phase 6)
 
-### Long Term (Next Quarter)
+### Long Term (Next 2-3 Months)
+- [ ] Complete log bundle implementation (6 weeks)
+  - [ ] Weeks 1-2: Bundle loading, K8s resources
+  - [ ] Weeks 3-4: Log viewer, health analysis
+  - [ ] Weeks 5-6: System/network, polish
+- [ ] Bundle mode fully functional
+- [ ] Advanced features planning
+
+### Future Enhancements (Beyond 3 Months)
 - [ ] Command mode
-- [ ] Log streaming
-- [ ] Resource metrics
+- [ ] Log streaming (live mode)
+- [ ] Resource metrics (live mode)
 - [ ] Plugin system exploration
+- [ ] Multi-bundle correlation
+- [ ] Bundle comparison tools
 
 ---
 
