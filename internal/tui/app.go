@@ -1586,9 +1586,18 @@ func (a *App) describeService(clusterID, namespace, name string) tea.Cmd {
 	}
 }
 
-// fetchLogs fetches logs for a pod with mock data fallback
+// fetchLogs fetches logs for a pod using the data source
 func (a *App) fetchLogs(clusterID, namespace, podName string) tea.Cmd {
 	return func() tea.Msg {
+		// Try to get logs from data source first
+		if a.dataSource != nil {
+			logs, err := a.dataSource.GetLogs(clusterID, namespace, podName, a.currentContainer, a.showPrevious)
+			if err == nil && len(logs) > 0 {
+				return logsMsg{logs: logs}
+			}
+			// If error or no logs, fall through to mock data
+		}
+
 		// Generate realistic mock logs - larger dataset for better search testing
 		mockLogs := []string{
 			"I1127 00:44:40.476206 [INFO] Kubelet starting up...",
@@ -1679,15 +1688,25 @@ func (a *App) handleViewLogs() tea.Cmd {
 	return a.fetchLogs(a.currentView.clusterID, namespaceName, podName)
 }
 
-// fetchPods fetches pods with automatic fallback to mock data in offline mode
+// fetchPods fetches pods using the data source
 func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, skip API call and return mock data immediately
+		// Try to get pods from data source first
+		if a.dataSource != nil {
+			pods, err := a.dataSource.GetPods(projectID, namespaceName)
+			if err == nil && len(pods) > 0 {
+				return podsMsg{pods: pods}
+			}
+			// If error or no pods, check if we're in offline mode for fallback
+		}
+
+		// Fallback: If in offline mode without dataSource, use mock data
 		if a.offlineMode {
 			mockPods := a.getMockPods(namespaceName)
 			return podsMsg{pods: mockPods}
 		}
 
+		// Fallback: Try client directly (backward compatibility)
 		if a.client == nil {
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
