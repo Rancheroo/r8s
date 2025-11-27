@@ -62,6 +62,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 	opts := bundle.ImportOptions{
 		Path:    bundlePath,
 		MaxSize: bundleMaxSize * 1024 * 1024, // Convert MB to bytes
+		Verbose: verbose, // Pass verbose flag from root
 	}
 
 	// Load the bundle
