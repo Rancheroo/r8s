@@ -1,4 +1,4 @@
-// Package cmd implements the CLI commands and flags for r9s using the Cobra framework.
+// Package cmd implements the CLI commands and flags for r8s using the Cobra framework.
 // It provides the root command, version information, and configuration management.
 package cmd
 
@@ -8,8 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
-	"github.com/4realtech/r9s/internal/config"
-	"github.com/4realtech/r9s/internal/tui"
+	"github.com/Rancheroo/r8s/internal/config"
+	"github.com/Rancheroo/r8s/internal/tui"
 )
 
 var (
@@ -28,11 +28,11 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "r9s",
-	Short: "Rancher9s - k9s-inspired TUI for Rancher",
-	Long: `r9s (Rancher9s) is a terminal UI for managing Rancher-based Kubernetes clusters.
-It provides a k9s-like experience tailored for Rancher's multi-cluster management,
-including projects, namespaces, and Rancher-specific resources.`,
+	Use:   "r8s",
+	Short: "r8s - Rancher log viewer and cluster simulator",
+	Long: `r8s (Rancheroos) is a terminal UI for managing Rancher-based Kubernetes clusters.
+It provides log viewing, filtering, and offline cluster simulation from log bundles,
+along with interactive navigation of projects, namespaces, and Rancher resources.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Load configuration
 		cfg, err := config.Load(cfgFile, profile)
@@ -74,7 +74,7 @@ func Execute() error {
 
 func init() {
 	// Global flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.r9s/config.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.r8s/config.yaml)")
 	rootCmd.PersistentFlags().StringVar(&profile, "profile", "", "Rancher profile to use (default is from config)")
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip TLS certificate verification")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
@@ -89,7 +89,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("r9s %s (commit: %s, built: %s)\n",
+		fmt.Printf("r8s %s (commit: %s, built: %s)\n",
 			versionInfo.Version,
 			versionInfo.Commit,
 			versionInfo.Date,
@@ -99,8 +99,8 @@ var versionCmd = &cobra.Command{
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Manage r9s configuration",
-	Long:  "Initialize, view, or edit r9s configuration file",
+	Short: "Manage r8s configuration",
+	Long:  "Initialize, view, or edit r8s configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Config management commands:")
 		fmt.Println("  init   - Initialize a new config file")

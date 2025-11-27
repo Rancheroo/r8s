@@ -1,6 +1,6 @@
-# Contributing to r9s
+# Contributing to r8s
 
-Thank you for your interest in contributing to r9s! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to r8s! This document provides guidelines and instructions for contributing to the project.
 
 ## Table of Contents
 
@@ -28,8 +28,8 @@ Before you begin, ensure you have the following installed:
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/4realtech/r9s.git
-cd r9s
+git clone https://github.com/Rancheroo/r8s.git
+cd r8s
 ```
 
 ### Install Dependencies
@@ -45,7 +45,7 @@ go mod download
 make build
 
 # Or directly with Go
-go build -o bin/r9s main.go
+go build -o bin/r8s main.go
 ```
 
 ### Run the Application
@@ -55,7 +55,7 @@ go build -o bin/r9s main.go
 go run main.go
 
 # Or run the built binary
-./bin/r9s
+./bin/r8s
 ```
 
 ---
@@ -76,7 +76,7 @@ go run main.go
 
 ### Configuration
 
-Create or edit `~/.r9s/config.yaml`:
+Create or edit `~/.r8s/config.yaml`:
 
 ```yaml
 current_profile: dev
@@ -105,7 +105,7 @@ We follow standard Go conventions and idioms:
 ### Code Organization
 
 ```
-r9s/
+r8s/
 ├── cmd/              # CLI commands
 │   └── root.go      # Root command setup
 ├── internal/        # Private application code
@@ -384,7 +384,7 @@ git commit -m "feat: implement filter mode
 ```bash
 # Enable verbose logging
 export LOG_LEVEL=debug
-./bin/r9s
+./bin/r8s
 
 # Run with race detector
 go run -race main.go
@@ -406,7 +406,7 @@ go tool pprof mem.prof
 
 ## License
 
-By contributing to r9s, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing to r8s, you agree that your contributions will be licensed under the Apache License 2.0.
 
 ---
 
@@ -418,4 +418,4 @@ If you have questions about contributing, please:
 3. Open a new discussion
 4. Ask in pull request comments
 
-Thank you for contributing to r9s! 🎉
+Thank you for contributing to r8s! 🎉

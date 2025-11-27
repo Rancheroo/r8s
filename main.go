@@ -1,13 +1,12 @@
-// Package main provides the entry point for r9s, a k9s-inspired terminal UI for managing
-// Rancher-based Kubernetes clusters. It initializes version information and executes the
-// root Cobra command.
+// Package main provides the entry point for r8s, a Rancher-focused log viewer and cluster
+// simulator. It initializes version information and executes the root Cobra command.
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/4realtech/r9s/cmd"
+	"github.com/Rancheroo/r8s/cmd"
 )
 
 var (

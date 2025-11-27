@@ -38,3 +38,25 @@ config.yaml
 # Test coverage
 *.cover
 coverage.txt
+
+# Warp AI context (local development only)
+WARP.md
+
+# Profiling and debugging
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+tmp/
+
+# Editor backup files
+*.bak
+*.orig
+
+# Debug binaries
+__debug_bin*

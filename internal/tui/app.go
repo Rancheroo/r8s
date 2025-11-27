@@ -1,4 +1,4 @@
-// Package tui implements the terminal user interface for r9s using the Bubble Tea framework.
+// Package tui implements the terminal user interface for r8s using the Bubble Tea framework.
 // It provides an interactive, keyboard-driven interface for navigating Rancher clusters, projects,
 // namespaces, and Kubernetes resources. The package handles view rendering, state management,
 // and user input processing.
@@ -14,8 +14,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/evertras/bubble-table/table"
 
-	"github.com/4realtech/r9s/internal/config"
-	"github.com/4realtech/r9s/internal/rancher"
+	"github.com/Rancheroo/r8s/internal/config"
+	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
 // ViewType represents different view types
@@ -857,7 +857,7 @@ func (a *App) updateTable() {
 func (a *App) getBreadcrumb() string {
 	switch a.currentView.viewType {
 	case ViewClusters:
-		return "r9s - Clusters"
+		return "r8s - Clusters"
 	case ViewProjects:
 		return fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
 	case ViewNamespaces:
@@ -877,7 +877,7 @@ func (a *App) getBreadcrumb() string {
 	case ViewCRDInstances:
 		return fmt.Sprintf("Cluster: %s > CRDs > %s", a.currentView.clusterName, a.currentView.crdKind)
 	default:
-		return "r9s - Rancher Navigator"
+		return "r8s - Rancher Navigator"
 	}
 }
 

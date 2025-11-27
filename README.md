@@ -1,11 +1,11 @@
-# r9s (Rancher9s)
+# r8s (Rancheroos)
 
 > A terminal UI for navigating and managing Rancher-based Kubernetes clusters
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-r9s provides a fast, keyboard-driven terminal interface for browsing Rancher clusters, projects, namespaces, and Kubernetes resources. Inspired by k9s but designed specifically for Rancher's multi-cluster management model.
+r8s (pronounced "rancheros", a play on k9s and k8s) provides a fast, keyboard-driven terminal interface for browsing Rancher clusters, projects, namespaces, and Kubernetes resources. Inspired by k9s but designed specifically for Rancher's multi-cluster management model.
 
 ---
 
@@ -48,13 +48,13 @@ _[Screenshot coming soon - showing TUI with cluster navigator and describe modal
 
 ```bash
 # Clone the repository
-git clone https://github.com/4realtech/r9s.git
-cd r9s
+git clone https://github.com/Rancheroo/r8s.git
+cd r8s
 
 # Build
 make build
 
-# Binary will be in: ./bin/r9s
+# Binary will be in: ./bin/r8s
 ```
 
 ### Quick Install
@@ -64,8 +64,8 @@ make build
 go mod download
 
 # Build and run
-go build -o bin/r9s main.go
-./bin/r9s
+go build -o bin/r8s main.go
+./bin/r8s
 ```
 
 ---
@@ -74,11 +74,11 @@ go build -o bin/r9s main.go
 
 ### 1. First Run - Create Configuration
 
-On first run, r9s creates a default config template:
+On first run, r8s creates a default config template:
 
 ```bash
-./bin/r9s
-# Creates ~/.r9s/config.yaml
+./bin/r8s
+# Creates ~/.r8s/config.yaml
 ```
 
 ### 2. Get Rancher API Credentials
@@ -88,7 +88,7 @@ On first run, r9s creates a default config template:
 1. Log in to your Rancher UI
 2. Click your avatar (top right) → **Account & API Keys**
 3. Click **Create API Key**
-4. Set a description (e.g., "r9s CLI access")
+4. Set a description (e.g., "r8s CLI access")
 5. Set expiration (optional) and scope (optional)
 6. Click **Create**
 7. **Copy both keys immediately** (won't be shown again):
@@ -100,9 +100,9 @@ On first run, r9s creates a default config template:
 
 If you already have a bearer token, use that directly.
 
-### 3. Configure r9s
+### 3. Configure r8s
 
-Edit `~/.r9s/config.yaml`:
+Edit `~/.r8s/config.yaml`:
 
 ```yaml
 current_profile: production
@@ -126,14 +126,14 @@ profiles:
     bearer_token: token-yyyyy:staging-secret
 ```
 
-### 4. Launch r9s
+### 4. Launch r8s
 
 ```bash
 # Start with default profile
-./bin/r9s
+./bin/r8s
 
 # Or specify a profile
-./bin/r9s --profile development
+./bin/r8s --profile development
 ```
 
 ---
@@ -175,7 +175,7 @@ profiles:
 
 ### Navigation Hierarchy
 
-r9s follows Rancher's natural hierarchy:
+r8s follows Rancher's natural hierarchy:
 
 ```
 Clusters
@@ -190,7 +190,7 @@ Resources (Pods / Deployments / Services)
 **Example Navigation Flow:**
 
 ```bash
-1. Start r9s
+1. Start r8s
 2. See list of clusters
 3. Press ↓ to select "production-cluster"
 4. Press Enter → Now viewing projects in that cluster
@@ -267,7 +267,7 @@ Custom Resource Definitions can be browsed:
 
 ### Offline Mode
 
-If r9s can't connect to Rancher, it automatically enters offline mode:
+If r8s can't connect to Rancher, it automatically enters offline mode:
 
 ```
 ⚠️  OFFLINE MODE - DISPLAYING MOCK DATA  ⚠️
@@ -287,8 +287,8 @@ This allows:
 
 ### Config File Location
 
-- **Default**: `~/.r9s/config.yaml`
-- **Override**: `r9s --config /path/to/config.yaml`
+- **Default**: `~/.r8s/config.yaml`
+- **Override**: `r8s --config /path/to/config.yaml`
 
 ### Multiple Profiles
 
@@ -314,8 +314,8 @@ profiles:
 Switch profiles:
 
 ```bash
-r9s --profile staging
-r9s --profile development
+r8s --profile staging
+r8s --profile development
 ```
 
 ### TLS/SSL Options
@@ -336,7 +336,7 @@ profiles:
 
 ### For New Team Members
 
-Welcome! Here's how to get started with r9s:
+Welcome! Here's how to get started with r8s:
 
 #### Step 1: Install Go
 
@@ -352,8 +352,8 @@ go version
 
 ```bash
 # Clone the repo
-git clone https://github.com/4realtech/r9s.git
-cd r9s
+git clone https://github.com/Rancheroo/r8s.git
+cd r8s
 
 # Install dependencies
 go mod download
@@ -362,7 +362,7 @@ go mod download
 make build
 
 # Verify build
-./bin/r9s --version
+./bin/r8s --version
 ```
 
 #### Step 3: Get Credentials
@@ -374,11 +374,11 @@ Ask your team lead for:
 #### Step 4: Configure
 
 ```bash
-# r9s will create a config template on first run
-./bin/r9s
+# r8s will create a config template on first run
+./bin/r8s
 
 # Edit the config
-vim ~/.r9s/config.yaml   # or use your preferred editor
+vim ~/.r8s/config.yaml   # or use your preferred editor
 
 # Add your credentials
 ```
@@ -392,7 +392,7 @@ vim ~/.r9s/config.yaml   # or use your preferred editor
 
 #### Helpful Resources
 
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - How r9s works internally
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - How r8s works internally
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 
@@ -437,7 +437,7 @@ make clean
 ### Project Structure
 
 ```
-r9s/
+r8s/
 ├── main.go              # Entry point
 ├── cmd/root.go          # CLI setup
 ├── internal/
@@ -485,15 +485,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 **Cause:** Invalid or expired token  
 **Solutions:**
 - Generate new API token in Rancher UI
-- Update `~/.r9s/config.yaml` with new token
+- Update `~/.r8s/config.yaml` with new token
 - Check token hasn't expired
 
 ### Offline mode when not expected
 
-**Cause:** r9s couldn't connect on startup  
+**Cause:** r8s couldn't connect on startup  
 **Solutions:**
 - Check Rancher URL and credentials
-- Restart r9s after fixing config
+- Restart r8s after fixing config
 - Look for error details in terminal
 
 ### Deployment replica counts show 0/0
@@ -543,8 +543,8 @@ Apache License 2.0 - See [LICENSE](LICENSE) for details
 
 ## 📞 Support & Contact
 
-- **Issues**: [GitHub Issues](https://github.com/4realtech/r9s/issues)
-- **Documentation**: [GitHub Wiki](https://github.com/4realtech/r9s/wiki)
+- **Issues**: [GitHub Issues](https://github.com/Rancheroo/r8s/issues)
+- **Documentation**: [GitHub Wiki](https://github.com/Rancheroo/r8s/wiki)
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---

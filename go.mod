@@ -1,4 +1,4 @@
-module github.com/4realtech/r9s
+module github.com/Rancheroo/r8s
 
 go 1.23
 

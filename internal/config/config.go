@@ -54,7 +54,7 @@ func Load(cfgFile, profileName string) (*Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get home directory: %w", err)
 		}
-		cfgFile = filepath.Join(home, ".r9s", "config.yaml")
+		cfgFile = filepath.Join(home, ".r8s", "config.yaml")
 	}
 
 	// Check if config file exists
@@ -175,7 +175,7 @@ func (c *Config) Save(cfgFile string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get home directory: %w", err)
 		}
-		cfgFile = filepath.Join(home, ".r9s", "config.yaml")
+		cfgFile = filepath.Join(home, ".r8s", "config.yaml")
 	}
 
 	data, err := yaml.Marshal(c)
