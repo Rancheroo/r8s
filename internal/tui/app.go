@@ -120,7 +120,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		}
 	}
 
-	// Determine data source based on bundle path
+	// Determine data source based on mode
 	var dataSource DataSource
 	var client *rancher.Client
 	var bundleMode bool
@@ -137,7 +137,11 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		}
 		dataSource = ds
 		bundleMode = true
+		offlineMode = false // Bundle mode is not "offline", it's bundle analysis
+	} else if cfg.MockMode {
+		// Demo/Mock mode - explicitly requested via --mockdata flag
 		offlineMode = true
+		dataSource = NewLiveDataSource(nil, true) // nil client, mock enabled
 	} else {
 		// Live mode - use Rancher client
 		client = rancher.NewClient(
@@ -146,13 +150,25 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 			cfg.Insecure || profile.Insecure,
 		)
 
-		// Test connection
+		// Test connection - fail hard if it doesn't work
 		if err := client.TestConnection(); err != nil {
-			// Connection failed - enable offline mode with graceful fallback
-			offlineMode = true
+			return &App{
+				config: cfg,
+				error: fmt.Sprintf(
+					"Cannot connect to Rancher API at %s\n\n"+
+						"Error: %v\n\n"+
+						"Options:\n"+
+						"  • Check RANCHER_URL and RANCHER_TOKEN\n"+
+						"  • Use --mockdata flag for demo mode\n"+
+						"  • Use --bundle flag to analyze log bundles\n"+
+						"  • Run 'r8s config init' to set up configuration",
+					profile.URL, err,
+				),
+			}
 		}
 
-		dataSource = NewLiveDataSource(client, offlineMode)
+		dataSource = NewLiveDataSource(client, false)
+		offlineMode = false
 	}
 
 	// Always start at Clusters view regardless of connection status

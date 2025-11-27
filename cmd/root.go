@@ -5,11 +5,7 @@ package cmd
 import (
 	"fmt"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-
-	"github.com/Rancheroo/r8s/internal/config"
-	"github.com/Rancheroo/r8s/internal/tui"
 )
 
 var (
@@ -30,42 +26,37 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "r8s",
-	Short: "r8s - Rancher log viewer and cluster simulator",
-	Long: `r8s (Rancheroos) is a terminal UI for managing Rancher-based Kubernetes clusters.
-It provides log viewing, filtering, and offline cluster simulation from log bundles,
-along with interactive navigation of projects, namespaces, and Rancher resources.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// Load configuration
-		cfg, err := config.Load(cfgFile, profile)
-		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
-		}
+	Short: "r8s - Rancher Cluster Navigator & Log Analyzer",
+	Long: `r8s (Rancheroos) - A TUI for browsing Rancher-managed Kubernetes clusters and analyzing log bundles.
 
-		// Override config with CLI flags
-		if insecure {
-			cfg.Insecure = true
-		}
-		if contextName != "" {
-			cfg.Context = contextName
-		}
-		if namespace != "" {
-			cfg.Namespace = namespace
-		}
+FEATURES:
+  • Interactive TUI for navigating Rancher clusters, projects, namespaces
+  • View pods, deployments, services, and CRDs with live data
+  • Analyze RKE2 log bundles offline (no API required)
+  • Color-coded log viewing with search and filtering
+  • Demo mode with mock data for testing and screenshots
 
-		// Create and start TUI with bundle path if provided
-		app := tui.NewApp(cfg, tuiBundlePath)
-		p := tea.NewProgram(
-			app,
-			tea.WithAltScreen(),
-			tea.WithMouseCellMotion(),
-		)
+CONFIGURATION:
+  r8s uses a config file at ~/.config/r8s/config.yaml or via environment variables:
+    export RANCHER_URL=https://rancher.example.com
+    export RANCHER_TOKEN=token-xxxxx:yyyyyyyy
 
-		if _, err := p.Run(); err != nil {
-			return fmt.Errorf("TUI error: %w", err)
-		}
+EXAMPLES:
+  # Launch TUI with live Rancher connection
+  r8s tui
 
-		return nil
-	},
+  # Launch TUI with demo/mock data (no API required)
+  r8s tui --mockdata
+
+  # Analyze a log bundle offline
+  r8s bundle import --path=w-guard-wg-cp-svtk6-lqtxw.tar.gz
+
+  # Show bundle summary without launching TUI
+  r8s bundle info --path=logs.tar.gz
+
+  # Set up configuration
+  r8s config init`,
+	// No RunE - shows help by default when run without subcommands
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -80,7 +71,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip TLS certificate verification")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
-	rootCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to bundle for offline mode")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)

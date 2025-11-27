@@ -23,6 +23,7 @@ type Config struct {
 	Insecure  bool
 	Context   string
 	Namespace string
+	MockMode  bool // Enable demo mode with mock data
 }
 
 // Profile represents a Rancher connection profile
