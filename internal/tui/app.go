@@ -259,6 +259,20 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// FIX BUG #7: Handle Ctrl+L to refresh (prevent terminal clear conflicts)
 			a.loading = true
 			return a, a.refreshCurrentView()
+		case "j":
+			// FIX BUG #14: Vim-style navigation down
+			if !a.searchMode && a.currentView.viewType != ViewLogs {
+				newTable, cmd := a.table.Update(tea.KeyMsg{Type: tea.KeyDown})
+				a.table = newTable
+				return a, cmd
+			}
+		case "k":
+			// FIX BUG #14: Vim-style navigation up
+			if !a.searchMode && a.currentView.viewType != ViewLogs {
+				newTable, cmd := a.table.Update(tea.KeyMsg{Type: tea.KeyUp})
+				a.table = newTable
+				return a, cmd
+			}
 		case "?":
 			a.showHelp = true
 			return a, nil
@@ -1641,69 +1655,83 @@ func (a *App) fetchLogs(clusterID, namespace, podName string) tea.Cmd {
 		// Try to get logs from data source first
 		if a.dataSource != nil {
 			logs, err := a.dataSource.GetLogs(clusterID, namespace, podName, a.currentContainer, a.showPrevious)
-			if err == nil && len(logs) > 0 {
+			if err == nil {
+				// Return even if empty - empty logs is valid
 				return logsMsg{logs: logs}
 			}
-			// If error or no logs, fall through to mock data
+			// FIX BUG #13: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch logs from data source: %w\n\n"+
+					"Context: cluster=%s, namespace=%s, pod=%s, container=%s\n"+
+					"Hint: Check bundle data or pod status", err, clusterID, namespace, podName, a.currentContainer)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch logs: %w", err)}
 		}
 
-		// Generate realistic mock logs - larger dataset for better search testing
-		mockLogs := []string{
-			"I1127 00:44:40.476206 [INFO] Kubelet starting up...",
-			"I1127 00:44:40.478859 [INFO] None policy: Start",
-			"I1127 00:44:40.478889 [INFO] Starting memory manager with policy=None",
-			"I1127 00:44:40.479426 [INFO] Initialized iptables rules for IPv6",
-			"I1127 00:44:40.479451 [INFO] Starting to sync pod status with apiserver",
-			"I1127 00:44:40.479482 [INFO] Starting kubelet main sync loop",
-			"E1127 00:44:40.479579 [ERROR] Skipping pod synchronization - PLEG is not healthy",
-			"W1127 00:44:40.483015 [WARN] Failed to list RuntimeClass: connection refused",
-			"E1127 00:44:40.483087 [ERROR] Unhandled error in reflector: connection refused",
-			"I1127 00:44:40.545805 [INFO] Attempting to connect to API server",
-			"E1127 00:44:40.545850 [ERROR] Error getting current node from lister: node not found",
-			"I1127 00:44:40.586619 [INFO] Failed to read data from checkpoint - checkpoint not found",
-			"I1127 00:44:40.586837 [INFO] Eviction manager: starting control loop",
-			"I1127 00:44:40.588489 [INFO] Starting Kubelet Plugin Manager",
-			"E1127 00:44:40.590954 [ERROR] Eviction manager: failed to check container filesystem",
-			"I1127 00:44:40.688184 [INFO] Attempting to register node w-guard-wg-cp-svtk6-lqtxw",
-			"E1127 00:44:40.688785 [ERROR] Unable to register node with API server: connection refused",
-			"W1127 00:44:40.810298 [WARN] No need to create mirror pod - failed to get node info",
-			"I1127 00:44:40.838155 [INFO] VerifyControllerAttachedVolume started for volume file3",
-			"I1127 00:44:40.838373 [INFO] VerifyControllerAttachedVolume started for volume file5",
-			"I1127 00:44:40.838450 [INFO] VerifyControllerAttachedVolume started for volume file6",
-			"I1127 00:44:40.890508 [INFO] Attempting to register node (retry 2)",
-			"E1127 00:44:40.890971 [ERROR] Unable to register node with API server: connection refused",
-			"E1127 00:44:41.066666 [ERROR] Failed to ensure lease exists - will retry with backoff",
-			"W1127 00:44:41.110927 [WARN] Nameserver limits exceeded - some nameservers omitted",
-			"I1127 00:44:41.292845 [INFO] Attempting to register node (retry 3)",
-			"E1127 00:44:41.293183 [ERROR] Unable to register node with API server: connection refused",
-			"W1127 00:44:41.420049 [WARN] Failed to list Services: connection refused",
-			"W1127 00:44:41.455586 [WARN] Failed to list RuntimeClass: connection refused",
-			"I1127 00:44:42.000000 [INFO] Health check passed for container app-main",
-			"I1127 00:44:42.500000 [INFO] Processing HTTP request GET /api/v1/pods",
-			"I1127 00:44:42.501234 [INFO] Query execution completed in 15ms",
-			"I1127 00:44:42.550000 [INFO] Response sent: 200 OK",
-			"W1127 00:44:43.000000 [WARN] Slow query detected: SELECT * FROM pods (duration: 500ms)",
-			"I1127 00:44:43.100000 [INFO] Cache invalidated for namespace default",
-			"I1127 00:44:43.200000 [INFO] Syncing pod state with etcd",
-			"E1127 00:44:43.300000 [ERROR] Connection timeout to metrics server",
-			"I1127 00:44:43.400000 [INFO] Retrying connection to metrics server (attempt 1/3)",
-			"W1127 00:44:43.500000 [WARN] High memory usage detected: 85% of limit",
-			"I1127 00:44:43.600000 [INFO] Garbage collection triggered",
-			"I1127 00:44:43.700000 [INFO] Freed 150MB of memory",
-			"I1127 00:44:44.000000 [INFO] Pod nginx-deployment-abc123 started successfully",
-			"I1127 00:44:44.100000 [INFO] Container nginx pulling image nginx:1.21",
-			"I1127 00:44:44.200000 [INFO] Image pull successful",
-			"I1127 00:44:44.300000 [INFO] Container nginx started",
-			"E1127 00:44:44.400000 [ERROR] Failed to mount volume pvc-data: volume not found",
-			"W1127 00:44:44.500000 [WARN] Retrying volume mount with exponential backoff",
-			"I1127 00:44:44.800000 [INFO] Volume pvc-data mounted successfully on retry",
-			"I1127 00:44:45.000000 [INFO] Readiness probe succeeded for container nginx",
-			fmt.Sprintf("I1127 00:44:45.500000 [INFO] Mock logs for pod: %s", podName),
-			"I1127 00:44:45.600000 [INFO] All health checks passing",
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockLogs := a.generateMockLogs(podName)
+			return logsMsg{logs: mockLogs}
 		}
 
-		// In offline mode or if API fails, return mock logs
-		return logsMsg{logs: mockLogs}
+		return errMsg{fmt.Errorf("no data source available")}
+	}
+}
+
+// generateMockLogs generates realistic mock logs for testing
+func (a *App) generateMockLogs(podName string) []string {
+	return []string{
+		"I1127 00:44:40.476206 [INFO] Kubelet starting up...",
+		"I1127 00:44:40.478859 [INFO] None policy: Start",
+		"I1127 00:44:40.478889 [INFO] Starting memory manager with policy=None",
+		"I1127 00:44:40.479426 [INFO] Initialized iptables rules for IPv6",
+		"I1127 00:44:40.479451 [INFO] Starting to sync pod status with apiserver",
+		"I1127 00:44:40.479482 [INFO] Starting kubelet main sync loop",
+		"E1127 00:44:40.479579 [ERROR] Skipping pod synchronization - PLEG is not healthy",
+		"W1127 00:44:40.483015 [WARN] Failed to list RuntimeClass: connection refused",
+		"E1127 00:44:40.483087 [ERROR] Unhandled error in reflector: connection refused",
+		"I1127 00:44:40.545805 [INFO] Attempting to connect to API server",
+		"E1127 00:44:40.545850 [ERROR] Error getting current node from lister: node not found",
+		"I1127 00:44:40.586619 [INFO] Failed to read data from checkpoint - checkpoint not found",
+		"I1127 00:44:40.586837 [INFO] Eviction manager: starting control loop",
+		"I1127 00:44:40.588489 [INFO] Starting Kubelet Plugin Manager",
+		"E1127 00:44:40.590954 [ERROR] Eviction manager: failed to check container filesystem",
+		"I1127 00:44:40.688184 [INFO] Attempting to register node w-guard-wg-cp-svtk6-lqtxw",
+		"E1127 00:44:40.688785 [ERROR] Unable to register node with API server: connection refused",
+		"W1127 00:44:40.810298 [WARN] No need to create mirror pod - failed to get node info",
+		"I1127 00:44:40.838155 [INFO] VerifyControllerAttachedVolume started for volume file3",
+		"I1127 00:44:40.838373 [INFO] VerifyControllerAttachedVolume started for volume file5",
+		"I1127 00:44:40.838450 [INFO] VerifyControllerAttachedVolume started for volume file6",
+		"I1127 00:44:40.890508 [INFO] Attempting to register node (retry 2)",
+		"E1127 00:44:40.890971 [ERROR] Unable to register node with API server: connection refused",
+		"E1127 00:44:41.066666 [ERROR] Failed to ensure lease exists - will retry with backoff",
+		"W1127 00:44:41.110927 [WARN] Nameserver limits exceeded - some nameservers omitted",
+		"I1127 00:44:41.292845 [INFO] Attempting to register node (retry 3)",
+		"E1127 00:44:41.293183 [ERROR] Unable to register node with API server: connection refused",
+		"W1127 00:44:41.420049 [WARN] Failed to list Services: connection refused",
+		"W1127 00:44:41.455586 [WARN] Failed to list RuntimeClass: connection refused",
+		"I1127 00:44:42.000000 [INFO] Health check passed for container app-main",
+		"I1127 00:44:42.500000 [INFO] Processing HTTP request GET /api/v1/pods",
+		"I1127 00:44:42.501234 [INFO] Query execution completed in 15ms",
+		"I1127 00:44:42.550000 [INFO] Response sent: 200 OK",
+		"W1127 00:44:43.000000 [WARN] Slow query detected: SELECT * FROM pods (duration: 500ms)",
+		"I1127 00:44:43.100000 [INFO] Cache invalidated for namespace default",
+		"I1127 00:44:43.200000 [INFO] Syncing pod state with etcd",
+		"E1127 00:44:43.300000 [ERROR] Connection timeout to metrics server",
+		"I1127 00:44:43.400000 [INFO] Retrying connection to metrics server (attempt 1/3)",
+		"W1127 00:44:43.500000 [WARN] High memory usage detected: 85% of limit",
+		"I1127 00:44:43.600000 [INFO] Garbage collection triggered",
+		"I1127 00:44:43.700000 [INFO] Freed 150MB of memory",
+		"I1127 00:44:44.000000 [INFO] Pod nginx-deployment-abc123 started successfully",
+		"I1127 00:44:44.100000 [INFO] Container nginx pulling image nginx:1.21",
+		"I1127 00:44:44.200000 [INFO] Image pull successful",
+		"I1127 00:44:44.300000 [INFO] Container nginx started",
+		"E1127 00:44:44.400000 [ERROR] Failed to mount volume pvc-data: volume not found",
+		"W1127 00:44:44.500000 [WARN] Retrying volume mount with exponential backoff",
+		"I1127 00:44:44.800000 [INFO] Volume pvc-data mounted successfully on retry",
+		"I1127 00:44:45.000000 [INFO] Readiness probe succeeded for container nginx",
+		fmt.Sprintf("I1127 00:44:45.500000 [INFO] Mock logs for pod: %s", podName),
+		"I1127 00:44:45.600000 [INFO] All health checks passing",
 	}
 }
 
@@ -2494,12 +2522,23 @@ func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 				a.updateNamespaceCounts(namespaces)
 				return namespacesMsg{namespaces: namespaces}
 			}
+			// FIX BUG #12: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch namespaces from data source: %w\n\n"+
+					"Context: clusterID=%s, projectID=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, clusterID, projectID)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch namespaces: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockNamespaces := a.getMockNamespaces(clusterID, projectID)
-		a.updateNamespaceCounts(mockNamespaces)
-		return namespacesMsg{namespaces: mockNamespaces}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
+			a.updateNamespaceCounts(mockNamespaces)
+			return namespacesMsg{namespaces: mockNamespaces}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -2621,9 +2660,9 @@ func (a *App) performSearch() {
 // tickTail returns a command to refresh logs in tail mode
 func (a *App) tickTail() tea.Cmd {
 	return tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
-		// For now, just return a tick message
-		// In production, this would fetch new logs
-		return nil
+		// FIX BUG #15: Actually fetch new logs in tail mode
+		// Create a tea command that fetches logs
+		return tea.Batch(a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName))()
 	})
 }
 
