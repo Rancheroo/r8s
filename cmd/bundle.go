@@ -50,9 +50,12 @@ func init() {
 	rootCmd.AddCommand(bundleCmd)
 	bundleCmd.AddCommand(importCmd)
 
+	// Add limit flag to main bundle command for positional syntax
+	bundleCmd.Flags().Int64VarP(&bundleMaxSize, "limit", "l", 50, "Maximum bundle size in MB (default 50, use 0 for unlimited)")
+
 	// Import subcommand flags
 	importCmd.Flags().StringVarP(&bundlePath, "path", "p", "", "Path to bundle tar.gz file (required)")
-	importCmd.Flags().Int64VarP(&bundleMaxSize, "limit", "l", 10, "Maximum bundle size in MB (default 10MB)")
+	importCmd.Flags().Int64VarP(&bundleMaxSize, "limit", "l", 50, "Maximum bundle size in MB (default 50MB, use 0 for unlimited)")
 	importCmd.MarkFlagRequired("path")
 }
 
@@ -67,12 +70,25 @@ func runBundleCommand(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
 
 	fmt.Printf("Importing bundle: %s\n", bundlePath)
-	fmt.Printf("Size limit: 10MB (default)\n\n")
 
-	// Create import options with defaults
+	// Display size limit
+	if bundleMaxSize == 0 {
+		fmt.Printf("Size limit: unlimited\n\n")
+	} else if bundleMaxSize == 50 {
+		fmt.Printf("Size limit: 50MB (default)\n\n")
+	} else {
+		fmt.Printf("Size limit: %dMB\n\n", bundleMaxSize)
+	}
+
+	// Create import options using flag value
+	maxSizeBytes := bundleMaxSize * 1024 * 1024
+	if bundleMaxSize == 0 {
+		maxSizeBytes = 0 // Unlimited
+	}
+
 	opts := bundle.ImportOptions{
 		Path:    bundlePath,
-		MaxSize: 10 * 1024 * 1024, // Default 10MB
+		MaxSize: maxSizeBytes,
 		Verbose: verbose,
 	}
 
@@ -116,7 +132,9 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	// Display size limit (show default if 0 or negative)
 	if bundleMaxSize <= 0 {
-		fmt.Printf("Size limit: 10MB (default)\n\n")
+		fmt.Printf("Size limit: 50MB (default)\n\n")
+	} else if bundleMaxSize == 50 {
+		fmt.Printf("Size limit: 50MB (default)\n\n")
 	} else {
 		fmt.Printf("Size limit: %dMB\n\n", bundleMaxSize)
 	}

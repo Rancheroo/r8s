@@ -80,8 +80,32 @@ func Extract(bundlePath string, opts ImportOptions) (string, error) {
 		totalExtracted += header.Size
 		if opts.MaxSize > 0 && totalExtracted > opts.MaxSize {
 			os.RemoveAll(extractPath)
-			return "", fmt.Errorf("bundle uncompressed size (%d bytes) exceeds limit (%d bytes)",
-				totalExtracted, opts.MaxSize)
+			// Calculate sizes in MB for user-friendly message
+			sizeMB := float64(totalExtracted) / (1024 * 1024)
+			limitMB := float64(opts.MaxSize) / (1024 * 1024)
+			
+			if opts.Verbose {
+				return "", fmt.Errorf("bundle uncompressed size (%.1f MB) exceeds limit (%.1f MB)\n\n"+
+					"The bundle is too large for the current size limit.\n\n"+
+					"SOLUTION:\n"+
+					"  Increase the limit with --limit flag:\n"+
+					"  r8s bundle import --path=%s --limit=%d\n\n"+
+					"DETAILS:\n"+
+					"  Current limit: %.1f MB\n"+
+					"  Bundle size:   %.1f MB\n"+
+					"  Suggested:     --limit=%d (or higher)\n\n"+
+					"SAFETY NOTES:\n"+
+					"  • Size limits prevent system OOM (out of memory)\n"+
+					"  • Reasonable limit: 100-500 MB for typical bundles\n"+
+					"  • Maximum safe limit depends on available RAM\n"+
+					"  • Use --limit=0 to disable (not recommended for large files)",
+					sizeMB, limitMB, filepath.Base(bundlePath), int(sizeMB)+10,
+					limitMB, sizeMB, int(sizeMB)+10)
+			}
+			
+			return "", fmt.Errorf("bundle size (%.1f MB) exceeds limit (%.1f MB)\n"+
+				"Solution: Use --limit=%d to increase (e.g. 'r8s bundle import --path=bundle.tar.gz --limit=%d')",
+				sizeMB, limitMB, int(sizeMB)+10, int(sizeMB)+10)
 		}
 
 		// Handle different file types

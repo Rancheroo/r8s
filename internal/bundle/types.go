@@ -157,5 +157,7 @@ type ImportOptions struct {
 	Verbose bool
 }
 
-// DefaultMaxBundleSize is 10MB by default to prevent OOM with huge bundles.
-const DefaultMaxBundleSize int64 = 10 * 1024 * 1024 // 10MB
+// DefaultMaxBundleSize is 50MB by default to handle typical RKE2 log bundles.
+// Increased from 10MB based on real-world bundle sizes (often 20-40MB uncompressed).
+// Users can override with --limit flag for larger bundles.
+const DefaultMaxBundleSize int64 = 50 * 1024 * 1024 // 50MB
