@@ -12,7 +12,9 @@ import (
 
 // ParseCRDs parses kubectl get crds output from bundle
 func ParseCRDs(extractPath string) ([]rancher.CRD, error) {
-	path := filepath.Join(extractPath, "rke2/kubectl/crds")
+	// FIX BUG-003: Use getBundleRoot() to handle wrapper directories
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/crds")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -80,7 +82,9 @@ func ParseCRDs(extractPath string) ([]rancher.CRD, error) {
 
 // ParseDeployments parses kubectl get deployments output from bundle
 func ParseDeployments(extractPath string) ([]rancher.Deployment, error) {
-	path := filepath.Join(extractPath, "rke2/kubectl/deployments")
+	// FIX BUG-003: Use getBundleRoot() to handle wrapper directories
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/deployments")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -128,7 +132,9 @@ func ParseDeployments(extractPath string) ([]rancher.Deployment, error) {
 
 // ParseServices parses kubectl get services output from bundle
 func ParseServices(extractPath string) ([]rancher.Service, error) {
-	path := filepath.Join(extractPath, "rke2/kubectl/services")
+	// FIX BUG-003: Use getBundleRoot() to handle wrapper directories
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/services")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -187,7 +193,9 @@ func ParseServices(extractPath string) ([]rancher.Service, error) {
 
 // ParseNamespaces parses kubectl get namespaces output from bundle
 func ParseNamespaces(extractPath string) ([]rancher.Namespace, error) {
-	path := filepath.Join(extractPath, "rke2/kubectl/namespaces")
+	// FIX BUG-003: Use getBundleRoot() to handle wrapper directories
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/namespaces")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

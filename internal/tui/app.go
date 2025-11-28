@@ -1475,13 +1475,16 @@ func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 			},
 		}
 
-		// Try real API first, fallback to mock
-		details, err := a.client.GetPodDetails(clusterID, namespace, name)
 		var jsonData interface{} = mockDetails
 
-		if err == nil {
-			// Use real details if API succeeded
-			jsonData = details
+		// Try real API first, fallback to mock
+		// FIX BUG-002: Check if client exists before calling (prevents crash in mock mode)
+		if a.client != nil {
+			details, err := a.client.GetPodDetails(clusterID, namespace, name)
+			if err == nil {
+				// Use real details if API succeeded
+				jsonData = details
+			}
 		}
 
 		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
@@ -1524,13 +1527,16 @@ func (a *App) describeDeployment(clusterID, namespace, name string) tea.Cmd {
 			},
 		}
 
-		// Try real API first, fallback to mock
-		details, err := a.client.GetDeploymentDetails(clusterID, namespace, name)
 		var jsonData interface{} = mockDetails
 
-		if err == nil {
-			// Use real details if API succeeded
-			jsonData = details
+		// Try real API first, fallback to mock
+		// FIX BUG-002: Check if client exists before calling (prevents crash in mock mode)
+		if a.client != nil {
+			details, err := a.client.GetDeploymentDetails(clusterID, namespace, name)
+			if err == nil {
+				// Use real details if API succeeded
+				jsonData = details
+			}
 		}
 
 		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
@@ -1574,13 +1580,16 @@ func (a *App) describeService(clusterID, namespace, name string) tea.Cmd {
 			},
 		}
 
-		// Try real API first, fallback to mock
-		details, err := a.client.GetServiceDetails(clusterID, namespace, name)
 		var jsonData interface{} = mockDetails
 
-		if err == nil {
-			// Use real details if API succeeded
-			jsonData = details
+		// Try real API first, fallback to mock
+		// FIX BUG-002: Check if client exists before calling (prevents crash in mock mode)
+		if a.client != nil {
+			details, err := a.client.GetServiceDetails(clusterID, namespace, name)
+			if err == nil {
+				// Use real details if API succeeded
+				jsonData = details
+			}
 		}
 
 		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
