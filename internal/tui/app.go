@@ -554,6 +554,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.logViewport = viewport.New(a.width-4, a.height-6)
 		a.logViewport.SetContent(a.renderLogsWithColors())
 
+	case tailTickMsg:
+		// Handle tail mode tick - fetch new logs and schedule next tick
+		if a.tailMode && a.currentView.viewType == ViewLogs {
+			return a, tea.Batch(
+				a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName),
+				a.tickTail(), // Schedule next tick
+			)
+		}
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
@@ -2660,9 +2669,9 @@ func (a *App) performSearch() {
 // tickTail returns a command to refresh logs in tail mode
 func (a *App) tickTail() tea.Cmd {
 	return tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
-		// FIX BUG #15: Actually fetch new logs in tail mode
-		// Create a tea command that fetches logs
-		return tea.Batch(a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName))()
+		// FIX BUG #15 REGRESSION: Return tailTickMsg to continue tick chain
+		// Cannot invoke cmd() here - breaks event loop
+		return tailTickMsg{}
 	})
 }
 
@@ -2733,6 +2742,9 @@ func (a *App) getVisibleLogs() []string {
 type clustersMsg struct {
 	clusters []rancher.Cluster
 }
+
+// tailTickMsg is sent periodically when tail mode is active
+type tailTickMsg struct{}
 
 type projectsMsg struct {
 	projects        []rancher.Project
