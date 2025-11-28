@@ -83,7 +83,7 @@ func Extract(bundlePath string, opts ImportOptions) (string, error) {
 			// Calculate sizes in MB for user-friendly message
 			sizeMB := float64(totalExtracted) / (1024 * 1024)
 			limitMB := float64(opts.MaxSize) / (1024 * 1024)
-			
+
 			if opts.Verbose {
 				return "", fmt.Errorf("bundle uncompressed size (%.1f MB) exceeds limit (%.1f MB)\n\n"+
 					"The bundle is too large for the current size limit.\n\n"+
@@ -102,7 +102,7 @@ func Extract(bundlePath string, opts ImportOptions) (string, error) {
 					sizeMB, limitMB, filepath.Base(bundlePath), int(sizeMB)+10,
 					limitMB, sizeMB, int(sizeMB)+10)
 			}
-			
+
 			return "", fmt.Errorf("bundle size (%.1f MB) exceeds limit (%.1f MB)\n"+
 				"Solution: Use --limit=%d to increase (e.g. 'r8s bundle import --path=bundle.tar.gz --limit=%d')",
 				sizeMB, limitMB, int(sizeMB)+10, int(sizeMB)+10)
@@ -126,11 +126,13 @@ func Extract(bundlePath string, opts ImportOptions) (string, error) {
 			fileCount++
 
 		case tar.TypeSymlink:
-			// Create symlink
-			if err := os.Symlink(header.Linkname, target); err != nil {
-				// Skip symlink errors (often fail on Windows)
-				continue
+			// FIX BUG #1: Validate symlink target to prevent panic on malicious/broken links
+			// Skip symlinks entirely - they can cause traversal issues and aren't needed for bundle data
+			if opts.Verbose {
+				fmt.Printf("⚠ Skipping symlink: %s -> %s (symlinks not supported in bundles)\n",
+					header.Name, header.Linkname)
 			}
+			continue
 
 		default:
 			// Skip other types (block devices, etc.)

@@ -226,10 +226,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if a.searchMode && a.currentView.viewType == ViewLogs {
 			switch msg.String() {
 			case "esc":
+				// FIX BUG #3: Restore filter state when exiting search
 				a.searchMode = false
 				a.searchQuery = ""
 				a.searchMatches = nil
 				a.currentMatch = -1
+				// Re-apply any active log filter to restore filtered view
+				a.applyLogFilter()
 				return a, nil
 			case "enter":
 				a.searchMode = false
@@ -252,7 +255,8 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return a, tea.Quit
-		case "r", "ctrl+r":
+		case "r", "ctrl+r", "ctrl+l":
+			// FIX BUG #7: Handle Ctrl+L to refresh (prevent terminal clear conflicts)
 			a.loading = true
 			return a, a.refreshCurrentView()
 		case "?":
@@ -553,8 +557,11 @@ func (a *App) View() string {
 	}
 
 	if a.loading {
+		// FIX BUG #4: Show appropriate loading message for each mode
 		loadingMsg := "Loading..."
-		if a.offlineMode {
+		if a.bundleMode {
+			loadingMsg = "Loading bundle data..."
+		} else if a.offlineMode {
 			loadingMsg = "Loading mock data (OFFLINE MODE)..."
 		}
 		return loadingStyle.Render(loadingMsg)
@@ -1112,32 +1119,40 @@ func (a *App) updateTable() {
 
 // getBreadcrumb provides navigation context for each view
 func (a *App) getBreadcrumb() string {
+	// FIX BUG #8: Add visual mode indicator to breadcrumb
+	modeIndicator := "[LIVE] "
+	if a.bundleMode {
+		modeIndicator = "[BUNDLE] "
+	} else if a.offlineMode {
+		modeIndicator = "[MOCK] "
+	}
+
 	switch a.currentView.viewType {
 	case ViewClusters:
-		return "r8s - Clusters"
+		return modeIndicator + "r8s - Clusters"
 	case ViewProjects:
-		return fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
 	case ViewNamespaces:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
 			a.currentView.clusterName, a.currentView.projectName)
 	case ViewPods:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewDeployments:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewServices:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewCRDs:
-		return fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
+		return modeIndicator + fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
 	case ViewCRDInstances:
-		return fmt.Sprintf("Cluster: %s > CRDs > %s", a.currentView.clusterName, a.currentView.crdKind)
+		return modeIndicator + fmt.Sprintf("Cluster: %s > CRDs > %s", a.currentView.clusterName, a.currentView.crdKind)
 	case ViewLogs:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pod: %s > Logs",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pod: %s > Logs",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName, a.currentView.podName)
 	default:
-		return "r8s - Rancher Navigator"
+		return modeIndicator + "r8s - Rancher Navigator"
 	}
 }
 
@@ -1768,11 +1783,22 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 				// Return even if empty - empty list is valid bundle data
 				return deploymentsMsg{deployments: deployments}
 			}
+			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch deployments from data source: %w\n\n"+
+					"Context: projectID=%s, namespace=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockDeployments := a.getMockDeployments(namespaceName)
-		return deploymentsMsg{deployments: mockDeployments}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockDeployments := a.getMockDeployments(namespaceName)
+			return deploymentsMsg{deployments: mockDeployments}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -1786,11 +1812,22 @@ func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 				// Return even if empty - empty list is valid bundle data
 				return servicesMsg{services: services}
 			}
+			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch services from data source: %w\n\n"+
+					"Context: projectID=%s, namespace=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch services: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockServices := a.getMockServices(namespaceName)
-		return servicesMsg{services: mockServices}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockServices := a.getMockServices(namespaceName)
+			return servicesMsg{services: mockServices}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -2063,11 +2100,22 @@ func (a *App) fetchCRDs(clusterID string) tea.Cmd {
 				// Return even if empty - empty list is valid bundle data
 				return crdsMsg{crds: crds}
 			}
+			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch CRDs from data source: %w\n\n"+
+					"Context: clusterID=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, clusterID)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch CRDs: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockCRDs := a.getMockCRDs()
-		return crdsMsg{crds: mockCRDs}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockCRDs := a.getMockCRDs()
+			return crdsMsg{crds: mockCRDs}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
