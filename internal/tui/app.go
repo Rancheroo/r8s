@@ -392,6 +392,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					a.filterLevel = "ERROR"
 				}
+				// FIX BUG #10: Clear search state when filter changes (prevents stale match indices)
+				a.searchMatches = nil
+				a.currentMatch = -1
 				a.applyLogFilter()
 				return a, nil
 			}
@@ -403,6 +406,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					a.filterLevel = "WARN"
 				}
+				// FIX BUG #10: Clear search state when filter changes
+				a.searchMatches = nil
+				a.currentMatch = -1
 				a.applyLogFilter()
 				return a, nil
 			}
@@ -410,6 +416,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Show all logs (clear filter)
 			if a.currentView.viewType == ViewLogs {
 				a.filterLevel = ""
+				// FIX BUG #10: Clear search state when filter changes
+				a.searchMatches = nil
+				a.currentMatch = -1
 				a.applyLogFilter()
 				return a, nil
 			}
@@ -459,6 +468,11 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		a.width = msg.Width
 		a.height = msg.Height
+		// FIX BUG #11: Resize log viewport on window resize
+		if a.currentView.viewType == ViewLogs {
+			a.logViewport.Width = a.width - 4
+			a.logViewport.Height = a.height - 6
+		}
 		a.updateTable()
 
 	case clustersMsg:
@@ -1729,47 +1743,26 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 		// Try to get pods from data source first
 		if a.dataSource != nil {
 			pods, err := a.dataSource.GetPods(projectID, namespaceName)
-			if err == nil && len(pods) > 0 {
+			if err == nil {
+				// Return even if empty - empty list is valid bundle data
 				return podsMsg{pods: pods}
 			}
-			// If error or no pods, check if we're in offline mode for fallback
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch pods from data source: %w\n\n"+
+					"Context: projectID=%s, namespace=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch pods: %w", err)}
 		}
 
-		// Fallback: If in offline mode without dataSource, use mock data
-		if a.offlineMode {
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockPods := a.getMockPods(namespaceName)
 			return podsMsg{pods: mockPods}
 		}
 
-		// Fallback: Try client directly (backward compatibility)
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListPods(projectID)
-		if err != nil {
-			// API failed - gracefully fallback to mock data for development
-			mockPods := a.getMockPods(namespaceName)
-			return podsMsg{pods: mockPods}
-		}
-
-		// Filter pods by namespace name - only show pods from this namespace
-		filteredPods := []rancher.Pod{}
-		for _, pod := range collection.Data {
-			podNamespace := pod.NamespaceID
-			if strings.Contains(podNamespace, ":") {
-				parts := strings.Split(podNamespace, ":")
-				if len(parts) > 1 {
-					podNamespace = parts[1]
-				}
-			}
-
-			if podNamespace == namespaceName {
-				filteredPods = append(filteredPods, pod)
-			}
-		}
-
-		return podsMsg{pods: filteredPods}
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -2219,8 +2212,8 @@ func (a *App) getMockCRDs() []rancher.CRD {
 // fetchCRDInstances fetches instances of a CRD with fallback to mock data
 func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockInstances := a.getMockCRDInstances(group, resource)
 			return crdInstancesMsg{instances: mockInstances}
 		}
@@ -2229,12 +2222,16 @@ func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
 
-		// Attempt to fetch real CRD instances, fallback to mock data on error
+		// Attempt to fetch real CRD instances
 		instanceList, err := a.client.ListCustomResources(clusterID, group, version, resource, "")
 		if err != nil {
-			// API failed - fallback to mock data for development
-			mockInstances := a.getMockCRDInstances(group, resource)
-			return crdInstancesMsg{instances: mockInstances}
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch CRD instances from API: %w\n\n"+
+					"Context: clusterID=%s, group=%s, version=%s, resource=%s\n"+
+					"Hint: Check CRD version and API connectivity", err, clusterID, group, version, resource)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch CRD instances: %w", err)}
 		}
 
 		return crdInstancesMsg{instances: instanceList.Items}
@@ -2407,8 +2404,8 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 // fetchClusters fetches clusters with fallback to mock data
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockClusters := a.getMockClusters()
 			return clustersMsg{clusters: mockClusters}
 		}
@@ -2419,9 +2416,13 @@ func (a *App) fetchClusters() tea.Cmd {
 
 		collection, err := a.client.ListClusters()
 		if err != nil {
-			// API failed - fallback to mock data for development
-			mockClusters := a.getMockClusters()
-			return clustersMsg{clusters: mockClusters}
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch clusters from API: %w\n\n"+
+					"Context: Rancher API connection\n"+
+					"Hint: Check RANCHER_URL and RANCHER_TOKEN environment variables", err)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch clusters: %w", err)}
 		}
 
 		return clustersMsg{clusters: collection.Data}
@@ -2431,8 +2432,8 @@ func (a *App) fetchClusters() tea.Cmd {
 // fetchProjects fetches projects for a cluster with fallback to mock data
 func (a *App) fetchProjects(clusterID string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockProjects := a.getMockProjects(clusterID)
 			mockNamespaceCounts := map[string]int{
 				"demo-project": 3,
@@ -2447,13 +2448,13 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 
 		collection, err := a.client.ListProjects(clusterID)
 		if err != nil {
-			// API failed - fallback to mock data
-			mockProjects := a.getMockProjects(clusterID)
-			mockNamespaceCounts := map[string]int{
-				"demo-project": 3,
-				"system":       5,
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch projects from API: %w\n\n"+
+					"Context: clusterID=%s\n"+
+					"Hint: Check cluster ID and API connectivity", err, clusterID)}
 			}
-			return projectsMsg{projects: mockProjects, namespaceCounts: mockNamespaceCounts}
+			return errMsg{fmt.Errorf("failed to fetch projects: %w", err)}
 		}
 
 		// Count namespaces per project by fetching all namespaces
