@@ -34,6 +34,10 @@ type Bundle struct {
 
 	// Size is the total size of the bundle in bytes
 	Size int64
+
+	// IsTemporary indicates if this bundle was extracted from an archive
+	// and should be cleaned up when Close() is called
+	IsTemporary bool
 }
 
 // BundleManifest contains metadata extracted from a support bundle.

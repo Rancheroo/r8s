@@ -2,151 +2,38 @@ package bundle
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 )
 
-// Load loads a bundle from a tar.gz file and returns a Bundle structure.
+// Load loads a bundle from either a tar.gz archive or an extracted directory.
+// It automatically detects the input type and validates the bundle structure.
+//
+// This function now delegates to LoadFromPath which handles both:
+// - Compressed archives (.tar.gz, .tgz)
+// - Extracted directories
 func Load(opts ImportOptions) (*Bundle, error) {
-	// Validate options
-	if opts.Path == "" {
-		if opts.Verbose {
-			return nil, fmt.Errorf("bundle path is required\nHint: Use --bundle=/path/to/bundle.tar.gz")
-		}
-		return nil, fmt.Errorf("bundle path is required")
-	}
-
-	// Resolve relative path to absolute path
-	// This handles ../path, ./path, ~/path correctly
-	absPath, err := filepath.Abs(opts.Path)
-	if err != nil {
-		if opts.Verbose {
-			return nil, fmt.Errorf("invalid path: %w\nProvided path: %s\nHint: Check the path format", err, opts.Path)
-		}
-		return nil, fmt.Errorf("invalid path: %w", err)
-	}
-
-	// Check if file exists (using absolute path)
-	if _, err := os.Stat(absPath); os.IsNotExist(err) {
-		if opts.Verbose {
-			cwd, _ := os.Getwd()
-			return nil, fmt.Errorf("bundle file not found: %s\nCurrent directory: %s\nAbsolute path tried: %s\nHint: Check the file path and ensure the file exists", opts.Path, cwd, absPath)
-		}
-		return nil, fmt.Errorf("bundle file not found: %s", opts.Path)
-	}
-
-	// Update opts.Path to use absolute path for all subsequent operations
-	opts.Path = absPath
-
 	// Set default max size if not specified
 	if opts.MaxSize == 0 {
 		opts.MaxSize = DefaultMaxBundleSize
 	}
 
-	// Extract the bundle
-	extractPath, err := Extract(opts.Path, opts)
-	if err != nil {
-		if opts.Verbose {
-			return nil, fmt.Errorf("failed to extract bundle: %w\nBundle path: %s\nHint: Ensure the file is a valid .tar.gz archive", err, opts.Path)
-		}
-		return nil, fmt.Errorf("failed to extract bundle: %w", err)
-	}
-
-	// Parse manifest
-	manifest, err := ParseManifest(extractPath)
-	if err != nil {
-		Cleanup(extractPath)
-		if opts.Verbose {
-			return nil, fmt.Errorf("failed to parse bundle manifest: %w\nExtract path: %s\nExpected: metadata.json with bundle info\nHint: This may not be a valid RKE2 support bundle", err, extractPath)
-		}
-		return nil, fmt.Errorf("failed to parse bundle manifest: %w", err)
-	}
-
-	// Inventory pods
-	pods, err := InventoryPods(extractPath)
-	if err != nil {
-		Cleanup(extractPath)
-		if opts.Verbose {
-			return nil, fmt.Errorf("failed to inventory pods: %w\nExtract path: %s\nSearched: rke2/podlogs/ directory\nHint: Bundle may not contain pod logs", err, extractPath)
-		}
-		return nil, fmt.Errorf("failed to inventory pods: %w", err)
-	}
-
-	// Inventory log files
-	logFiles, err := InventoryLogFiles(extractPath)
-	if err != nil {
-		Cleanup(extractPath)
-		if opts.Verbose {
-			return nil, fmt.Errorf("failed to inventory log files: %w\nExtract path: %s\nSearched: rke2/podlogs/ directory\nFound pods: %d\nHint: Check bundle structure", err, extractPath, len(pods))
-		}
-		return nil, fmt.Errorf("failed to inventory log files: %w", err)
-	}
-
-	// Parse kubectl resources (ignore errors - these are optional)
-	// Storing as interface{} to avoid import cycle - will be type-asserted in datasource
-	crds, err := ParseCRDs(extractPath)
-	if err != nil {
-		log.Printf("Warning: Failed to parse CRDs from bundle: %v", err)
-	}
-	deployments, err := ParseDeployments(extractPath)
-	if err != nil {
-		log.Printf("Warning: Failed to parse Deployments from bundle: %v", err)
-	}
-	services, err := ParseServices(extractPath)
-	if err != nil {
-		log.Printf("Warning: Failed to parse Services from bundle: %v", err)
-	}
-	namespaces, err := ParseNamespaces(extractPath)
-	if err != nil {
-		log.Printf("Warning: Failed to parse Namespaces from bundle: %v", err)
-	}
-
-	// Get bundle file size
-	stat, _ := os.Stat(opts.Path)
-	bundleSize := int64(0)
-	if stat != nil {
-		bundleSize = stat.Size()
-	}
-
-	// Convert to []interface{} to avoid import cycle
-	var crdsI, deploymentsI, servicesI, namespacesI []interface{}
-	for i := range crds {
-		crdsI = append(crdsI, crds[i])
-	}
-	for i := range deployments {
-		deploymentsI = append(deploymentsI, deployments[i])
-	}
-	for i := range services {
-		servicesI = append(servicesI, services[i])
-	}
-	for i := range namespaces {
-		namespacesI = append(namespacesI, namespaces[i])
-	}
-
-	// Create bundle structure
-	bundle := &Bundle{
-		Path:        opts.Path,
-		ExtractPath: extractPath,
-		Manifest:    manifest,
-		Pods:        pods,
-		LogFiles:    logFiles,
-		CRDs:        crdsI,
-		Deployments: deploymentsI,
-		Services:    servicesI,
-		Namespaces:  namespacesI,
-		Loaded:      true,
-		Size:        bundleSize,
-	}
-
-	return bundle, nil
+	// Use the new bulletproof loader that handles both archives and directories
+	return LoadFromPath(opts.Path, opts)
 }
 
-// Close cleans up the bundle's extracted files.
+// Close cleans up the bundle's extracted files if they are temporary.
+// Only cleans up if bundle was extracted from an archive (IsTemporary = true).
+// Extracted directories provided by user are never deleted.
 func (b *Bundle) Close() error {
 	if b.ExtractPath == "" {
 		return nil
 	}
+
+	// Only cleanup if this was a temporary extraction
+	if !b.IsTemporary {
+		return nil
+	}
+
 	return Cleanup(b.ExtractPath)
 }
 
