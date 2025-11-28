@@ -237,27 +237,60 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 
 // parsePodLogFilename extracts pod information from a log filename.
 func parsePodLogFilename(filename string) *LogFileInfo {
-	// Remove .log extension
-	name := strings.TrimSuffix(filename, ".log")
-
-	// Check for -previous suffix
-	isPrevious := strings.HasSuffix(name, "-previous")
+	// Check for -previous suffix first
+	isPrevious := strings.HasSuffix(filename, "-previous")
 	if isPrevious {
-		name = strings.TrimSuffix(name, "-previous")
+		filename = strings.TrimSuffix(filename, "-previous")
 	}
 
-	// Split by underscore: namespace_podname_container
-	parts := strings.Split(name, "_")
-	if len(parts) < 3 {
+	// The format is: namespace-podname (no separate container field)
+	// Example: calico-system-calico-kube-controllers-8889b866f-jtlsb
+	// namespace: calico-system
+	// podname: calico-kube-controllers-8889b866f-jtlsb
+
+	// Find the first dash to separate namespace from pod
+	// Namespaces typically follow pattern: xxx-system, xxx-xxx, etc
+	// We need to identify where namespace ends and pod begins
+	// Common patterns: kube-system, calico-system, cattle-system, longhorn-system
+
+	parts := strings.Split(filename, "-")
+	if len(parts) < 2 {
 		return nil // Invalid format
+	}
+
+	// Try to identify namespace boundary
+	// Common namespace patterns end with: -system, -operator
+	var namespace, podName string
+
+	// Check for common namespace patterns
+	if len(parts) >= 2 && (parts[1] == "system" || parts[1] == "operator") {
+		// Pattern: xxx-system or xxx-operator
+		namespace = parts[0] + "-" + parts[1]
+		if len(parts) > 2 {
+			podName = strings.Join(parts[2:], "-")
+		}
+	} else if len(parts) >= 3 && parts[2] == "system" {
+		// Pattern: xxx-xxx-system
+		namespace = parts[0] + "-" + parts[1] + "-" + parts[2]
+		if len(parts) > 3 {
+			podName = strings.Join(parts[3:], "-")
+		}
+	} else {
+		// Fallback: assume first part is namespace
+		namespace = parts[0]
+		podName = strings.Join(parts[1:], "-")
+	}
+
+	if podName == "" {
+		return nil // No pod name found
 	}
 
 	return &LogFileInfo{
 		Path:          filename,
 		Type:          LogTypePod,
-		Namespace:     parts[0],
-		PodName:       strings.Join(parts[1:len(parts)-1], "_"),
-		ContainerName: parts[len(parts)-1],
+		Namespace:     namespace,
+		PodName:       podName,
+		ContainerName: "", // Not available in this format
 		IsPrevious:    isPrevious,
 	}
 }
