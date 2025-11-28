@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Testing & Quality Assurance (2025-11-28)
+- Completed comprehensive TUI/UX critical bug testing
+- Verified all CLI functionality (8/8 tests passed)
+- Created detailed bug reports and fix guides
+- Disproved external claims about missing 'C' keybinding (already implemented)
+- Confirmed CRD instance counts are already displayed (not a bug)
+
+### Known Issues
+- **CRITICAL BUG-001**: CRD version selection causes 404 errors when first version not served
+  - Location: `internal/tui/app.go:1395-1406`
+  - Impact: Cannot view instances of some CRDs
+  - Fix: Pending (see BUG_001_FIX_GUIDE.md)
+  - Workaround: None
+
 ### Added
 - Comprehensive API field documentation for Deployment struct
 - Consistent mock data fallback behavior across all resource types
+- Testing documentation: TUI_UX_BUG_REPORT.md, BUG_001_FIX_GUIDE.md
+- Automated CLI test script: test_interactive_tui.sh
 
 ### Changed
 - Services fetch now returns errors in online mode instead of silently falling back to mock data

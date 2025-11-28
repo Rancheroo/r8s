@@ -1392,17 +1392,12 @@ func (a *App) handleEnter() tea.Cmd {
 		// Push current view to stack
 		a.viewStack = append(a.viewStack, a.currentView)
 
-		// Get the storage version
-		storageVersion := ""
-		for _, v := range selectedCRD.Spec.Versions {
-			if v.Storage {
-				storageVersion = v.Name
-				break
-			}
-		}
-		// Fallback to first version if no storage version
-		if storageVersion == "" && len(selectedCRD.Spec.Versions) > 0 {
-			storageVersion = selectedCRD.Spec.Versions[0].Name
+		// FIX BUG-001: Use helper function to select best CRD version
+		// This correctly handles served versions and avoids 404 errors
+		storageVersion, err := selectBestCRDVersion(selectedCRD.Spec.Versions)
+		if err != nil {
+			a.error = fmt.Sprintf("CRD %s: %v", selectedCRD.Metadata.Name, err)
+			return nil
 		}
 
 		// Navigate to CRD instances
@@ -2731,6 +2726,44 @@ func (a *App) renderLogsWithColors() string {
 	}
 
 	return strings.Join(coloredLines, "\n")
+}
+
+// selectBestCRDVersion selects the best version from a CRD's version list
+// Priority: storage+served > storage > first served > error
+func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
+	var storageVersion string
+	var firstServedVersion string
+
+	for _, v := range versions {
+		// Track first served version as fallback
+		if v.Served && firstServedVersion == "" {
+			firstServedVersion = v.Name
+		}
+
+		// Prefer storage version if it's also served
+		if v.Storage && v.Served {
+			return v.Name, nil
+		}
+
+		// Track storage version even if not served
+		if v.Storage {
+			storageVersion = v.Name
+		}
+	}
+
+	// Fallback 1: Use storage version even if not marked as served
+	// (some CRDs have storage=true but don't explicitly mark served)
+	if storageVersion != "" {
+		return storageVersion, nil
+	}
+
+	// Fallback 2: Use first served version
+	if firstServedVersion != "" {
+		return firstServedVersion, nil
+	}
+
+	// No valid version found
+	return "", fmt.Errorf("no served versions available")
 }
 
 // renderHelp shows comprehensive keybinding reference

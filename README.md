@@ -30,9 +30,16 @@ _[Screenshot coming soon - showing TUI with cluster navigator and describe modal
 ### Current Limitations
 
 - Read-only (no resource modification)
-- No log viewing or pod exec yet
+- Log viewing implemented (press `l` on pods)
+- No pod exec yet
 - No real-time watching (manual refresh only)
 - Describe limited to Pods, Deployments, Services
+
+### ⚠️ Known Issues
+
+- **CRITICAL**: CRD instance browsing may show 404 errors (BUG-001) - Fix pending
+  - See `BUG_001_FIX_GUIDE.md` for technical details
+  - Workaround: None available
 
 ---
 

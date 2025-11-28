@@ -179,9 +179,18 @@ All phase completion docs moved to `docs/archive/week1/`:
 
 ## Next Steps (Week 2)
 
+### Priority 0: CRITICAL Bug Fixes
+- [ ] **FIX BUG-001**: CRD version selection (404 errors) - See BUG_001_FIX_GUIDE.md
+- [ ] Add unit tests for CRD version selection logic
+- [ ] Validate fix with real Rancher instance
+- [ ] Test with CRDs having multiple versions (some deprecated)
+
 ### Priority 1: Testing & Quality
+- [x] TUI/UX critical bug testing completed (2025-11-28)
+- [x] CLI functionality verified (8/8 tests passed)
 - [ ] Increase unit test coverage to 80%+
 - [ ] Add integration tests for bundle import
+- [ ] Add integration tests for CRD workflows
 - [ ] Set up CI/CD pipeline
 - [ ] Add benchmark tests for log parsing
 
@@ -252,6 +261,29 @@ Or use config file at `~/.r8s/config.yaml`.
 3. **Bundle Formats**: Optimized for RKE2, may not handle all variants
 4. **Log Size**: Default 10MB limit to prevent OOM
 5. **Windows Support**: Untested (macOS/Linux focus)
+6. **CRD Version Selection Bug**: CRITICAL issue when viewing CRD instances (see Known Bugs below)
+
+---
+
+## Known Bugs
+
+### 🔴 CRITICAL: CRD Instance 404 Error (BUG-001)
+
+**Status**: IDENTIFIED - Awaiting Fix  
+**Severity**: CRITICAL  
+**Discovered**: 2025-11-28 (Testing Phase)
+
+**Description**: When navigating into CRD instances (pressing Enter on a CRD), users may encounter 404 errors. The version selection logic falls back to `Spec.Versions[0]` without checking if `served: true`.
+
+**Impact**: Cannot view instances of CRDs where the first version is not served
+
+**Location**: `internal/tui/app.go`, lines 1395-1406
+
+**Fix Required**: Update version selection to prefer served versions. See `BUG_001_FIX_GUIDE.md` for detailed fix instructions.
+
+**Workaround**: None available - requires code fix
+
+**Test Report**: See `TUI_UX_BUG_REPORT.md` for full testing details
 
 ---
 
