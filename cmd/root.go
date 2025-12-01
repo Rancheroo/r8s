@@ -47,15 +47,11 @@ EXAMPLES:
   # Launch TUI with live Rancher connection
   r8s
 
-  # Analyze a bundle (auto-detects and launches TUI)
+  # Analyze an extracted bundle (auto-launches TUI)
   r8s ./extracted-bundle-folder/
-  r8s ./support-bundle.tar.gz
 
   # Launch TUI with demo/mock data (no API required)
   r8s --mockdata
-
-  # View bundle metadata only
-  r8s bundle info ./extracted-folder/
 
   # Set up configuration
   r8s config init`,

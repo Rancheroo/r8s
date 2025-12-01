@@ -33,14 +33,11 @@ export EDITOR=vim  # or nano, code, etc.
 
 ### Bundle Analysis (Offline)
 ```bash
-# Just point at the bundle - it works!
+# Extract bundle first
+tar -xzf example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09.tar.gz
+
+# Then analyze
 ./bin/r8s ./example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09/
-
-# Or with your own bundle (extracts .tar.gz automatically)
-./bin/r8s ./support-bundle.tar.gz
-
-# Want just metadata? Use info command
-./bin/r8s bundle info ./extracted-folder/
 ```
 
 ---
@@ -93,11 +90,10 @@ make build
 
 **Bundle Troubleshooting:**
 ```bash
-# Just point at the bundle - auto-detects and launches TUI
-./bin/r8s ./rke2-support-bundle.tar.gz
-
-# Or extract first if preferred
+# Extract bundle first
 tar -xzf rke2-support-bundle-*.tar.gz
+
+# Then analyze
 ./bin/r8s ./rke2-support-bundle-*/
 ```
 
@@ -151,7 +147,7 @@ See [docs/USAGE.md](docs/USAGE.md) for details.
 | Error | Solution |
 |-------|----------|
 | "could not open TTY" | Run from interactive terminal, not CI/pipe |
-| "bundle size exceeds limit" | Extract first: `tar -xzf bundle.tar.gz` |
+| "not a directory" | Extract bundle: `tar -xzf bundle.tar.gz` |
 | "connection refused" | Check Rancher URL and network |
 | "authentication failed" | Regenerate API token |
 | "not a valid bundle" | Point to extracted folder with `rke2/` dir |

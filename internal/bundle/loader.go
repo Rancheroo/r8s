@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-// LoadFromPath is the new bulletproof entry point that handles both
-// extracted directories and compressed archives (.tar.gz, .zip).
-//
-// It auto-detects the input type and validates bundle structure.
+// LoadFromPath loads a bundle from an extracted directory.
+// Tarball support has been removed - users must extract bundles first.
 func LoadFromPath(path string, opts ImportOptions) (*Bundle, error) {
 	// Step 1: Validate and resolve path
 	absPath, pathInfo, err := validateAndResolvePath(path, opts.Verbose)
@@ -18,61 +15,37 @@ func LoadFromPath(path string, opts ImportOptions) (*Bundle, error) {
 		return nil, err
 	}
 
-	// Step 2: Determine if path is directory or archive
-	var extractPath string
-	var bundleSize int64
-	var isTemporary bool
-
-	if pathInfo.IsDir() {
-		// DIRECTORY MODE: Use extracted folder directly
+	// Step 2: Verify it's a directory
+	if !pathInfo.IsDir() {
 		if opts.Verbose {
-			fmt.Printf("📁 Detected extracted bundle directory: %s\n", absPath)
+			return nil, fmt.Errorf("%s is not a directory\n\n"+
+				"r8s only supports extracted bundle folders.\n\n"+
+				"If you have a .tar.gz file, extract it first:\n"+
+				"  tar -xzf %s\n"+
+				"  r8s ./extracted-folder/\n\n"+
+				"HINT: Point r8s at the extracted bundle directory, not the archive file",
+				path, filepath.Base(path))
 		}
-
-		// Validate it's actually a bundle
-		if err := validateBundleStructure(absPath, opts.Verbose); err != nil {
-			return nil, fmt.Errorf("invalid bundle directory: %w", err)
-		}
-
-		extractPath = absPath
-		bundleSize = 0 // Unknown for directories
-		isTemporary = false
-
-	} else {
-		// ARCHIVE MODE: Extract compressed bundle
-		if opts.Verbose {
-			fmt.Printf("📦 Detected bundle archive: %s (%.2f MB)\n",
-				filepath.Base(absPath),
-				float64(pathInfo.Size())/(1024*1024))
-		}
-
-		// Validate archive type
-		if err := validateArchiveType(absPath, opts.Verbose); err != nil {
-			return nil, err
-		}
-
-		// Extract the archive
-		extractPath, err = extractArchive(absPath, opts)
-		if err != nil {
-			return nil, err
-		}
-
-		bundleSize = pathInfo.Size()
-		isTemporary = true
+		return nil, fmt.Errorf("%s is not a directory - extract the bundle first (tar -xzf bundle.tar.gz)", path)
 	}
 
-	// Step 3: Load bundle from extracted path (common for both modes)
-	bundle, err := loadFromExtractedPath(extractPath, absPath, bundleSize, opts)
+	if opts.Verbose {
+		fmt.Printf("📁 Loading bundle from: %s\n", absPath)
+	}
+
+	// Step 3: Validate bundle structure
+	if err := validateBundleStructure(absPath, opts.Verbose); err != nil {
+		return nil, fmt.Errorf("invalid bundle directory: %w", err)
+	}
+
+	// Step 4: Load bundle from directory
+	bundle, err := loadFromExtractedPath(absPath, absPath, 0, opts)
 	if err != nil {
-		// Cleanup temp extraction if archive mode
-		if isTemporary {
-			Cleanup(extractPath)
-		}
 		return nil, err
 	}
 
-	// Mark whether cleanup is needed
-	bundle.IsTemporary = isTemporary
+	// Bundle is already extracted, no cleanup needed
+	bundle.IsTemporary = false
 
 	return bundle, nil
 }
@@ -83,9 +56,8 @@ func validateAndResolvePath(path string, verbose bool) (string, os.FileInfo, err
 		if verbose {
 			return "", nil, fmt.Errorf("bundle path is required\n\n" +
 				"USAGE:\n" +
-				"  r8s --bundle=/path/to/bundle.tar.gz    # Archive file\n" +
-				"  r8s --bundle=/path/to/extracted/       # Extracted directory\n\n" +
-				"HINT: Provide either a .tar.gz archive or an extracted bundle folder")
+				"  r8s ./extracted-bundle-folder/\n\n" +
+				"HINT: Provide an extracted bundle directory")
 		}
 		return "", nil, fmt.Errorf("bundle path is required")
 	}
@@ -111,9 +83,11 @@ func validateAndResolvePath(path string, verbose bool) (string, os.FileInfo, err
 				"Absolute path tried: %s\n\n"+
 				"TROUBLESHOOTING:\n"+
 				"  1. Check the path is correct\n"+
-				"  2. Ensure file/folder exists\n"+
-				"  3. Check file permissions\n"+
-				"  4. Try using an absolute path", path, cwd, absPath)
+				"  2. Ensure folder exists\n"+
+				"  3. Check directory permissions\n"+
+				"  4. Try using an absolute path\n\n"+
+				"REMINDER: If you have a .tar.gz file, extract it first:\n"+
+				"  tar -xzf bundle.tar.gz", path, cwd, absPath)
 		}
 		return "", nil, fmt.Errorf("path not found: %s", path)
 	}
@@ -139,7 +113,7 @@ func validateBundleStructure(dir string, verbose bool) error {
 				"    │   ├── kubectl/\n"+
 				"    │   ├── podlogs/\n"+
 				"    │   └── ...\n"+
-				"    └── metadata.json\n\n"+
+				"    └── (other bundle files)\n\n"+
 				"HINT: This folder doesn't appear to be an extracted RKE2 support bundle", rke2Dir)
 		}
 		return fmt.Errorf("missing rke2/ directory - not a valid bundle")
@@ -171,71 +145,6 @@ func validateBundleStructure(dir string, verbose bool) error {
 	}
 
 	return nil
-}
-
-// validateArchiveType checks if the file is a supported archive format
-func validateArchiveType(path string, verbose bool) error {
-	ext := strings.ToLower(filepath.Ext(path))
-
-	// Check for supported extensions
-	supported := []string{".gz", ".tgz"}
-	isSupported := false
-
-	for _, s := range supported {
-		if strings.HasSuffix(strings.ToLower(path), s) {
-			isSupported = true
-			break
-		}
-	}
-
-	if !isSupported {
-		if verbose {
-			return fmt.Errorf("unsupported archive format: %s\n\n"+
-				"Supported formats:\n"+
-				"  • .tar.gz  (RKE2 support bundles)\n"+
-				"  • .tgz     (compressed tar)\n\n"+
-				"Current file: %s\n\n"+
-				"SOLUTIONS:\n"+
-				"  1. If bundle is already extracted, point to the folder:\n"+
-				"     r8s --bundle=/path/to/extracted-folder/\n"+
-				"  2. If you have a different archive format, extract it first\n"+
-				"  3. Ensure the file extension is preserved", ext, filepath.Base(path))
-		}
-		return fmt.Errorf("unsupported format %s (expected .tar.gz or .tgz)", ext)
-	}
-
-	return nil
-}
-
-// extractArchive handles archive extraction (wraps existing Extract function)
-func extractArchive(path string, opts ImportOptions) (string, error) {
-	if opts.Verbose {
-		fmt.Println("Extracting archive...")
-	}
-
-	// Use existing Extract function
-	extractPath, err := Extract(path, opts)
-	if err != nil {
-		if opts.Verbose {
-			return "", fmt.Errorf("extraction failed: %w\n\n"+
-				"TROUBLESHOOTING:\n"+
-				"  • Ensure the file is a valid .tar.gz archive\n"+
-				"  • Check file isn't corrupted (try: tar -tzf bundle.tar.gz)\n"+
-				"  • Verify sufficient disk space\n"+
-				"  • Check file permissions\n\n"+
-				"ALTERNATIVE:\n"+
-				"  Extract manually and use folder mode:\n"+
-				"  $ tar -xzf bundle.tar.gz\n"+
-				"  $ r8s --bundle=./extracted-folder/", err)
-		}
-		return "", err
-	}
-
-	if opts.Verbose {
-		fmt.Printf("✓ Extracted to: %s\n", extractPath)
-	}
-
-	return extractPath, nil
 }
 
 // loadFromExtractedPath loads bundle data from an extracted directory
@@ -315,7 +224,7 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 		Namespaces:  namespacesI,
 		Loaded:      true,
 		Size:        size,
-		IsTemporary: false, // Will be set by caller
+		IsTemporary: false, // Bundles are already extracted, never temporary
 	}
 
 	return bundle, nil

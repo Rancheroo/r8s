@@ -21,20 +21,11 @@ func Load(opts ImportOptions) (*Bundle, error) {
 	return LoadFromPath(opts.Path, opts)
 }
 
-// Close cleans up the bundle's extracted files if they are temporary.
-// Only cleans up if bundle was extracted from an archive (IsTemporary = true).
-// Extracted directories provided by user are never deleted.
+// Close is a no-op since bundles are always pre-extracted directories.
+// Kept for backwards compatibility.
 func (b *Bundle) Close() error {
-	if b.ExtractPath == "" {
-		return nil
-	}
-
-	// Only cleanup if this was a temporary extraction
-	if !b.IsTemporary {
-		return nil
-	}
-
-	return Cleanup(b.ExtractPath)
+	// No cleanup needed - users manage their own extracted directories
+	return nil
 }
 
 // GetPod returns pod information by namespace and name.
