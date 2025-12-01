@@ -9,126 +9,65 @@ import (
 )
 
 var bundleCmd = &cobra.Command{
-	Use:   "bundle [path-to-bundle.tar.gz]",
-	Short: "Work with support bundles",
-	Long: `Work with support bundles for offline analysis.
+	Use:   "bundle",
+	Short: "View support bundle information",
+	Long: `View information about support bundles without launching TUI.
 
-Support bundles are tar.gz archives containing cluster diagnostics,
-logs, and configuration files. This command allows you to import
-and analyze bundles without needing a live cluster connection.
+Support bundles are RKE2 diagnostic archives containing cluster logs,
+configurations, and kubectl resource dumps.
 
-Quick Usage:
-  r8s bundle bundle.tar.gz              # Import and launch TUI automatically
+RECOMMENDED WORKFLOW:
+  # Just point at the bundle and it works!
+  r8s ./extracted-bundle-folder/
+  r8s ./support-bundle.tar.gz
 
-Subcommands:
-  r8s bundle import --path=bundle.tar.gz  # Import with custom options`,
-	Args: cobra.MaximumNArgs(1),
-	RunE: runBundleCommand,
+  # Or use the TUI command explicitly
+  r8s tui --bundle=./extracted-folder/
+
+COMMANDS:
+  info   View bundle metadata and statistics (for inspection/validation)
+
+TIP: For interactive analysis, just run 'r8s ./bundle-path' directly!`,
 }
 
 var (
-	bundlePath    string
 	bundleMaxSize int64
 )
 
-var importCmd = &cobra.Command{
-	Use:   "import",
-	Short: "Import a support bundle",
-	Long: `Import a support bundle from a tar.gz file.
+var infoCmd = &cobra.Command{
+	Use:   "info [path]",
+	Short: "Display bundle information",
+	Long: `Display metadata and statistics about a support bundle.
 
-The bundle will be extracted and analyzed. You can then use r8s
-to browse the bundle contents offline, similar to browsing a live cluster.
+This command shows bundle info without launching the TUI.
+Useful for quick inspection or CI/CD validation.
 
-Example:
-  r8s bundle import --path=bundle.tar.gz
-  r8s bundle import --path=bundle.tar.gz --limit=20
-`,
-	RunE: runImport,
+For interactive analysis, just run: r8s ./bundle-path
+
+EXAMPLES:
+  # View bundle info
+  r8s bundle info ./w-guard-wg-cp-xyz/
+  r8s bundle info bundle.tar.gz
+
+  # Set custom size limit
+  r8s bundle info bundle.tar.gz --limit=100`,
+	Args: cobra.ExactArgs(1),
+	RunE: runBundleInfo,
 }
 
 func init() {
 	rootCmd.AddCommand(bundleCmd)
-	bundleCmd.AddCommand(importCmd)
+	bundleCmd.AddCommand(infoCmd)
 
-	// Add limit flag to main bundle command for positional syntax
-	bundleCmd.Flags().Int64VarP(&bundleMaxSize, "limit", "l", 50, "Maximum bundle size in MB (default 50, use 0 for unlimited)")
-
-	// Import subcommand flags
-	importCmd.Flags().StringVarP(&bundlePath, "path", "p", "", "Path to bundle tar.gz file (required)")
-	importCmd.Flags().Int64VarP(&bundleMaxSize, "limit", "l", 50, "Maximum bundle size in MB (default 50MB, use 0 for unlimited)")
-	importCmd.MarkFlagRequired("path")
+	// Info command flags
+	infoCmd.Flags().Int64VarP(&bundleMaxSize, "limit", "l", 50, "Maximum bundle size in MB (default 50, use 0 for unlimited)")
 }
 
-// runBundleCommand handles the bundle command with optional positional argument
-func runBundleCommand(cmd *cobra.Command, args []string) error {
-	// If no args provided, show help
-	if len(args) == 0 {
-		return cmd.Help()
-	}
-
-	// User provided a bundle path directly - import and launch TUI
+func runBundleInfo(cmd *cobra.Command, args []string) error {
+	// Get bundle path from positional argument
 	bundlePath := args[0]
 
-	fmt.Printf("Importing bundle: %s\n", bundlePath)
-
-	// Display size limit
-	if bundleMaxSize == 0 {
-		fmt.Printf("Size limit: unlimited\n\n")
-	} else if bundleMaxSize == 50 {
-		fmt.Printf("Size limit: 50MB (default)\n\n")
-	} else {
-		fmt.Printf("Size limit: %dMB\n\n", bundleMaxSize)
-	}
-
-	// Create import options using flag value
-	maxSizeBytes := bundleMaxSize * 1024 * 1024
-	if bundleMaxSize == 0 {
-		maxSizeBytes = 0 // Unlimited
-	}
-
-	opts := bundle.ImportOptions{
-		Path:    bundlePath,
-		MaxSize: maxSizeBytes,
-		Verbose: verbose,
-	}
-
-	// Load the bundle
-	fmt.Println("Extracting bundle...")
-	b, err := bundle.Load(opts)
-	if err != nil {
-		return fmt.Errorf("failed to load bundle: %w", err)
-	}
-	defer b.Close()
-
-	// Display bundle information (condensed version)
-	fmt.Println("\n" + strings.Repeat("─", 60))
-	fmt.Println("Bundle Import Successful!")
-	fmt.Println(strings.Repeat("─", 60))
-	fmt.Printf("\nNode Name:     %s\n", b.Manifest.NodeName)
-	fmt.Printf("Bundle Type:   %s\n", b.Manifest.BundleType)
-	fmt.Printf("K8s Version:   %s\n", b.Manifest.K8sVersion)
-	fmt.Printf("\nPods Found:    %d\n", len(b.Pods))
-	fmt.Printf("Log Files:     %d\n", len(b.LogFiles))
-
-	fmt.Println("\n" + strings.Repeat("─", 60))
-	fmt.Println("\n✓ Bundle imported successfully!")
-	fmt.Println("\nLaunching TUI...")
-
-	// Launch TUI with the bundle
-	return launchTUIWithBundle(bundlePath)
-}
-
-// launchTUIWithBundle launches the TUI with a specific bundle loaded
-func launchTUIWithBundle(bundlePath string) error {
-	// This will be handled by the TUI launch logic
-	// For now, just inform the user
-	fmt.Println("\nTo browse the bundle, run:")
-	fmt.Printf("  r8s tui --bundle=%s\n\n", bundlePath)
-	return nil
-}
-
-func runImport(cmd *cobra.Command, args []string) error {
-	fmt.Printf("Importing bundle: %s\n", bundlePath)
+	fmt.Printf("Analyzing bundle: %s\n", bundlePath)
 
 	// Display size limit (show default if 0 or negative)
 	if bundleMaxSize <= 0 {
@@ -156,7 +95,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	// Display bundle information
 	fmt.Println("\n" + strings.Repeat("─", 60))
-	fmt.Println("Bundle Import Successful!")
+	fmt.Println("Bundle Analysis Complete!")
 	fmt.Println(strings.Repeat("─", 60))
 	fmt.Printf("\nNode Name:     %s\n", b.Manifest.NodeName)
 	fmt.Printf("Bundle Type:   %s\n", b.Manifest.BundleType)
@@ -203,11 +142,9 @@ func runImport(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("\n" + strings.Repeat("─", 60))
-	fmt.Println("\n✓ Bundle successfully imported and ready for analysis!")
-	fmt.Println("\nNext steps:")
-	fmt.Println("  • Use 'r8s' to browse the bundle in TUI mode")
-	fmt.Println("  • Bundle will remain extracted until system cleanup")
-	fmt.Printf("  • Extraction location: %s\n", b.ExtractPath)
+	fmt.Println("\n✓ Bundle loaded successfully and ready for analysis!")
+	fmt.Println("\nTo analyze interactively:")
+	fmt.Printf("  r8s %s\n", bundlePath)
 
 	return nil
 }

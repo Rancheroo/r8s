@@ -19,6 +19,23 @@ import (
 	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
+// safeRowString safely extracts a string value from table row data.
+// Returns empty string if key doesn't exist or value is nil/wrong type.
+// This prevents panics from nil interface conversions in bundle mode.
+func safeRowString(rowData table.RowData, key string) string {
+	if rowData == nil {
+		return ""
+	}
+	val, exists := rowData[key]
+	if !exists || val == nil {
+		return ""
+	}
+	if s, ok := val.(string); ok {
+		return s
+	}
+	return ""
+}
+
 // ViewType represents different view types
 type ViewType int
 
@@ -331,7 +348,10 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if a.table.HighlightedRow().Data == nil {
 						return a, nil
 					}
-					name := a.table.HighlightedRow().Data["name"].(string)
+					name := safeRowString(a.table.HighlightedRow().Data, "name")
+					if name == "" {
+						return a, nil
+					}
 					for _, c := range a.clusters {
 						if c.Name == name {
 							clusterID = c.ID
@@ -1353,7 +1373,10 @@ func (a *App) handleEnter() tea.Cmd {
 	switch a.currentView.viewType {
 	case ViewClusters:
 		// Navigate to Projects for selected cluster
-		clusterName := selected["name"].(string)
+		clusterName := safeRowString(selected, "name")
+		if clusterName == "" {
+			return nil // Skip if name is missing
+		}
 		var clusterID string
 		for _, c := range a.clusters {
 			if c.Name == clusterName {
@@ -1376,7 +1399,10 @@ func (a *App) handleEnter() tea.Cmd {
 
 	case ViewProjects:
 		// Navigate to Namespaces for selected project
-		projectName := selected["name"].(string)
+		projectName := safeRowString(selected, "name")
+		if projectName == "" {
+			return nil // Skip if name is missing
+		}
 		var projectID string
 		for _, p := range a.projects {
 			if p.Name == projectName {
@@ -1401,7 +1427,10 @@ func (a *App) handleEnter() tea.Cmd {
 
 	case ViewNamespaces:
 		// Navigate to Pods (default namespace view)
-		namespaceName := selected["name"].(string)
+		namespaceName := safeRowString(selected, "name")
+		if namespaceName == "" {
+			return nil // Skip if name is missing
+		}
 		var namespaceID string
 		for _, n := range a.namespaces {
 			if n.Name == namespaceName {
@@ -1428,7 +1457,10 @@ func (a *App) handleEnter() tea.Cmd {
 
 	case ViewCRDs:
 		// Navigate to CRD instances for selected CRD
-		crdName := selected["name"].(string)
+		crdName := safeRowString(selected, "name")
+		if crdName == "" {
+			return nil // Skip if name is missing
+		}
 		var selectedCRD *rancher.CRD
 		for _, crd := range a.crds {
 			if crd.Metadata.Name == crdName {
@@ -1481,18 +1513,27 @@ func (a *App) handleDescribe() tea.Cmd {
 
 	switch a.currentView.viewType {
 	case ViewPods:
-		podName := selected["name"].(string)
-		namespaceName := selected["namespace"].(string)
+		podName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if podName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
 		return a.describePod(a.currentView.clusterID, namespaceName, podName)
 
 	case ViewDeployments:
-		deploymentName := selected["name"].(string)
-		namespaceName := selected["namespace"].(string)
+		deploymentName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if deploymentName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
 		return a.describeDeployment(a.currentView.clusterID, namespaceName, deploymentName)
 
 	case ViewServices:
-		serviceName := selected["name"].(string)
-		namespaceName := selected["namespace"].(string)
+		serviceName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if serviceName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
 		return a.describeService(a.currentView.clusterID, namespaceName, serviceName)
 
 	default:
@@ -1751,8 +1792,11 @@ func (a *App) handleViewLogs() tea.Cmd {
 	}
 
 	selected := a.table.HighlightedRow().Data
-	podName := selected["name"].(string)
-	namespaceName := selected["namespace"].(string)
+	podName := safeRowString(selected, "name")
+	namespaceName := safeRowString(selected, "namespace")
+	if podName == "" || namespaceName == "" {
+		return nil // Skip if required fields are missing
+	}
 
 	// Push current view to stack
 	a.viewStack = append(a.viewStack, a.currentView)
@@ -2441,6 +2485,15 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 // fetchClusters fetches clusters with fallback to mock data
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
+		// Try data source first (for bundle mode or live mode)
+		if a.dataSource != nil {
+			clusters, err := a.dataSource.GetClusters()
+			if err == nil {
+				return clustersMsg{clusters: clusters}
+			}
+			// Log error but continue to try other sources
+		}
+
 		// Only use mock data if explicitly in mock mode
 		if a.offlineMode && a.config.MockMode {
 			mockClusters := a.getMockClusters()
@@ -2469,6 +2522,15 @@ func (a *App) fetchClusters() tea.Cmd {
 // fetchProjects fetches projects for a cluster with fallback to mock data
 func (a *App) fetchProjects(clusterID string) tea.Cmd {
 	return func() tea.Msg {
+		// Try data source first (for bundle mode or live mode)
+		if a.dataSource != nil {
+			projects, namespaceCounts, err := a.dataSource.GetProjects(clusterID)
+			if err == nil {
+				return projectsMsg{projects: projects, namespaceCounts: namespaceCounts}
+			}
+			// Log error but continue to try other sources
+		}
+
 		// Only use mock data if explicitly in mock mode
 		if a.offlineMode && a.config.MockMode {
 			mockProjects := a.getMockProjects(clusterID)
@@ -2710,6 +2772,7 @@ func (a *App) applyLogFilter() {
 
 // getVisibleLogs returns the currently visible logs based on active filters
 // FIX 3: Helper function to get logs respecting current filter state
+// Supports both bracketed format ([ERROR], [WARN]) and K8s format (E1120, W1120)
 func (a *App) getVisibleLogs() []string {
 	if a.filterLevel == "" {
 		// No filter - return all logs
@@ -2719,23 +2782,132 @@ func (a *App) getVisibleLogs() []string {
 	// Filter logs by level
 	var filteredLogs []string
 	for _, line := range a.logs {
-		lineUpper := strings.ToUpper(line)
+		include := false
 
 		switch a.filterLevel {
 		case "ERROR":
-			// Show only ERROR logs
-			if strings.Contains(lineUpper, "[ERROR]") {
-				filteredLogs = append(filteredLogs, line)
-			}
+			// Show only ERROR logs - support both formats
+			include = isErrorLog(line)
 		case "WARN":
-			// Show WARN and ERROR logs
-			if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, "[ERROR]") {
-				filteredLogs = append(filteredLogs, line)
-			}
+			// Show WARN and ERROR logs - support both formats
+			include = isWarnLog(line) || isErrorLog(line)
+		}
+
+		if include {
+			filteredLogs = append(filteredLogs, line)
 		}
 	}
 
 	return filteredLogs
+}
+
+// isErrorLog detects ERROR level logs in both bracketed and K8s formats
+func isErrorLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [ERROR]
+	if strings.Contains(lineUpper, "[ERROR]") {
+		return true
+	}
+	// K8s format: E1120, E0102, etc. (E followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'E' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=error format
+	if strings.Contains(lineUpper, "LEVEL=ERROR") {
+		return true
+	}
+	return false
+}
+
+// isWarnLog detects WARN level logs in both bracketed and K8s formats
+func isWarnLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [WARN]
+	if strings.Contains(lineUpper, "[WARN]") {
+		return true
+	}
+	// K8s format: W1120, W0102, etc. (W followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'W' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=warn/warning format
+	if strings.Contains(lineUpper, "LEVEL=WARN") {
+		return true
+	}
+	return false
+}
+
+// isInfoLog detects INFO level logs in both bracketed and K8s formats
+func isInfoLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [INFO]
+	if strings.Contains(lineUpper, "[INFO]") {
+		return true
+	}
+	// K8s format: I1120, I0102, etc. (I followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'I' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=info format
+	if strings.Contains(lineUpper, "LEVEL=INFO") {
+		return true
+	}
+	return false
+}
+
+// isDebugLog detects DEBUG level logs in both bracketed and K8s formats
+func isDebugLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [DEBUG]
+	if strings.Contains(lineUpper, "[DEBUG]") {
+		return true
+	}
+	// K8s format: D1120, D0102, etc. (D followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'D' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=debug format
+	if strings.Contains(lineUpper, "LEVEL=DEBUG") {
+		return true
+	}
+	return false
+}
+
+// isDigit checks if a byte is an ASCII digit
+func isDigit(b byte) bool {
+	return b >= '0' && b <= '9'
 }
 
 // Messages
@@ -2791,9 +2963,8 @@ type logsMsg struct {
 }
 
 // colorizeLogLine applies color styling based on log level
+// Supports both bracketed format ([ERROR], [WARN]) and K8s format (E1120, W1120)
 func (a *App) colorizeLogLine(line string, lineIndex int) string {
-	lineUpper := strings.ToUpper(line)
-
 	// Check if this is the current search match
 	isCurrentMatch := false
 	if len(a.searchMatches) > 0 && a.currentMatch >= 0 && a.currentMatch < len(a.searchMatches) {
@@ -2807,17 +2978,17 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 		return searchMatchStyle.Render(line)
 	}
 
-	// Otherwise, colorize by log level
-	if strings.Contains(lineUpper, "[ERROR]") || strings.Contains(lineUpper, " E ") {
+	// Otherwise, colorize by log level using the same detection functions as filtering
+	if isErrorLog(line) {
 		return logErrorStyle.Render(line)
 	}
-	if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, " W ") {
+	if isWarnLog(line) {
 		return logWarnStyle.Render(line)
 	}
-	if strings.Contains(lineUpper, "[INFO]") || strings.Contains(lineUpper, " I ") {
+	if isInfoLog(line) {
 		return logInfoStyle.Render(line)
 	}
-	if strings.Contains(lineUpper, "[DEBUG]") || strings.Contains(lineUpper, " D ") {
+	if isDebugLog(line) {
 		return logDebugStyle.Render(line)
 	}
 
