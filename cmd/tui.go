@@ -3,6 +3,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -33,8 +35,9 @@ EXAMPLES:
   # Demo mode - mock data for testing/screenshots
   r8s tui --mockdata
 
-  # Bundle mode - analyze logs offline
-  r8s tui --bundle=w-guard-wg-cp-svtk6-lqtxw.tar.gz
+  # Bundle mode - extract first, then analyze
+  tar -xzf support-bundle.tar.gz
+  r8s tui --bundle=./w-guard-wg-cp-xyz/
 
 KEYBOARD SHORTCUTS:
   Enter  - Navigate into selected resource
@@ -45,42 +48,66 @@ KEYBOARD SHORTCUTS:
   r      - Refresh current view
   ?      - Show help
   q      - Quit`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// Load configuration
-		cfg, err := config.Load(cfgFile, profile)
+	RunE: runTUI,
+}
+
+// runTUI handles launching the TUI application
+func runTUI(cmd *cobra.Command, args []string) error {
+	// Validate bundle path if provided (before loading config or starting TUI)
+	if tuiBundlePath != "" {
+		info, err := os.Stat(tuiBundlePath)
 		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
+			if os.IsNotExist(err) {
+				return fmt.Errorf("bundle path not found: %s", tuiBundlePath)
+			}
+			return fmt.Errorf("failed to access bundle path: %w", err)
 		}
 
-		// Override config with CLI flags
-		if insecure {
-			cfg.Insecure = true
+		// Must be a directory (no tarball support)
+		if !info.IsDir() {
+			return fmt.Errorf("%s is not a directory\n\n"+
+				"r8s only supports extracted bundle folders.\n\n"+
+				"Extract the bundle first:\n"+
+				"  tar -xzf %s\n"+
+				"  r8s ./extracted-folder/",
+				tuiBundlePath, filepath.Base(tuiBundlePath))
 		}
-		if contextName != "" {
-			cfg.Context = contextName
-		}
-		if namespace != "" {
-			cfg.Namespace = namespace
-		}
+	}
 
-		// Set mock mode and verbose in config
-		cfg.MockMode = mockData
-		cfg.Verbose = verbose
+	// Load configuration
+	cfg, err := config.Load(cfgFile, profile)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
 
-		// Create and start TUI with bundle path if provided
-		app := tui.NewApp(cfg, tuiBundlePath)
-		p := tea.NewProgram(
-			app,
-			tea.WithAltScreen(),
-			tea.WithMouseCellMotion(),
-		)
+	// Override config with CLI flags
+	if insecure {
+		cfg.Insecure = true
+	}
+	if contextName != "" {
+		cfg.Context = contextName
+	}
+	if namespace != "" {
+		cfg.Namespace = namespace
+	}
 
-		if _, err := p.Run(); err != nil {
-			return fmt.Errorf("TUI error: %w", err)
-		}
+	// Set mock mode and verbose in config
+	cfg.MockMode = mockData
+	cfg.Verbose = verbose
 
-		return nil
-	},
+	// Create and start TUI with bundle path if provided
+	app := tui.NewApp(cfg, tuiBundlePath)
+	p := tea.NewProgram(
+		app,
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
+
+	if _, err := p.Run(); err != nil {
+		return fmt.Errorf("TUI error: %w", err)
+	}
+
+	return nil
 }
 
 func init() {
@@ -88,5 +115,5 @@ func init() {
 
 	// TUI-specific flags
 	tuiCmd.Flags().BoolVar(&mockData, "mockdata", false, "enable demo mode with mock data (no API required)")
-	tuiCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to log bundle for offline analysis")
+	tuiCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to extracted log bundle folder")
 }

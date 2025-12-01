@@ -11,6 +11,12 @@ import (
 // DataSource abstracts pod and log data retrieval
 // This allows the TUI to work with both live Rancher API and offline bundles
 type DataSource interface {
+	// GetClusters returns all available clusters
+	GetClusters() ([]rancher.Cluster, error)
+
+	// GetProjects returns projects for the given cluster with namespace counts
+	GetProjects(clusterID string) ([]rancher.Project, map[string]int, error)
+
 	// GetPods returns pods for the given project and namespace
 	GetPods(projectID, namespace string) ([]rancher.Pod, error)
 
@@ -53,6 +59,52 @@ func NewLiveDataSource(client *rancher.Client, offline bool) *LiveDataSource {
 	}
 }
 
+// GetClusters fetches clusters from the Rancher API
+func (ds *LiveDataSource) GetClusters() ([]rancher.Cluster, error) {
+	if ds.offlineMode {
+		return nil, fmt.Errorf("offline mode")
+	}
+
+	collection, err := ds.client.ListClusters()
+	if err != nil {
+		return nil, err
+	}
+
+	return collection.Data, nil
+}
+
+// GetProjects fetches projects from the Rancher API
+func (ds *LiveDataSource) GetProjects(clusterID string) ([]rancher.Project, map[string]int, error) {
+	if ds.offlineMode {
+		return nil, nil, fmt.Errorf("offline mode")
+	}
+
+	collection, err := ds.client.ListProjects(clusterID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Count namespaces per project
+	namespaceCounts := make(map[string]int)
+	nsCollection, err := ds.client.ListNamespaces(clusterID)
+	if err == nil {
+		for _, ns := range nsCollection.Data {
+			if ns.ProjectID != "" {
+				namespaceCounts[ns.ProjectID]++
+			}
+		}
+	}
+
+	// Ensure all projects have an entry
+	for _, project := range collection.Data {
+		if _, exists := namespaceCounts[project.ID]; !exists {
+			namespaceCounts[project.ID] = 0
+		}
+	}
+
+	return collection.Data, namespaceCounts, nil
+}
+
 // GetPods fetches pods from the Rancher API
 func (ds *LiveDataSource) GetPods(projectID, namespace string) ([]rancher.Pod, error) {
 	// If offline, return empty (caller will use mock data)
@@ -86,14 +138,38 @@ func (ds *LiveDataSource) GetPods(projectID, namespace string) ([]rancher.Pod, e
 
 // GetLogs fetches logs from the Rancher API
 func (ds *LiveDataSource) GetLogs(clusterID, namespace, pod, container string, previous bool) ([]string, error) {
-	// For now, return error to trigger mock data
-	// In production, would call: ds.client.GetPodLogs(...)
-	return nil, fmt.Errorf("live logs not yet implemented")
+	if ds.offlineMode {
+		return nil, fmt.Errorf("offline mode")
+	}
+
+	// Fetch logs from Rancher via K8s proxy
+	logContent, err := ds.client.GetPodLogs(clusterID, namespace, pod, container, previous, 1000)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch logs: %w", err)
+	}
+
+	// Split into lines
+	lines := strings.Split(logContent, "\n")
+
+	// Remove empty last line if present
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	return lines, nil
 }
 
 // GetContainers returns containers for a pod
 func (ds *LiveDataSource) GetContainers(namespace, pod string) ([]string, error) {
-	// For now, return default container
+	if ds.offlineMode {
+		return []string{"app"}, nil
+	}
+
+	// We need clusterID to fetch pod details - extract from current context
+	// For now, we'll need to get this from somewhere... let's return a sensible default
+	// TODO: Store clusterID in LiveDataSource for this use case
+
+	// Return common container name as fallback
 	return []string{"app"}, nil
 }
 
@@ -236,6 +312,75 @@ func NewBundleDataSource(bundlePath string, verbose bool) (*BundleDataSource, er
 	}
 
 	return &BundleDataSource{bundle: b}, nil
+}
+
+// GetClusters returns a single cluster from bundle metadata
+func (ds *BundleDataSource) GetClusters() ([]rancher.Cluster, error) {
+	// Bundle represents a single cluster snapshot
+	// Create a cluster from bundle metadata
+	clusterName := "bundle-cluster"
+	if ds.bundle.Manifest != nil && ds.bundle.Manifest.NodeName != "" {
+		clusterName = ds.bundle.Manifest.NodeName
+	}
+
+	cluster := rancher.Cluster{
+		ID:       "bundle-cluster",
+		Name:     clusterName,
+		State:    "active",
+		Provider: "bundle",
+	}
+
+	return []rancher.Cluster{cluster}, nil
+}
+
+// GetProjects returns projects from the bundle with namespace counts
+func (ds *BundleDataSource) GetProjects(clusterID string) ([]rancher.Project, map[string]int, error) {
+	// Get unique projects from namespaces
+	projectMap := make(map[string]*rancher.Project)
+	namespaceCounts := make(map[string]int)
+
+	for _, item := range ds.bundle.Namespaces {
+		if ns, ok := item.(rancher.Namespace); ok {
+			projectID := ns.ProjectID
+			if projectID == "" {
+				projectID = "default"
+			}
+
+			// Count namespace
+			namespaceCounts[projectID]++
+
+			// Create project if not exists
+			if _, exists := projectMap[projectID]; !exists {
+				projectMap[projectID] = &rancher.Project{
+					ID:        projectID,
+					Name:      projectID,
+					ClusterID: clusterID,
+					State:     "active",
+				}
+			}
+		}
+	}
+
+	// Convert map to slice
+	var projects []rancher.Project
+	for _, project := range projectMap {
+		projects = append(projects, *project)
+	}
+
+	// If no projects found, create a default one
+	if len(projects) == 0 {
+		projects = []rancher.Project{
+			{
+				ID:        "default",
+				Name:      "default",
+				ClusterID: clusterID,
+				State:     "active",
+			},
+		}
+		namespaceCounts["default"] = len(ds.bundle.Namespaces)
+	}
+
+	return projects, namespaceCounts, nil
 }
 
 // GetPods returns pods from the bundle

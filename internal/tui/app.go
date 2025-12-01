@@ -19,6 +19,23 @@ import (
 	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
+// safeRowString safely extracts a string value from table row data.
+// Returns empty string if key doesn't exist or value is nil/wrong type.
+// This prevents panics from nil interface conversions in bundle mode.
+func safeRowString(rowData table.RowData, key string) string {
+	if rowData == nil {
+		return ""
+	}
+	val, exists := rowData[key]
+	if !exists || val == nil {
+		return ""
+	}
+	if s, ok := val.(string); ok {
+		return s
+	}
+	return ""
+}
+
 // ViewType represents different view types
 type ViewType int
 
@@ -226,10 +243,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if a.searchMode && a.currentView.viewType == ViewLogs {
 			switch msg.String() {
 			case "esc":
+				// FIX BUG #3: Restore filter state when exiting search
 				a.searchMode = false
 				a.searchQuery = ""
 				a.searchMatches = nil
 				a.currentMatch = -1
+				// Re-apply any active log filter to restore filtered view
+				a.applyLogFilter()
 				return a, nil
 			case "enter":
 				a.searchMode = false
@@ -252,9 +272,24 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return a, tea.Quit
-		case "r", "ctrl+r":
+		case "r", "ctrl+r", "ctrl+l":
+			// FIX BUG #7: Handle Ctrl+L to refresh (prevent terminal clear conflicts)
 			a.loading = true
 			return a, a.refreshCurrentView()
+		case "j":
+			// FIX BUG #14: Vim-style navigation down
+			if !a.searchMode && a.currentView.viewType != ViewLogs {
+				newTable, cmd := a.table.Update(tea.KeyMsg{Type: tea.KeyDown})
+				a.table = newTable
+				return a, cmd
+			}
+		case "k":
+			// FIX BUG #14: Vim-style navigation up
+			if !a.searchMode && a.currentView.viewType != ViewLogs {
+				newTable, cmd := a.table.Update(tea.KeyMsg{Type: tea.KeyUp})
+				a.table = newTable
+				return a, cmd
+			}
 		case "?":
 			a.showHelp = true
 			return a, nil
@@ -313,7 +348,10 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if a.table.HighlightedRow().Data == nil {
 						return a, nil
 					}
-					name := a.table.HighlightedRow().Data["name"].(string)
+					name := safeRowString(a.table.HighlightedRow().Data, "name")
+					if name == "" {
+						return a, nil
+					}
 					for _, c := range a.clusters {
 						if c.Name == name {
 							clusterID = c.ID
@@ -388,6 +426,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					a.filterLevel = "ERROR"
 				}
+				// FIX BUG #10: Clear search state when filter changes (prevents stale match indices)
+				a.searchMatches = nil
+				a.currentMatch = -1
 				a.applyLogFilter()
 				return a, nil
 			}
@@ -399,6 +440,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					a.filterLevel = "WARN"
 				}
+				// FIX BUG #10: Clear search state when filter changes
+				a.searchMatches = nil
+				a.currentMatch = -1
 				a.applyLogFilter()
 				return a, nil
 			}
@@ -406,6 +450,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Show all logs (clear filter)
 			if a.currentView.viewType == ViewLogs {
 				a.filterLevel = ""
+				// FIX BUG #10: Clear search state when filter changes
+				a.searchMatches = nil
+				a.currentMatch = -1
 				a.applyLogFilter()
 				return a, nil
 			}
@@ -455,6 +502,11 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		a.width = msg.Width
 		a.height = msg.Height
+		// FIX BUG #11: Resize log viewport on window resize
+		if a.currentView.viewType == ViewLogs {
+			a.logViewport.Width = a.width - 4
+			a.logViewport.Height = a.height - 6
+		}
 		a.updateTable()
 
 	case clustersMsg:
@@ -522,6 +574,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.logViewport = viewport.New(a.width-4, a.height-6)
 		a.logViewport.SetContent(a.renderLogsWithColors())
 
+	case tailTickMsg:
+		// Handle tail mode tick - fetch new logs and schedule next tick
+		if a.tailMode && a.currentView.viewType == ViewLogs {
+			return a, tea.Batch(
+				a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName),
+				a.tickTail(), // Schedule next tick
+			)
+		}
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
@@ -553,8 +614,11 @@ func (a *App) View() string {
 	}
 
 	if a.loading {
+		// FIX BUG #4: Show appropriate loading message for each mode
 		loadingMsg := "Loading..."
-		if a.offlineMode {
+		if a.bundleMode {
+			loadingMsg = "Loading bundle data..."
+		} else if a.offlineMode {
 			loadingMsg = "Loading mock data (OFFLINE MODE)..."
 		}
 		return loadingStyle.Render(loadingMsg)
@@ -1112,32 +1176,40 @@ func (a *App) updateTable() {
 
 // getBreadcrumb provides navigation context for each view
 func (a *App) getBreadcrumb() string {
+	// FIX BUG #8: Add visual mode indicator to breadcrumb
+	modeIndicator := "[LIVE] "
+	if a.bundleMode {
+		modeIndicator = "[BUNDLE] "
+	} else if a.offlineMode {
+		modeIndicator = "[MOCK] "
+	}
+
 	switch a.currentView.viewType {
 	case ViewClusters:
-		return "r8s - Clusters"
+		return modeIndicator + "r8s - Clusters"
 	case ViewProjects:
-		return fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Projects", a.currentView.clusterName)
 	case ViewNamespaces:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespaces",
 			a.currentView.clusterName, a.currentView.projectName)
 	case ViewPods:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pods",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewDeployments:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Deployments",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewServices:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Services",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName)
 	case ViewCRDs:
-		return fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
+		return modeIndicator + fmt.Sprintf("Cluster: %s > CRDs", a.currentView.clusterName)
 	case ViewCRDInstances:
-		return fmt.Sprintf("Cluster: %s > CRDs > %s", a.currentView.clusterName, a.currentView.crdKind)
+		return modeIndicator + fmt.Sprintf("Cluster: %s > CRDs > %s", a.currentView.clusterName, a.currentView.crdKind)
 	case ViewLogs:
-		return fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pod: %s > Logs",
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pod: %s > Logs",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName, a.currentView.podName)
 	default:
-		return "r8s - Rancher Navigator"
+		return modeIndicator + "r8s - Rancher Navigator"
 	}
 }
 
@@ -1301,7 +1373,10 @@ func (a *App) handleEnter() tea.Cmd {
 	switch a.currentView.viewType {
 	case ViewClusters:
 		// Navigate to Projects for selected cluster
-		clusterName := selected["name"].(string)
+		clusterName := safeRowString(selected, "name")
+		if clusterName == "" {
+			return nil // Skip if name is missing
+		}
 		var clusterID string
 		for _, c := range a.clusters {
 			if c.Name == clusterName {
@@ -1324,7 +1399,10 @@ func (a *App) handleEnter() tea.Cmd {
 
 	case ViewProjects:
 		// Navigate to Namespaces for selected project
-		projectName := selected["name"].(string)
+		projectName := safeRowString(selected, "name")
+		if projectName == "" {
+			return nil // Skip if name is missing
+		}
 		var projectID string
 		for _, p := range a.projects {
 			if p.Name == projectName {
@@ -1349,7 +1427,10 @@ func (a *App) handleEnter() tea.Cmd {
 
 	case ViewNamespaces:
 		// Navigate to Pods (default namespace view)
-		namespaceName := selected["name"].(string)
+		namespaceName := safeRowString(selected, "name")
+		if namespaceName == "" {
+			return nil // Skip if name is missing
+		}
 		var namespaceID string
 		for _, n := range a.namespaces {
 			if n.Name == namespaceName {
@@ -1376,7 +1457,10 @@ func (a *App) handleEnter() tea.Cmd {
 
 	case ViewCRDs:
 		// Navigate to CRD instances for selected CRD
-		crdName := selected["name"].(string)
+		crdName := safeRowString(selected, "name")
+		if crdName == "" {
+			return nil // Skip if name is missing
+		}
 		var selectedCRD *rancher.CRD
 		for _, crd := range a.crds {
 			if crd.Metadata.Name == crdName {
@@ -1429,18 +1513,27 @@ func (a *App) handleDescribe() tea.Cmd {
 
 	switch a.currentView.viewType {
 	case ViewPods:
-		podName := selected["name"].(string)
-		namespaceName := selected["namespace"].(string)
+		podName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if podName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
 		return a.describePod(a.currentView.clusterID, namespaceName, podName)
 
 	case ViewDeployments:
-		deploymentName := selected["name"].(string)
-		namespaceName := selected["namespace"].(string)
+		deploymentName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if deploymentName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
 		return a.describeDeployment(a.currentView.clusterID, namespaceName, deploymentName)
 
 	case ViewServices:
-		serviceName := selected["name"].(string)
-		namespaceName := selected["namespace"].(string)
+		serviceName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if serviceName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
 		return a.describeService(a.currentView.clusterID, namespaceName, serviceName)
 
 	default:
@@ -1612,69 +1705,83 @@ func (a *App) fetchLogs(clusterID, namespace, podName string) tea.Cmd {
 		// Try to get logs from data source first
 		if a.dataSource != nil {
 			logs, err := a.dataSource.GetLogs(clusterID, namespace, podName, a.currentContainer, a.showPrevious)
-			if err == nil && len(logs) > 0 {
+			if err == nil {
+				// Return even if empty - empty logs is valid
 				return logsMsg{logs: logs}
 			}
-			// If error or no logs, fall through to mock data
+			// FIX BUG #13: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch logs from data source: %w\n\n"+
+					"Context: cluster=%s, namespace=%s, pod=%s, container=%s\n"+
+					"Hint: Check bundle data or pod status", err, clusterID, namespace, podName, a.currentContainer)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch logs: %w", err)}
 		}
 
-		// Generate realistic mock logs - larger dataset for better search testing
-		mockLogs := []string{
-			"I1127 00:44:40.476206 [INFO] Kubelet starting up...",
-			"I1127 00:44:40.478859 [INFO] None policy: Start",
-			"I1127 00:44:40.478889 [INFO] Starting memory manager with policy=None",
-			"I1127 00:44:40.479426 [INFO] Initialized iptables rules for IPv6",
-			"I1127 00:44:40.479451 [INFO] Starting to sync pod status with apiserver",
-			"I1127 00:44:40.479482 [INFO] Starting kubelet main sync loop",
-			"E1127 00:44:40.479579 [ERROR] Skipping pod synchronization - PLEG is not healthy",
-			"W1127 00:44:40.483015 [WARN] Failed to list RuntimeClass: connection refused",
-			"E1127 00:44:40.483087 [ERROR] Unhandled error in reflector: connection refused",
-			"I1127 00:44:40.545805 [INFO] Attempting to connect to API server",
-			"E1127 00:44:40.545850 [ERROR] Error getting current node from lister: node not found",
-			"I1127 00:44:40.586619 [INFO] Failed to read data from checkpoint - checkpoint not found",
-			"I1127 00:44:40.586837 [INFO] Eviction manager: starting control loop",
-			"I1127 00:44:40.588489 [INFO] Starting Kubelet Plugin Manager",
-			"E1127 00:44:40.590954 [ERROR] Eviction manager: failed to check container filesystem",
-			"I1127 00:44:40.688184 [INFO] Attempting to register node w-guard-wg-cp-svtk6-lqtxw",
-			"E1127 00:44:40.688785 [ERROR] Unable to register node with API server: connection refused",
-			"W1127 00:44:40.810298 [WARN] No need to create mirror pod - failed to get node info",
-			"I1127 00:44:40.838155 [INFO] VerifyControllerAttachedVolume started for volume file3",
-			"I1127 00:44:40.838373 [INFO] VerifyControllerAttachedVolume started for volume file5",
-			"I1127 00:44:40.838450 [INFO] VerifyControllerAttachedVolume started for volume file6",
-			"I1127 00:44:40.890508 [INFO] Attempting to register node (retry 2)",
-			"E1127 00:44:40.890971 [ERROR] Unable to register node with API server: connection refused",
-			"E1127 00:44:41.066666 [ERROR] Failed to ensure lease exists - will retry with backoff",
-			"W1127 00:44:41.110927 [WARN] Nameserver limits exceeded - some nameservers omitted",
-			"I1127 00:44:41.292845 [INFO] Attempting to register node (retry 3)",
-			"E1127 00:44:41.293183 [ERROR] Unable to register node with API server: connection refused",
-			"W1127 00:44:41.420049 [WARN] Failed to list Services: connection refused",
-			"W1127 00:44:41.455586 [WARN] Failed to list RuntimeClass: connection refused",
-			"I1127 00:44:42.000000 [INFO] Health check passed for container app-main",
-			"I1127 00:44:42.500000 [INFO] Processing HTTP request GET /api/v1/pods",
-			"I1127 00:44:42.501234 [INFO] Query execution completed in 15ms",
-			"I1127 00:44:42.550000 [INFO] Response sent: 200 OK",
-			"W1127 00:44:43.000000 [WARN] Slow query detected: SELECT * FROM pods (duration: 500ms)",
-			"I1127 00:44:43.100000 [INFO] Cache invalidated for namespace default",
-			"I1127 00:44:43.200000 [INFO] Syncing pod state with etcd",
-			"E1127 00:44:43.300000 [ERROR] Connection timeout to metrics server",
-			"I1127 00:44:43.400000 [INFO] Retrying connection to metrics server (attempt 1/3)",
-			"W1127 00:44:43.500000 [WARN] High memory usage detected: 85% of limit",
-			"I1127 00:44:43.600000 [INFO] Garbage collection triggered",
-			"I1127 00:44:43.700000 [INFO] Freed 150MB of memory",
-			"I1127 00:44:44.000000 [INFO] Pod nginx-deployment-abc123 started successfully",
-			"I1127 00:44:44.100000 [INFO] Container nginx pulling image nginx:1.21",
-			"I1127 00:44:44.200000 [INFO] Image pull successful",
-			"I1127 00:44:44.300000 [INFO] Container nginx started",
-			"E1127 00:44:44.400000 [ERROR] Failed to mount volume pvc-data: volume not found",
-			"W1127 00:44:44.500000 [WARN] Retrying volume mount with exponential backoff",
-			"I1127 00:44:44.800000 [INFO] Volume pvc-data mounted successfully on retry",
-			"I1127 00:44:45.000000 [INFO] Readiness probe succeeded for container nginx",
-			fmt.Sprintf("I1127 00:44:45.500000 [INFO] Mock logs for pod: %s", podName),
-			"I1127 00:44:45.600000 [INFO] All health checks passing",
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockLogs := a.generateMockLogs(podName)
+			return logsMsg{logs: mockLogs}
 		}
 
-		// In offline mode or if API fails, return mock logs
-		return logsMsg{logs: mockLogs}
+		return errMsg{fmt.Errorf("no data source available")}
+	}
+}
+
+// generateMockLogs generates realistic mock logs for testing
+func (a *App) generateMockLogs(podName string) []string {
+	return []string{
+		"I1127 00:44:40.476206 [INFO] Kubelet starting up...",
+		"I1127 00:44:40.478859 [INFO] None policy: Start",
+		"I1127 00:44:40.478889 [INFO] Starting memory manager with policy=None",
+		"I1127 00:44:40.479426 [INFO] Initialized iptables rules for IPv6",
+		"I1127 00:44:40.479451 [INFO] Starting to sync pod status with apiserver",
+		"I1127 00:44:40.479482 [INFO] Starting kubelet main sync loop",
+		"E1127 00:44:40.479579 [ERROR] Skipping pod synchronization - PLEG is not healthy",
+		"W1127 00:44:40.483015 [WARN] Failed to list RuntimeClass: connection refused",
+		"E1127 00:44:40.483087 [ERROR] Unhandled error in reflector: connection refused",
+		"I1127 00:44:40.545805 [INFO] Attempting to connect to API server",
+		"E1127 00:44:40.545850 [ERROR] Error getting current node from lister: node not found",
+		"I1127 00:44:40.586619 [INFO] Failed to read data from checkpoint - checkpoint not found",
+		"I1127 00:44:40.586837 [INFO] Eviction manager: starting control loop",
+		"I1127 00:44:40.588489 [INFO] Starting Kubelet Plugin Manager",
+		"E1127 00:44:40.590954 [ERROR] Eviction manager: failed to check container filesystem",
+		"I1127 00:44:40.688184 [INFO] Attempting to register node w-guard-wg-cp-svtk6-lqtxw",
+		"E1127 00:44:40.688785 [ERROR] Unable to register node with API server: connection refused",
+		"W1127 00:44:40.810298 [WARN] No need to create mirror pod - failed to get node info",
+		"I1127 00:44:40.838155 [INFO] VerifyControllerAttachedVolume started for volume file3",
+		"I1127 00:44:40.838373 [INFO] VerifyControllerAttachedVolume started for volume file5",
+		"I1127 00:44:40.838450 [INFO] VerifyControllerAttachedVolume started for volume file6",
+		"I1127 00:44:40.890508 [INFO] Attempting to register node (retry 2)",
+		"E1127 00:44:40.890971 [ERROR] Unable to register node with API server: connection refused",
+		"E1127 00:44:41.066666 [ERROR] Failed to ensure lease exists - will retry with backoff",
+		"W1127 00:44:41.110927 [WARN] Nameserver limits exceeded - some nameservers omitted",
+		"I1127 00:44:41.292845 [INFO] Attempting to register node (retry 3)",
+		"E1127 00:44:41.293183 [ERROR] Unable to register node with API server: connection refused",
+		"W1127 00:44:41.420049 [WARN] Failed to list Services: connection refused",
+		"W1127 00:44:41.455586 [WARN] Failed to list RuntimeClass: connection refused",
+		"I1127 00:44:42.000000 [INFO] Health check passed for container app-main",
+		"I1127 00:44:42.500000 [INFO] Processing HTTP request GET /api/v1/pods",
+		"I1127 00:44:42.501234 [INFO] Query execution completed in 15ms",
+		"I1127 00:44:42.550000 [INFO] Response sent: 200 OK",
+		"W1127 00:44:43.000000 [WARN] Slow query detected: SELECT * FROM pods (duration: 500ms)",
+		"I1127 00:44:43.100000 [INFO] Cache invalidated for namespace default",
+		"I1127 00:44:43.200000 [INFO] Syncing pod state with etcd",
+		"E1127 00:44:43.300000 [ERROR] Connection timeout to metrics server",
+		"I1127 00:44:43.400000 [INFO] Retrying connection to metrics server (attempt 1/3)",
+		"W1127 00:44:43.500000 [WARN] High memory usage detected: 85% of limit",
+		"I1127 00:44:43.600000 [INFO] Garbage collection triggered",
+		"I1127 00:44:43.700000 [INFO] Freed 150MB of memory",
+		"I1127 00:44:44.000000 [INFO] Pod nginx-deployment-abc123 started successfully",
+		"I1127 00:44:44.100000 [INFO] Container nginx pulling image nginx:1.21",
+		"I1127 00:44:44.200000 [INFO] Image pull successful",
+		"I1127 00:44:44.300000 [INFO] Container nginx started",
+		"E1127 00:44:44.400000 [ERROR] Failed to mount volume pvc-data: volume not found",
+		"W1127 00:44:44.500000 [WARN] Retrying volume mount with exponential backoff",
+		"I1127 00:44:44.800000 [INFO] Volume pvc-data mounted successfully on retry",
+		"I1127 00:44:45.000000 [INFO] Readiness probe succeeded for container nginx",
+		fmt.Sprintf("I1127 00:44:45.500000 [INFO] Mock logs for pod: %s", podName),
+		"I1127 00:44:45.600000 [INFO] All health checks passing",
 	}
 }
 
@@ -1685,8 +1792,11 @@ func (a *App) handleViewLogs() tea.Cmd {
 	}
 
 	selected := a.table.HighlightedRow().Data
-	podName := selected["name"].(string)
-	namespaceName := selected["namespace"].(string)
+	podName := safeRowString(selected, "name")
+	namespaceName := safeRowString(selected, "namespace")
+	if podName == "" || namespaceName == "" {
+		return nil // Skip if required fields are missing
+	}
 
 	// Push current view to stack
 	a.viewStack = append(a.viewStack, a.currentView)
@@ -1714,47 +1824,26 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 		// Try to get pods from data source first
 		if a.dataSource != nil {
 			pods, err := a.dataSource.GetPods(projectID, namespaceName)
-			if err == nil && len(pods) > 0 {
+			if err == nil {
+				// Return even if empty - empty list is valid bundle data
 				return podsMsg{pods: pods}
 			}
-			// If error or no pods, check if we're in offline mode for fallback
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch pods from data source: %w\n\n"+
+					"Context: projectID=%s, namespace=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch pods: %w", err)}
 		}
 
-		// Fallback: If in offline mode without dataSource, use mock data
-		if a.offlineMode {
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockPods := a.getMockPods(namespaceName)
 			return podsMsg{pods: mockPods}
 		}
 
-		// Fallback: Try client directly (backward compatibility)
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListPods(projectID)
-		if err != nil {
-			// API failed - gracefully fallback to mock data for development
-			mockPods := a.getMockPods(namespaceName)
-			return podsMsg{pods: mockPods}
-		}
-
-		// Filter pods by namespace name - only show pods from this namespace
-		filteredPods := []rancher.Pod{}
-		for _, pod := range collection.Data {
-			podNamespace := pod.NamespaceID
-			if strings.Contains(podNamespace, ":") {
-				parts := strings.Split(podNamespace, ":")
-				if len(parts) > 1 {
-					podNamespace = parts[1]
-				}
-			}
-
-			if podNamespace == namespaceName {
-				filteredPods = append(filteredPods, pod)
-			}
-		}
-
-		return podsMsg{pods: filteredPods}
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -1768,11 +1857,22 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 				// Return even if empty - empty list is valid bundle data
 				return deploymentsMsg{deployments: deployments}
 			}
+			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch deployments from data source: %w\n\n"+
+					"Context: projectID=%s, namespace=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockDeployments := a.getMockDeployments(namespaceName)
-		return deploymentsMsg{deployments: mockDeployments}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockDeployments := a.getMockDeployments(namespaceName)
+			return deploymentsMsg{deployments: mockDeployments}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -1786,11 +1886,22 @@ func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 				// Return even if empty - empty list is valid bundle data
 				return servicesMsg{services: services}
 			}
+			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch services from data source: %w\n\n"+
+					"Context: projectID=%s, namespace=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch services: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockServices := a.getMockServices(namespaceName)
-		return servicesMsg{services: mockServices}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockServices := a.getMockServices(namespaceName)
+			return servicesMsg{services: mockServices}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -2063,11 +2174,22 @@ func (a *App) fetchCRDs(clusterID string) tea.Cmd {
 				// Return even if empty - empty list is valid bundle data
 				return crdsMsg{crds: crds}
 			}
+			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch CRDs from data source: %w\n\n"+
+					"Context: clusterID=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, clusterID)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch CRDs: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockCRDs := a.getMockCRDs()
-		return crdsMsg{crds: mockCRDs}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockCRDs := a.getMockCRDs()
+			return crdsMsg{crds: mockCRDs}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -2171,8 +2293,8 @@ func (a *App) getMockCRDs() []rancher.CRD {
 // fetchCRDInstances fetches instances of a CRD with fallback to mock data
 func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockInstances := a.getMockCRDInstances(group, resource)
 			return crdInstancesMsg{instances: mockInstances}
 		}
@@ -2181,12 +2303,16 @@ func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.
 			return errMsg{fmt.Errorf("client not initialized")}
 		}
 
-		// Attempt to fetch real CRD instances, fallback to mock data on error
+		// Attempt to fetch real CRD instances
 		instanceList, err := a.client.ListCustomResources(clusterID, group, version, resource, "")
 		if err != nil {
-			// API failed - fallback to mock data for development
-			mockInstances := a.getMockCRDInstances(group, resource)
-			return crdInstancesMsg{instances: mockInstances}
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch CRD instances from API: %w\n\n"+
+					"Context: clusterID=%s, group=%s, version=%s, resource=%s\n"+
+					"Hint: Check CRD version and API connectivity", err, clusterID, group, version, resource)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch CRD instances: %w", err)}
 		}
 
 		return crdInstancesMsg{instances: instanceList.Items}
@@ -2359,8 +2485,17 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 // fetchClusters fetches clusters with fallback to mock data
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
+		// Try data source first (for bundle mode or live mode)
+		if a.dataSource != nil {
+			clusters, err := a.dataSource.GetClusters()
+			if err == nil {
+				return clustersMsg{clusters: clusters}
+			}
+			// Log error but continue to try other sources
+		}
+
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockClusters := a.getMockClusters()
 			return clustersMsg{clusters: mockClusters}
 		}
@@ -2371,9 +2506,13 @@ func (a *App) fetchClusters() tea.Cmd {
 
 		collection, err := a.client.ListClusters()
 		if err != nil {
-			// API failed - fallback to mock data for development
-			mockClusters := a.getMockClusters()
-			return clustersMsg{clusters: mockClusters}
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch clusters from API: %w\n\n"+
+					"Context: Rancher API connection\n"+
+					"Hint: Check RANCHER_URL and RANCHER_TOKEN environment variables", err)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch clusters: %w", err)}
 		}
 
 		return clustersMsg{clusters: collection.Data}
@@ -2383,8 +2522,17 @@ func (a *App) fetchClusters() tea.Cmd {
 // fetchProjects fetches projects for a cluster with fallback to mock data
 func (a *App) fetchProjects(clusterID string) tea.Cmd {
 	return func() tea.Msg {
-		// If in offline mode, return mock data immediately
-		if a.offlineMode {
+		// Try data source first (for bundle mode or live mode)
+		if a.dataSource != nil {
+			projects, namespaceCounts, err := a.dataSource.GetProjects(clusterID)
+			if err == nil {
+				return projectsMsg{projects: projects, namespaceCounts: namespaceCounts}
+			}
+			// Log error but continue to try other sources
+		}
+
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
 			mockProjects := a.getMockProjects(clusterID)
 			mockNamespaceCounts := map[string]int{
 				"demo-project": 3,
@@ -2399,13 +2547,13 @@ func (a *App) fetchProjects(clusterID string) tea.Cmd {
 
 		collection, err := a.client.ListProjects(clusterID)
 		if err != nil {
-			// API failed - fallback to mock data
-			mockProjects := a.getMockProjects(clusterID)
-			mockNamespaceCounts := map[string]int{
-				"demo-project": 3,
-				"system":       5,
+			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch projects from API: %w\n\n"+
+					"Context: clusterID=%s\n"+
+					"Hint: Check cluster ID and API connectivity", err, clusterID)}
 			}
-			return projectsMsg{projects: mockProjects, namespaceCounts: mockNamespaceCounts}
+			return errMsg{fmt.Errorf("failed to fetch projects: %w", err)}
 		}
 
 		// Count namespaces per project by fetching all namespaces
@@ -2445,12 +2593,23 @@ func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 				a.updateNamespaceCounts(namespaces)
 				return namespacesMsg{namespaces: namespaces}
 			}
+			// FIX BUG #12: NO SILENT FALLBACK - return error with context
+			if a.config.Verbose {
+				return errMsg{fmt.Errorf("failed to fetch namespaces from data source: %w\n\n"+
+					"Context: clusterID=%s, projectID=%s\n"+
+					"Hint: Check bundle data or API connectivity", err, clusterID, projectID)}
+			}
+			return errMsg{fmt.Errorf("failed to fetch namespaces: %w", err)}
 		}
 
-		// Fallback to mock data only on error
-		mockNamespaces := a.getMockNamespaces(clusterID, projectID)
-		a.updateNamespaceCounts(mockNamespaces)
-		return namespacesMsg{namespaces: mockNamespaces}
+		// Only use mock data if explicitly in mock mode
+		if a.offlineMode && a.config.MockMode {
+			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
+			a.updateNamespaceCounts(mockNamespaces)
+			return namespacesMsg{namespaces: mockNamespaces}
+		}
+
+		return errMsg{fmt.Errorf("no data source available")}
 	}
 }
 
@@ -2572,9 +2731,9 @@ func (a *App) performSearch() {
 // tickTail returns a command to refresh logs in tail mode
 func (a *App) tickTail() tea.Cmd {
 	return tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
-		// For now, just return a tick message
-		// In production, this would fetch new logs
-		return nil
+		// FIX BUG #15 REGRESSION: Return tailTickMsg to continue tick chain
+		// Cannot invoke cmd() here - breaks event loop
+		return tailTickMsg{}
 	})
 }
 
@@ -2613,6 +2772,7 @@ func (a *App) applyLogFilter() {
 
 // getVisibleLogs returns the currently visible logs based on active filters
 // FIX 3: Helper function to get logs respecting current filter state
+// Supports both bracketed format ([ERROR], [WARN]) and K8s format (E1120, W1120)
 func (a *App) getVisibleLogs() []string {
 	if a.filterLevel == "" {
 		// No filter - return all logs
@@ -2622,29 +2782,141 @@ func (a *App) getVisibleLogs() []string {
 	// Filter logs by level
 	var filteredLogs []string
 	for _, line := range a.logs {
-		lineUpper := strings.ToUpper(line)
+		include := false
 
 		switch a.filterLevel {
 		case "ERROR":
-			// Show only ERROR logs
-			if strings.Contains(lineUpper, "[ERROR]") {
-				filteredLogs = append(filteredLogs, line)
-			}
+			// Show only ERROR logs - support both formats
+			include = isErrorLog(line)
 		case "WARN":
-			// Show WARN and ERROR logs
-			if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, "[ERROR]") {
-				filteredLogs = append(filteredLogs, line)
-			}
+			// Show WARN and ERROR logs - support both formats
+			include = isWarnLog(line) || isErrorLog(line)
+		}
+
+		if include {
+			filteredLogs = append(filteredLogs, line)
 		}
 	}
 
 	return filteredLogs
 }
 
+// isErrorLog detects ERROR level logs in both bracketed and K8s formats
+func isErrorLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [ERROR]
+	if strings.Contains(lineUpper, "[ERROR]") {
+		return true
+	}
+	// K8s format: E1120, E0102, etc. (E followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'E' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=error format
+	if strings.Contains(lineUpper, "LEVEL=ERROR") {
+		return true
+	}
+	return false
+}
+
+// isWarnLog detects WARN level logs in both bracketed and K8s formats
+func isWarnLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [WARN]
+	if strings.Contains(lineUpper, "[WARN]") {
+		return true
+	}
+	// K8s format: W1120, W0102, etc. (W followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'W' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=warn/warning format
+	if strings.Contains(lineUpper, "LEVEL=WARN") {
+		return true
+	}
+	return false
+}
+
+// isInfoLog detects INFO level logs in both bracketed and K8s formats
+func isInfoLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [INFO]
+	if strings.Contains(lineUpper, "[INFO]") {
+		return true
+	}
+	// K8s format: I1120, I0102, etc. (I followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'I' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=info format
+	if strings.Contains(lineUpper, "LEVEL=INFO") {
+		return true
+	}
+	return false
+}
+
+// isDebugLog detects DEBUG level logs in both bracketed and K8s formats
+func isDebugLog(line string) bool {
+	lineUpper := strings.ToUpper(line)
+	// Bracketed format: [DEBUG]
+	if strings.Contains(lineUpper, "[DEBUG]") {
+		return true
+	}
+	// K8s format: D1120, D0102, etc. (D followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'D' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				// Check if followed by space or colon
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+	// Also check for level=debug format
+	if strings.Contains(lineUpper, "LEVEL=DEBUG") {
+		return true
+	}
+	return false
+}
+
+// isDigit checks if a byte is an ASCII digit
+func isDigit(b byte) bool {
+	return b >= '0' && b <= '9'
+}
+
 // Messages
 type clustersMsg struct {
 	clusters []rancher.Cluster
 }
+
+// tailTickMsg is sent periodically when tail mode is active
+type tailTickMsg struct{}
 
 type projectsMsg struct {
 	projects        []rancher.Project
@@ -2691,9 +2963,8 @@ type logsMsg struct {
 }
 
 // colorizeLogLine applies color styling based on log level
+// Supports both bracketed format ([ERROR], [WARN]) and K8s format (E1120, W1120)
 func (a *App) colorizeLogLine(line string, lineIndex int) string {
-	lineUpper := strings.ToUpper(line)
-
 	// Check if this is the current search match
 	isCurrentMatch := false
 	if len(a.searchMatches) > 0 && a.currentMatch >= 0 && a.currentMatch < len(a.searchMatches) {
@@ -2707,17 +2978,17 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 		return searchMatchStyle.Render(line)
 	}
 
-	// Otherwise, colorize by log level
-	if strings.Contains(lineUpper, "[ERROR]") || strings.Contains(lineUpper, " E ") {
+	// Otherwise, colorize by log level using the same detection functions as filtering
+	if isErrorLog(line) {
 		return logErrorStyle.Render(line)
 	}
-	if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, " W ") {
+	if isWarnLog(line) {
 		return logWarnStyle.Render(line)
 	}
-	if strings.Contains(lineUpper, "[INFO]") || strings.Contains(lineUpper, " I ") {
+	if isInfoLog(line) {
 		return logInfoStyle.Render(line)
 	}
-	if strings.Contains(lineUpper, "[DEBUG]") || strings.Contains(lineUpper, " D ") {
+	if isDebugLog(line) {
 		return logDebugStyle.Render(line)
 	}
 

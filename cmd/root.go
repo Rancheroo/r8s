@@ -26,7 +26,8 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "r8s",
+	Use:   "r8s [bundle-path]",
+	Args:  cobra.MaximumNArgs(1), // Allow 0 or 1 positional argument (bundle path)
 	Short: "r8s - Rancher Cluster Navigator & Log Analyzer",
 	Long: `r8s (Rancheroos) - A TUI for browsing Rancher-managed Kubernetes clusters and analyzing log bundles.
 
@@ -38,26 +39,23 @@ FEATURES:
   • Demo mode with mock data for testing and screenshots
 
 CONFIGURATION:
-  r8s uses a config file at ~/.config/r8s/config.yaml or via environment variables:
+  r8s uses a config file at ~/.r8s/config.yaml or via environment variables:
     export RANCHER_URL=https://rancher.example.com
     export RANCHER_TOKEN=token-xxxxx:yyyyyyyy
 
 EXAMPLES:
   # Launch TUI with live Rancher connection
-  r8s tui
+  r8s
+
+  # Analyze an extracted bundle (auto-launches TUI)
+  r8s ./extracted-bundle-folder/
 
   # Launch TUI with demo/mock data (no API required)
-  r8s tui --mockdata
-
-  # Analyze a log bundle offline
-  r8s bundle import --path=w-guard-wg-cp-svtk6-lqtxw.tar.gz
-
-  # Show bundle summary without launching TUI
-  r8s bundle info --path=logs.tar.gz
+  r8s --mockdata
 
   # Set up configuration
   r8s config init`,
-	// No RunE - shows help by default when run without subcommands
+	RunE: runRoot,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -73,6 +71,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose error output for debugging")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
+
+	// Root command flags (for direct TUI launch)
+	rootCmd.Flags().BoolVar(&mockData, "mockdata", false, "enable demo mode with mock data (no API required)")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
@@ -110,4 +111,17 @@ func SetVersionInfo(version, commit, date string) {
 	versionInfo.Version = version
 	versionInfo.Commit = commit
 	versionInfo.Date = date
+}
+
+// runRoot handles execution of the root command with optional bundle path argument
+func runRoot(cmd *cobra.Command, args []string) error {
+	// Check if a positional argument was provided (bundle path)
+	if len(args) > 0 {
+		bundlePath := args[0]
+		// Auto-detect bundle and launch TUI directly
+		tuiBundlePath = bundlePath
+	}
+
+	// Delegate to TUI command
+	return runTUI(cmd, args)
 }

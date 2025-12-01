@@ -311,3 +311,54 @@ func (c *Client) GetServiceDetails(clusterID, namespace, name string) (*Service,
 	}
 	return &result, nil
 }
+
+// GetPodLogs returns logs for a specific pod container (via K8s proxy)
+func (c *Client) GetPodLogs(clusterID, namespace, podName, container string, previous bool, tailLines int) (string, error) {
+	// Build the K8s proxy path
+	path := "/k8s/clusters/" + clusterID + "/api/v1/namespaces/" + namespace + "/pods/" + podName + "/log"
+
+	// Add query parameters
+	params := []string{}
+	if container != "" {
+		params = append(params, "container="+container)
+	}
+	if previous {
+		params = append(params, "previous=true")
+	}
+	if tailLines > 0 {
+		params = append(params, fmt.Sprintf("tailLines=%d", tailLines))
+	}
+
+	if len(params) > 0 {
+		path += "?" + strings.Join(params, "&")
+	}
+
+	// Make the request
+	url := c.rootURL + path
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	// Don't set Accept header - let server return default format (plain text for logs)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	// Read log content as plain text
+	logContent, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read logs: %w", err)
+	}
+
+	return string(logContent), nil
+}
