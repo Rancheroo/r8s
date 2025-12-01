@@ -103,21 +103,22 @@ bundle-name/
 
 ## Supported Formats
 
-### Accepted File Types
+### Accepted Format
 
-| Format | Extension | Notes |
-|--------|-----------|-------|
-| **Extracted folder** | N/A | **Recommended** - no size limits |
-| Gzipped tarball | `.tar.gz` | Most common, 50MB default limit |
-| Tarball | `.tar` | Supported |
-| Gzipped | `.tgz` | Supported |
+R8s **only** supports extracted bundle folders. Tarball (.tar.gz) support has been removed for simplicity.
 
-### Not Supported
+| Format | Extension | Support |
+|--------|-----------|---------|
+| **Extracted folder** | N/A | ✅ Supported |
+| Gzipped tarball | `.tar.gz` | ❌ Not supported - extract first |
+| Tarball | `.tar` | ❌ Not supported - extract first |
+| Other archives | `.zip`, `.7z`, etc. | ❌ Not supported - extract first |
 
-- `.zip` archives (use `.tar.gz` instead)
-- `.7z` archives
-- Encrypted archives
-- Split/multi-volume archives
+**Extract bundles before analysis:**
+```bash
+tar -xzf support-bundle.tar.gz
+r8s ./support-bundle-folder/
+```
 
 ---
 
@@ -212,13 +213,12 @@ Systemd journal exports for specific services.
 
 ### Parse Sequence
 
-1. **Extract** (if .tar.gz) → temporary directory
-2. **Validate** bundle structure (check for `rke2/` directory)
-3. **Parse manifest** → extract node name, versions, timestamps
-4. **Inventory pods** → parse `rke2/kubectl/pods`
-5. **Inventory logs** → scan `rke2/podlogs/` directory
-6. **Parse resources** → load deployments, services, CRDs, namespaces
-7. **Ready** → bundle loaded, TUI can navigate
+1. **Validate** bundle structure (check for `rke2/` directory)
+2. **Parse manifest** → extract node name, versions, timestamps
+3. **Inventory pods** → parse `rke2/kubectl/pods`
+4. **Inventory logs** → scan `rke2/podlogs/` directory
+5. **Parse resources** → load deployments, services, CRDs, namespaces
+6. **Ready** → bundle loaded, TUI can navigate
 
 ### Data Extraction
 
@@ -249,41 +249,27 @@ See [`internal/bundle/safeget.go`](../../internal/bundle/safeget.go) for impleme
 
 ---
 
-## Size Limits
+## Bundle Size Considerations
 
-### Default Limits
+### No Size Limits
 
-| Type | Limit | Override |
-|------|-------|----------|
-| Extracted folder | Unlimited | N/A |
-| .tar.gz file | 50MB | `--limit=<MB>` flag |
-| .tar file | 50MB | `--limit=<MB>` flag |
+Since r8s only accepts extracted folders, there are **no size limits** during analysis.
 
-### Why Size Limits?
+However, consider:
+- **Memory usage** - Very large bundles (1GB+) may consume significant RAM
+- **Parse time** - Bundles with thousands of pods may take 10-30 seconds to load
+- **Disk space** - Ensure sufficient space before extracting large tarballs
 
-1. **Memory safety** - Large bundles can consume significant RAM during extraction
-2. **Performance** - Parsing 100MB+ of YAML is slow
-3. **UX** - Prevent accidental processing of wrong files
-
-### Overriding Limits
+### Performance Tips
 
 ```bash
-# Increase limit to 100MB
-r8s tui --bundle=large-bundle.tar.gz --limit=100
+# Extract to fast local disk (not NFS/network storage)
+tar -xzf huge-bundle.tar.gz -C /tmp/
+r8s /tmp/huge-bundle/
 
-# Unlimited (use with caution!)
-r8s bundle info huge-bundle.tar.gz --limit=0
-
-# Recommended: Extract first, then analyze
-tar -xzf huge-bundle.tar.gz
-r8s tui --bundle=./huge-bundle/
-```
-
-### What Happens When Exceeded?
-
-```
-Error: bundle size (75.4 MB) exceeds limit (50.0 MB)
-Solution: Use --limit=80 to increase (e.g. 'r8s tui --bundle=bundle.tar.gz --limit=80')
+# Check bundle size before extraction
+tar -tzf bundle.tar.gz | wc -l  # Count files
+ls -lh bundle.tar.gz              # Check tarball size
 ```
 
 ---
@@ -375,9 +361,14 @@ r8s tui --bundle=./bundle/ --verbose
 - Use `--verbose` to see details of skipped entries
 - If many entries skipped, bundle may be corrupted
 
-### Size Limit Issues
+### Large Bundle Performance
 
-See [Size Limits](#size-limits) section above.
+**Symptom:** Bundle takes >30 seconds to load
+
+**Solutions:**
+- Extract to faster disk (SSD vs HDD)
+- Use verbose mode to see progress: `r8s --verbose ./bundle/`
+- Consider if bundle is abnormally large (may indicate collection issue)
 
 ---
 

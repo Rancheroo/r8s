@@ -8,7 +8,6 @@ Complete command-line reference for r8s (Rancheroos).
 - [Commands](#commands)
   - [r8s (root)](#r8s-root)
   - [r8s tui](#r8s-tui)
-  - [r8s bundle](#r8s-bundle)
   - [r8s config](#r8s-config)
   - [r8s version](#r8s-version)
 - [Environment Variables](#environment-variables)
@@ -17,7 +16,7 @@ Complete command-line reference for r8s (Rancheroos).
 
 ---
 
-## Global flags
+## Global Flags
 
 These flags work with any r8s command:
 
@@ -68,15 +67,17 @@ r8s --namespace=kube-system
 r8s --mockdata
 ```
 
-**Bundle mode (simplified!):**
+**Bundle mode:**
 ```bash
-# Just point at the bundle - auto-detects and launches TUI
+# Extract bundle first
+tar -xzf support-bundle.tar.gz
+
+# Then analyze extracted folder
 r8s ./extracted-bundle-folder/
-r8s ./support-bundle.tar.gz
 
 # Works with any path format
 r8s ./example-log-bundle/w-guard-wg-cp-xyz/
-r8s /tmp/support-bundles/bundle.tar.gz
+r8s /tmp/support-bundles/bundle-001/
 ```
 
 **Why use the root command?**
@@ -102,7 +103,7 @@ r8s tui [flags]
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--mockdata` | `false` | Enable demo mode with mock data (no API required) |
-| `--bundle` | | Path to log bundle (folder or .tar.gz file) |
+| `--bundle` | | Path to extracted log bundle folder |
 
 ### Examples
 
@@ -127,12 +128,12 @@ r8s tui --insecure
 r8s tui --mockdata
 ```
 
-**Bundle mode (recommended workflow):**
+**Bundle mode:**
 ```bash
 # Extract bundle first
 tar -xzf support-bundle.tar.gz
 
-# Analyze extracted folder (no size limits)
+# Analyze extracted folder
 r8s tui --bundle=./w-guard-wg-cp-xyz/
 
 # Works with relative paths
@@ -140,15 +141,6 @@ r8s tui --bundle=./example-log-bundle/extracted-folder/
 
 # Works with absolute paths
 r8s tui --bundle=/tmp/support-bundles/bundle-001/
-```
-
-**Bundle mode (.tar.gz):**
-```bash
-# Analyze .tar.gz directly (50MB limit applies)
-r8s tui --bundle=./support-bundle.tar.gz
-
-# Increase size limit for larger bundles
-r8s tui --bundle=./large-bundle.tar.gz --limit=100
 ```
 
 ### Keyboard Shortcuts
@@ -180,89 +172,6 @@ r8s tui --bundle=./large-bundle.tar.gz --limit=100
 - `Ctrl+W` - Filter WARN logs
 - `Ctrl+A` - Show all logs
 - `t` - Toggle tail mode
-
----
-
-## r8s bundle
-
-View support bundle information without launching the TUI.
-
-**Note:** For interactive analysis, use the simpler `r8s ./bundle-path` command.
-
-### Synopsis
-```bash
-r8s bundle info [path] [flags]
-```
-
-### Subcommands
-
-#### bundle info
-
-Display bundle metadata and statistics (does NOT launch TUI).
-
-```bash
-r8s bundle info [path] [flags]
-```
-
-**Flags:**
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `--limit` | `-l` | `50` | Max bundle size in MB (0 = unlimited) |
-
-**Examples:**
-```bash
-# View info for extracted folder
-r8s bundle info ./w-guard-wg-cp-xyz/
-
-# View info for .tar.gz (applies 50MB limit)
-r8s bundle info bundle.tar.gz
-
-# Increase size limit
-r8s bundle info large-bundle.tar.gz --limit=100
-
-# Unlimited size
-r8s bundle info huge-bundle.tar.gz --limit=0
-
-# Verbose output with debugging info
-r8s bundle info bundle.tar.gz --verbose
-```
-
-**When to use `bundle info`:**
-- Quick validation in CI/CD pipelines
-- Checking bundle contents before analysis
-- Viewing bundle statistics without TUI
-
-**For interactive analysis, use:**
-```bash
-r8s ./bundle-path  # Simpler!
-```
-
-### Bundle Path Formats
-
-R8s accepts bundles in multiple formats:
-
-| Format | Example | Notes |
-|--------|---------|-------|
-| Extracted folder | `./w-guard-wg-cp-xyz/` | **Recommended** - no size limits |
-| Relative .tar.gz | `./bundle.tar.gz` | 50MB limit (configurable) |
-| Absolute .tar.gz | `/tmp/bundles/bundle.tar.gz` | 50MB limit (configurable) |
-| Glob patterns | `./bundles/*.tar.gz` | First match used |
-
-### Common Bundle Locations
-
-```bash
-# RKE2 support bundles (typically in /tmp)
-/tmp/rke2-support-bundle-*.tar.gz
-
-# Downloaded bundles
-~/Downloads/cluster-support-bundle.tar.gz
-
-# CI/CD artifacts
-/var/lib/jenkins/artifacts/bundles/
-
-# Extracted bundles
-/tmp/extracted-bundles/w-guard-wg-cp-*/
-```
 
 ---
 
@@ -485,31 +394,21 @@ r8s --profile=staging
 r8s --profile=dev
 ```
 
-### Troubleshooting a Cluster (Simplified!)
+### Troubleshooting a Cluster
 
 ```bash
 # 1. Get support bundle from RKE2 node
 ssh node.example.com
 sudo rke2 support-bundle
 
-# 2. Download and analyze - one command!
+# 2. Download bundle
 scp node.example.com:/tmp/rke2-support-bundle-*.tar.gz ./
-r8s ./rke2-support-bundle-*.tar.gz
 
-# Or extract first if preferred
+# 3. Extract bundle
 tar -xzf rke2-support-bundle-*.tar.gz
+
+# 4. Analyze
 r8s ./rke2-support-bundle-*/
-```
-
-### CI/CD Integration
-
-```bash
-# Validate bundle in CI pipeline
-r8s bundle info ./artifacts/bundle.tar.gz --verbose
-
-# Exit codes:
-# 0 = success
-# 1 = error
 ```
 
 ### Demo/Screenshot Mode
@@ -542,12 +441,10 @@ r8s --help
 
 # Command-specific help
 r8s tui --help
-r8s bundle --help
 r8s config --help
 
 # Subcommand help
 r8s config set --help
-r8s bundle info --help
 ```
 
 ---

@@ -22,7 +22,7 @@ Before troubleshooting, gather this information:
 r8s version
 
 # Verbose mode
-r8s --verbose tui [your flags]
+r8s --verbose [your-bundle-path]
 
 # Config validation
 r8s config validate
@@ -48,10 +48,10 @@ Error: TUI error: could not open a new TTY: open /dev/tty: no such device or add
 **Solutions:**
 ```bash
 # SSH: Force pseudo-TTY allocation
-ssh -t user@host r8s tui
+ssh -t user@host r8s ./bundle-folder/
 
-# CI/CD: Use bundle info instead (no TUI)
-r8s bundle info ./bundle.tar.gz
+# CI/CD: r8s is not designed for automation
+# Use kubectl/k9s/other tools for automation
 
 # Check if you have a TTY
 tty
@@ -61,27 +61,28 @@ tty
 
 ---
 
-### 2. "bundle size exceeds limit"
+### 2. "not a directory"
 
 **Error message:**
 ```
-Error: bundle size (75.4 MB) exceeds limit (50.0 MB)
-Solution: Use --limit=80 to increase (e.g. 'r8s tui --bundle=bundle.tar.gz --limit=80')
+Error: ./bundle.tar.gz is not a directory
+
+r8s only supports extracted bundle folders.
+
+Extract the bundle first:
+  tar -xzf bundle.tar.gz
+  r8s ./extracted-folder/
 ```
 
-**Cause:** Default 50MB size limit for .tar.gz files.
+**Cause:** Trying to analyze a .tar.gz file directly (no longer supported).
 
-**Solutions:**
+**Solution:**
 ```bash
-# Option 1: Increase limit
-r8s tui --bundle=bundle.tar.gz --limit=100
-
-# Option 2: Extract first (recommended, no limits)
+# Extract the bundle first
 tar -xzf bundle.tar.gz
-r8s tui --bundle=./extracted-folder/
 
-# Option 3: Unlimited (use with caution)
-r8s tui --bundle=bundle.tar.gz --limit=0
+# Then analyze the extracted folder
+r8s ./extracted-folder/
 ```
 
 ---
@@ -122,7 +123,7 @@ Error: failed to connect to Rancher: dial tcp 192.168.1.100:443: connection refu
 
 4. **Use verbose mode:**
    ```bash
-   r8s --verbose tui
+   r8s --verbose
    # Shows detailed connection attempts
    ```
 
@@ -176,13 +177,13 @@ Missing: rke2/ directory
 **Cause:** Pointing to wrong directory or unsupported bundle type.
 
 **Solutions:**
-1. **Check directory:**
+1. **Check directory structure:**
    ```bash
-   # Wrong: pointing to parent
-   r8s tui --bundle=./bundles/
+   # Wrong: pointing to parent folder
+   r8s ./bundles/
    
    # Right: pointing to extracted bundle
-   r8s tui --bundle=./bundles/w-guard-wg-cp-xyz/
+   r8s ./bundles/w-guard-wg-cp-xyz/
    ```
 
 2. **Verify structure:**
@@ -194,12 +195,16 @@ Missing: rke2/ directory
    # Should see: kubectl/, podlogs/, etc.
    ```
 
-3. **Extract if needed:**
+3. **Make sure bundle is extracted:**
    ```bash
+   # List tarball contents first
    tar -tzf bundle.tar.gz | head -20
-   # Shows bundle contents
    
+   # Extract if needed
    tar -xzf bundle.tar.gz
+   
+   # Analyze extracted folder
+   r8s ./extracted-folder/
    ```
 
 ---
@@ -225,7 +230,7 @@ panic: interface conversion: interface {} is nil, not string
 
 2. Use verbose mode:
    ```bash
-   r8s --verbose tui --bundle=./bundle/
+   r8s --verbose ./bundle/
    ```
 
 3. Report bug if still occurring (should not happen!)
@@ -251,12 +256,12 @@ Error: failed to load config: open /home/user/.r8s/config.yaml: no such file or 
    ```bash
    export RANCHER_URL=https://rancher.example.com
    export RANCHER_TOKEN=token-xxxxx:yyyyyyyy
-   r8s tui
+   r8s
    ```
 
 3. **Or use demo mode (no config needed):**
    ```bash
-   r8s tui --mockdata
+   r8s --mockdata
    ```
 
 ---
@@ -274,7 +279,7 @@ Error: x509: certificate signed by unknown authority
 1. **Development environment (self-signed cert):**
    ```bash
    # Option 1: Use insecure flag
-   r8s tui --insecure
+   r8s --insecure
    
    # Option 2: Set in config
    r8s config set insecure true
@@ -324,13 +329,13 @@ Error: x509: certificate signed by unknown authority
 
 2. **Malformed YAML:**
    ```bash
-   r8s --verbose tui --bundle=./bundle/
+   r8s --verbose ./bundle/
    # Shows parse errors
    ```
 
 3. **Wrong directory:**
    ```bash
-   # Make sure you're pointing to the extracted folder
+   # Make sure you're pointing to the extracted bundle folder
    find . -type d -name "rke2"
    ```
 
@@ -341,19 +346,45 @@ Error: x509: certificate signed by unknown authority
 **Symptom:** Bundle takes >10 seconds to load.
 
 **Causes:**
-- Very large bundle (100MB+)
-- Thousands of pods
+- Very large bundle (hundreds of MBs extracted)
+- Thousands of pods/resources
 - Slow disk (networked storage)
 
 **Solutions:**
 ```bash
-# Use extracted folder (faster than .tar.gz)
-tar -xzf bundle.tar.gz
-r8s tui --bundle=./extracted/
+# Extract to faster disk if possible
+tar -xzf bundle.tar.gz -C /tmp/
+r8s /tmp/extracted-bundle/
 
-# Reduce bundle size by filtering
-# (when generating bundle on cluster)
+# Use local SSD instead of networked storage
+# (extraction is one-time cost)
 ```
+
+---
+
+### Bundle path not found
+
+**Error:**
+```
+Error: bundle path not found: ./my-bundle/
+```
+
+**Solutions:**
+1. **Check path is correct:**
+   ```bash
+   ls -la ./my-bundle/
+   # Does it exist?
+   
+   # Use absolute path if needed
+   r8s /full/path/to/bundle/
+   ```
+
+2. **Check bundle is extracted:**
+   ```bash
+   # If you have bundle.tar.gz, extract it first
+   tar -xzf bundle.tar.gz
+   r8s ./extracted-folder/
+   ```
 
 ---
 
@@ -380,7 +411,7 @@ Error: profile 'production' not found
 
 3. **Use default profile:**
    ```bash
-   r8s tui
+   r8s
    # Uses currentProfile from config
    ```
 
@@ -442,7 +473,7 @@ Error: failed to parse config file: yaml: line 5: mapping values are not allowed
 
 3. **Use verbose mode:**
    ```bash
-   r8s --verbose tui
+   r8s --verbose ./bundle/
    ```
 
 ---
@@ -494,7 +525,7 @@ Error: failed to parse config file: yaml: line 5: mapping values are not allowed
 Always use `--verbose` when reporting issues:
 
 ```bash
-r8s --verbose tui --bundle=./bundle/ 2>&1 | tee debug.log
+r8s --verbose ./bundle/ 2>&1 | tee debug.log
 ```
 
 This shows:
@@ -517,18 +548,24 @@ When asking for help, include:
 2. **Command used:**
    ```bash
    # Exact command that failed
-   r8s tui --bundle=./my-bundle/
+   r8s ./my-bundle/
    ```
 
 3. **Verbose output:**
    ```bash
-   r8s --verbose tui --bundle=./my-bundle/ 2>&1
+   r8s --verbose ./my-bundle/ 2>&1
    ```
 
 4. **Environment:**
    - OS: `uname -a`
    - Go version: `go version`
    - Terminal: `echo $TERM`
+
+5. **Bundle structure (if bundle issue):**
+   ```bash
+   ls -la bundle-folder/
+   ls -la bundle-folder/rke2/
+   ```
 
 ---
 
@@ -566,15 +603,12 @@ These are expected behavior, not bugs:
    - Only shows snapshot from collection time
    - No live updates
    - Describe limited to static YAML
-
-4. **Size limits:**
-   - 50MB default for .tar.gz
-   - No limit for extracted folders
-
+4. **Directory-only bundles:**
+   - Bundles must be extracted first
+   - No automatic tarball extraction
 5. **TTY required:**
    - Cannot run without terminal
    - Not suitable for cronjobs/automation
-   - Use `bundle info` instead
 
 ---
 
@@ -594,7 +628,7 @@ These are expected behavior, not bugs:
 3. **Try demo mode:**
    ```bash
    # Test r8s without any configuration
-   r8s tui --mockdata
+   r8s --mockdata
    
    # If this works, issue is with config/bundle
    ```
