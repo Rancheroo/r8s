@@ -60,6 +60,77 @@ go run main.go
 
 ---
 
+## Version Management
+
+r8s uses **git tags** for version management. The version is automatically detected during build and embedded into the binary.
+
+### How It Works
+
+The `Makefile` automatically detects the version from git tags:
+
+```makefile
+VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+```
+
+This produces versions like:
+- `v0.1.0` - Clean tagged version
+- `v0.1.0-5-gabcdef` - 5 commits after v0.1.0 tag
+- `v0.1.0-dirty` - Uncommitted changes present
+- `dev` - No git repository or no tags
+
+### Creating a New Release
+
+1. **Commit all changes**:
+   ```bash
+   git add .
+   git commit -m "feat: description of changes"
+   ```
+
+2. **Create a version tag**:
+   ```bash
+   git tag -a v0.2.0 -m "Release v0.2.0 - Description of changes"
+   ```
+
+3. **Build with the new version**:
+   ```bash
+   make build
+   ./bin/r8s version
+   # Output: r8s v0.2.0 (commit: abc123, built: 2025-12-01T...)
+   ```
+
+4. **Push the tag to remote** (optional):
+   ```bash
+   git push origin v0.2.0        # Push specific tag
+   git push origin --tags        # Push all tags
+   ```
+
+### Version Override
+
+You can manually override the version during development:
+
+```bash
+make build VERSION=0.2.0-dev
+```
+
+### Semantic Versioning
+
+We follow [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** (v1.0.0): Breaking API changes
+- **MINOR** (v0.2.0): New features, backwards compatible
+- **PATCH** (v0.1.1): Bug fixes, backwards compatible
+
+### Pre-release Versions
+
+For pre-release versions, use suffixes:
+
+```bash
+git tag -a v0.2.0-beta -m "Beta release for v0.2.0"
+git tag -a v0.2.0-rc1 -m "Release candidate 1 for v0.2.0"
+```
+
+---
+
 ## Development Environment
 
 ### Recommended IDE Setup
