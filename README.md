@@ -47,10 +47,12 @@ tar -xzf example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09.tar.gz
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
 | `↑`/`↓` or `j`/`k` | Navigate | `Enter` | Select |
-| `Esc` | Back | `q` | Quit |
+| `Esc` or `b` | Back | `q` | Quit |
 | `d` | Describe (JSON) | `l` | View logs |
 | `1`/`2`/`3` | Pods/Deploys/Services | `r` | Refresh |
 | `/` | Search logs | `?` | Help |
+| `g` | Jump to top (logs) | `G` | Jump to bottom (logs) |
+| `w` | Toggle wrap (logs) | | |
 
 ---
 

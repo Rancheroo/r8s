@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Released for Testing]
 
+## [0.3.1] - 2025-12-03
+
+### Added
+- **Vim-style log navigation**: `g` key jumps to first log line, `G` jumps to last line (instant even on 5M-line logs)
+- **Universal back navigation**: `b` key works everywhere alongside `Esc` for intuitive navigation
+- **Word wrap toggle**: `w` key toggles soft word-wrap in log view with "Wrap:On" indicator
+- **Enriched bundle pod details**: Bundle mode now shows full pod metadata from kubectl output
+  - Pod status (Ready, Status, Age, IP, Restarts, ReadinessGates)
+  - Kubernetes events attached to pods (17 events loaded from example bundle)
+  - 93 pods with full kubectl data vs basic 86 pod inventory
+- **Events parsing**: ParseEvents() function extracts pod events from kubectl output
+
+### Changed
+- Log view horizontal scrolling improved with word wrap support
+- Bundle pod describe now shows data comparable to live mode
+- Help screen updated with new keyboard shortcuts
+
+### User Experience
+- Log navigation feels instant and responsive with vim muscle memory
+- Long log lines are now readable with toggleable word wrap
+- Back navigation is more intuitive with `b` key option
+- Bundle mode provides richer pod context for troubleshooting
+
 ## [0.3.0] - 2025-12-01
 
 ### Fixed
