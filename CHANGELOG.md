@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.2] - 2025-12-03
 
+### Fixed
+- **Describe function in Live mode**: Fixed pod/deployment/service describe breaking in Live mode
+  - Root cause: describe functions were calling `GetPods("")` which fails without projectID in Live mode
+  - Solution: Use proper `DataSource.DescribePod/Deployment/Service()` interface methods
+  - All three describe functions now work correctly in Live, Bundle, and Demo modes
+  - Removed mock data fallbacks in favor of proper datasource abstraction
+
 ### Refactored
 - **DataSource architecture**: Unified data layer with clean interface abstraction
   - New `internal/datasource/` package with `DataSource` interface

@@ -1610,84 +1610,23 @@ func (a *App) handleDescribe() tea.Cmd {
 // describePod fetches detailed pod information
 func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 	return func() tea.Msg {
-		// Get the pod from datasource (has enriched fields)
-		pods, err := a.dataSource.GetPods("", namespace)
+		// Use DataSource interface for describe - works in all modes
+		data, err := a.dataSource.DescribePod(clusterID, namespace, name)
 		if err != nil {
-			return errMsg{fmt.Errorf("failed to get pod: %w", err)}
+			return errMsg{fmt.Errorf("failed to describe pod: %w", err)}
 		}
 
-		// Find the specific pod
-		var pod *rancher.Pod
-		for i := range pods {
-			if pods[i].Name == name {
-				pod = &pods[i]
-				break
-			}
-		}
-
-		if pod == nil {
-			return errMsg{fmt.Errorf("pod not found: %s/%s", namespace, name)}
-		}
-
-		// Build enriched describe view
-		var content strings.Builder
-
-		// Status Summary Section
-		content.WriteString("POD STATUS SUMMARY\n")
-		content.WriteString("==================\n\n")
-
-		if pod.KubectlReady != "" {
-			content.WriteString(fmt.Sprintf("Ready:       %s\n", pod.KubectlReady))
-		}
-		if pod.KubectlStatus != "" {
-			content.WriteString(fmt.Sprintf("Status:      %s\n", pod.KubectlStatus))
-		}
-		if pod.KubectlAge != "" {
-			content.WriteString(fmt.Sprintf("Age:         %s\n", pod.KubectlAge))
-		}
-		if pod.KubectlIP != "" || pod.PodIP != "" {
-			ip := pod.KubectlIP
-			if ip == "" {
-				ip = pod.PodIP
-			}
-			content.WriteString(fmt.Sprintf("IP:          %s\n", ip))
-		}
-		if pod.NodeName != "" {
-			content.WriteString(fmt.Sprintf("Node:        %s\n", pod.NodeName))
-		}
-		if pod.KubectlRestarts > 0 || pod.RestartCount > 0 {
-			restarts := pod.KubectlRestarts
-			if restarts == 0 {
-				restarts = pod.RestartCount
-			}
-			content.WriteString(fmt.Sprintf("Restarts:    %d\n", restarts))
-		}
-		if pod.KubectlReadinessGates != "" && pod.KubectlReadinessGates != "<none>" {
-			content.WriteString(fmt.Sprintf("Readiness:   %s\n", pod.KubectlReadinessGates))
-		}
-
-		// Events Section (if available)
-		if len(pod.KubectlEvents) > 0 {
-			content.WriteString("\n\nRECENT EVENTS\n")
-			content.WriteString("=============\n\n")
-			for _, event := range pod.KubectlEvents {
-				content.WriteString(fmt.Sprintf("• %s\n", event))
-			}
-		}
-
-		// Full Details Section (JSON)
-		content.WriteString("\n\nFULL DETAILS (JSON)\n")
-		content.WriteString("===================\n\n")
-
-		jsonBytes, err := json.MarshalIndent(pod, "", "  ")
+		// Format as JSON for display
+		jsonBytes, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			return errMsg{fmt.Errorf("failed to format pod details: %w", err)}
 		}
-		content.WriteString(string(jsonBytes))
+
+		content := fmt.Sprintf("Pod Details (JSON):\n\n%s", string(jsonBytes))
 
 		return describeMsg{
 			title:   fmt.Sprintf("Pod: %s/%s", namespace, name),
-			content: content.String(),
+			content: content,
 		}
 	}
 }
@@ -1695,42 +1634,13 @@ func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 // describeDeployment fetches detailed deployment information
 func (a *App) describeDeployment(clusterID, namespace, name string) tea.Cmd {
 	return func() tea.Msg {
-		// Create mock details for fallback
-		mockDetails := map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name":      name,
-				"namespace": namespace,
-			},
-			"spec": map[string]interface{}{
-				"replicas": 3,
-				"selector": map[string]interface{}{
-					"matchLabels": map[string]interface{}{
-						"app": name,
-					},
-				},
-			},
-			"status": map[string]interface{}{
-				"availableReplicas": 3,
-				"readyReplicas":     3,
-				"replicas":          3,
-			},
+		// Use DataSource interface for describe - works in all modes
+		data, err := a.dataSource.DescribeDeployment(clusterID, namespace, name)
+		if err != nil {
+			return errMsg{fmt.Errorf("failed to describe deployment: %w", err)}
 		}
 
-		var jsonData interface{} = mockDetails
-
-		// Try real API first, fallback to mock
-		// FIX BUG-002: Check if client exists before calling (prevents crash in mock mode)
-		if a.client != nil {
-			details, err := a.client.GetDeploymentDetails(clusterID, namespace, name)
-			if err == nil {
-				// Use real details if API succeeded
-				jsonData = details
-			}
-		}
-
-		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+		jsonBytes, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			return errMsg{fmt.Errorf("failed to format deployment details: %w", err)}
 		}
@@ -1747,43 +1657,13 @@ func (a *App) describeDeployment(clusterID, namespace, name string) tea.Cmd {
 // describeService fetches detailed service information
 func (a *App) describeService(clusterID, namespace, name string) tea.Cmd {
 	return func() tea.Msg {
-		// Create mock details for fallback
-		mockDetails := map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":      name,
-				"namespace": namespace,
-			},
-			"spec": map[string]interface{}{
-				"type":      "ClusterIP",
-				"clusterIP": "10.43.0.1",
-				"ports": []interface{}{
-					map[string]interface{}{
-						"port":       80,
-						"targetPort": 8080,
-						"protocol":   "TCP",
-					},
-				},
-			},
-			"status": map[string]interface{}{
-				"loadBalancer": map[string]interface{}{},
-			},
+		// Use DataSource interface for describe - works in all modes
+		data, err := a.dataSource.DescribeService(clusterID, namespace, name)
+		if err != nil {
+			return errMsg{fmt.Errorf("failed to describe service: %w", err)}
 		}
 
-		var jsonData interface{} = mockDetails
-
-		// Try real API first, fallback to mock
-		// FIX BUG-002: Check if client exists before calling (prevents crash in mock mode)
-		if a.client != nil {
-			details, err := a.client.GetServiceDetails(clusterID, namespace, name)
-			if err == nil {
-				// Use real details if API succeeded
-				jsonData = details
-			}
-		}
-
-		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+		jsonBytes, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			return errMsg{fmt.Errorf("failed to format service details: %w", err)}
 		}
