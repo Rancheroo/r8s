@@ -148,9 +148,18 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		// Bundle mode - load bundle as data source
 		ds, err := NewBundleDataSource(bundlePath, cfg.Verbose)
 		if err != nil {
+			// Provide helpful error message based on common issues
+			errorMsg := fmt.Sprintf("Failed to load log bundle from: %s\n\n%v\n\n", bundlePath, err)
+			errorMsg += "Common solutions:\n"
+			errorMsg += "  • Ensure the path points to an extracted bundle directory\n"
+			errorMsg += "  • Check that the bundle contains an rke2/ directory\n"
+			errorMsg += "  • Verify the bundle structure: kubectl/, podlogs/, etc.\n"
+			errorMsg += "  • See docs/BUNDLE-FORMAT.md for details\n"
+			errorMsg += "\nUse --verbose flag for more details"
+
 			return &App{
 				config: cfg,
-				error:  fmt.Sprintf("Failed to load bundle: %v", err),
+				error:  errorMsg,
 			}
 		}
 		dataSource = ds
