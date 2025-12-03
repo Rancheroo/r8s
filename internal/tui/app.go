@@ -119,6 +119,7 @@ type App struct {
 	tailMode         bool     // Auto-refresh tail mode
 	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
 	showPrevious     bool     // Show previous logs (for crashed containers)
+	wordWrap         bool     // Enable word wrapping for long log lines
 
 	// App state
 	offlineMode bool   // Flag to indicate running without live Rancher connection
@@ -508,6 +509,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Jump to last log line (vim muscle memory)
 			if a.currentView.viewType == ViewLogs && !a.searchMode {
 				a.logViewport.GotoBottom()
+				return a, nil
+			}
+		case "w":
+			// Toggle word wrap in logs view
+			if a.currentView.viewType == ViewLogs && !a.searchMode {
+				a.wordWrap = !a.wordWrap
+				// Re-render with new wrap setting
+				a.logViewport.SetContent(a.renderLogsWithColors())
 				return a, nil
 			}
 		}
@@ -1284,12 +1293,15 @@ func (a *App) getStatusText() string {
 		if a.showPrevious {
 			parts = append(parts, "PREVIOUS LOGS")
 		}
+		if a.wordWrap {
+			parts = append(parts, "Wrap:On")
+		}
 		if len(a.containers) > 1 {
 			parts = append(parts, fmt.Sprintf("Container: %s", a.currentContainer))
 		}
 
 		statusInfo := strings.Join(parts, " | ")
-		status = fmt.Sprintf(" %s%s | 't'=tail Ctrl+P=prev Ctrl+E/W/A=filter '/'=search | Esc=back q=quit ", offlinePrefix, statusInfo)
+		status = fmt.Sprintf(" %s%s | 'w'=wrap 't'=tail Ctrl+E/W/A=filter '/'=search | Esc=back q=quit ", offlinePrefix, statusInfo)
 
 	default:
 		status = fmt.Sprintf(" %sPress 'Esc' to go back | '?' for help | 'q' to quit ", offlinePrefix)
@@ -3012,13 +3024,44 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 // renderLogsWithColors renders logs with color coding and search highlighting
 func (a *App) renderLogsWithColors() string {
 	visibleLogs := a.getVisibleLogs()
-	coloredLines := make([]string, len(visibleLogs))
 
-	for i, line := range visibleLogs {
-		coloredLines[i] = a.colorizeLogLine(line, i)
+	if !a.wordWrap {
+		// No wrapping - colorize and return as-is
+		coloredLines := make([]string, len(visibleLogs))
+		for i, line := range visibleLogs {
+			coloredLines[i] = a.colorizeLogLine(line, i)
+		}
+		return strings.Join(coloredLines, "\n")
 	}
 
-	return strings.Join(coloredLines, "\n")
+	// Word wrap enabled - wrap long lines to viewport width
+	var wrappedLines []string
+	wrapWidth := a.logViewport.Width
+	if wrapWidth <= 0 {
+		wrapWidth = 80 // Fallback width
+	}
+
+	for i, line := range visibleLogs {
+		colorizedLine := a.colorizeLogLine(line, i)
+
+		// Simple wrapping: break at wrapWidth
+		if len(line) <= wrapWidth {
+			wrappedLines = append(wrappedLines, colorizedLine)
+		} else {
+			// Wrap line into multiple lines
+			for len(line) > 0 {
+				if len(line) <= wrapWidth {
+					wrappedLines = append(wrappedLines, a.colorizeLogLine(line, i))
+					break
+				}
+				// Take wrapWidth characters
+				wrappedLines = append(wrappedLines, a.colorizeLogLine(line[:wrapWidth], i))
+				line = line[wrapWidth:]
+			}
+		}
+	}
+
+	return strings.Join(wrappedLines, "\n")
 }
 
 // selectBestCRDVersion selects the best version from a CRD's version list
@@ -3085,6 +3128,7 @@ CLUSTER VIEWS
 LOG VIEWING (when viewing logs)
   g           Jump to first line
   G           Jump to last line
+  w           Toggle word wrap for long lines
   /           Start search
   n           Next search match
   N           Previous search match
