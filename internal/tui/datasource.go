@@ -383,25 +383,67 @@ func (ds *BundleDataSource) GetProjects(clusterID string) ([]rancher.Project, ma
 	return projects, namespaceCounts, nil
 }
 
-// GetPods returns pods from the bundle
+// GetPods returns pods from the bundle with enriched kubectl data
 func (ds *BundleDataSource) GetPods(projectID, namespace string) ([]rancher.Pod, error) {
 	var pods []rancher.Pod
 
-	for _, podInfo := range ds.bundle.Pods {
-		// Filter by namespace if specified
-		if namespace != "" && podInfo.Namespace != namespace {
-			continue
+	// Build event map for quick lookup: namespace/podname -> []event messages
+	eventMap := make(map[string][]string)
+	for _, item := range ds.bundle.Events {
+		if event, ok := item.(rancher.Event); ok {
+			if event.ObjectKind == "pod" && event.PodName != "" {
+				key := event.Namespace + "/" + event.PodName
+				msg := fmt.Sprintf("[%s] %s: %s (count: %d)", event.Type, event.Reason, event.Message, event.Count)
+				eventMap[key] = append(eventMap[key], msg)
+			}
 		}
+	}
 
-		// Convert bundle.PodInfo to rancher.Pod
-		pod := rancher.Pod{
-			Name:        podInfo.Name,
-			NamespaceID: podInfo.Namespace,
-			State:       "Bundle", // Special state for bundle pods
-			NodeName:    "bundle", // Placeholder
+	// Parse kubectl pods directly for enriched data
+	kubectlPods, err := bundle.ParsePods(ds.bundle.ExtractPath)
+	kubectlPodsFound := false
+	if err == nil && len(kubectlPods) > 0 {
+		kubectlPodsFound = true
+		for _, pod := range kubectlPods {
+			// Filter by namespace if specified
+			if namespace != "" && pod.NamespaceID != namespace {
+				continue
+			}
+
+			// Attach events to this pod
+			key := pod.NamespaceID + "/" + pod.Name
+			if events, ok := eventMap[key]; ok {
+				pod.Events = events
+			}
+
+			pods = append(pods, pod)
 		}
+	}
 
-		pods = append(pods, pod)
+	// Fallback to basic PodInfo if kubectl parsing failed
+	if !kubectlPodsFound {
+		for _, podInfo := range ds.bundle.Pods {
+			// Filter by namespace if specified
+			if namespace != "" && podInfo.Namespace != namespace {
+				continue
+			}
+
+			// Convert bundle.PodInfo to rancher.Pod
+			pod := rancher.Pod{
+				Name:        podInfo.Name,
+				NamespaceID: podInfo.Namespace,
+				State:       "Bundle", // Special state for bundle pods
+				NodeName:    "bundle", // Placeholder
+			}
+
+			// Attach events
+			key := pod.NamespaceID + "/" + pod.Name
+			if events, ok := eventMap[key]; ok {
+				pod.Events = events
+			}
+
+			pods = append(pods, pod)
+		}
 	}
 
 	return pods, nil

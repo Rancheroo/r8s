@@ -190,9 +190,11 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	deployments, _ := ParseDeployments(extractPath)
 	services, _ := ParseServices(extractPath)
 	namespaces, _ := ParseNamespaces(extractPath)
+	kubectlPods, _ := ParsePods(extractPath)
+	events, _ := ParseEvents(extractPath)
 
 	// Convert to interfaces for storage
-	var crdsI, deploymentsI, servicesI, namespacesI []interface{}
+	var crdsI, deploymentsI, servicesI, namespacesI, eventsI []interface{}
 	for i := range crds {
 		crdsI = append(crdsI, crds[i])
 	}
@@ -205,10 +207,13 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	for i := range namespaces {
 		namespacesI = append(namespacesI, namespaces[i])
 	}
+	for i := range events {
+		eventsI = append(eventsI, events[i])
+	}
 
 	if opts.Verbose {
-		fmt.Printf("✓ Loaded: %d pods, %d logs, %d deployments, %d services, %d CRDs, %d namespaces\n",
-			len(pods), len(logFiles), len(deployments), len(services), len(crds), len(namespaces))
+		fmt.Printf("✓ Loaded: %d pods, %d logs, %d kubectl pods, %d events, %d deployments, %d services, %d CRDs, %d namespaces\n",
+			len(pods), len(logFiles), len(kubectlPods), len(events), len(deployments), len(services), len(crds), len(namespaces))
 	}
 
 	// Create bundle
@@ -222,6 +227,7 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 		Deployments: deploymentsI,
 		Services:    servicesI,
 		Namespaces:  namespacesI,
+		Events:      eventsI,
 		Loaded:      true,
 		Size:        size,
 		IsTemporary: false, // Bundles are already extracted, never temporary

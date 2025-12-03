@@ -229,3 +229,142 @@ func ParseNamespaces(extractPath string) ([]rancher.Namespace, error) {
 
 	return namespaces, nil
 }
+
+// ParsePods parses kubectl get pods output from bundle
+// Format: NAMESPACE NAME READY STATUS RESTARTS AGE IP NODE NOMINATED_NODE READINESS_GATES
+func ParsePods(extractPath string) ([]rancher.Pod, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/pods")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var pods []rancher.Pod
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 8 {
+			continue // Need at least namespace, name, ready, status, restarts, age, ip, node
+		}
+
+		namespace := fields[0]
+		name := fields[1]
+		ready := fields[2]  // e.g., "1/1", "2/2"
+		status := fields[3] // Running, Completed, etc.
+		restartsStr := fields[4]
+		age := fields[5]
+		ip := fields[6]
+		node := fields[7]
+
+		// Parse readiness gates if present (fields 8 and 9)
+		readinessGates := "<none>"
+		if len(fields) >= 10 {
+			readinessGates = fields[9]
+		}
+
+		// Parse restart count
+		var restarts int
+		fmt.Sscanf(restartsStr, "%d", &restarts)
+
+		pods = append(pods, rancher.Pod{
+			Name:           name,
+			NamespaceID:    namespace,
+			NodeName:       node,
+			State:          status,
+			Ready:          ready,
+			Status:         status,
+			Age:            age,
+			IP:             ip,
+			PodIP:          ip,
+			ReadinessGates: readinessGates,
+			Restarts:       restarts,
+			RestartCount:   restarts,
+			Created:        time.Now(), // Not available in kubectl output
+		})
+	}
+
+	return pods, nil
+}
+
+// ParseEvents parses kubectl get events output from bundle
+// Format: NAMESPACE LAST_SEEN TYPE REASON OBJECT SUBOBJECT SOURCE MESSAGE FIRST_SEEN COUNT NAME
+func ParseEvents(extractPath string) ([]rancher.Event, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/events")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var events []rancher.Event
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 11 {
+			continue // Need minimum fields
+		}
+
+		namespace := fields[0]
+		lastSeen := fields[1]
+		eventType := fields[2]
+		reason := fields[3]
+		object := fields[4]
+		// subobject := fields[5] (often empty)
+		source := fields[6]
+
+		// Message spans multiple fields, find FIRST_SEEN marker
+		messageStart := 7
+		messageEnd := len(fields) - 3 // Last 3 are FIRST_SEEN, COUNT, NAME
+
+		message := ""
+		if messageEnd > messageStart {
+			message = strings.Join(fields[messageStart:messageEnd], " ")
+		}
+
+		firstSeen := fields[len(fields)-3]
+		countStr := fields[len(fields)-2]
+		name := fields[len(fields)-1]
+
+		var count int
+		fmt.Sscanf(countStr, "%d", &count)
+
+		// Extract pod name from object field (format: "pod/pod-name")
+		podName := ""
+		objectKind := ""
+		if strings.Contains(object, "/") {
+			parts := strings.SplitN(object, "/", 2)
+			if len(parts) == 2 {
+				objectKind = parts[0]
+				podName = parts[1]
+			}
+		}
+
+		events = append(events, rancher.Event{
+			Namespace:  namespace,
+			Type:       eventType,
+			Reason:     reason,
+			Object:     object,
+			Message:    message,
+			Source:     source,
+			FirstSeen:  firstSeen,
+			LastSeen:   lastSeen,
+			Count:      count,
+			Name:       name,
+			PodName:    podName,
+			ObjectKind: objectKind,
+		})
+	}
+
+	return events, nil
+}

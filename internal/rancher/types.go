@@ -206,6 +206,15 @@ type Pod struct {
 	Annotations  map[string]string `json:"annotations,omitempty"`
 	Links        map[string]string `json:"links"`
 	Actions      map[string]string `json:"actions"`
+
+	// Additional fields from kubectl output (populated in bundle mode)
+	Ready          string   `json:"ready,omitempty"`          // e.g., "1/1", "2/2"
+	Status         string   `json:"status,omitempty"`         // Running, Completed, CrashLoopBackOff, etc.
+	Age            string   `json:"age,omitempty"`            // e.g., "7d3h", "26h"
+	IP             string   `json:"ip,omitempty"`             // Pod IP from kubectl output
+	ReadinessGates string   `json:"readinessGates,omitempty"` // e.g., "<none>", "1/1"
+	Restarts       int      `json:"restarts,omitempty"`       // Restart count from kubectl
+	Events         []string `json:"events,omitempty"`         // Recent events for this pod
 }
 
 // DeploymentCollection represents a collection of deployments
@@ -339,4 +348,20 @@ type Service struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Links       map[string]string `json:"links"`
 	Actions     map[string]string `json:"actions"`
+}
+
+// Event represents a Kubernetes event
+type Event struct {
+	Namespace  string `json:"namespace"`
+	Type       string `json:"type"`       // Normal, Warning
+	Reason     string `json:"reason"`     // e.g., "DNSConfigForming", "Started"
+	Object     string `json:"object"`     // e.g., "pod/calico-typha-b74b9cb47-l5kcf"
+	Message    string `json:"message"`    // Event message
+	Source     string `json:"source"`     // e.g., "kubelet, node-name"
+	FirstSeen  string `json:"firstSeen"`  // First occurrence time
+	LastSeen   string `json:"lastSeen"`   // Last occurrence time
+	Count      int    `json:"count"`      // Number of occurrences
+	Name       string `json:"name"`       // Event name/ID
+	PodName    string `json:"podName"`    // Extracted pod name from Object field
+	ObjectKind string `json:"objectKind"` // Extracted from Object (e.g., "pod", "node")
 }

@@ -28,6 +28,7 @@ type Bundle struct {
 	Deployments []interface{} // Will be []rancher.Deployment
 	Services    []interface{} // Will be []rancher.Service
 	Namespaces  []interface{} // Will be []rancher.Namespace
+	Events      []interface{} // Will be []rancher.Event when imported
 
 	// Loaded indicates whether the bundle has been successfully loaded
 	Loaded bool
