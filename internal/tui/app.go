@@ -295,7 +295,8 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return a, nil
 		case "enter":
 			return a, a.handleEnter()
-		case "esc":
+		case "esc", "b":
+			// Universal back navigation - 'b' and 'Esc' do the same thing
 			if a.showingDescribe {
 				// Exit describe view
 				a.showingDescribe = false
@@ -3065,7 +3066,7 @@ func renderHelp() string {
 NAVIGATION
   ↑/↓, j/k    Move selection up/down
   Enter       Navigate into selection
-  Esc         Go back one level
+  b or Esc    Go back one level
   
 ACTIONS
   l           View logs (Pod view)
