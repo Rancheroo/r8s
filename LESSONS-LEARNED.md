@@ -367,6 +367,169 @@ The project evolved from a simple cluster browser to a comprehensive observabili
 
 ---
 
-**Date**: November 27, 2025
-**Status**: Week 1 Complete - Solid foundation established
-**Next**: Week 2 - Polish, testing, and production readiness
+## v0.3.2 Update: DataSource Architecture Refactoring
+
+### DataSource Interface Abstraction
+
+**Context:** Version 0.3.2 introduced a major architectural refactor to unify data access across all modes.
+
+**Lesson:** **Unified interfaces eliminate code duplication and prevent mode-specific bugs**
+
+**What We Did:**
+- Created `DataSource` interface in `internal/datasource/`
+- Three clean implementations: `LiveDataSource`, `BundleDataSource`, `EmbeddedDataSource`
+- TUI layer only depends on interface, not implementations
+
+**Impact:**
+- ✅ Eliminated 300+ lines of duplicate/fallback code
+- ✅ Single code path for all modes
+- ✅ Mode-agnostic TUI - no if/else branching
+- ✅ Easy to add new modes (just implement interface)
+
+**Key Insight:** When you find yourself writing `if liveMode { ... } else if bundleMode { ... }` repeatedly, you need an interface.
+
+---
+
+### Bug: Live Mode Describe Broken
+
+**Context:** Describe feature ('d' key) worked in Bundle mode but failed in Live mode after refactoring.
+
+**Lesson:** **Always use your own interfaces - bypassing them creates mode-specific bugs**
+
+**What Went Wrong:**
+```go
+// WRONG: Bypassed DataSource interface
+pods, err := a.dataSource.GetPods("", namespace)  // Empty projectID fails in Live
+// Then searched for specific pod in returned list
+```
+
+**Root Cause:**
+- `describePod()` called `GetPods("")` instead of using `DescribePod()` interface method
+- Live mode requires valid `projectID` for GetPods() - empty string causes API failure
+- Bundle mode ignores `projectID` parameter, so it worked fine
+- Bug only manifested in Live mode
+
+**The Fix:**
+```go
+// CORRECT: Use proper interface method
+data, err := a.dataSource.DescribePod(clusterID, namespace, name)
+```
+
+**Impact:**
+- ✅ Works in all modes (Live/Bundle/Demo)
+- ✅ Removed 138 lines of fallback code
+- ✅ Consistent behavior across modes
+
+**Key Insight:** If you design an interface with specific methods (DescribePod), USE THEM. Don't work around your own abstractions.
+
+---
+
+### Selection Preservation Investigation
+
+**Context:** Wanted to preserve table selection when navigating back to previous view.
+
+**Lesson:** **Third-party library limitations can block features - document and move on**
+
+**What We Discovered:**
+- bubble-table library doesn't expose methods to:
+  - Iterate through rows
+  - Set selection by row data/content
+  - Query row at specific index
+- Only provides: GetHighlightedRow(), row count, pagination
+
+**Attempted Workarounds:**
+1. **Fork library** - Adds maintenance burden
+2. **Parallel data structures** - Duplicates state, risks drift
+3. **Switch table libraries** - Major refactor
+
+**Decision:**
+- Added infrastructure (`savedRowName` field in App struct)
+- Documented limitation in code comments
+- Selection resets to top (acceptable UX for now)
+- Deferred until library improves or we switch
+
+**Key Insight:** Don't fight library limitations if workarounds are complex. Document, defer, and reassess when priorities change.
+
+---
+
+### Incremental Refactoring Process
+
+**Lesson:** **Large refactors work better when done incrementally with testing at each step**
+
+**Our Approach for DataSource Refactor:**
+1. Create interface + implementations
+2. Keep old code paths working
+3. Switch one fetch function at a time
+4. Test after each switch
+5. Remove old code once all switched
+6. Final build + test
+
+**Benefits:**
+- Always have working code
+- Easy to identify which change broke something
+- Can pause/resume refactor
+- Less stressful than big-bang rewrites
+
+**Key Insight:** "Make it work, make it right, make it fast" - in that order.
+
+---
+
+### Interface Design Best Practices
+
+**What Made DataSource Interface Work:**
+
+1. **Comprehensive Methods:**
+   ```go
+   GetPods(projectID, namespace) ([]Pod, error)
+   DescribePod(clusterID, namespace, name) (interface{}, error)
+   GetLogs(...) ([]string, error)
+   ```
+
+2. **Mode() Method:**
+   - Returns "LIVE", "BUNDLE", or "MOCK"
+   - Used for UI indicators
+   - Helps with debugging
+
+3. **Single Responsibility:**
+   - Each method does one thing
+   - No overloaded "get data somehow" methods
+   - Clear contracts
+
+**Anti-Pattern to Avoid:**
+```go
+// DON'T: One method that does different things based on mode
+GetData(mode string, params ...interface{}) (interface{}, error)
+
+// DO: Separate methods with clear signatures
+GetPods(projectID, namespace string) ([]Pod, error)
+GetDeployments(projectID, namespace string) ([]Deployment, error)
+```
+
+**Key Insight:** Specific methods > generic methods. Type safety > flexibility.
+
+---
+
+### Architecture Evolution Summary
+
+**v0.2.0 and earlier:**
+- API calls directly from TUI
+- Silent fallbacks to mock data
+- Mode-specific logic everywhere
+
+**v0.3.0:**
+- Eliminated silent fallbacks
+- Added mode indicators
+- Better error messages
+
+**v0.3.2:**
+- DataSource interface abstraction
+- Complete mode separation
+- Single code path for all modes
+- Bug-free describe across all modes
+
+---
+
+**Date**: December 3, 2025  
+**Status**: v0.3.2 Complete - DataSource architecture refactored  
+**Previous**: November 27, 2025 - Week 1 Complete  
+**Next**: Continue refining interface, consider table library alternatives if selection preservation becomes priority
