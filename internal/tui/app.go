@@ -497,6 +497,18 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return a, nil
 			}
+		case "g":
+			// Jump to first log line (vim muscle memory)
+			if a.currentView.viewType == ViewLogs && !a.searchMode {
+				a.logViewport.GotoTop()
+				return a, nil
+			}
+		case "G":
+			// Jump to last log line (vim muscle memory)
+			if a.currentView.viewType == ViewLogs && !a.searchMode {
+				a.logViewport.GotoBottom()
+				return a, nil
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -3070,6 +3082,8 @@ CLUSTER VIEWS
   i           Toggle CRD description (in CRD view)
   
 LOG VIEWING (when viewing logs)
+  g           Jump to first line
+  G           Jump to last line
   /           Start search
   n           Next search match
   N           Previous search match
