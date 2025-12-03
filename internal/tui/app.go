@@ -128,7 +128,7 @@ type App struct {
 	bundlePath  string // Path to loaded bundle
 
 	// Selection preservation
-	savedSelectionIndex int // Saved row index when navigating away
+	savedRowName string // Saved row name when navigating away
 }
 
 // NewApp creates a new TUI application
@@ -350,11 +350,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.currentMatch = -1
 
 				// Save current selection before navigating back
-				// Note: We'll save the row's primary key (name) instead of index
-				// since index can change when data refreshes
+				// Store the row's primary key (name) so we can restore position after refresh
 				if row := a.table.HighlightedRow(); row.Data != nil {
-					a.savedSelectionIndex = 0 // Will be set by looking up name
-					// Store will happen in the message handler
+					a.savedRowName = safeRowString(row.Data, "name")
 				}
 
 				a.currentView = a.viewStack[len(a.viewStack)-1]
@@ -2660,10 +2658,14 @@ func (a *App) getCRDInstanceCount(group, resource string) int {
 // restoreSelection restores the previously saved table selection if applicable
 // This is called after table updates to maintain user's position when navigating back
 func (a *App) restoreSelection() {
-	// For now, reset to 0 - selection preservation is simplified
-	// A more robust implementation would store row identifiers and search for them
-	// But that requires significant refactoring of the table update logic
-	a.savedSelectionIndex = 0
+	// Note: Full restoration not implemented - bubble-table doesn't provide
+	// a way to iterate through rows or set selection by index
+	// This would require either:
+	// 1. bubble-table library changes to expose rows
+	// 2. Maintaining a parallel rows slice ourselves
+	// 3. Using a different table library
+	// For now, selection resets to top (simple behavior)
+	a.savedRowName = "" // Clear any saved state
 }
 
 // isNamespaceResourceView returns true if the current view is a namespace-scoped resource view

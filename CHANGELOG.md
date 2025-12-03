@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo mode (`--mockdata`) now uses embedded example bundle instead of synthetic data
 - Selection preservation infrastructure added (resets to top for now, full implementation deferred)
 
+### Investigated
+- **Selection preservation**: Table position restoration when navigating back
+  - Added `savedRowName` field for storing selected row identifier
+  - Implementation blocked by bubble-table library API limitations
+  - Library doesn't expose row iteration or selection-by-data methods
+  - Documented in code comments for future implementation options
+  - Workarounds would require: library fork, parallel data structures, or different table library
+
 ### Removed
 - Dead code in fetch functions (300+ lines of fallback calls eliminated)
 - Silent fallback behaviors between modes
@@ -26,9 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getMock*()` functions retained for test suite only
 - All fetch functions simplified to single datasource call
 - Clean separation: Live → API, Bundle → Files, Demo → Example
+- Selection preservation requires architectural changes to implement fully
 
 ### Known Limitations
-- Table selection currently resets to top when navigating back (deferred to future release)
+- Table selection currently resets to top when navigating back (library API constraint)
+- Full implementation deferred until bubble-table API enhancement or library replacement
 
 ## [0.3.1] - 2025-12-03
 
