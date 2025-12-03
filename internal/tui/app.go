@@ -1571,50 +1571,84 @@ func (a *App) handleDescribe() tea.Cmd {
 // describePod fetches detailed pod information
 func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 	return func() tea.Msg {
-		// For demo purposes, create mock details since API might not work yet
-		mockDetails := map[string]interface{}{
-			"apiVersion": "v1",
-			"kind":       "Pod",
-			"metadata": map[string]interface{}{
-				"name":      name,
-				"namespace": namespace,
-			},
-			"spec": map[string]interface{}{
-				"containers": []interface{}{
-					map[string]interface{}{
-						"name":  "app",
-						"image": "example:latest",
-					},
-				},
-			},
-			"status": map[string]interface{}{
-				"phase": "Running",
-				"podIP": "10.0.1.1",
-			},
+		// Get the pod from datasource (has enriched fields)
+		pods, err := a.dataSource.GetPods("", namespace)
+		if err != nil {
+			return errMsg{fmt.Errorf("failed to get pod: %w", err)}
 		}
 
-		var jsonData interface{} = mockDetails
-
-		// Try real API first, fallback to mock
-		// FIX BUG-002: Check if client exists before calling (prevents crash in mock mode)
-		if a.client != nil {
-			details, err := a.client.GetPodDetails(clusterID, namespace, name)
-			if err == nil {
-				// Use real details if API succeeded
-				jsonData = details
+		// Find the specific pod
+		var pod *rancher.Pod
+		for i := range pods {
+			if pods[i].Name == name {
+				pod = &pods[i]
+				break
 			}
 		}
 
-		jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+		if pod == nil {
+			return errMsg{fmt.Errorf("pod not found: %s/%s", namespace, name)}
+		}
+
+		// Build enriched describe view
+		var content strings.Builder
+
+		// Status Summary Section
+		content.WriteString("POD STATUS SUMMARY\n")
+		content.WriteString("==================\n\n")
+
+		if pod.Ready != "" {
+			content.WriteString(fmt.Sprintf("Ready:       %s\n", pod.Ready))
+		}
+		if pod.Status != "" {
+			content.WriteString(fmt.Sprintf("Status:      %s\n", pod.Status))
+		}
+		if pod.Age != "" {
+			content.WriteString(fmt.Sprintf("Age:         %s\n", pod.Age))
+		}
+		if pod.IP != "" || pod.PodIP != "" {
+			ip := pod.IP
+			if ip == "" {
+				ip = pod.PodIP
+			}
+			content.WriteString(fmt.Sprintf("IP:          %s\n", ip))
+		}
+		if pod.NodeName != "" {
+			content.WriteString(fmt.Sprintf("Node:        %s\n", pod.NodeName))
+		}
+		if pod.Restarts > 0 || pod.RestartCount > 0 {
+			restarts := pod.Restarts
+			if restarts == 0 {
+				restarts = pod.RestartCount
+			}
+			content.WriteString(fmt.Sprintf("Restarts:    %d\n", restarts))
+		}
+		if pod.ReadinessGates != "" && pod.ReadinessGates != "<none>" {
+			content.WriteString(fmt.Sprintf("Readiness:   %s\n", pod.ReadinessGates))
+		}
+
+		// Events Section (if available)
+		if len(pod.Events) > 0 {
+			content.WriteString("\n\nRECENT EVENTS\n")
+			content.WriteString("=============\n\n")
+			for _, event := range pod.Events {
+				content.WriteString(fmt.Sprintf("• %s\n", event))
+			}
+		}
+
+		// Full Details Section (JSON)
+		content.WriteString("\n\nFULL DETAILS (JSON)\n")
+		content.WriteString("===================\n\n")
+
+		jsonBytes, err := json.MarshalIndent(pod, "", "  ")
 		if err != nil {
 			return errMsg{fmt.Errorf("failed to format pod details: %w", err)}
 		}
-
-		content := fmt.Sprintf("Pod Details (JSON):\n\n%s", string(jsonBytes))
+		content.WriteString(string(jsonBytes))
 
 		return describeMsg{
 			title:   fmt.Sprintf("Pod: %s/%s", namespace, name),
-			content: content,
+			content: content.String(),
 		}
 	}
 }
