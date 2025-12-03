@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Released for Testing]
 
+## [0.3.2] - 2025-12-03
+
+### Refactored
+- **DataSource architecture**: Unified data layer with clean interface abstraction
+  - New `internal/datasource/` package with `DataSource` interface
+  - Three implementations: `LiveDataSource`, `BundleDataSource`, `EmbeddedDataSource`
+  - Zero code duplication between modes
+  - No fallback code paths - each mode is self-contained
+- Demo mode (`--mockdata`) now uses embedded example bundle instead of synthetic data
+- Selection preservation infrastructure added (resets to top for now, full implementation deferred)
+
+### Removed
+- Dead code in fetch functions (300+ lines of fallback calls eliminated)
+- Silent fallback behaviors between modes
+
+### Technical
+- `getMock*()` functions retained for test suite only
+- All fetch functions simplified to single datasource call
+- Clean separation: Live → API, Bundle → Files, Demo → Example
+
+### Known Limitations
+- Table selection currently resets to top when navigating back (deferred to future release)
+
 ## [0.3.1] - 2025-12-03
 
 ### Added

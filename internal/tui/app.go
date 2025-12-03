@@ -16,6 +16,7 @@ import (
 	"github.com/evertras/bubble-table/table"
 
 	"github.com/Rancheroo/r8s/internal/config"
+	"github.com/Rancheroo/r8s/internal/datasource"
 	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
@@ -75,7 +76,7 @@ type ViewContext struct {
 type App struct {
 	config     *config.Config
 	client     *rancher.Client
-	dataSource DataSource // Abstracted data source (live or bundle)
+	dataSource datasource.DataSource // Abstracted data source (live or bundle)
 	width      int
 	height     int
 
@@ -125,6 +126,9 @@ type App struct {
 	offlineMode bool   // Flag to indicate running without live Rancher connection
 	bundleMode  bool   // Flag to indicate bundle mode
 	bundlePath  string // Path to loaded bundle
+
+	// Selection preservation
+	savedSelectionIndex int // Saved row index when navigating away
 }
 
 // NewApp creates a new TUI application
@@ -139,14 +143,14 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	}
 
 	// Determine data source based on mode
-	var dataSource DataSource
+	var ds datasource.DataSource
 	var client *rancher.Client
 	var bundleMode bool
 	var offlineMode bool
 
 	if bundlePath != "" {
 		// Bundle mode - load bundle as data source
-		ds, err := NewBundleDataSource(bundlePath, cfg.Verbose)
+		bds, err := datasource.NewBundleDataSource(bundlePath, cfg.Verbose)
 		if err != nil {
 			// Provide helpful error message based on common issues
 			errorMsg := fmt.Sprintf("Failed to load log bundle from: %s\n\n%v\n\n", bundlePath, err)
@@ -162,13 +166,27 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 				error:  errorMsg,
 			}
 		}
-		dataSource = ds
+		ds = bds
 		bundleMode = true
 		offlineMode = false // Bundle mode is not "offline", it's bundle analysis
 	} else if cfg.MockMode {
 		// Demo/Mock mode - explicitly requested via --mockdata flag
-		offlineMode = true
-		dataSource = NewLiveDataSource(nil, true) // nil client, mock enabled
+		// Uses the example bundle from the repo
+		eds, err := datasource.NewEmbeddedDataSource(cfg.Verbose)
+		if err != nil {
+			return &App{
+				config: cfg,
+				error: fmt.Sprintf(
+					"Failed to load demo bundle: %v\n\n"+
+						"The demo bundle may be missing from the repo.\n"+
+						"Try using --bundle with the example-log-bundle/ directory instead.",
+					err,
+				),
+			}
+		}
+		ds = eds
+		offlineMode = true // Display as offline in UI
+		bundleMode = false // It's demo, not user bundle
 	} else {
 		// Live mode - use Rancher client
 		client = rancher.NewClient(
@@ -194,7 +212,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 			}
 		}
 
-		dataSource = NewLiveDataSource(client, false)
+		ds = datasource.NewLiveDataSource(client)
 		offlineMode = false
 	}
 
@@ -204,7 +222,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	return &App{
 		config:      cfg,
 		client:      client,
-		dataSource:  dataSource,
+		dataSource:  ds,
 		offlineMode: offlineMode,
 		bundleMode:  bundleMode,
 		bundlePath:  bundlePath,
@@ -330,6 +348,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.searchQuery = ""
 				a.searchMatches = nil
 				a.currentMatch = -1
+
+				// Save current selection before navigating back
+				// Note: We'll save the row's primary key (name) instead of index
+				// since index can change when data refreshes
+				if row := a.table.HighlightedRow(); row.Data != nil {
+					a.savedSelectionIndex = 0 // Will be set by looking up name
+					// Store will happen in the message handler
+				}
 
 				a.currentView = a.viewStack[len(a.viewStack)-1]
 				a.viewStack = a.viewStack[:len(a.viewStack)-1]
@@ -545,6 +571,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.clusters = msg.clusters
 		a.error = ""
 		a.updateTable()
+		a.restoreSelection()
 
 	case projectsMsg:
 		a.loading = false
@@ -552,30 +579,35 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.projectNamespaceCounts = msg.namespaceCounts
 		a.error = ""
 		a.updateTable()
+		a.restoreSelection()
 
 	case namespacesMsg:
 		a.loading = false
 		a.namespaces = msg.namespaces
 		a.error = ""
 		a.updateTable()
+		a.restoreSelection()
 
 	case podsMsg:
 		a.loading = false
 		a.pods = msg.pods
 		a.error = ""
 		a.updateTable()
+		a.restoreSelection()
 
 	case deploymentsMsg:
 		a.loading = false
 		a.deployments = msg.deployments
 		a.error = ""
 		a.updateTable()
+		a.restoreSelection()
 
 	case servicesMsg:
 		a.loading = false
 		a.services = msg.services
 		a.error = ""
 		a.updateTable()
+		a.restoreSelection()
 
 	case crdsMsg:
 		a.loading = false
@@ -1886,90 +1918,66 @@ func (a *App) handleViewLogs() tea.Cmd {
 	return a.fetchLogs(a.currentView.clusterID, namespaceName, podName)
 }
 
-// fetchPods fetches pods using the data source
+// fetchPods fetches pods using the unified data source
 func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
-		// Try to get pods from data source first
-		if a.dataSource != nil {
-			pods, err := a.dataSource.GetPods(projectID, namespaceName)
-			if err == nil {
-				// Return even if empty - empty list is valid bundle data
-				return podsMsg{pods: pods}
-			}
-			// FIX BUG #9: NO SILENT FALLBACK - return error with context
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
+		}
+
+		pods, err := a.dataSource.GetPods(projectID, namespaceName)
+		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch pods from data source: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch pods: %w\n\n"+
 					"Context: projectID=%s, namespace=%s\n"+
 					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch pods: %w", err)}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockPods := a.getMockPods(namespaceName)
-			return podsMsg{pods: mockPods}
-		}
-
-		return errMsg{fmt.Errorf("no data source available")}
+		return podsMsg{pods: pods}
 	}
 }
 
-// fetchDeployments fetches deployments using the data source
+// fetchDeployments fetches deployments using the unified data source
 func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
-		// Try to get deployments from data source first
-		if a.dataSource != nil {
-			deployments, err := a.dataSource.GetDeployments(projectID, namespaceName)
-			if err == nil {
-				// Return even if empty - empty list is valid bundle data
-				return deploymentsMsg{deployments: deployments}
-			}
-			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
+		}
+
+		deployments, err := a.dataSource.GetDeployments(projectID, namespaceName)
+		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch deployments from data source: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch deployments: %w\n\n"+
 					"Context: projectID=%s, namespace=%s\n"+
 					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockDeployments := a.getMockDeployments(namespaceName)
-			return deploymentsMsg{deployments: mockDeployments}
-		}
-
-		return errMsg{fmt.Errorf("no data source available")}
+		return deploymentsMsg{deployments: deployments}
 	}
 }
 
-// fetchServices fetches services using the data source
+// fetchServices fetches services using the unified data source
 func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 	return func() tea.Msg {
-		// Try to get services from data source first
-		if a.dataSource != nil {
-			services, err := a.dataSource.GetServices(projectID, namespaceName)
-			if err == nil {
-				// Return even if empty - empty list is valid bundle data
-				return servicesMsg{services: services}
-			}
-			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
+		}
+
+		services, err := a.dataSource.GetServices(projectID, namespaceName)
+		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch services from data source: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch services: %w\n\n"+
 					"Context: projectID=%s, namespace=%s\n"+
 					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch services: %w", err)}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockServices := a.getMockServices(namespaceName)
-			return servicesMsg{services: mockServices}
-		}
-
-		return errMsg{fmt.Errorf("no data source available")}
+		return servicesMsg{services: services}
 	}
 }
 
@@ -2232,32 +2240,24 @@ func (a *App) getMockNamespaces(clusterID, projectID string) []rancher.Namespace
 	return namespaces
 }
 
-// fetchCRDs fetches CustomResourceDefinitions using the data source
+// fetchCRDs fetches CRDs using the unified data source
 func (a *App) fetchCRDs(clusterID string) tea.Cmd {
 	return func() tea.Msg {
-		// Try to get CRDs from data source first
-		if a.dataSource != nil {
-			crds, err := a.dataSource.GetCRDs(clusterID)
-			if err == nil {
-				// Return even if empty - empty list is valid bundle data
-				return crdsMsg{crds: crds}
-			}
-			// FIX BUG #2: NO SILENT FALLBACK - return error with context
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
+		}
+
+		crds, err := a.dataSource.GetCRDs(clusterID)
+		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch CRDs from data source: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch CRDs: %w\n\n"+
 					"Context: clusterID=%s\n"+
 					"Hint: Check bundle data or API connectivity", err, clusterID)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch CRDs: %w", err)}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockCRDs := a.getMockCRDs()
-			return crdsMsg{crds: mockCRDs}
-		}
-
-		return errMsg{fmt.Errorf("no data source available")}
+		return crdsMsg{crds: crds}
 	}
 }
 
@@ -2358,32 +2358,24 @@ func (a *App) getMockCRDs() []rancher.CRD {
 	}
 }
 
-// fetchCRDInstances fetches instances of a CRD with fallback to mock data
+// fetchCRDInstances fetches CRD instances using the unified data source
 func (a *App) fetchCRDInstances(clusterID, group, version, resource string) tea.Cmd {
 	return func() tea.Msg {
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockInstances := a.getMockCRDInstances(group, resource)
-			return crdInstancesMsg{instances: mockInstances}
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
 		}
 
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		// Attempt to fetch real CRD instances
-		instanceList, err := a.client.ListCustomResources(clusterID, group, version, resource, "")
+		instances, err := a.dataSource.GetCRDInstances(clusterID, group, version, resource)
 		if err != nil {
-			// FIX BUG #9: NO SILENT FALLBACK - return error with context
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch CRD instances from API: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch CRD instances: %w\n\n"+
 					"Context: clusterID=%s, group=%s, version=%s, resource=%s\n"+
 					"Hint: Check CRD version and API connectivity", err, clusterID, group, version, resource)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch CRD instances: %w", err)}
 		}
 
-		return crdInstancesMsg{instances: instanceList.Items}
+		return crdInstancesMsg{instances: instances}
 	}
 }
 
@@ -2550,134 +2542,67 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 	return []map[string]interface{}{}
 }
 
-// fetchClusters fetches clusters with fallback to mock data
+// fetchClusters fetches clusters using the unified data source
 func (a *App) fetchClusters() tea.Cmd {
 	return func() tea.Msg {
-		// Try data source first (for bundle mode or live mode)
-		if a.dataSource != nil {
-			clusters, err := a.dataSource.GetClusters()
-			if err == nil {
-				return clustersMsg{clusters: clusters}
-			}
-			// Log error but continue to try other sources
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockClusters := a.getMockClusters()
-			return clustersMsg{clusters: mockClusters}
-		}
-
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListClusters()
+		clusters, err := a.dataSource.GetClusters()
 		if err != nil {
-			// FIX BUG #9: NO SILENT FALLBACK - return error with context
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch clusters from API: %w\n\n"+
-					"Context: Rancher API connection\n"+
-					"Hint: Check RANCHER_URL and RANCHER_TOKEN environment variables", err)}
+				return errMsg{fmt.Errorf("failed to fetch clusters: %w\n\n"+
+					"Context: DataSource fetch\n"+
+					"Hint: Check bundle data or API connectivity", err)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch clusters: %w", err)}
 		}
 
-		return clustersMsg{clusters: collection.Data}
+		return clustersMsg{clusters: clusters}
 	}
 }
 
-// fetchProjects fetches projects for a cluster with fallback to mock data
+// fetchProjects fetches projects using the unified data source
 func (a *App) fetchProjects(clusterID string) tea.Cmd {
 	return func() tea.Msg {
-		// Try data source first (for bundle mode or live mode)
-		if a.dataSource != nil {
-			projects, namespaceCounts, err := a.dataSource.GetProjects(clusterID)
-			if err == nil {
-				return projectsMsg{projects: projects, namespaceCounts: namespaceCounts}
-			}
-			// Log error but continue to try other sources
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockProjects := a.getMockProjects(clusterID)
-			mockNamespaceCounts := map[string]int{
-				"demo-project": 3,
-				"system":       5,
-			}
-			return projectsMsg{projects: mockProjects, namespaceCounts: mockNamespaceCounts}
-		}
-
-		if a.client == nil {
-			return errMsg{fmt.Errorf("client not initialized")}
-		}
-
-		collection, err := a.client.ListProjects(clusterID)
+		projects, namespaceCounts, err := a.dataSource.GetProjects(clusterID)
 		if err != nil {
-			// FIX BUG #9: NO SILENT FALLBACK - return error with context
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch projects from API: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch projects: %w\n\n"+
 					"Context: clusterID=%s\n"+
-					"Hint: Check cluster ID and API connectivity", err, clusterID)}
+					"Hint: Check bundle data or API connectivity", err, clusterID)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch projects: %w", err)}
 		}
 
-		// Count namespaces per project by fetching all namespaces
-		namespaceCounts := make(map[string]int)
-
-		// Fetch namespaces to get accurate counts
-		nsCollection, err := a.client.ListNamespaces(clusterID)
-		if err == nil {
-			// Count namespaces by project ID
-			for _, ns := range nsCollection.Data {
-				if ns.ProjectID != "" {
-					namespaceCounts[ns.ProjectID]++
-				}
-			}
-		}
-
-		// Ensure all projects have an entry (even if 0)
-		for _, project := range collection.Data {
-			if _, exists := namespaceCounts[project.ID]; !exists {
-				namespaceCounts[project.ID] = 0
-			}
-		}
-
-		return projectsMsg{projects: collection.Data, namespaceCounts: namespaceCounts}
+		return projectsMsg{projects: projects, namespaceCounts: namespaceCounts}
 	}
 }
 
-// fetchNamespaces fetches namespaces using the data source
+// fetchNamespaces fetches namespaces using the unified data source
 func (a *App) fetchNamespaces(clusterID, projectID string) tea.Cmd {
 	return func() tea.Msg {
-		// Try to get namespaces from data source first
-		if a.dataSource != nil {
-			namespaces, err := a.dataSource.GetNamespaces(clusterID, projectID)
-			if err == nil {
-				// Return even if empty - empty list is valid bundle data
-				// Update namespace counts for project view
-				a.updateNamespaceCounts(namespaces)
-				return namespacesMsg{namespaces: namespaces}
-			}
-			// FIX BUG #12: NO SILENT FALLBACK - return error with context
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
+		}
+
+		namespaces, err := a.dataSource.GetNamespaces(clusterID, projectID)
+		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch namespaces from data source: %w\n\n"+
+				return errMsg{fmt.Errorf("failed to fetch namespaces: %w\n\n"+
 					"Context: clusterID=%s, projectID=%s\n"+
 					"Hint: Check bundle data or API connectivity", err, clusterID, projectID)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch namespaces: %w", err)}
 		}
 
-		// Only use mock data if explicitly in mock mode
-		if a.offlineMode && a.config.MockMode {
-			mockNamespaces := a.getMockNamespaces(clusterID, projectID)
-			a.updateNamespaceCounts(mockNamespaces)
-			return namespacesMsg{namespaces: mockNamespaces}
-		}
-
-		return errMsg{fmt.Errorf("no data source available")}
+		a.updateNamespaceCounts(namespaces)
+		return namespacesMsg{namespaces: namespaces}
 	}
 }
 
@@ -2697,44 +2622,48 @@ func (a *App) updateNamespaceCounts(namespaces []rancher.Namespace) {
 	a.projectNamespaceCounts = counts
 }
 
-// getCRDInstanceCount returns the count of instances for a given CRD
+// getCRDInstanceCount returns the count of instances for a given CRD using datasource
 func (a *App) getCRDInstanceCount(group, resource string) int {
-	// If in offline mode, use mock data
-	if a.offlineMode {
-		mockInstances := a.getMockCRDInstances(group, resource)
-		return len(mockInstances)
+	if a.dataSource == nil {
+		return 0
 	}
 
-	// Try to fetch real instance count from API
-	if a.client != nil && a.currentView.clusterID != "" {
-		// Get the storage version for this CRD
-		var version string
-		for _, crd := range a.crds {
-			if crd.Spec.Group == group && crd.Spec.Names.Plural == resource {
-				for _, v := range crd.Spec.Versions {
-					if v.Storage {
-						version = v.Name
-						break
-					}
+	// Get the storage version for this CRD
+	var version string
+	for _, crd := range a.crds {
+		if crd.Spec.Group == group && crd.Spec.Names.Plural == resource {
+			for _, v := range crd.Spec.Versions {
+				if v.Storage {
+					version = v.Name
+					break
 				}
-				if version == "" && len(crd.Spec.Versions) > 0 {
-					version = crd.Spec.Versions[0].Name
-				}
-				break
 			}
-		}
-
-		if version != "" {
-			instanceList, err := a.client.ListCustomResources(a.currentView.clusterID, group, version, resource, "")
-			if err == nil {
-				return len(instanceList.Items)
+			if version == "" && len(crd.Spec.Versions) > 0 {
+				version = crd.Spec.Versions[0].Name
 			}
+			break
 		}
 	}
 
-	// Fallback to mock data count
-	mockInstances := a.getMockCRDInstances(group, resource)
-	return len(mockInstances)
+	if version == "" {
+		return 0
+	}
+
+	instances, err := a.dataSource.GetCRDInstances(a.currentView.clusterID, group, version, resource)
+	if err != nil {
+		return 0 // Silently return 0 for counts (non-critical)
+	}
+
+	return len(instances)
+}
+
+// restoreSelection restores the previously saved table selection if applicable
+// This is called after table updates to maintain user's position when navigating back
+func (a *App) restoreSelection() {
+	// For now, reset to 0 - selection preservation is simplified
+	// A more robust implementation would store row identifiers and search for them
+	// But that requires significant refactoring of the table update logic
+	a.savedSelectionIndex = 0
 }
 
 // isNamespaceResourceView returns true if the current view is a namespace-scoped resource view

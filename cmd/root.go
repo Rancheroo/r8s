@@ -16,6 +16,7 @@ var (
 	namespace     string
 	tuiBundlePath string // Path to bundle for TUI offline mode
 	verbose       bool   // Enable verbose error output
+	demoMode      bool   // Enable demo mode with mock data
 
 	versionInfo struct {
 		Version string
@@ -73,7 +74,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
 
 	// Root command flags (for direct TUI launch)
-	rootCmd.Flags().BoolVar(&mockData, "mockdata", false, "enable demo mode with mock data (no API required)")
+	rootCmd.Flags().BoolVar(&demoMode, "mockdata", false, "enable demo mode with mock data (no API required)")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
