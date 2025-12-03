@@ -273,19 +273,19 @@ func ParsePods(extractPath string) ([]rancher.Pod, error) {
 		fmt.Sscanf(restartsStr, "%d", &restarts)
 
 		pods = append(pods, rancher.Pod{
-			Name:           name,
-			NamespaceID:    namespace,
-			NodeName:       node,
-			State:          status,
-			Ready:          ready,
-			Status:         status,
-			Age:            age,
-			IP:             ip,
-			PodIP:          ip,
-			ReadinessGates: readinessGates,
-			Restarts:       restarts,
-			RestartCount:   restarts,
-			Created:        time.Now(), // Not available in kubectl output
+			Name:                  name,
+			NamespaceID:           namespace,
+			NodeName:              node,
+			State:                 status,
+			PodIP:                 ip,
+			RestartCount:          restarts,
+			Created:               time.Now(), // Not available in kubectl output
+			KubectlReady:          ready,
+			KubectlStatus:         status,
+			KubectlAge:            age,
+			KubectlIP:             ip,
+			KubectlReadinessGates: readinessGates,
+			KubectlRestarts:       restarts,
 		})
 	}
 

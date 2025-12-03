@@ -413,7 +413,7 @@ func (ds *BundleDataSource) GetPods(projectID, namespace string) ([]rancher.Pod,
 			// Attach events to this pod
 			key := pod.NamespaceID + "/" + pod.Name
 			if events, ok := eventMap[key]; ok {
-				pod.Events = events
+				pod.KubectlEvents = events
 			}
 
 			pods = append(pods, pod)
@@ -439,7 +439,7 @@ func (ds *BundleDataSource) GetPods(projectID, namespace string) ([]rancher.Pod,
 			// Attach events
 			key := pod.NamespaceID + "/" + pod.Name
 			if events, ok := eventMap[key]; ok {
-				pod.Events = events
+				pod.KubectlEvents = events
 			}
 
 			pods = append(pods, pod)

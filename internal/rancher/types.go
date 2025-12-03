@@ -207,14 +207,15 @@ type Pod struct {
 	Links        map[string]string `json:"links"`
 	Actions      map[string]string `json:"actions"`
 
-	// Additional fields from kubectl output (populated in bundle mode)
-	Ready          string   `json:"ready,omitempty"`          // e.g., "1/1", "2/2"
-	Status         string   `json:"status,omitempty"`         // Running, Completed, CrashLoopBackOff, etc.
-	Age            string   `json:"age,omitempty"`            // e.g., "7d3h", "26h"
-	IP             string   `json:"ip,omitempty"`             // Pod IP from kubectl output
-	ReadinessGates string   `json:"readinessGates,omitempty"` // e.g., "<none>", "1/1"
-	Restarts       int      `json:"restarts,omitempty"`       // Restart count from kubectl
-	Events         []string `json:"events,omitempty"`         // Recent events for this pod
+	// Additional fields from kubectl output (populated in bundle mode only)
+	// Using json:"-" to prevent conflicts with Rancher API responses
+	KubectlReady          string   `json:"-"` // e.g., "1/1", "2/2"
+	KubectlStatus         string   `json:"-"` // Running, Completed, CrashLoopBackOff, etc.
+	KubectlAge            string   `json:"-"` // e.g., "7d3h", "26h"
+	KubectlIP             string   `json:"-"` // Pod IP from kubectl output
+	KubectlReadinessGates string   `json:"-"` // e.g., "<none>", "1/1"
+	KubectlRestarts       int      `json:"-"` // Restart count from kubectl
+	KubectlEvents         []string `json:"-"` // Recent events for this pod
 }
 
 // DeploymentCollection represents a collection of deployments

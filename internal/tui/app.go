@@ -1606,17 +1606,17 @@ func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 		content.WriteString("POD STATUS SUMMARY\n")
 		content.WriteString("==================\n\n")
 
-		if pod.Ready != "" {
-			content.WriteString(fmt.Sprintf("Ready:       %s\n", pod.Ready))
+		if pod.KubectlReady != "" {
+			content.WriteString(fmt.Sprintf("Ready:       %s\n", pod.KubectlReady))
 		}
-		if pod.Status != "" {
-			content.WriteString(fmt.Sprintf("Status:      %s\n", pod.Status))
+		if pod.KubectlStatus != "" {
+			content.WriteString(fmt.Sprintf("Status:      %s\n", pod.KubectlStatus))
 		}
-		if pod.Age != "" {
-			content.WriteString(fmt.Sprintf("Age:         %s\n", pod.Age))
+		if pod.KubectlAge != "" {
+			content.WriteString(fmt.Sprintf("Age:         %s\n", pod.KubectlAge))
 		}
-		if pod.IP != "" || pod.PodIP != "" {
-			ip := pod.IP
+		if pod.KubectlIP != "" || pod.PodIP != "" {
+			ip := pod.KubectlIP
 			if ip == "" {
 				ip = pod.PodIP
 			}
@@ -1625,22 +1625,22 @@ func (a *App) describePod(clusterID, namespace, name string) tea.Cmd {
 		if pod.NodeName != "" {
 			content.WriteString(fmt.Sprintf("Node:        %s\n", pod.NodeName))
 		}
-		if pod.Restarts > 0 || pod.RestartCount > 0 {
-			restarts := pod.Restarts
+		if pod.KubectlRestarts > 0 || pod.RestartCount > 0 {
+			restarts := pod.KubectlRestarts
 			if restarts == 0 {
 				restarts = pod.RestartCount
 			}
 			content.WriteString(fmt.Sprintf("Restarts:    %d\n", restarts))
 		}
-		if pod.ReadinessGates != "" && pod.ReadinessGates != "<none>" {
-			content.WriteString(fmt.Sprintf("Readiness:   %s\n", pod.ReadinessGates))
+		if pod.KubectlReadinessGates != "" && pod.KubectlReadinessGates != "<none>" {
+			content.WriteString(fmt.Sprintf("Readiness:   %s\n", pod.KubectlReadinessGates))
 		}
 
 		// Events Section (if available)
-		if len(pod.Events) > 0 {
+		if len(pod.KubectlEvents) > 0 {
 			content.WriteString("\n\nRECENT EVENTS\n")
 			content.WriteString("=============\n\n")
-			for _, event := range pod.Events {
+			for _, event := range pod.KubectlEvents {
 				content.WriteString(fmt.Sprintf("• %s\n", event))
 			}
 		}
