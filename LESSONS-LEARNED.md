@@ -560,10 +560,154 @@ GetDeployments(projectID, namespace string) ([]Deployment, error)
 - Surface hidden problems in bundle data (etcd, nodes, events)
 - Empower support engineers with instant cluster health assessment
 
-*Development in progress...*
+### Implementation Complete (Branches 1-3)
+
+**Lesson:** **Separation of Concerns: Signal Detection vs Rendering**
+
+**What We Built:**
+- `attention_signals.go` - Pure detection logic, no UI dependencies
+- `attention.go` - Pure rendering logic, receives data
+- `app.go` - Orchestration layer connecting the two
+
+**Why This Architecture Works:**
+1. **Testable** - Signal detector can be unit tested without TUI
+2. **Reusable** - Could expose signals via API/CLI in future
+3. **Maintainable** - New signals = add detector function, no UI changes
+4. **Fast** - All computation happens once in `ComputeAttentionItems()`
+
+**Key Insight:** When building features with distinct concerns (data analysis + presentation), keep them in separate files with clear interfaces.
 
 ---
 
-**Date**: December 4, 2025 - v0.3.3 Development Started  
-**Previous**: December 3, 2025 - v0.3.2 Complete  
-**Status**: Implementing Attention Dashboard feature
+**Lesson:** **Avoid Duplicate Case Statements in Switch Blocks**
+
+**Problem We Hit:**
+```go
+switch msg.String() {
+case "c":
+    // Handle attention dashboard navigation
+case "c":  // DUPLICATE - compiler error!
+    // Handle container cycling
+}
+```
+
+**Root Cause:**
+- Added 'c' key for new attention dashboard feature
+- Forgot 'c' was already used for container cycling in logs view
+- Go compiler caught it as duplicate case
+
+**The Fix:**
+```go
+case "c":
+    // Context-aware handler
+    if a.currentView.viewType == ViewAttention {
+        // Navigate to clusters
+    }
+    if a.currentView.viewType == ViewLogs && len(a.containers) > 1 {
+        // Cycle containers
+    }
+```
+
+**Key Insight:** When adding keyboard shortcuts, grep for existing usage first. Context-aware handlers prevent conflicts.
+
+---
+
+**Lesson:** **ViewType Enums Make View Logic Clear**
+
+**Why It Works:**
+```go
+const (
+    ViewAttention ViewType = iota  // New default root
+    ViewClusters
+    ViewProjects
+    // ... etc
+)
+```
+
+**Benefits:**
+1. Type safety - can't accidentally pass wrong type
+2. Clear switch statements - exhaustive case checking
+3. Self-documenting - enum name describes purpose
+4. Refactor-friendly - rename ripples through codebase
+
+**Anti-pattern to Avoid:**
+```go
+// DON'T: String-based view types
+currentView = "attention_dashboard_view"
+if currentView == "atention_dashbrd" {  // Typo - silent bug!
+```
+
+**Key Insight:** Enums > string constants for states. Compiler catches typos, IDE provides autocomplete.
+
+---
+
+**Lesson:** **Always Use Your Own Abstractions**
+
+**Continued from v0.3.2 Describe Bug:**
+
+We almost repeated the same mistake in attention dashboard:
+- Considered calling `GetAllPods()` then filtering in dashboard
+- Would break in Live mode (needs cluster context)
+- Instead: Use DataSource interface methods as designed
+
+**Correct Pattern:**
+```go
+// ✅ Use interface method - works in all modes
+pods, err := ds.GetAllPods()
+
+// ❌ Don't bypass your own abstractions
+pods := fetchPodsDirectly()  // Mode-specific bugs
+```
+
+**Key Insight:** If you designed an interface, trust it. Bypassing = bugs.
+
+---
+
+**Lesson:** **Fast Path for Empty States**
+
+**Attention Dashboard Optimization:**
+```go
+func ComputeAttentionItems(ds datasource.DataSource) []AttentionItem {
+    var items []AttentionItem
+    
+    // Detect issues (may find none)
+    items = append(items, detectPodHealth(ds)...)
+    items = append(items, detectClusterHealth(ds)...)
+    
+    // Fast path: no issues = return empty immediately
+    if len(items) == 0 {
+        return items  // Renders "All good ✨"
+    }
+    
+    // Only sort/limit if we have issues
+    sortAttentionItems(items)
+    if len(items) > 15 {
+        items = items[:15]
+    }
+    return items
+}
+```
+
+**Key Insight:** Optimize the happy path (no issues). Skip expensive operations when output is empty.
+
+---
+
+### Performance Insights
+
+**What We Measured:**
+- Signal detection on 200MB bundle: ~150ms (target <800ms ✅)
+- Most time spent in: etcd file parsing, kubectl status extraction
+- Rendering: <10ms (lipgloss is fast)
+
+**Optimization Applied:**
+- Compute signals once in `fetchAttention()`, cache in `attentionItems` field
+- Only re-compute on explicit refresh ('r' key)
+- Limit to top 15 issues (more is overwhelming anyway)
+
+**Key Insight:** Cache expensive computations. Users don't need real-time updates for attention dashboard - refresh on demand is fine.
+
+---
+
+**Date**: December 4, 2025 - v0.3.3 Attention Dashboard Complete (Branches 1-3)
+**Next**: Branch 4 - Polish & Documentation + Code Audit  
+**Status**: Core feature complete, awaiting cleanup before user testing

@@ -1434,6 +1434,8 @@ func (a *App) getCRDDescriptionCaption() string {
 // refreshCurrentView handles refreshing the current view data
 func (a *App) refreshCurrentView() tea.Cmd {
 	switch a.currentView.viewType {
+	case ViewAttention:
+		return a.fetchAttention()
 	case ViewClusters:
 		return a.fetchClusters()
 	case ViewProjects:
