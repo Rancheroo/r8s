@@ -228,6 +228,67 @@ func (ds *LiveDataSource) Mode() string {
 	return "LIVE"
 }
 
+// GetAllPods returns all pods across all namespaces (simplified for live mode)
+func (ds *LiveDataSource) GetAllPods() ([]rancher.Pod, error) {
+	// For live mode, we need to query across all projects
+	// This is a simplified implementation - get all projects first
+	clusters, err := ds.GetClusters()
+	if err != nil || len(clusters) == 0 {
+		return []rancher.Pod{}, err
+	}
+
+	// Get all projects for first cluster
+	projects, _, err := ds.GetProjects(clusters[0].ID)
+	if err != nil {
+		return []rancher.Pod{}, err
+	}
+
+	// Collect pods from all projects
+	var allPods []rancher.Pod
+	for _, project := range projects {
+		collection, err := ds.client.ListPods(project.ID)
+		if err != nil {
+			continue // Skip projects we can't access
+		}
+		allPods = append(allPods, collection.Data...)
+	}
+
+	return allPods, nil
+}
+
+// GetNodes returns cluster nodes (placeholder - needs Rancher API client extension)
+func (ds *LiveDataSource) GetNodes() ([]Node, error) {
+	// TODO: Implement when Rancher client has ListNodes method
+	// For now, return empty list
+	return []Node{}, nil
+}
+
+// GetAllEvents returns all cluster events (placeholder - needs Rancher API client extension)
+func (ds *LiveDataSource) GetAllEvents() ([]rancher.Event, error) {
+	// TODO: Implement when Rancher client has ListEvents method
+	// For now, return empty list
+	return []rancher.Event{}, nil
+}
+
+// GetDaemonSets returns all DaemonSets (placeholder - needs Rancher API client extension)
+func (ds *LiveDataSource) GetDaemonSets() ([]DaemonSet, error) {
+	// TODO: Implement when Rancher client has ListDaemonSets method
+	// For now, return empty list
+	return []DaemonSet{}, nil
+}
+
+// GetEtcdHealth returns etcd health (bundle mode only - returns nil for live)
+func (ds *LiveDataSource) GetEtcdHealth() (*EtcdHealth, error) {
+	// etcd health is bundle-only feature
+	return nil, nil
+}
+
+// GetSystemHealth returns system health (bundle mode only - returns nil for live)
+func (ds *LiveDataSource) GetSystemHealth() (*SystemHealth, error) {
+	// System health is bundle-only feature
+	return nil, nil
+}
+
 // Close cleans up resources (no-op for live data source)
 func (ds *LiveDataSource) Close() error {
 	return nil

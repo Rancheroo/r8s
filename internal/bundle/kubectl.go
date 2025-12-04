@@ -368,3 +368,98 @@ func ParseEvents(extractPath string) ([]rancher.Event, error) {
 
 	return events, nil
 }
+
+// ParseNodes parses kubectl get nodes output from bundle
+// Format: NAME STATUS ROLES AGE VERSION
+func ParseNodes(extractPath string) ([]NodeInfo, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/nodes")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var nodes []NodeInfo
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+
+		name := fields[0]
+		status := fields[1]
+
+		nodes = append(nodes, NodeInfo{
+			Name:   name,
+			Status: status,
+		})
+	}
+
+	return nodes, nil
+}
+
+// ParseDaemonSets parses kubectl get daemonsets output from bundle
+// Format: NAMESPACE NAME DESIRED CURRENT READY UP-TO-DATE AVAILABLE NODE_SELECTOR AGE
+func ParseDaemonSets(extractPath string) ([]DaemonSetInfo, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/daemonsets")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var daemonsets []DaemonSetInfo
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 4 {
+			continue
+		}
+
+		namespace := fields[0]
+		name := fields[1]
+		desired := fields[2]
+		current := fields[3]
+		ready := ""
+		if len(fields) > 4 {
+			ready = fields[4]
+		}
+
+		// Format ready as "current/desired" if not already in that format
+		if ready == "" || !strings.Contains(ready, "/") {
+			ready = fmt.Sprintf("%s/%s", current, desired)
+		}
+
+		daemonsets = append(daemonsets, DaemonSetInfo{
+			Name:      name,
+			Namespace: namespace,
+			Ready:     ready,
+		})
+	}
+
+	return daemonsets, nil
+}
+
+// NodeInfo contains parsed node information
+type NodeInfo struct {
+	Name   string
+	Status string
+}
+
+// DaemonSetInfo contains parsed daemonset information
+type DaemonSetInfo struct {
+	Name      string
+	Namespace string
+	Ready     string
+}

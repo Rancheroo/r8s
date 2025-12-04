@@ -23,6 +23,9 @@ type DataSource interface {
 	// GetPods returns pods for the given project and namespace
 	GetPods(projectID, namespace string) ([]rancher.Pod, error)
 
+	// GetAllPods returns all pods across all namespaces (for attention dashboard)
+	GetAllPods() ([]rancher.Pod, error)
+
 	// GetDeployments returns deployments for the given project and namespace
 	GetDeployments(projectID, namespace string) ([]rancher.Deployment, error)
 
@@ -50,9 +53,51 @@ type DataSource interface {
 	// DescribeService returns detailed service information as JSON-marshalable data
 	DescribeService(clusterID, namespace, name string) (interface{}, error)
 
+	// GetNodes returns cluster nodes (for attention dashboard)
+	GetNodes() ([]Node, error)
+
+	// GetAllEvents returns all cluster events (for attention dashboard)
+	GetAllEvents() ([]rancher.Event, error)
+
+	// GetDaemonSets returns all DaemonSets (for attention dashboard)
+	GetDaemonSets() ([]DaemonSet, error)
+
+	// GetEtcdHealth returns etcd cluster health (bundle mode only, returns nil for live)
+	GetEtcdHealth() (*EtcdHealth, error)
+
+	// GetSystemHealth returns system health metrics (bundle mode only, returns nil for live)
+	GetSystemHealth() (*SystemHealth, error)
+
 	// Mode returns a display string for the current mode (LIVE, BUNDLE, DEMO)
 	Mode() string
 
 	// Close cleans up any resources held by the data source
 	Close() error
+}
+
+// Node represents a Kubernetes node
+type Node struct {
+	Name   string
+	Status string
+}
+
+// DaemonSet represents a DaemonSet with ready status
+type DaemonSet struct {
+	Name      string
+	Namespace string
+	Ready     string // Format: "X/Y"
+}
+
+// EtcdHealth represents etcd cluster health status
+type EtcdHealth struct {
+	Healthy    bool
+	HasAlarms  bool
+	AlarmType  string
+	AlarmCount int
+}
+
+// SystemHealth represents system resource usage
+type SystemHealth struct {
+	MemoryUsedPercent float64
+	DiskUsedPercent   float64
 }

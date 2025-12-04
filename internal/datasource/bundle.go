@@ -341,6 +341,95 @@ func (ds *BundleDataSource) Mode() string {
 	return "BUNDLE"
 }
 
+// GetAllPods returns all pods across all namespaces
+func (ds *BundleDataSource) GetAllPods() ([]rancher.Pod, error) {
+	// Use kubectl parser which has all pods
+	pods, err := bundle.ParsePods(ds.bundle.ExtractPath)
+	if err != nil {
+		return nil, err
+	}
+	return pods, nil
+}
+
+// GetNodes returns cluster nodes
+func (ds *BundleDataSource) GetNodes() ([]Node, error) {
+	nodeInfos, err := bundle.ParseNodes(ds.bundle.ExtractPath)
+	if err != nil {
+		// Nodes file might not exist in all bundles
+		return []Node{}, nil
+	}
+
+	var nodes []Node
+	for _, ni := range nodeInfos {
+		nodes = append(nodes, Node{
+			Name:   ni.Name,
+			Status: ni.Status,
+		})
+	}
+	return nodes, nil
+}
+
+// GetAllEvents returns all cluster events
+func (ds *BundleDataSource) GetAllEvents() ([]rancher.Event, error) {
+	// Events are already parsed and stored in bundle
+	var events []rancher.Event
+	for _, item := range ds.bundle.Events {
+		if event, ok := item.(rancher.Event); ok {
+			events = append(events, event)
+		}
+	}
+	return events, nil
+}
+
+// GetDaemonSets returns all DaemonSets
+func (ds *BundleDataSource) GetDaemonSets() ([]DaemonSet, error) {
+	dsInfos, err := bundle.ParseDaemonSets(ds.bundle.ExtractPath)
+	if err != nil {
+		// DaemonSets file might not exist
+		return []DaemonSet{}, nil
+	}
+
+	var daemonsets []DaemonSet
+	for _, dsi := range dsInfos {
+		daemonsets = append(daemonsets, DaemonSet{
+			Name:      dsi.Name,
+			Namespace: dsi.Namespace,
+			Ready:     dsi.Ready,
+		})
+	}
+	return daemonsets, nil
+}
+
+// GetEtcdHealth returns etcd health info (bundle only)
+func (ds *BundleDataSource) GetEtcdHealth() (*EtcdHealth, error) {
+	healthInfo, err := bundle.ParseEtcdHealth(ds.bundle.ExtractPath)
+	if err != nil {
+		// etcd dir might not exist
+		return nil, nil
+	}
+
+	return &EtcdHealth{
+		Healthy:    healthInfo.Healthy,
+		HasAlarms:  healthInfo.HasAlarms,
+		AlarmType:  healthInfo.AlarmType,
+		AlarmCount: healthInfo.AlarmCount,
+	}, nil
+}
+
+// GetSystemHealth returns system health info (bundle only)
+func (ds *BundleDataSource) GetSystemHealth() (*SystemHealth, error) {
+	healthInfo, err := bundle.ParseSystemHealth(ds.bundle.ExtractPath)
+	if err != nil {
+		// systeminfo dir might not exist
+		return nil, nil
+	}
+
+	return &SystemHealth{
+		MemoryUsedPercent: healthInfo.MemoryUsedPercent,
+		DiskUsedPercent:   healthInfo.DiskUsedPercent,
+	}, nil
+}
+
 // Close cleans up bundle resources
 func (ds *BundleDataSource) Close() error {
 	if ds.bundle != nil {
