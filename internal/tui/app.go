@@ -761,7 +761,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View renders the application - simplified for now
 func (a *App) View() string {
 	if a.error != "" {
-		return errorStyle.Render(fmt.Sprintf("Error: %s\n\nPress 'q' to quit", a.error))
+		return errorStyle.Render(fmt.Sprintf("Error: %s\n\nPress Esc to continue", a.error))
 	}
 
 	if a.loading {

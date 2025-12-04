@@ -125,7 +125,7 @@ func (a *App) renderAttentionDashboard() string {
 		Width(a.width - 4).
 		Render(content)
 
-	status := statusStyle.Render(" [1-9] jump · [Enter] logs · [c] classic view · [r] refresh · [q] quit ")
+	status := statusStyle.Render(" [1-9] jump · [Enter] logs · [→] expand · [c] classic · [r] refresh · [Esc] back ")
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -140,8 +140,20 @@ func (a *App) renderAttentionDashboard() string {
 
 // renderAttentionItem renders a single attention item with number prefix and selection highlight
 func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) string {
-	// Format: "1. 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
+	// Format: "1. ► 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
 	numStr := fmt.Sprintf("%d. ", num)
+
+	// Add ►/▼ indicator for collapsible event items
+	expandIndicator := ""
+	if item.ResourceType == "event" || item.ResourceType == "cluster" {
+		// Check if this item is expanded
+		itemIdx := num - 1 // Convert to 0-based index
+		if a.expandedItems != nil && a.expandedItems[itemIdx] {
+			expandIndicator = "▼ "
+		} else {
+			expandIndicator = "► "
+		}
+	}
 
 	titleWidth := 30
 	descWidth := 25
@@ -162,8 +174,9 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 		ns = ns[:nsWidth-3] + "..."
 	}
 
-	line := fmt.Sprintf("%s%s %-*s  %-*s  %s",
+	line := fmt.Sprintf("%s%s%s %-*s  %-*s  %s",
 		numStr,
+		expandIndicator,
 		item.Emoji,
 		titleWidth, title,
 		descWidth, desc,
