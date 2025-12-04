@@ -220,8 +220,8 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		offlineMode = false
 	}
 
-	// Always start at Clusters view regardless of connection status
-	var initialView ViewContext = ViewContext{viewType: ViewClusters}
+	// Always start at Attention Dashboard (new default root view)
+	var initialView ViewContext = ViewContext{viewType: ViewAttention}
 
 	return &App{
 		config:      cfg,
@@ -244,11 +244,14 @@ func (a *App) Init() tea.Cmd {
 
 	// Start fetching data based on current view
 	switch a.currentView.viewType {
+	case ViewAttention:
+		// Fetch attention dashboard data (new default)
+		cmds = append(cmds, a.fetchAttention())
 	case ViewPods:
 		// For offline mode, automatically fetch pods
 		cmds = append(cmds, a.fetchPods("demo-project", "default"))
 	default:
-		// For online mode, try clusters first, then navigate
+		// For other views, try clusters first
 		cmds = append(cmds, a.fetchClusters())
 	}
 
