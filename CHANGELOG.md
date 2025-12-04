@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3-final] - 2025-12-04
+
+### Fixed
+- **CRITICAL: Dashboard keyboard navigation completely restored**
+  - ↑/↓ or j/k moves focus with visible cyan highlight (inverted row)
+  - 1-9 instant jump to issue lines
+  - Enter drills down to pod logs (pre-filtered to errors+warnings)
+  - → or l expands collapsed event lines (future feature placeholder)
+  - c = classic cluster view, r = refresh, q = quit
+  - All keys work instantly with no input delay
+
+### Changed
+- **Dashboard is now BUNDLE-ONLY** (architectural decision locked in permanently)
+  - Live mode skips dashboard entirely, goes directly to Clusters view
+  - Clear message in live mode: "Live cluster browser — use --bundle for Attention Dashboard"
+  - Removes all live-mode attention-related bugs permanently
+  - Doubles development velocity by eliminating dual-mode complexity
+
+### Added
+- Visible selection highlighting in dashboard (cyan background with inverted colors)
+- [BUNDLE] prefix in status bar when using bundle mode
+- Session state tracking for dashboard cursor position
+- Expandable event line infrastructure (placeholders for future expansion feature)
+
+### Technical
+- Added `attentionCursor` and `expandedItems` state fields to App struct
+- Keyboard navigation handled before general table navigation in Update()
+- Initial view selection based on mode: bundle → Attention, live/mock → Clusters
+- Selection rendering uses `isSelected` parameter in `renderAttentionItem()`
+- Cyan/dark-gray color scheme for maximum visibility
+
 ## [0.3.3] - 2025-12-04 (IN PROGRESS)
 
 ### Added

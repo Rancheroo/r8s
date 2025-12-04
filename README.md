@@ -1,6 +1,6 @@
 # r8s
 
-> TUI for Rancher cluster navigation and RKE2 log bundle analysis
+> **r8s = fastest bundle troubleshooter on earth** · Live cluster browser
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)

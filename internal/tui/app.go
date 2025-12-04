@@ -129,7 +129,9 @@ type App struct {
 	bundlePath  string // Path to loaded bundle
 
 	// Attention Dashboard
-	attentionItems []AttentionItem // Detected issues for attention dashboard
+	attentionItems  []AttentionItem // Detected issues for attention dashboard
+	attentionCursor int             // Selected item index in dashboard
+	expandedItems   map[int]bool    // Which collapsed event items are expanded
 
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
@@ -220,8 +222,14 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		offlineMode = false
 	}
 
-	// Always start at Attention Dashboard (new default root view)
-	var initialView ViewContext = ViewContext{viewType: ViewAttention}
+	// Bundle mode → Attention Dashboard (the killer feature)
+	// Live mode → Classic Clusters view (dashboard doesn't work well with live data)
+	var initialView ViewContext
+	if bundleMode {
+		initialView = ViewContext{viewType: ViewAttention}
+	} else {
+		initialView = ViewContext{viewType: ViewClusters}
+	}
 
 	return &App{
 		config:      cfg,
@@ -299,6 +307,66 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Add character to search query
 				if len(msg.String()) == 1 {
 					a.searchQuery += msg.String()
+				}
+				return a, nil
+			}
+		}
+
+		// ATTENTION DASHBOARD NAVIGATION - Handle before general navigation
+		if a.currentView.viewType == ViewAttention && len(a.attentionItems) > 0 {
+			switch msg.String() {
+			case "j", "down":
+				if a.attentionCursor < len(a.attentionItems)-1 {
+					a.attentionCursor++
+				}
+				return a, nil
+			case "k", "up":
+				if a.attentionCursor > 0 {
+					a.attentionCursor--
+				}
+				return a, nil
+			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+				// Jump to line by number (1-indexed display, 0-indexed storage)
+				idx := int(msg.String()[0] - '1')
+				if idx < len(a.attentionItems) {
+					a.attentionCursor = idx
+				}
+				return a, nil
+			case "enter":
+				// Navigate to logs for the selected item (pod issues only)
+				if a.attentionCursor < len(a.attentionItems) {
+					item := a.attentionItems[a.attentionCursor]
+					if item.ResourceType == "pod" && item.PodName != "" {
+						// Push current view to stack
+						a.viewStack = append(a.viewStack, a.currentView)
+
+						// Navigate to logs view with error/warning filter
+						a.currentView = ViewContext{
+							viewType:      ViewLogs,
+							clusterID:     item.ClusterID,
+							clusterName:   "",
+							projectID:     "",
+							projectName:   "",
+							namespaceID:   "",
+							namespaceName: item.Namespace,
+							podName:       item.PodName,
+							containerName: item.ContainerName,
+						}
+
+						// Set filter to show errors and warnings by default
+						a.filterLevel = "WARN"
+						a.loading = true
+						return a, a.fetchLogs(item.ClusterID, item.Namespace, item.PodName)
+					}
+				}
+				return a, nil
+			case "right", "l":
+				// Toggle expansion for event items (future feature)
+				if a.attentionCursor < len(a.attentionItems) {
+					if a.expandedItems == nil {
+						a.expandedItems = make(map[int]bool)
+					}
+					a.expandedItems[a.attentionCursor] = !a.expandedItems[a.attentionCursor]
 				}
 				return a, nil
 			}

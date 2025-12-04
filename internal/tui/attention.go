@@ -68,17 +68,18 @@ func (a *App) renderAttentionDashboard() string {
 		Padding(0, 1).
 		Render(summaryText)
 
-	// Build issue list
+	// Build issue list with cursor tracking
 	var lines []string
-	lineNum := 1
+	itemIdx := 0 // Track actual item index (for cursor)
 
 	if len(critical) > 0 {
 		lines = append(lines, "")
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorRed).Bold(true).Render("CRITICAL:"))
 		for _, item := range critical {
-			line := a.renderAttentionItem(lineNum, item)
+			isSelected := (itemIdx == a.attentionCursor)
+			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
-			lineNum++
+			itemIdx++
 		}
 	}
 
@@ -86,9 +87,10 @@ func (a *App) renderAttentionDashboard() string {
 		lines = append(lines, "")
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorYellow).Bold(true).Render("WARNING:"))
 		for _, item := range warning {
-			line := a.renderAttentionItem(lineNum, item)
+			isSelected := (itemIdx == a.attentionCursor)
+			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
-			lineNum++
+			itemIdx++
 		}
 	}
 
@@ -96,9 +98,10 @@ func (a *App) renderAttentionDashboard() string {
 		lines = append(lines, "")
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorCyan).Bold(true).Render("INFO:"))
 		for _, item := range info {
-			line := a.renderAttentionItem(lineNum, item)
+			isSelected := (itemIdx == a.attentionCursor)
+			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
-			lineNum++
+			itemIdx++
 		}
 	}
 
@@ -135,8 +138,8 @@ func (a *App) renderAttentionDashboard() string {
 	)
 }
 
-// renderAttentionItem renders a single attention item with number prefix
-func (a *App) renderAttentionItem(num int, item AttentionItem) string {
+// renderAttentionItem renders a single attention item with number prefix and selection highlight
+func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) string {
 	// Format: "1. 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
 	numStr := fmt.Sprintf("%d. ", num)
 
@@ -159,7 +162,24 @@ func (a *App) renderAttentionItem(num int, item AttentionItem) string {
 		ns = ns[:nsWidth-3] + "..."
 	}
 
-	// Color the entire line based on severity
+	line := fmt.Sprintf("%s%s %-*s  %-*s  %s",
+		numStr,
+		item.Emoji,
+		titleWidth, title,
+		descWidth, desc,
+		ns,
+	)
+
+	// Apply selection highlight (inverts colors for visibility)
+	if isSelected {
+		return lipgloss.NewStyle().
+			Background(colorCyan).
+			Foreground(colorDarkGray).
+			Bold(true).
+			Render(line)
+	}
+
+	// Color the entire line based on severity when not selected
 	var style lipgloss.Style
 	switch item.Severity {
 	case SeverityCritical:
@@ -169,14 +189,6 @@ func (a *App) renderAttentionItem(num int, item AttentionItem) string {
 	case SeverityInfo:
 		style = lipgloss.NewStyle().Foreground(colorWhite)
 	}
-
-	line := fmt.Sprintf("%s%s %-*s  %-*s  %s",
-		numStr,
-		item.Emoji,
-		titleWidth, title,
-		descWidth, desc,
-		ns,
-	)
 
 	return style.Render(line)
 }
