@@ -1,11 +1,42 @@
 # Changelog
 
-All notable changes to the r9s project will be documented in this file.
+All notable changes to the r8s project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Released for Testing]
+## [Unreleased]
+
+## [0.3.3] - 2025-12-04 (IN PROGRESS)
+
+### Added
+- **🔥 Attention Dashboard**: New default root view that immediately shows cluster health status
+  - Detects critical issues: CrashLoopBackOff, OOMKilled, ImagePullBackOff, Evicted pods
+  - Detects pod restarts (≥3 in recent period)
+  - Identifies high error/warning counts in logs
+  - Shows etcd health issues (bundle mode)
+  - Detects NotReady nodes
+  - Displays DaemonSet incomplete deployments
+  - Parses cluster events for warnings and failures
+  - Clean "All good ✨" state when no issues detected
+  - Severity-based grouping: Critical, Warning, Info
+  - One-key drill-down (1-9 for quick jump, Enter for details)
+  - Toggle classic navigation with 'c' key
+  - Configurable default view preference
+
+### Added (Technical)
+- `internal/tui/attention.go` - Attention Dashboard view and orchestration
+- `internal/tui/attention_signals.go` - Signal detection engine with 5 detector tiers
+- `internal/bundle/etcd.go` - etcd health file parsers (alarmlist, endpointhealth)
+- `internal/bundle/systeminfo.go` - System health parsers (memory, disk)
+- Extended kubectl parsers: ParseNodes(), ParseDaemonSets()
+- New DataSource interface methods: GetNodes(), GetEtcdHealth(), GetSystemHealth()
+- `ViewAttention` type added to navigation flow
+- Attention-specific styles with emoji indicators and severity colors
+
+### Changed
+- Default root view is now Attention Dashboard (classic view accessible via 'c' key)
+- Config supports `defaultView` setting for user preference persistence
 
 ## [0.3.2] - 2025-12-03
 

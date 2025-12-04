@@ -529,7 +529,41 @@ GetDeployments(projectID, namespace string) ([]Deployment, error)
 
 ---
 
-**Date**: December 3, 2025  
-**Status**: v0.3.2 Complete - DataSource architecture refactored  
-**Previous**: November 27, 2025 - Week 1 Complete  
-**Next**: Continue refining interface, consider table library alternatives if selection preservation becomes priority
+---
+
+## v0.3.3 Development: Attention Dashboard Implementation
+
+### Starting Development: December 4, 2025
+
+**Goal:** Transform r8s into the fastest "is this cluster broken?" diagnostic tool.
+
+**Approach:**
+- New **Attention Dashboard** as default root view
+- Detects critical signals across 5 tiers: Pod Health, Cluster Health, Events, Logs, System Health
+- Leverages comprehensive bundle data discovered in BUNDLE_DISCOVERY_COMPREHENSIVE.md
+- Clean architecture with signal detector pattern for easy testing
+
+**Key Design Decisions:**
+1. **Signal-based detection** - Not a metrics dashboard, but a "smoke detector"
+2. **Performance-first** - Must complete in <800ms even on 200MB bundles
+3. **Zero false positives** - Only flag real problems worth human attention
+4. **One-key drill-down** - Jump directly to problematic pod/log/resource
+5. **Optional default** - Users can persist preference for classic vs attention view
+
+**Implementation Plan:**
+- Branch 1: Core signal detection engine and basic view rendering
+- Branch 2: Keyboard navigation and drill-down capabilities
+- Branch 3: Visual polish and documentation
+
+**Expected Impact:**
+- Reduce time-to-diagnosis from minutes to seconds
+- Surface hidden problems in bundle data (etcd, nodes, events)
+- Empower support engineers with instant cluster health assessment
+
+*Development in progress...*
+
+---
+
+**Date**: December 4, 2025 - v0.3.3 Development Started  
+**Previous**: December 3, 2025 - v0.3.2 Complete  
+**Status**: Implementing Attention Dashboard feature
