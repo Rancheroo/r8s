@@ -187,7 +187,8 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 		}
 
 		// Warning: Not Ready (but not in terminal state)
-		if pod.KubectlReady != "" && !strings.HasPrefix(pod.KubectlReady, "1/1") &&
+		// Only flag if containers are actually not ready (e.g., "1/2" not "2/2")
+		if pod.KubectlReady != "" && !isHealthyReadyStatus(pod.KubectlReady) &&
 			pod.KubectlStatus == "Running" {
 			items = append(items, AttentionItem{
 				Severity:     SeverityWarning,
@@ -365,6 +366,22 @@ func detectSystemHealth(ds datasource.DataSource) []AttentionItem {
 	}
 
 	return items
+}
+
+// isHealthyReadyStatus checks if a pod's ready status indicates all containers are ready
+// Examples: "2/2" → true, "3/3" → true, "1/2" → false, "0/3" → false
+func isHealthyReadyStatus(ready string) bool {
+	if ready == "" {
+		return false
+	}
+
+	parts := strings.Split(ready, "/")
+	if len(parts) != 2 {
+		return false
+	}
+
+	// Check if ready count equals total count (e.g., "2/2" or "3/3")
+	return parts[0] == parts[1]
 }
 
 // sortAttentionItems sorts items by severity (Critical first)
