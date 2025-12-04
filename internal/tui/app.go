@@ -702,6 +702,11 @@ func (a *App) View() string {
 		return a.renderDescribeView()
 	}
 
+	// Special rendering for attention dashboard
+	if a.currentView.viewType == ViewAttention {
+		return a.renderAttentionDashboard()
+	}
+
 	// Special rendering for logs view
 	if a.currentView.viewType == ViewLogs {
 		return a.renderLogsView()
