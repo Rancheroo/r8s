@@ -648,6 +648,11 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			)
 		}
 
+	case attentionMsg:
+		a.loading = false
+		a.attentionItems = msg.items
+		a.error = ""
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
@@ -2422,6 +2427,20 @@ func (a *App) getMockCRDInstances(group, resource string) []map[string]interface
 
 	// Default: 0 instances for unknown CRDs
 	return []map[string]interface{}{}
+}
+
+// fetchAttention analyzes cluster health and returns attention items
+func (a *App) fetchAttention() tea.Cmd {
+	return func() tea.Msg {
+		if a.dataSource == nil {
+			return errMsg{fmt.Errorf("no data source available")}
+		}
+
+		// Detect all issues across the cluster
+		items := ComputeAttentionItems(a.dataSource)
+
+		return attentionMsg{items: items}
+	}
 }
 
 // fetchClusters fetches clusters using the unified data source
