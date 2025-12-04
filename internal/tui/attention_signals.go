@@ -86,9 +86,12 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			}
 		}
 
-		// Critical: CrashLoopBackOff
-		if strings.Contains(pod.State, "CrashLoopBackOff") ||
-			strings.Contains(pod.KubectlStatus, "CrashLoopBackOff") {
+		// Critical: CrashLoopBackOff (case-insensitive for Rancher API compatibility)
+		stateLower := strings.ToLower(pod.State)
+		kubectlStatusLower := strings.ToLower(pod.KubectlStatus)
+
+		if strings.Contains(stateLower, "crashloopbackoff") ||
+			strings.Contains(kubectlStatusLower, "crashloopbackoff") {
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "💀",
@@ -102,12 +105,12 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: OOMKilled
-		if strings.Contains(pod.State, "OOMKilled") ||
-			strings.Contains(pod.KubectlStatus, "OOMKilled") {
+		// Critical: OOMKilled (distinct emoji for visibility)
+		if strings.Contains(stateLower, "oomkilled") ||
+			strings.Contains(kubectlStatusLower, "oomkilled") {
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
-				Emoji:        "💀",
+				Emoji:        "🧨", // Distinct from CrashLoop
 				Title:        pod.Name,
 				Description:  "OOMKilled",
 				Namespace:    namespace,
@@ -118,9 +121,9 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: Error/Failed state
-		if strings.Contains(pod.State, "Error") || strings.Contains(pod.State, "Failed") ||
-			strings.Contains(pod.KubectlStatus, "Error") || strings.Contains(pod.KubectlStatus, "Failed") {
+		// Critical: Error/Failed state (case-insensitive)
+		if strings.Contains(stateLower, "error") || strings.Contains(stateLower, "failed") ||
+			strings.Contains(kubectlStatusLower, "error") || strings.Contains(kubectlStatusLower, "failed") {
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "💀",
@@ -134,9 +137,9 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: ImagePullBackOff / ErrImagePull
-		if strings.Contains(pod.State, "ImagePullBackOff") || strings.Contains(pod.State, "ErrImagePull") ||
-			strings.Contains(pod.KubectlStatus, "ImagePullBackOff") || strings.Contains(pod.KubectlStatus, "ErrImagePull") {
+		// Critical: ImagePullBackOff / ErrImagePull (case-insensitive)
+		if strings.Contains(stateLower, "imagepullbackoff") || strings.Contains(stateLower, "errimagepull") ||
+			strings.Contains(kubectlStatusLower, "imagepullbackoff") || strings.Contains(kubectlStatusLower, "errimagepull") {
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "🚫",
@@ -150,8 +153,8 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: Evicted
-		if strings.Contains(pod.State, "Evicted") || strings.Contains(pod.KubectlStatus, "Evicted") {
+		// Critical: Evicted (case-insensitive)
+		if strings.Contains(stateLower, "evicted") || strings.Contains(kubectlStatusLower, "evicted") {
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "🚫",
@@ -300,7 +303,7 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 		}
 	}
 
-	// Report high-impact warning types
+	// Report high-impact warning types (collapsed format)
 	for reason, count := range warningCounts {
 		if count >= 5 { // At least 5 occurrences
 			emoji := "🟨"
@@ -314,11 +317,12 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 				severity = SeverityWarning // Keep as warning, but with red emoji
 			}
 
+			// Collapsed format: "467339× DNSConfigForming" instead of long description
 			items = append(items, AttentionItem{
 				Severity:     severity,
 				Emoji:        emoji,
-				Title:        fmt.Sprintf("%d Warning events", count),
-				Description:  reason,
+				Title:        fmt.Sprintf("%d× %s", count, reason),
+				Description:  "Warning events",
 				Namespace:    "cluster",
 				Count:        count,
 				ResourceType: "event",

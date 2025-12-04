@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "metrics-server" in pod "rke2-metrics-server-69bdccfdd9-lvfg2" not found

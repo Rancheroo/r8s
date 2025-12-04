@@ -1,0 +1,76 @@
+apparmor module is loaded.
+42 profiles are loaded.
+42 profiles are in enforce mode.
+   /snap/snapd/21759/usr/lib/snapd/snap-confine
+   /snap/snapd/21759/usr/lib/snapd/snap-confine//mount-namespace-capture-helper
+   /snap/snapd/25577/usr/lib/snapd/snap-confine
+   /snap/snapd/25577/usr/lib/snapd/snap-confine//mount-namespace-capture-helper
+   /usr/bin/man
+   /usr/lib/NetworkManager/nm-dhcp-client.action
+   /usr/lib/NetworkManager/nm-dhcp-helper
+   /usr/lib/connman/scripts/dhclient-script
+   /usr/lib/snapd/snap-confine
+   /usr/lib/snapd/snap-confine//mount-namespace-capture-helper
+   /{,usr/}sbin/dhclient
+   cri-containerd.apparmor.d
+   lsb_release
+   man_filter
+   man_groff
+   nvidia_modprobe
+   nvidia_modprobe//kmod
+   snap-update-ns.lxd
+   snap.lxd.activate
+   snap.lxd.benchmark
+   snap.lxd.buginfo
+   snap.lxd.check-kernel
+   snap.lxd.daemon
+   snap.lxd.hook.configure
+   snap.lxd.hook.install
+   snap.lxd.hook.remove
+   snap.lxd.lxc
+   snap.lxd.lxc-to-lxd
+   snap.lxd.lxd
+   snap.lxd.migrate
+   snap.lxd.user-daemon
+   tcpdump
+   ubuntu_pro_apt_news
+   ubuntu_pro_esm_cache
+   ubuntu_pro_esm_cache//apt_methods
+   ubuntu_pro_esm_cache//apt_methods_gpgv
+   ubuntu_pro_esm_cache//cloud_id
+   ubuntu_pro_esm_cache//dpkg
+   ubuntu_pro_esm_cache//ps
+   ubuntu_pro_esm_cache//ubuntu_distro_info
+   ubuntu_pro_esm_cache_systemctl
+   ubuntu_pro_esm_cache_systemd_detect_virt
+0 profiles are in complain mode.
+0 profiles are in kill mode.
+0 profiles are in unconfined mode.
+22 processes have profiles defined.
+22 processes are in enforce mode.
+   /usr/local/bin/etcd (9014) cri-containerd.apparmor.d
+   /usr/local/bin/kube-apiserver (9110) cri-containerd.apparmor.d
+   /usr/local/bin/kube-controller-manager (9344) cri-containerd.apparmor.d
+   /usr/local/bin/kube-scheduler (9397) cri-containerd.apparmor.d
+   /usr/local/bin/rke2-cloud-provider (9628) cri-containerd.apparmor.d
+   /usr/bin/operator (10634) cri-containerd.apparmor.d
+   /usr/bin/calico-typha (11423) cri-containerd.apparmor.d
+   /cluster-proportional-autoscaler (11966) cri-containerd.apparmor.d
+   /coredns (12325) cri-containerd.apparmor.d
+   /usr/bin/wrapper (12446) cri-containerd.apparmor.d
+   /usr/bin/kube-controllers (12467) cri-containerd.apparmor.d
+   /usr/bin/tini (14798) cri-containerd.apparmor.d
+   /usr/bin/agent (14877) cri-containerd.apparmor.d
+   /usr/bin/tini (15609) cri-containerd.apparmor.d
+   /usr/bin/agent (15675) cri-containerd.apparmor.d
+   /usr/bin/webhook (16104) cri-containerd.apparmor.d
+   /bin/system-upgrade-controller (16975) cri-containerd.apparmor.d
+   /bin/node_exporter (791523) cri-containerd.apparmor.d
+   /usr/bin/pushprox-client (791565) cri-containerd.apparmor.d
+   /usr/bin/pushprox-client (791593) cri-containerd.apparmor.d
+   /usr/bin/pushprox-client (791595) cri-containerd.apparmor.d
+   /usr/bin/pushprox-client (791596) cri-containerd.apparmor.d
+0 processes are in complain mode.
+0 processes are unconfined but have a profile defined.
+0 processes are in mixed mode.
+0 processes are in kill mode.

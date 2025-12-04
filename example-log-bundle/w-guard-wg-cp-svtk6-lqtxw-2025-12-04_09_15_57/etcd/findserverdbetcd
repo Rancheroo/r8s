@@ -1,0 +1,14 @@
+-rw------- 1 root root 34 Nov 20 00:44 /var/lib/rancher/rke2/server/db/etcd/name
+-rw-r--r-- 1 root root 7205 Dec  4 08:30 /var/lib/rancher/rke2/server/db/etcd/member/snap/0000000000000002-0000000000729ae0.snap
+-rw-r--r-- 1 root root 7205 Dec  4 08:04 /var/lib/rancher/rke2/server/db/etcd/member/snap/0000000000000002-00000000007273cf.snap
+-rw-r--r-- 1 root root 7205 Dec  4 07:12 /var/lib/rancher/rke2/server/db/etcd/member/snap/0000000000000002-00000000007225ad.snap
+-rw------- 1 root root 50720768 Dec  4 09:18 /var/lib/rancher/rke2/server/db/etcd/member/snap/db
+-rw-r--r-- 1 root root 7205 Dec  4 08:55 /var/lib/rancher/rke2/server/db/etcd/member/snap/0000000000000002-000000000072c1f1.snap
+-rw-r--r-- 1 root root 7205 Dec  4 07:38 /var/lib/rancher/rke2/server/db/etcd/member/snap/0000000000000002-0000000000724cbe.snap
+-rw------- 1 root root 64001168 Dec  4 01:29 /var/lib/rancher/rke2/server/db/etcd/member/wal/0000000000000054-00000000006ed201.wal
+-rw------- 1 root root 64000000 Dec  4 08:59 /var/lib/rancher/rke2/server/db/etcd/member/wal/1.tmp
+-rw------- 1 root root 64001448 Dec  3 21:45 /var/lib/rancher/rke2/server/db/etcd/member/wal/0000000000000053-00000000006d7f7e.wal
+-rw------- 1 root root 64001240 Dec  4 08:59 /var/lib/rancher/rke2/server/db/etcd/member/wal/0000000000000056-000000000071760c.wal
+-rw------- 1 root root 64000000 Dec  4 09:18 /var/lib/rancher/rke2/server/db/etcd/member/wal/0000000000000057-000000000072c7c4.wal
+-rw------- 1 root root 64001032 Dec  4 05:15 /var/lib/rancher/rke2/server/db/etcd/member/wal/0000000000000055-000000000070237f.wal
+-rw------- 1 root root 1322 Nov 20 00:44 /var/lib/rancher/rke2/server/db/etcd/config

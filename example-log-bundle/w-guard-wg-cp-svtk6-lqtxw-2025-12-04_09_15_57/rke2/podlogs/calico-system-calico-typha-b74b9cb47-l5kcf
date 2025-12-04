@@ -1,0 +1,18 @@
+2025-12-01 04:19:50.523 [INFO][1] typha/sync_server.go 422: Accepted from 45.79.181.223:31698 port=5473
+2025-12-01 04:19:50.525 [INFO][1] typha/sync_server.go 431: New connection connID=0x39 port=5473
+2025-12-01 04:19:50.527 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=45.79.181.223:31698 connID=0x39
+2025-12-01 04:19:50.528 [INFO][1] typha/sync_server.go 855: Failed to read from client client=45.79.181.223:31698 connID=0x39 error=tls: first record does not look like a TLS handshake thread="read"
+2025-12-01 04:19:50.528 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=45.79.181.223:31698 connID=0x39 thread="read"
+2025-12-01 04:19:50.529 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=45.79.181.223:31698 connID=0x39 error=context canceled
+2025-12-01 04:19:50.529 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=45.79.181.223:31698 connID=0x39
+2025-12-01 04:19:50.530 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=45.79.181.223:31698 connID=0x39
+2025-12-01 04:19:50.530 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled
+2025-12-01 04:19:50.941 [INFO][1] typha/sync_server.go 422: Accepted from 45.79.181.223:31702 port=5473
+2025-12-01 04:19:50.941 [INFO][1] typha/sync_server.go 431: New connection connID=0x3a port=5473
+2025-12-01 04:19:50.941 [INFO][1] typha/sync_server.go 719: Per-connection goroutine started client=45.79.181.223:31702 connID=0x3a
+2025-12-01 04:19:51.154 [INFO][1] typha/sync_server.go 855: Failed to read from client client=45.79.181.223:31702 connID=0x3a error=tls: client didn't provide a certificate thread="read"
+2025-12-01 04:19:51.154 [INFO][1] typha/sync_server.go 845: Read goroutine finished client=45.79.181.223:31702 connID=0x3a thread="read"
+2025-12-01 04:19:51.154 [WARNING][1] typha/sync_server.go 898: Failed to read client hello. client=45.79.181.223:31702 connID=0x3a error=context canceled
+2025-12-01 04:19:51.154 [INFO][1] typha/sync_server.go 706: Client connection shutting down. client=45.79.181.223:31702 connID=0x3a
+2025-12-01 04:19:51.154 [INFO][1] typha/sync_server.go 715: Client connection shut down. client=45.79.181.223:31702 connID=0x3a
+2025-12-01 04:19:51.154 [INFO][1] typha/sync_server.go 468: Connection handler finished error=context canceled

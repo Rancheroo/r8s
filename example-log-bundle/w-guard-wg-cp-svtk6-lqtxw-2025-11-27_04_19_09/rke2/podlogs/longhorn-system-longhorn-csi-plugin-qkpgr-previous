@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "node-driver-registrar" in pod "longhorn-csi-plugin-qkpgr" not found

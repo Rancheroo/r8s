@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "kube-proxy" in pod "kube-proxy-w-guard-wg-wk-pfvjr-g4m8r" not found

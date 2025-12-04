@@ -1,0 +1,23 @@
+NAMESPACE             NAME                                             HOLDER                                                                      AGE
+cattle-fleet-system   fleet-agent                                      fleet-agent-66b6b7fd98-vx59n-1                                              14d
+cattle-system         system-upgrade-controller                        system-upgrade-controller-c84595cc6-cxj8p                                   14d
+kube-node-lease       w-guard-wg-cp-svtk6-lqtxw                        w-guard-wg-cp-svtk6-lqtxw                                                   14d
+kube-node-lease       w-guard-wg-wk-pfvjr-4xgxg                        w-guard-wg-wk-pfvjr-4xgxg                                                   14d
+kube-node-lease       w-guard-wg-wk-pfvjr-ch7xq                        w-guard-wg-wk-pfvjr-ch7xq                                                   14d
+kube-node-lease       w-guard-wg-wk-pfvjr-g4m8r                        w-guard-wg-wk-pfvjr-g4m8r                                                   14d
+kube-system           apiserver-2uom5huxbbt3uqveg5s7aoyqzu             apiserver-2uom5huxbbt3uqveg5s7aoyqzu_7c59cad1-a92f-41ae-8b10-5a2e17898a7f   14d
+kube-system           cattle-controllers                               cattle-cluster-agent-7cfc6cd66d-tx2md                                       14d
+kube-system           kube-controller-manager                          w-guard-wg-cp-svtk6-lqtxw_ffcf8423-8e9c-47ab-9514-b073bedc319a              14d
+kube-system           kube-scheduler                                   w-guard-wg-cp-svtk6-lqtxw_37d67524-4a1a-4314-9344-609db3916617              14d
+kube-system           rke2                                             w-guard-wg-cp-svtk6-lqtxw                                                   14d
+kube-system           rke2-cloud-controller-manager                    w-guard-wg-cp-svtk6-lqtxw_86cf7ed7-1ce0-4894-90de-5fe4ae22c920              14d
+kube-system           rke2-etcd                                        w-guard-wg-cp-svtk6-lqtxw                                                   14d
+kube-system           rke2-ingress-nginx-leader                        rke2-ingress-nginx-controller-trh6r                                         14d
+kube-system           snapshot-controller-leader                       rke2-snapshot-controller-696989ffdd-7f6fb                                   14d
+longhorn-system       driver-longhorn-io                               1764120404887-415-driver-longhorn-io                                        8d
+longhorn-system       external-attacher-leader-driver-longhorn-io      csi-attacher-858dd64dc4-wjqlr                                               8d
+longhorn-system       external-resizer-driver-longhorn-io              csi-resizer-567484d9f7-ccgh4                                                8d
+longhorn-system       external-snapshotter-leader-driver-longhorn-io   csi-snapshotter-858f58fdc5-ltjrx                                            8d
+longhorn-system       longhorn-manager-upgrade-lock                                                                                                8d
+longhorn-system       longhorn-manager-webhook-lock                                                                                                8d
+tigera-operator       operator-lock                                    w-guard-wg-cp-svtk6-lqtxw_3eb7c5a0-b04e-418c-ad24-7cc7e7d2814d              14d

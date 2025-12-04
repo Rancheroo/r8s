@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "rancher-webhook" in pod "rancher-webhook-65bdfb464d-hsfns" not found

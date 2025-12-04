@@ -1,5 +1,0 @@
-State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      
-UNCONN 0      0            0.0.0.0:51820      0.0.0.0:*                                                
-UNCONN 0      0            0.0.0.0:4789       0.0.0.0:*                                                
-UNCONN 0      0      127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=232732,fd=13))
-UNCONN 0      0               [::]:51820         [::]:*                                                

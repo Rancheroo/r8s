@@ -1,0 +1,1192 @@
+table ip mangle {
+	chain KUBE-IPTABLES-HINT {
+	}
+
+	chain KUBE-KUBELET-CANARY {
+	}
+
+	chain KUBE-PROXY-CANARY {
+	}
+
+	chain cali-PREROUTING {
+		 ct state related,established counter packets 529169813 bytes 126262733902 accept
+		 meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+		 counter packets 2916514 bytes 175025345 jump cali-from-host-endpoint
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+	}
+
+	chain cali-from-host-endpoint {
+	}
+
+	chain cali-POSTROUTING {
+		 meta mark & 0x00010000 == 0x00010000 counter packets 18654 bytes 1816089 return
+		 counter packets 536341016 bytes 187892032693 meta mark set mark and 0xffe4ffff 
+		 ct status dnat counter packets 56857584 bytes 35479296538 jump cali-to-host-endpoint
+		  meta mark & 0x00010000 == 0x00010000 counter packets 850 bytes 934482 return
+	}
+
+	chain cali-to-host-endpoint {
+	}
+
+	chain POSTROUTING {
+		type filter hook postrouting priority mangle; policy accept;
+		 counter packets 536359670 bytes 187893848782 jump cali-POSTROUTING
+	}
+
+	chain PREROUTING {
+		type filter hook prerouting priority mangle; policy accept;
+		 counter packets 532086327 bytes 126437759247 jump cali-PREROUTING
+	}
+}
+table ip filter {
+	chain KUBE-FIREWALL {
+		ip saddr != 127.0.0.0/8 ip daddr 127.0.0.0/8  ct status dnat counter packets 0 bytes 0 drop
+	}
+
+	chain OUTPUT {
+		type filter hook output priority filter; policy accept;
+		 counter packets 527475566 bytes 183710239976 jump cali-OUTPUT
+		ct state new  counter packets 3133006 bytes 188142669 jump KUBE-PROXY-FIREWALL
+		ct state new  counter packets 3133006 bytes 188142669 jump KUBE-SERVICES
+		counter packets 520611749 bytes 180759494694 jump KUBE-FIREWALL
+	}
+
+	chain INPUT {
+		type filter hook input priority filter; policy accept;
+		 counter packets 523201927 bytes 122254132389 jump cali-INPUT
+		ct state new  counter packets 2812744 bytes 166839780 jump KUBE-PROXY-FIREWALL
+		 counter packets 466263512 bytes 107955654741 jump KUBE-NODEPORTS
+		ct state new  counter packets 2812744 bytes 166839780 jump KUBE-EXTERNAL-SERVICES
+		counter packets 466287866 bytes 108300265384 jump KUBE-FIREWALL
+	}
+
+	chain KUBE-KUBELET-CANARY {
+	}
+
+	chain KUBE-PROXY-CANARY {
+	}
+
+	chain KUBE-EXTERNAL-SERVICES {
+	}
+
+	chain FORWARD {
+		type filter hook forward priority filter; policy accept;
+		 counter packets 8884398 bytes 4183626754 jump cali-FORWARD
+		ct state new  counter packets 18665 bytes 1817041 jump KUBE-PROXY-FIREWALL
+		 counter packets 18665 bytes 1817041 jump KUBE-FORWARD
+		ct state new  counter packets 18665 bytes 1817041 jump KUBE-SERVICES
+		ct state new  counter packets 18653 bytes 1816029 jump KUBE-EXTERNAL-SERVICES
+		  meta mark & 0x00010000 == 0x00010000 counter packets 18653 bytes 1816029 accept
+		 counter packets 0 bytes 0 meta mark set mark or 0x10000 
+	}
+
+	chain KUBE-NODEPORTS {
+	}
+
+	chain KUBE-SERVICES {
+		meta l4proto tcp ip daddr 10.43.126.84  tcp dport 9796 counter packets 0 bytes 0 reject
+	}
+
+	chain KUBE-FORWARD {
+		ct state invalid # nfacct-name  ct_state_invalid_dropped_pkts counter packets 0 bytes 0 drop
+		 meta mark & 0x00004000 == 0x00004000 counter packets 0 bytes 0 accept
+		 ct state related,established counter packets 0 bytes 0 accept
+	}
+
+	chain KUBE-PROXY-FIREWALL {
+	}
+
+	chain cali-FORWARD {
+		 counter packets 8884398 bytes 4183626754 meta mark set mark and 0xffe5ffff 
+		 meta mark & 0x00010000 == 0x00000000 counter packets 8884398 bytes 4183626754 jump cali-from-hep-forward
+		iifname "cali*"  counter packets 5010361 bytes 3099259330 jump cali-from-wl-dispatch
+		oifname "cali*"  counter packets 3875177 bytes 1083792028 jump cali-to-wl-dispatch
+		 counter packets 18665 bytes 1817041 jump cali-to-hep-forward
+		 counter packets 18665 bytes 1817041 jump cali-cidr-block
+	}
+
+	chain cali-to-wl-dispatch {
+		oifname "cali4*"  counter packets 3869338 bytes 1080860741 goto cali-to-wl-dispatch-4
+		oifname "cali6*"  counter packets 0 bytes 0 goto cali-to-wl-dispatch-6
+		oifname "calicff72b3391d"  counter packets 0 bytes 0 goto cali-tw-calicff72b3391d
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-INPUT {
+		meta l4proto udp   udp dport 4789 # match-set cali40all-vxlan-net src fib daddr type local counter packets 0 bytes 0 accept
+		meta l4proto udp   udp dport 4789 fib daddr type local counter packets 0 bytes 0 drop
+		meta l4proto udp   udp dport 51820 fib daddr type local counter packets 9245240 bytes 9782408368 accept
+		iifname "cali*"  counter packets 47748809 bytes 4978445827 goto cali-wl-to-host
+		 meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+		 counter packets 466207878 bytes 107493278194 meta mark set mark and 0xffe4ffff 
+		 counter packets 466207878 bytes 107493278194 jump cali-from-host-endpoint
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+	}
+
+	chain cali-to-host-endpoint {
+	}
+
+	chain cali-pro-_7bnNHSm00P51QAo5Qe {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-pri-kns.kube-system {
+		  counter packets 1864 bytes 167485 meta mark set mark or 0x10000 
+	}
+
+	chain cali-cidr-block {
+	}
+
+	chain cali-wl-to-host {
+		 counter packets 47748809 bytes 4978445827 jump cali-from-wl-dispatch
+		  counter packets 1703 bytes 102180 accept
+	}
+
+	chain cali-from-host-endpoint {
+	}
+
+	chain cali-from-wl-dispatch {
+		iifname "cali4*"  counter packets 46689083 bytes 6947516117 goto cali-from-wl-dispatch-4
+		iifname "cali6*"  counter packets 3289737 bytes 510824945 goto cali-from-wl-dispatch-6
+		iifname "calicff72b3391d"  counter packets 2723973 bytes 587064104 goto cali-fw-calicff72b3391d
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-to-hep-forward {
+	}
+
+	chain cali-OUTPUT {
+		 meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+		oifname "cali*"  counter packets 49716455 bytes 28470146466 return
+		meta l4proto udp   udp dport 4789 fib saddr type local # match-set cali40all-vxlan-net dst counter packets 125 bytes 19617 accept
+		meta l4proto udp   udp dport 51820 fib saddr type local counter packets 6916875 bytes 3023109100 accept
+		 counter packets 470842111 bytes 152216964793 meta mark set mark and 0xffe4ffff 
+		 ct status dnat counter packets 458328009 bytes 144403101644 jump cali-to-host-endpoint
+		  meta mark & 0x00010000 == 0x00010000 counter packets 1 bytes 60 accept
+	}
+
+	chain cali-fw-cali622a93eb23b {
+		 ct state related,established counter packets 832947 bytes 60842284 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 jump cali-pro-kns.kube-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 1 bytes 60 return
+		 counter packets 0 bytes 0 jump cali-pro-_7bnNHSm00P51QAo5Qe
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pro-kns.kube-system {
+		  counter packets 327 bytes 23868 meta mark set mark or 0x10000 
+	}
+
+	chain cali-tw-cali622a93eb23b {
+		 ct state related,established counter packets 0 bytes 0 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 meta mark set mark and 0xfffcffff 
+		 counter packets 0 bytes 0 jump cali-pri-kns.kube-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_7bnNHSm00P51QAo5Qe
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pri-_7bnNHSm00P51QAo5Qe {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-from-hep-forward {
+	}
+
+	chain cali-fw-cali4e366eba6b4 {
+		 ct state related,established counter packets 1173693 bytes 207667797 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 1915 bytes 140790 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		  counter packets 1915 bytes 140790 meta mark set mark and 0xfffdffff 
+		 meta mark & 0x00020000 == 0x00000000 counter packets 1915 bytes 140790 jump cali-po-_8rTIryhbLDXLydt7Zyq
+		  meta mark & 0x00010000 == 0x00010000 counter packets 1915 bytes 140790 return
+		  meta mark & 0x00020000 == 0x00000000 counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 jump cali-pro-kns.kube-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pro-_u2Tn2rSoAPffvE7JO6
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pro-_u2Tn2rSoAPffvE7JO6 {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-tw-cali4e366eba6b4 {
+		 ct state related,established counter packets 159612 bytes 50786408 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 12443 bytes 1314161 meta mark set mark and 0xfffcffff 
+		  counter packets 12443 bytes 1314161 meta mark set mark and 0xfffdffff 
+		 meta mark & 0x00020000 == 0x00000000 counter packets 12443 bytes 1314161 jump cali-pi-_8rTIryhbLDXLydt7Zyq
+		  meta mark & 0x00010000 == 0x00010000 counter packets 12443 bytes 1314161 return
+		  meta mark & 0x00020000 == 0x00000000 counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 jump cali-pri-kns.kube-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_u2Tn2rSoAPffvE7JO6
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pri-_u2Tn2rSoAPffvE7JO6 {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-fw-cali4611030f6e0 {
+		 ct state related,established counter packets 2096701 bytes 267522593 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 jump cali-pro-kns.calico-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 1 bytes 60 return
+		 counter packets 0 bytes 0 jump cali-pro-_nzzjLvInId1gPHmQz_
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pro-kns.calico-system {
+		  counter packets 1 bytes 60 meta mark set mark or 0x10000 
+	}
+
+	chain cali-pro-_nzzjLvInId1gPHmQz_ {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-tw-cali4611030f6e0 {
+		 ct state related,established counter packets 0 bytes 0 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 meta mark set mark and 0xfffcffff 
+		 counter packets 0 bytes 0 jump cali-pri-kns.calico-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_nzzjLvInId1gPHmQz_
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pri-_nzzjLvInId1gPHmQz_ {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-from-wl-dispatch-4 {
+		iifname "cali40a2bb3ea25"  counter packets 23458676 bytes 2653862677 goto cali-fw-cali40a2bb3ea25
+		iifname "cali436ce3cef50"  counter packets 19220838 bytes 3758993853 goto cali-fw-cali436ce3cef50
+		iifname "cali4611030f6e0"  counter packets 2096137 bytes 267461766 goto cali-fw-cali4611030f6e0
+		iifname "cali4e366eba6b4"  counter packets 1932042 bytes 271084150 goto cali-fw-cali4e366eba6b4
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-to-wl-dispatch-4 {
+		oifname "cali40a2bb3ea25"  counter packets 2284039 bytes 406825758 goto cali-tw-cali40a2bb3ea25
+		oifname "cali436ce3cef50"  counter packets 1412170 bytes 622055290 goto cali-tw-cali436ce3cef50
+		oifname "cali4611030f6e0"  counter packets 0 bytes 0 goto cali-tw-cali4611030f6e0
+		oifname "cali4e366eba6b4"  counter packets 173963 bytes 52290717 goto cali-tw-cali4e366eba6b4
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pri-kns.calico-system {
+		  counter packets 0 bytes 0 meta mark set mark or 0x10000 
+	}
+
+	chain cali-pri-_XnQ5h_hZf854SLqzqE {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-pro-kns.cattle-system {
+		  counter packets 5731 bytes 437827 meta mark set mark or 0x10000 
+	}
+
+	chain cali-pro-_XnQ5h_hZf854SLqzqE {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-pri-kns.cattle-system {
+		  counter packets 0 bytes 0 meta mark set mark or 0x10000 
+	}
+
+	chain cali-fw-cali40a2bb3ea25 {
+		 ct state related,established counter packets 23462302 bytes 2658566881 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 4309 bytes 342416 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		 counter packets 4309 bytes 342416 jump cali-pro-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 4309 bytes 342416 return
+		 counter packets 0 bytes 0 jump cali-pro-_XnQ5h_hZf854SLqzqE
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-tw-cali40a2bb3ea25 {
+		 ct state related,established counter packets 2285004 bytes 407224586 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 meta mark set mark and 0xfffcffff 
+		 counter packets 0 bytes 0 jump cali-pri-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_XnQ5h_hZf854SLqzqE
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-fw-cali436ce3cef50 {
+		 ct state related,established counter packets 19219924 bytes 3758935079 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 914 bytes 58774 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		 counter packets 914 bytes 58774 jump cali-pro-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 914 bytes 58774 return
+		 counter packets 0 bytes 0 jump cali-pro-_XnQ5h_hZf854SLqzqE
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-tw-cali436ce3cef50 {
+		 ct state related,established counter packets 1412170 bytes 622055290 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 meta mark set mark and 0xfffcffff 
+		 counter packets 0 bytes 0 jump cali-pri-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_XnQ5h_hZf854SLqzqE
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-tw-calicff72b3391d {
+		 ct state related,established counter packets 0 bytes 0 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 meta mark set mark and 0xfffcffff 
+		 counter packets 0 bytes 0 jump cali-pri-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_Jt5JQO28LboxWwRucA
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pri-_Jt5JQO28LboxWwRucA {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-fw-calicff72b3391d {
+		 ct state related,established counter packets 2725023 bytes 587249519 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 jump cali-pro-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 1 bytes 60 return
+		 counter packets 0 bytes 0 jump cali-pro-_Jt5JQO28LboxWwRucA
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pro-_Jt5JQO28LboxWwRucA {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-to-wl-dispatch-6 {
+		oifname "cali622a93eb23b"  counter packets 0 bytes 0 goto cali-tw-cali622a93eb23b
+		oifname "cali6c12df98eb6"  counter packets 0 bytes 0 goto cali-tw-cali6c12df98eb6
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-tw-cali6c12df98eb6 {
+		 ct state related,established counter packets 0 bytes 0 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 0 bytes 0 meta mark set mark and 0xfffcffff 
+		 counter packets 0 bytes 0 jump cali-pri-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		 counter packets 0 bytes 0 jump cali-pri-_deDmtCOemYXSj_UG1n
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pri-_deDmtCOemYXSj_UG1n {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-from-wl-dispatch-6 {
+		iifname "cali622a93eb23b"  counter packets 832598 bytes 60814466 goto cali-fw-cali622a93eb23b
+		iifname "cali6c12df98eb6"  counter packets 2457139 bytes 450010479 goto cali-fw-cali6c12df98eb6
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-fw-cali6c12df98eb6 {
+		 ct state related,established counter packets 2457138 bytes 450010419 accept
+		 ct state invalid counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 meta mark set mark and 0xfffcffff 
+		meta l4proto udp   udp dport 4789 counter packets 0 bytes 0 drop
+		meta l4proto ipencap   counter packets 0 bytes 0 drop
+		 counter packets 1 bytes 60 jump cali-pro-kns.cattle-system
+		  meta mark & 0x00010000 == 0x00010000 counter packets 1 bytes 60 return
+		 counter packets 0 bytes 0 jump cali-pro-_deDmtCOemYXSj_UG1n
+		  meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 return
+		  counter packets 0 bytes 0 drop
+	}
+
+	chain cali-pro-_deDmtCOemYXSj_UG1n {
+		  counter packets 0 bytes 0
+	}
+
+	chain cali-pi-_8rTIryhbLDXLydt7Zyq {
+		  counter packets 12443 bytes 1314161 meta mark set mark or 0x10000 
+	}
+
+	chain cali-po-_8rTIryhbLDXLydt7Zyq {
+		  counter packets 1915 bytes 140790 meta mark set mark or 0x10000 
+	}
+}
+table ip6 mangle {
+	chain KUBE-IPTABLES-HINT {
+	}
+
+	chain KUBE-KUBELET-CANARY {
+	}
+
+	chain KUBE-PROXY-CANARY {
+	}
+}
+table ip nat {
+	chain KUBE-KUBELET-CANARY {
+	}
+
+	chain KUBE-PROXY-CANARY {
+	}
+
+	chain KUBE-SERVICES {
+		meta l4proto tcp ip daddr 10.43.51.105  tcp dport 9503 counter packets 0 bytes 0 jump KUBE-SVC-TYVUZ72JN6SHFAXC
+		meta l4proto tcp ip daddr 10.43.123.164  tcp dport 9500 counter packets 0 bytes 0 jump KUBE-SVC-NQL64TY2T3FWFXFQ
+		meta l4proto tcp ip daddr 10.43.192.58  tcp dport 9093 counter packets 0 bytes 0 jump KUBE-SVC-JCCTHMVVOJD7CTXD
+		meta l4proto tcp ip daddr 10.43.221.21  tcp dport 80 counter packets 0 bytes 0 jump KUBE-SVC-6EEFEXJOUC5HRC2U
+		meta l4proto tcp ip daddr 10.43.75.117  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-4WFNQVGMHXINT2VO
+		meta l4proto tcp ip daddr 10.43.214.63  tcp dport 9796 counter packets 0 bytes 0 jump KUBE-SVC-OEKFV6TG6AAIHGRX
+		meta l4proto udp ip daddr 10.43.0.10  udp dport 53 counter packets 0 bytes 0 jump KUBE-SVC-YFPH5LFNKP7E3G4L
+		meta l4proto tcp ip daddr 10.43.83.142  tcp dport 443 counter packets 0 bytes 0 jump KUBE-SVC-BOJCKSINR77JVVPB
+		meta l4proto tcp ip daddr 10.43.113.211  tcp dport 9090 counter packets 0 bytes 0 jump KUBE-SVC-BSZMNEG7M6JICBTH
+		meta l4proto tcp ip daddr 10.43.118.208  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-2ABN56CTNX325LLI
+		meta l4proto tcp ip daddr 10.43.48.23  tcp dport 443 counter packets 0 bytes 0 jump KUBE-SVC-DISNXZXWEI7GIGLU
+		meta l4proto tcp ip daddr 10.43.10.180  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-UDVXCUUPV3TWYDKW
+		meta l4proto tcp ip daddr 10.43.106.123  tcp dport 80 counter packets 0 bytes 0 jump KUBE-SVC-6MECGK62JNIKDRLL
+		meta l4proto tcp ip daddr 10.43.227.236  tcp dport 80 counter packets 0 bytes 0 jump KUBE-SVC-V6M6RRQXTSHVF7LK
+		meta l4proto tcp ip daddr 10.43.59.17  tcp dport 9501 counter packets 0 bytes 0 jump KUBE-SVC-NGSMBSSFRDULITT4
+		meta l4proto tcp ip daddr 10.43.229.143  tcp dport 9502 counter packets 0 bytes 0 jump KUBE-SVC-S4EMHPZ44GDBMEWI
+		meta l4proto tcp ip daddr 10.43.9.86  tcp dport 443 counter packets 0 bytes 0 jump KUBE-SVC-WSX3IQ6WDZKL2S34
+		meta l4proto tcp ip daddr 10.43.6.31  tcp dport 10249 counter packets 0 bytes 0 jump KUBE-SVC-R2YIKPX5C2B4PRH7
+		meta l4proto tcp ip daddr 10.43.10.204  tcp dport 2381 counter packets 0 bytes 0 jump KUBE-SVC-DAM77X32V24O2EL5
+		meta l4proto tcp ip daddr 10.43.113.211  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-EZW4DS5HT4GROINA
+		meta l4proto tcp ip daddr 10.43.64.89  tcp dport 10257 counter packets 0 bytes 0 jump KUBE-SVC-JAGPXAZKZK76XVSE
+		meta l4proto tcp ip daddr 10.43.48.23  tcp dport 80 counter packets 0 bytes 0 jump KUBE-SVC-RXZQBFX6IWO22WWW
+		meta l4proto tcp ip daddr 10.43.0.1  tcp dport 443 counter packets 89 bytes 5340 jump KUBE-SVC-NPX46M4PTMTKRN6Y
+		meta l4proto tcp ip daddr 10.43.0.10  tcp dport 53 counter packets 0 bytes 0 jump KUBE-SVC-PUNXDRXNIM3ELMDM
+		meta l4proto tcp ip daddr 10.43.198.51  tcp dport 443 counter packets 0 bytes 0 jump KUBE-SVC-HP77IKALGGR6UULO
+		meta l4proto tcp ip daddr 10.43.67.110  tcp dport 443 counter packets 0 bytes 0 jump KUBE-SVC-46CB5Z6CZH2WFWVP
+		meta l4proto tcp ip daddr 10.43.19.114  tcp dport 80 counter packets 0 bytes 0 jump KUBE-SVC-ELE3EOWUPGZLKWXO
+		meta l4proto tcp ip daddr 10.43.248.104  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-VDF2XRPMF7GCOKCC
+		meta l4proto tcp ip daddr 10.43.35.174  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-JQ5LIQLHTIZNWLOX
+		meta l4proto tcp ip daddr 10.43.63.193  tcp dport 10259 counter packets 0 bytes 0 jump KUBE-SVC-SX5Y67UR33APG6CK
+		meta l4proto tcp ip daddr 10.43.192.58  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-D72WHH2PHGEL4SRX
+		meta l4proto tcp ip daddr 10.43.29.34  tcp dport 5473 counter packets 0 bytes 0 jump KUBE-SVC-RK657RLKDNVNU64O
+		meta l4proto tcp ip daddr 10.43.26.63  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-SVC-EW6UA3DC2CVRQ4ND
+		meta l4proto tcp ip daddr 10.43.162.3  tcp dport 10254 counter packets 0 bytes 0 jump KUBE-SVC-F3PZ5PNOTTIABLQ5
+		meta l4proto tcp ip daddr 10.43.172.21  tcp dport 443 counter packets 0 bytes 0 jump KUBE-SVC-REY7A7JAMMNC25ZM
+		 fib daddr type local counter packets 6913 bytes 409132 jump KUBE-NODEPORTS
+	}
+
+	chain OUTPUT {
+		type nat hook output priority -100; policy accept;
+		 counter packets 3132128 bytes 188073377 jump cali-OUTPUT
+		 counter packets 3132662 bytes 188109693 jump KUBE-SERVICES
+	}
+
+	chain PREROUTING {
+		type nat hook prerouting priority dstnat; policy accept;
+		 counter packets 373313 bytes 21133998 jump cali-PREROUTING
+		 counter packets 373325 bytes 21134522 jump KUBE-SERVICES
+	}
+
+	chain KUBE-POSTROUTING {
+		meta mark & 0x00004000 != 0x00004000 counter packets 7780 bytes 469085 return
+		counter packets 0 bytes 0 meta mark set mark xor 0x4000 
+		 counter packets 0 bytes 0 masquerade 
+	}
+
+	chain POSTROUTING {
+		type nat hook postrouting priority srcnat; policy accept;
+		 counter packets 3150857 bytes 189895219 jump KUBE-POSTROUTING
+		 counter packets 3150015 bytes 189830595 jump cali-POSTROUTING
+	}
+
+	chain KUBE-NODEPORTS {
+		meta l4proto tcp ip daddr 127.0.0.0/8  tcp dport 31716 # nfacct-name  localhost_nps_accepted_pkts counter packets 0 bytes 0 jump KUBE-EXT-UDVXCUUPV3TWYDKW
+		meta l4proto tcp  tcp dport 31716 counter packets 0 bytes 0 jump KUBE-EXT-UDVXCUUPV3TWYDKW
+	}
+
+	chain KUBE-MARK-MASQ {
+		counter packets 0 bytes 0 meta mark set mark or 0x4000 
+	}
+
+	chain KUBE-SVC-NPX46M4PTMTKRN6Y {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.0.1  tcp dport 443 counter packets 45 bytes 2700 jump KUBE-MARK-MASQ
+		 counter packets 1398 bytes 83880 jump KUBE-SEP-CETKDPRB4XVEPXEF
+	}
+
+	chain KUBE-SEP-CETKDPRB4XVEPXEF {
+		ip saddr 134.199.165.191  counter packets 45 bytes 2700 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 1398 bytes 83880 dnat to 134.199.165.191:6443
+	}
+
+	chain KUBE-SVC-RK657RLKDNVNU64O {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.29.34  tcp dport 5473 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-EUDFX5WWRVX5TEST
+		 counter packets 0 bytes 0 jump KUBE-SEP-KEQF6G5KHL2ZIEF4
+	}
+
+	chain KUBE-SEP-EUDFX5WWRVX5TEST {
+		ip saddr 134.199.165.191  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.165.191:5473
+	}
+
+	chain cali-PREROUTING {
+		 counter packets 373313 bytes 21133998 jump cali-fip-dnat
+	}
+
+	chain cali-fip-dnat {
+	}
+
+	chain cali-POSTROUTING {
+		 counter packets 3150015 bytes 189830595 jump cali-fip-snat
+		 counter packets 3150015 bytes 189830595 jump cali-nat-outgoing
+		oifname "vxlan.calico"  fib saddr . oif type != local fib saddr type local counter packets 0 bytes 0 masquerade 
+		oifname "wireguard.cali"  fib saddr . oif type != local fib saddr type local counter packets 0 bytes 0 masquerade 
+	}
+
+	chain cali-fip-snat {
+	}
+
+	chain cali-nat-outgoing {
+		 # match-set cali40masq-ipam-pools src # ! match-set cali40all-ipam-pools dst counter packets 2683 bytes 191118 masquerade 
+	}
+
+	chain cali-OUTPUT {
+		 counter packets 3132128 bytes 188073377 jump cali-fip-dnat
+	}
+
+	chain KUBE-SVC-YFPH5LFNKP7E3G4L {
+		meta l4proto udp ip saddr != 10.42.0.0/16 ip daddr 10.43.0.10  udp dport 53 counter packets 186 bytes 20700 jump KUBE-MARK-MASQ
+		  counter packets 1608 bytes 141499 jump KUBE-SEP-Y7CKTLQYNBT2IHXQ
+		 counter packets 1706 bytes 150233 jump KUBE-SEP-4FAGCKTPFUKXVWAR
+	}
+
+	chain KUBE-SEP-Y7CKTLQYNBT2IHXQ {
+		ip saddr 10.42.207.3  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto udp   counter packets 1608 bytes 141499 dnat to 10.42.207.3:53
+	}
+
+	chain KUBE-SVC-PUNXDRXNIM3ELMDM {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.0.10  tcp dport 53 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-BMQM5RYMOV3K655N
+		 counter packets 0 bytes 0 jump KUBE-SEP-FV26N6VYHXVXEHIW
+	}
+
+	chain KUBE-SEP-BMQM5RYMOV3K655N {
+		ip saddr 10.42.207.3  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.207.3:53
+	}
+
+	chain KUBE-SVC-DISNXZXWEI7GIGLU {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.48.23  tcp dport 443 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-2BW3IWP2DAO5VI5C
+		 counter packets 0 bytes 0 jump KUBE-SEP-2THVF4XV5EU3ZPXS
+	}
+
+	chain KUBE-SVC-RXZQBFX6IWO22WWW {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.48.23  tcp dport 80 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-6LG3EDEMRQHDULPO
+		 counter packets 0 bytes 0 jump KUBE-SEP-Z62NRHH5E3IPFBI7
+	}
+
+	chain KUBE-SEP-6LG3EDEMRQHDULPO {
+		ip saddr 10.42.207.10  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.207.10:80
+	}
+
+	chain KUBE-SEP-2BW3IWP2DAO5VI5C {
+		ip saddr 10.42.207.10  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.207.10:444
+	}
+
+	chain KUBE-SEP-2THVF4XV5EU3ZPXS {
+		ip saddr 10.42.207.12  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.207.12:444
+	}
+
+	chain KUBE-SEP-Z62NRHH5E3IPFBI7 {
+		ip saddr 10.42.207.12  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.207.12:80
+	}
+
+	chain KUBE-SVC-BOJCKSINR77JVVPB {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.83.142  tcp dport 443 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-LASVFMRDUWSGYCGQ
+	}
+
+	chain KUBE-SEP-LASVFMRDUWSGYCGQ {
+		ip saddr 10.42.207.13  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.207.13:9443
+	}
+
+	chain KUBE-SEP-KEQF6G5KHL2ZIEF4 {
+		ip saddr 209.38.91.232  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 209.38.91.232:5473
+	}
+
+	chain KUBE-SVC-HP77IKALGGR6UULO {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.198.51  tcp dport 443 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-DZT2I4ZDY7XPOYL6
+	}
+
+	chain KUBE-SEP-DZT2I4ZDY7XPOYL6 {
+		ip saddr 10.42.236.195  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.195:10250
+	}
+
+	chain KUBE-SEP-FV26N6VYHXVXEHIW {
+		ip saddr 10.42.236.194  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.194:53
+	}
+
+	chain KUBE-SEP-4FAGCKTPFUKXVWAR {
+		ip saddr 10.42.236.194  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto udp   counter packets 1706 bytes 150233 dnat to 10.42.236.194:53
+	}
+
+	chain KUBE-SVC-46CB5Z6CZH2WFWVP {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.67.110  tcp dport 443 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-YY7LQNSI52JC4GEO
+		  counter packets 0 bytes 0 jump KUBE-SEP-3EJXMAENS6PA5TNJ
+		 counter packets 0 bytes 0 jump KUBE-SEP-TDJETFWVGGPWXXGZ
+	}
+
+	chain KUBE-SEP-3EJXMAENS6PA5TNJ {
+		ip saddr 10.42.236.197  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.197:8443
+	}
+
+	chain KUBE-SEP-YY7LQNSI52JC4GEO {
+		ip saddr 10.42.20.72  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.72:8443
+	}
+
+	chain KUBE-SEP-TDJETFWVGGPWXXGZ {
+		ip saddr 10.42.60.67  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.67:8443
+	}
+
+	chain KUBE-SVC-6MECGK62JNIKDRLL {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.106.123  tcp dport 80 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-MR4SNJP7N4I5MJC5
+		 counter packets 0 bytes 0 jump KUBE-SEP-6YLB6OMTAAGHUWQ2
+	}
+
+	chain KUBE-SEP-6YLB6OMTAAGHUWQ2 {
+		ip saddr 10.42.60.70  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.70:80
+	}
+
+	chain KUBE-SEP-MR4SNJP7N4I5MJC5 {
+		ip saddr 10.42.236.200  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.200:80
+	}
+
+	chain KUBE-EXT-UDVXCUUPV3TWYDKW {
+		 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		counter packets 0 bytes 0 jump KUBE-SVC-UDVXCUUPV3TWYDKW
+	}
+
+	chain KUBE-SVC-UDVXCUUPV3TWYDKW {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.10.180  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-CQ6AM2NIQIU57G2U
+	}
+
+	chain KUBE-SEP-CQ6AM2NIQIU57G2U {
+		ip saddr 10.42.20.73  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.73:8080
+	}
+
+	chain KUBE-SVC-V6M6RRQXTSHVF7LK {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.227.236  tcp dport 80 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-SU4RI2JQCGIKYJU7
+	}
+
+	chain KUBE-SEP-SU4RI2JQCGIKYJU7 {
+		ip saddr 10.42.60.72  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.72:80
+	}
+
+	chain KUBE-SVC-ELE3EOWUPGZLKWXO {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.19.114  tcp dport 80 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-HZEHZT7X3ULDWZKC
+		 counter packets 0 bytes 0 jump KUBE-SEP-ERQO2O27TXDWHZNK
+	}
+
+	chain KUBE-SEP-HZEHZT7X3ULDWZKC {
+		ip saddr 10.42.20.75  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.75:8000
+	}
+
+	chain KUBE-SEP-ERQO2O27TXDWHZNK {
+		ip saddr 10.42.236.203  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.203:8000
+	}
+
+	chain KUBE-SVC-NGSMBSSFRDULITT4 {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.59.17  tcp dport 9501 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-F7S5577A6ZNFSPI6
+		  counter packets 0 bytes 0 jump KUBE-SEP-XVATE2C77IUSW7SZ
+		 counter packets 0 bytes 0 jump KUBE-SEP-3MTJL6YLVVP4DUO5
+	}
+
+	chain KUBE-SEP-F7S5577A6ZNFSPI6 {
+		ip saddr 10.42.20.76  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.76:9501
+	}
+
+	chain KUBE-SVC-NQL64TY2T3FWFXFQ {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.123.164  tcp dport 9500 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-5XEDYP5EIPN4BW4X
+		  counter packets 0 bytes 0 jump KUBE-SEP-ZWH452QYBB22FZMS
+		 counter packets 0 bytes 0 jump KUBE-SEP-VWMAUWN2G3PKN7SD
+	}
+
+	chain KUBE-SEP-5XEDYP5EIPN4BW4X {
+		ip saddr 10.42.20.76  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.76:9500
+	}
+
+	chain KUBE-SVC-S4EMHPZ44GDBMEWI {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.229.143  tcp dport 9502 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-IS7RHQCHB53RVMPD
+		  counter packets 0 bytes 0 jump KUBE-SEP-OGFQMBDAC6TKQTCJ
+		 counter packets 0 bytes 0 jump KUBE-SEP-W2INZDPAMSHMJ6BH
+	}
+
+	chain KUBE-SEP-IS7RHQCHB53RVMPD {
+		ip saddr 10.42.20.76  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.76:9502
+	}
+
+	chain KUBE-SVC-TYVUZ72JN6SHFAXC {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.51.105  tcp dport 9503 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-4XV5GCIHOE6UZQVZ
+		  counter packets 0 bytes 0 jump KUBE-SEP-CMLJ3UCZ2EWO6T2V
+		 counter packets 0 bytes 0 jump KUBE-SEP-U75AFFWW4NVNO5AO
+	}
+
+	chain KUBE-SEP-4XV5GCIHOE6UZQVZ {
+		ip saddr 10.42.20.76  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.76:9503
+	}
+
+	chain KUBE-SEP-ZWH452QYBB22FZMS {
+		ip saddr 10.42.236.204  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.204:9500
+	}
+
+	chain KUBE-SEP-XVATE2C77IUSW7SZ {
+		ip saddr 10.42.236.204  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.204:9501
+	}
+
+	chain KUBE-SEP-OGFQMBDAC6TKQTCJ {
+		ip saddr 10.42.236.204  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.204:9502
+	}
+
+	chain KUBE-SEP-CMLJ3UCZ2EWO6T2V {
+		ip saddr 10.42.236.204  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.204:9503
+	}
+
+	chain KUBE-SEP-VWMAUWN2G3PKN7SD {
+		ip saddr 10.42.60.74  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.74:9500
+	}
+
+	chain KUBE-SEP-3MTJL6YLVVP4DUO5 {
+		ip saddr 10.42.60.74  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.74:9501
+	}
+
+	chain KUBE-SEP-W2INZDPAMSHMJ6BH {
+		ip saddr 10.42.60.74  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.74:9502
+	}
+
+	chain KUBE-SEP-U75AFFWW4NVNO5AO {
+		ip saddr 10.42.60.74  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.74:9503
+	}
+
+	chain KUBE-SVC-F3PZ5PNOTTIABLQ5 {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.162.3  tcp dport 10254 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-EIY732PNOFHHIQ7T
+		  counter packets 0 bytes 0 jump KUBE-SEP-ZHT3WDXRH2LELU6J
+		 counter packets 0 bytes 0 jump KUBE-SEP-EVSNOTTPINK5I7GP
+	}
+
+	chain KUBE-SEP-EIY732PNOFHHIQ7T {
+		ip saddr 10.42.20.72  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.72:10254
+	}
+
+	chain KUBE-SEP-ZHT3WDXRH2LELU6J {
+		ip saddr 10.42.236.197  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.197:10254
+	}
+
+	chain KUBE-SEP-EVSNOTTPINK5I7GP {
+		ip saddr 10.42.60.67  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.67:10254
+	}
+
+	chain KUBE-SVC-R2YIKPX5C2B4PRH7 {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.6.31  tcp dport 10249 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-CXEJNOA3ZBPRSCR5
+		  counter packets 0 bytes 0 jump KUBE-SEP-NCRQ3ZFXVKBDYXJ2
+		  counter packets 0 bytes 0 jump KUBE-SEP-JYDKPX6DVENULHXV
+		 counter packets 0 bytes 0 jump KUBE-SEP-FKKKRNWJV3IF47YW
+	}
+
+	chain KUBE-SEP-CXEJNOA3ZBPRSCR5 {
+		ip saddr 134.199.144.255  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.144.255:10249
+	}
+
+	chain KUBE-SEP-FKKKRNWJV3IF47YW {
+		ip saddr 209.38.91.232  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 209.38.91.232:10249
+	}
+
+	chain KUBE-SVC-OEKFV6TG6AAIHGRX {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.214.63  tcp dport 9796 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		  counter packets 0 bytes 0 jump KUBE-SEP-PWGRZXJTFHT3DEJJ
+		  counter packets 0 bytes 0 jump KUBE-SEP-HDHKH3WYYOHIW2LM
+		  counter packets 0 bytes 0 jump KUBE-SEP-LGTKZ2DSVFSMWCDQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-LKLYRKOCFPASG5FO
+	}
+
+	chain KUBE-SEP-LKLYRKOCFPASG5FO {
+		ip saddr 209.38.91.232  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 209.38.91.232:9796
+	}
+
+	chain KUBE-SVC-VDF2XRPMF7GCOKCC {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.248.104  tcp dport 8080 counter packets 3 bytes 180 jump KUBE-MARK-MASQ
+		 counter packets 3 bytes 180 jump KUBE-SEP-3SHTPU44VOUWKIZX
+	}
+
+	chain KUBE-SEP-3SHTPU44VOUWKIZX {
+		ip saddr 10.42.60.84  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 3 bytes 180 dnat to 10.42.60.84:8080
+	}
+
+	chain KUBE-SVC-JQ5LIQLHTIZNWLOX {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.35.174  tcp dport 8080 counter packets 4 bytes 240 jump KUBE-MARK-MASQ
+		 counter packets 4 bytes 240 jump KUBE-SEP-27HDLAN2OMVP53B7
+	}
+
+	chain KUBE-SEP-27HDLAN2OMVP53B7 {
+		ip saddr 10.42.20.88  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 4 bytes 240 dnat to 10.42.20.88:8080
+	}
+
+	chain KUBE-SVC-EW6UA3DC2CVRQ4ND {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.26.63  tcp dport 8080 counter packets 2 bytes 120 jump KUBE-MARK-MASQ
+		 counter packets 2 bytes 120 jump KUBE-SEP-HRQZN5HMG7OT3UJ4
+	}
+
+	chain KUBE-SEP-HRQZN5HMG7OT3UJ4 {
+		ip saddr 10.42.60.85  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 2 bytes 120 dnat to 10.42.60.85:8080
+	}
+
+	chain KUBE-SVC-4WFNQVGMHXINT2VO {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.75.117  tcp dport 8080 counter packets 2 bytes 120 jump KUBE-MARK-MASQ
+		 counter packets 2 bytes 120 jump KUBE-SEP-E7HEK4AFR6T3WERX
+	}
+
+	chain KUBE-SEP-E7HEK4AFR6T3WERX {
+		ip saddr 10.42.20.87  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 2 bytes 120 dnat to 10.42.20.87:8080
+	}
+
+	chain KUBE-SEP-LGTKZ2DSVFSMWCDQ {
+		ip saddr 170.64.187.24  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 170.64.187.24:9796
+	}
+
+	chain KUBE-SEP-JYDKPX6DVENULHXV {
+		ip saddr 170.64.187.24  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 170.64.187.24:10249
+	}
+
+	chain KUBE-SEP-PWGRZXJTFHT3DEJJ {
+		ip saddr 134.199.144.255  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.144.255:9796
+	}
+
+	chain KUBE-SVC-DAM77X32V24O2EL5 {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.10.204  tcp dport 2381 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-T5GDSH5UDNVSBBBD
+	}
+
+	chain KUBE-SEP-T5GDSH5UDNVSBBBD {
+		ip saddr 134.199.165.191  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.165.191:2381
+	}
+
+	chain KUBE-SVC-JAGPXAZKZK76XVSE {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.64.89  tcp dport 10257 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-JQXXHRHTRP43NH2Z
+	}
+
+	chain KUBE-SEP-JQXXHRHTRP43NH2Z {
+		ip saddr 134.199.165.191  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.165.191:10257
+	}
+
+	chain KUBE-SVC-WSX3IQ6WDZKL2S34 {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.9.86  tcp dport 443 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-FBONYXDCZYUS66OX
+	}
+
+	chain KUBE-SEP-FBONYXDCZYUS66OX {
+		ip saddr 10.42.60.83  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.83:10250
+	}
+
+	chain KUBE-SEP-NCRQ3ZFXVKBDYXJ2 {
+		ip saddr 134.199.165.191  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.165.191:10249
+	}
+
+	chain KUBE-SVC-SX5Y67UR33APG6CK {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.63.193  tcp dport 10259 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-JH4AWE3MBLQPK244
+	}
+
+	chain KUBE-SEP-JH4AWE3MBLQPK244 {
+		ip saddr 134.199.165.191  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.165.191:10259
+	}
+
+	chain KUBE-SEP-HDHKH3WYYOHIW2LM {
+		ip saddr 134.199.165.191  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 134.199.165.191:9796
+	}
+
+	chain KUBE-SVC-2ABN56CTNX325LLI {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.118.208  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-C2F2NJYQA2OGQMLC
+	}
+
+	chain KUBE-SEP-C2F2NJYQA2OGQMLC {
+		ip saddr 10.42.60.86  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.86:8080
+	}
+
+	chain KUBE-SVC-D72WHH2PHGEL4SRX {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.192.58  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-UVS77VWFGEGINJWJ
+	}
+
+	chain KUBE-SEP-UVS77VWFGEGINJWJ {
+		ip saddr 10.42.236.212  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.212:8080
+	}
+
+	chain KUBE-SVC-JCCTHMVVOJD7CTXD {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.192.58  tcp dport 9093 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-CRKV7RYZO4CA6CZQ
+	}
+
+	chain KUBE-SEP-CRKV7RYZO4CA6CZQ {
+		ip saddr 10.42.236.212  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.236.212:9093
+	}
+
+	chain KUBE-SVC-REY7A7JAMMNC25ZM {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.172.21  tcp dport 443 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-Y4DRWWGMCJXLQWNT
+	}
+
+	chain KUBE-SEP-Y4DRWWGMCJXLQWNT {
+		ip saddr 10.42.20.89  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.89:6443
+	}
+
+	chain KUBE-SVC-BSZMNEG7M6JICBTH {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.113.211  tcp dport 9090 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-A2J7EKAZNUIJPVKB
+	}
+
+	chain KUBE-SEP-A2J7EKAZNUIJPVKB {
+		ip saddr 10.42.60.87  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.87:8081
+	}
+
+	chain KUBE-SVC-EZW4DS5HT4GROINA {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.113.211  tcp dport 8080 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-WLNEGUPYXN364HXH
+	}
+
+	chain KUBE-SEP-WLNEGUPYXN364HXH {
+		ip saddr 10.42.60.87  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.60.87:8080
+	}
+
+	chain KUBE-SVC-6EEFEXJOUC5HRC2U {
+		meta l4proto tcp ip saddr != 10.42.0.0/16 ip daddr 10.43.221.21  tcp dport 80 counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		 counter packets 0 bytes 0 jump KUBE-SEP-IAC2W3GOJYBJEQJY
+	}
+
+	chain KUBE-SEP-IAC2W3GOJYBJEQJY {
+		ip saddr 10.42.20.90  counter packets 0 bytes 0 jump KUBE-MARK-MASQ
+		meta l4proto tcp   counter packets 0 bytes 0 dnat to 10.42.20.90:8080
+	}
+}
+table ip6 nat {
+	chain KUBE-KUBELET-CANARY {
+	}
+
+	chain KUBE-PROXY-CANARY {
+	}
+
+	chain KUBE-SERVICES {
+		ip6 daddr != ::1  fib daddr type local counter packets 0 bytes 0 jump KUBE-NODEPORTS
+	}
+
+	chain OUTPUT {
+		type nat hook output priority -100; policy accept;
+		 counter packets 1116262 bytes 89301484 jump KUBE-SERVICES
+	}
+
+	chain PREROUTING {
+		type nat hook prerouting priority dstnat; policy accept;
+		 counter packets 0 bytes 0 jump KUBE-SERVICES
+	}
+
+	chain KUBE-POSTROUTING {
+		meta mark & 0x00004000 != 0x00004000 counter packets 631 bytes 50480 return
+		counter packets 0 bytes 0 meta mark set mark xor 0x4000 
+		 counter packets 0 bytes 0 masquerade  random-fully 
+	}
+
+	chain POSTROUTING {
+		type nat hook postrouting priority srcnat; policy accept;
+		 counter packets 1116262 bytes 89301484 jump KUBE-POSTROUTING
+	}
+
+	chain KUBE-NODEPORTS {
+	}
+
+	chain KUBE-MARK-MASQ {
+		counter packets 0 bytes 0 meta mark set mark or 0x4000 
+	}
+}
+table ip6 filter {
+	chain KUBE-KUBELET-CANARY {
+	}
+
+	chain KUBE-PROXY-CANARY {
+	}
+
+	chain KUBE-EXTERNAL-SERVICES {
+	}
+
+	chain INPUT {
+		type filter hook input priority filter; policy accept;
+		counter packets 13910483 bytes 4401280782 jump KUBE-FIREWALL
+		ct state new  counter packets 1116263 bytes 89302300 jump KUBE-PROXY-FIREWALL
+		 counter packets 13910483 bytes 4401280782 jump KUBE-NODEPORTS
+		ct state new  counter packets 1116263 bytes 89302300 jump KUBE-EXTERNAL-SERVICES
+	}
+
+	chain FORWARD {
+		type filter hook forward priority filter; policy accept;
+		ct state new  counter packets 0 bytes 0 jump KUBE-PROXY-FIREWALL
+		 counter packets 0 bytes 0 jump KUBE-FORWARD
+		ct state new  counter packets 0 bytes 0 jump KUBE-SERVICES
+		ct state new  counter packets 0 bytes 0 jump KUBE-EXTERNAL-SERVICES
+	}
+
+	chain KUBE-NODEPORTS {
+	}
+
+	chain KUBE-SERVICES {
+	}
+
+	chain OUTPUT {
+		type filter hook output priority filter; policy accept;
+		counter packets 13911637 bytes 4401347158 jump KUBE-FIREWALL
+		ct state new  counter packets 1116263 bytes 89302300 jump KUBE-PROXY-FIREWALL
+		ct state new  counter packets 1116263 bytes 89302300 jump KUBE-SERVICES
+	}
+
+	chain KUBE-FORWARD {
+		ct state invalid # nfacct-name  ct_state_invalid_dropped_pkts counter packets 0 bytes 0 drop
+		 meta mark & 0x00004000 == 0x00004000 counter packets 0 bytes 0 accept
+		 ct state related,established counter packets 0 bytes 0 accept
+	}
+
+	chain KUBE-PROXY-FIREWALL {
+	}
+
+	chain KUBE-FIREWALL {
+	}
+}
+table ip raw {
+	chain cali-from-host-endpoint {
+	}
+
+	chain cali-OUTPUT {
+		 counter packets 527475594 bytes 183710242735 meta mark set mark and 0xffe4ffff 
+		 counter packets 527475594 bytes 183710242735 jump cali-to-host-endpoint
+		meta l4proto udp  udp dport 4789 counter packets 125 bytes 19617 notrack
+		 meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+	}
+
+	chain cali-to-host-endpoint {
+	}
+
+	chain cali-PREROUTING {
+		 counter packets 532086352 bytes 126437761850 meta mark set mark and 0xffe4ffff 
+		meta l4proto udp  udp dport 4789 counter packets 0 bytes 0 notrack
+		iifname "cali*"  counter packets 52759591 bytes 8078302129 meta mark set mark or 0x80000 
+		 meta mark & 0x00080000 == 0x00080000 counter packets 52759591 bytes 8078302129 jump cali-rpf-skip
+		 meta mark & 0x00080000 == 0x00080000 fib saddr . mark . iif oif 0 counter packets 0 bytes 0 drop
+		 meta mark & 0x00080000 == 0x00000000 counter packets 479326761 bytes 118359459721 jump cali-from-host-endpoint
+		 meta mark & 0x00010000 == 0x00010000 counter packets 0 bytes 0 accept
+	}
+
+	chain cali-rpf-skip {
+	}
+
+	chain PREROUTING {
+		type filter hook prerouting priority raw; policy accept;
+		 counter packets 532086352 bytes 126437761850 jump cali-PREROUTING
+	}
+
+	chain OUTPUT {
+		type filter hook output priority raw; policy accept;
+		 counter packets 527475594 bytes 183710242735 jump cali-OUTPUT
+	}
+}

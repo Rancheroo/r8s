@@ -1,0 +1,34 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 6195938876563663222 (0x55fc6594ab9c2976)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN = rke2-client-ca@1763599467
+        Validity
+            Not Before: Nov 20 00:44:27 2025 GMT
+            Not After : Nov 20 00:44:27 2026 GMT
+        Subject: O = system:masters, CN = system:admin
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:41:53:bd:0b:f6:68:72:4a:a9:f1:e2:8e:3d:45:
+                    e7:61:88:bd:f4:3f:4e:e1:6e:b8:20:34:02:62:90:
+                    d0:7e:ca:1f:77:80:aa:48:f2:b1:68:81:1b:fc:4b:
+                    d6:28:c4:a7:99:02:5c:25:d8:34:88:da:75:0b:4d:
+                    40:9f:37:5c:83
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Authority Key Identifier: 
+                5D:05:0E:97:4D:C5:6B:02:2E:C7:74:6A:73:59:D0:C2:D4:DA:FF:CB
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:21:00:90:54:6a:15:22:87:e8:fe:f8:14:58:49:df:
+        5d:64:92:68:38:96:5a:30:74:fb:19:1d:fd:72:31:23:cc:2e:
+        c5:02:20:61:b4:c6:10:ad:97:30:76:fa:2a:79:ed:68:4a:43:
+        8f:55:a7:af:35:8e:5a:fe:62:1a:62:2d:ab:24:67:6e:80

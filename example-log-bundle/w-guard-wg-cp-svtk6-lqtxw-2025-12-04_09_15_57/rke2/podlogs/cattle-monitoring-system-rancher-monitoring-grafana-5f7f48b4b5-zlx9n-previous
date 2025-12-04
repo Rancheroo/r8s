@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "grafana-init-sc-datasources" in pod "rancher-monitoring-grafana-5f7f48b4b5-zlx9n" not found

@@ -1,0 +1,21 @@
+total 80K
+drwxr-x---  7 root root 4.0K Nov 20 00:45 .
+drwxr-xr-x  6 root root 4.0K Nov 20 00:44 ..
+-rw-------  1 root root  574 Nov 20 00:44 client-ca.crt
+-rw-------  1 root root 1.2K Nov 20 00:44 client-kube-proxy.crt
+-rw-------  1 root root  227 Nov 20 00:44 client-kube-proxy.key
+-rw-------  1 root root 1.2K Nov 20 00:44 client-kubelet.crt
+-rw-------  1 root root  227 Nov 20 00:44 client-kubelet.key
+-rw-------  1 root root 1.2K Nov 20 00:44 client-rke2-controller.crt
+-rw-------  1 root root  227 Nov 20 00:44 client-rke2-controller.key
+drwx------ 17 root root 4.0K Nov 30 09:27 containerd
+drwx------  4 root root 4.0K Nov 20 00:44 etc
+drwxr-xr-x  2 root root 4.0K Nov 20 00:44 images
+-rw-------  1 root root  464 Nov 20 00:44 kubelet.kubeconfig
+-rw-------  1 root root  470 Nov 20 00:44 kubeproxy.kubeconfig
+drwxr-x---  2 root root 4.0K Dec  2 13:58 logs
+drwxr-x---  2 root root 4.0K Nov 20 00:45 pod-manifests
+-rw-------  1 root root  480 Nov 20 00:44 rke2controller.kubeconfig
+-rw-------  1 root root  570 Nov 20 00:44 server-ca.crt
+-rw-------  1 root root 1.3K Nov 20 00:44 serving-kubelet.crt
+-rw-------  1 root root  227 Nov 20 00:44 serving-kubelet.key

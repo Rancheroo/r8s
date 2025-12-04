@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "rke2-ingress-nginx-controller" in pod "rke2-ingress-nginx-controller-cj5km" not found

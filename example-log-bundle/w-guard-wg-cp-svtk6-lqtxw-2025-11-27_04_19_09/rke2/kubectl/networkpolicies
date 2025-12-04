@@ -1,3 +1,0 @@
-NAMESPACE             NAME                                   POD-SELECTOR       AGE
-cattle-fleet-system   default-allow-all                      <none>             7d3h
-kube-system           rancher-monitoring-coredns-allow-all   k8s-app=kube-dns   26h

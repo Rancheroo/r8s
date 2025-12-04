@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "system-upgrade-controller" in pod "system-upgrade-controller-c84595cc6-cxj8p" not found

@@ -1,0 +1,21 @@
+Netid State  Recv-Q Send-Q   Local Address:Port  Peer Address:PortProcess                                      
+udp   UNCONN 0      0              0.0.0.0:51820      0.0.0.0:*                                                
+udp   UNCONN 0      0              0.0.0.0:4789       0.0.0.0:*                                                
+udp   UNCONN 0      0        127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=232732,fd=13))
+tcp   LISTEN 0      4096         127.0.0.1:9099       0.0.0.0:*    users:(("calico-node",pid=11740,fd=7))      
+tcp   LISTEN 0      4096         127.0.0.1:9098       0.0.0.0:*    users:(("calico-typha",pid=11423,fd=7))     
+tcp   LISTEN 0      4096         127.0.0.1:10259      0.0.0.0:*    users:(("kube-scheduler",pid=9397,fd=3))    
+tcp   LISTEN 0      4096         127.0.0.1:10258      0.0.0.0:*    users:(("cloud-controlle",pid=9628,fd=3))   
+tcp   LISTEN 0      4096         127.0.0.1:10257      0.0.0.0:*    users:(("kube-controller",pid=9344,fd=3))   
+tcp   LISTEN 0      4096         127.0.0.1:10256      0.0.0.0:*    users:(("kube-proxy",pid=9106,fd=15))       
+tcp   LISTEN 0      4096         127.0.0.1:10249      0.0.0.0:*    users:(("kube-proxy",pid=9106,fd=16))       
+tcp   LISTEN 0      4096         127.0.0.1:10248      0.0.0.0:*    users:(("kubelet",pid=8869,fd=17))          
+tcp   LISTEN 0      4096   134.199.165.191:2380       0.0.0.0:*    users:(("etcd",pid=9014,fd=7))              
+tcp   LISTEN 0      4096   134.199.165.191:2379       0.0.0.0:*    users:(("etcd",pid=9014,fd=8))              
+tcp   LISTEN 0      4096         127.0.0.1:2379       0.0.0.0:*    users:(("etcd",pid=9014,fd=10))             
+tcp   LISTEN 0      4096         127.0.0.1:2382       0.0.0.0:*    users:(("etcd",pid=9014,fd=9))              
+tcp   LISTEN 0      4096         127.0.0.1:2381       0.0.0.0:*    users:(("etcd",pid=9014,fd=14))             
+tcp   LISTEN 0      4096         127.0.0.1:2380       0.0.0.0:*    users:(("etcd",pid=9014,fd=6))              
+tcp   LISTEN 0      4096         127.0.0.1:10010      0.0.0.0:*    users:(("containerd",pid=8848,fd=13))       
+tcp   LISTEN 0      128            0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=244192,fd=3))            
+tcp   LISTEN 0      4096     127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=232732,fd=14))

@@ -1,0 +1,199 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           2  0.0  0.0      0     0 ?        S    Nov20   0:00 [kthreadd]
+root           3  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [rcu_gp]
+root           4  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [rcu_par_gp]
+root           5  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [slub_flushwq]
+root           6  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [netns]
+root           8  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kworker/0:0H-events_highpri]
+root          10  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [mm_percpu_wq]
+root          11  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [rcu_tasks_rude_]
+root          12  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [rcu_tasks_trace]
+root          13  0.0  0.0      0     0 ?        S    Nov20  18:51  \_ [ksoftirqd/0]
+root          14  0.1  0.0      0     0 ?        I    Nov20  20:51  \_ [rcu_sched]
+root          15  0.0  0.0      0     0 ?        S    Nov20   0:07  \_ [migration/0]
+root          16  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [idle_inject/0]
+root          18  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [cpuhp/0]
+root          19  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [cpuhp/1]
+root          20  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [idle_inject/1]
+root          21  0.0  0.0      0     0 ?        S    Nov20   0:08  \_ [migration/1]
+root          22  0.0  0.0      0     0 ?        S    Nov20  17:56  \_ [ksoftirqd/1]
+root          24  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kworker/1:0H-events_highpri]
+root          25  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [kdevtmpfs]
+root          26  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [inet_frag_wq]
+root          27  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [kauditd]
+root          28  0.0  0.0      0     0 ?        S    Nov20   0:01  \_ [khungtaskd]
+root          29  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [oom_reaper]
+root          30  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [writeback]
+root          31  0.0  0.0      0     0 ?        S    Nov20   6:06  \_ [kcompactd0]
+root          32  0.0  0.0      0     0 ?        SN   Nov20   0:00  \_ [ksmd]
+root          33  0.0  0.0      0     0 ?        SN   Nov20   0:04  \_ [khugepaged]
+root          79  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kintegrityd]
+root          80  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kblockd]
+root          81  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [blkcg_punt_bio]
+root          82  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [tpm_dev_wq]
+root          83  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [ata_sff]
+root          84  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [md]
+root          85  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [edac-poller]
+root          86  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [devfreq_wq]
+root          87  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [watchdogd]
+root          89  0.0  0.0      0     0 ?        I<   Nov20   4:15  \_ [kworker/1:1H-kblockd]
+root          92  0.0  0.0      0     0 ?        S    Nov20   2:30  \_ [kswapd0]
+root          93  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [ecryptfs-kthrea]
+root          95  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kthrotld]
+root          96  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [acpi_thermal_pm]
+root          98  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [scsi_eh_0]
+root          99  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [scsi_tmf_0]
+root         100  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [scsi_eh_1]
+root         101  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [scsi_tmf_1]
+root         103  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [vfio-irqfd-clea]
+root         104  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [mld]
+root         105  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [ipv6_addrconf]
+root         114  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kstrp]
+root         117  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [zswap-shrink]
+root         118  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kworker/u5:0]
+root         123  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [charger_manager]
+root         146  0.0  0.0      0     0 ?        I<   Nov20   5:26  \_ [kworker/0:1H-kblockd]
+root         169  0.0  0.0      0     0 ?        S    Nov20   0:00  \_ [scsi_eh_2]
+root         171  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [scsi_tmf_2]
+root         172  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [cryptd]
+root         245  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [raid5wq]
+root         289  0.0  0.0      0     0 ?        S    Nov20   3:31  \_ [jbd2/vda1-8]
+root         290  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [ext4-rsv-conver]
+root         390  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kaluad]
+root         391  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kmpath_rdacd]
+root         395  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kmpathd]
+root         396  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [kmpath_handlerd]
+root       11924  0.0  0.0      0     0 ?        I<   Nov20   0:00  \_ [wg-crypt-wiregu]
+root     3268279  0.0  0.0      0     0 ?        I    06:06   0:02  \_ [kworker/u4:1-events_power_efficient]
+root     3289503  0.0  0.0      0     0 ?        I    06:43   0:01  \_ [kworker/u4:3-flush-252:0]
+root     3356122  0.0  0.0      0     0 ?        I    08:28   0:01  \_ [kworker/0:1-events]
+root     3362876  0.0  0.0      0     0 ?        I    08:40   0:00  \_ [kworker/1:1-cgroup_destroy]
+root     3374382  0.0  0.0      0     0 ?        I    09:00   0:00  \_ [kworker/1:0-wg-crypt-wireguard.cali]
+root     3377098  0.0  0.0      0     0 ?        I    09:05   0:00  \_ [kworker/0:2-wg-crypt-wireguard.cali]
+root     3379083  0.0  0.0      0     0 ?        I    09:08   0:00  \_ [kworker/u4:0-flush-252:0]
+root     3379084  0.0  0.0      0     0 ?        I    09:08   0:00  \_ [kworker/u4:4-events_unbound]
+root     3381411  0.0  0.0      0     0 ?        I    09:13   0:00  \_ [kworker/1:2-events]
+root           1  0.0  0.2 168628 10660 ?        Ss   Nov20   2:05 /lib/systemd/systemd --system --deserialize 73
+root         398  0.0  0.6 289316 27100 ?        SLsl Nov20   1:58 /sbin/multipathd -d -s
+root         718  0.0  0.0   7288  2316 ?        Ss   Nov20   0:02 /usr/sbin/cron -f -P
+message+     721  0.0  0.0   9052  3908 ?        Ss   Nov20   0:22 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         725  0.0  0.0  82800  2480 ?        Ssl  Nov20   0:53 /usr/sbin/irqbalance --foreground
+root         726  0.0  0.2  33088 11684 ?        Ss   Nov20   0:00 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers
+root         734  0.0  0.1  23764  5336 ?        Ss   Nov20   0:04 /lib/systemd/systemd-logind
+root         782  0.0  0.0   6220   864 ttyS0    Ss+  Nov20   0:00 /sbin/agetty -o -p -- \u --keep-baud 115200,57600,38400,9600 ttyS0 vt220
+root         792  0.0  0.0   6176   804 tty1     Ss+  Nov20   0:00 /sbin/agetty -o -p -- \u --noclear tty1 linux
+root         806  0.0  0.2 110104 11424 ?        Ssl  Nov20   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root        1747  0.0  0.1 296116  6276 ?        Ssl  Nov20   0:07 /usr/libexec/packagekitd
+root        1751  0.0  0.1 234504  4572 ?        Ssl  Nov20   0:00 /usr/libexec/polkitd --no-debug
+root        8390  0.0  0.0 1239840 1500 ?        Ssl  Nov20   0:05 /opt/digitalocean/bin/droplet-agent
+root        8828  0.8  2.1 1682900 87404 ?       Ssl  Nov20 173:11 /usr/local/bin/rke2 server
+root        8848 14.3  1.3 1306376 53800 ?       Sl   Nov20 2959:23  \_ containerd -c /var/lib/rancher/rke2/agent/etc/containerd/config.toml
+root        8869  4.2  1.9 1313840 77656 ?       Sl   Nov20 873:04  \_ kubelet --volume-plugin-dir=/var/lib/kubelet/volumeplugins --file-check-frequency=5s --sync-frequency=30s --cloud-provider=external --config-dir=/var/lib/rancher/rke2/agent/etc/kubelet.conf.d --containerd=/run/k3s/containerd/containerd.sock --hostname-override=w-guard-wg-cp-svtk6-lqtxw --kubeconfig=/var/lib/rancher/rke2/agent/kubelet.kubeconfig --node-ip=134.199.165.191 --node-labels=rke.cattle.io/machine=6421af65-5a82-4c9e-92ed-981603e02c95 --read-only-port=0
+root        8920  0.0  0.1 1243324 5028 ?        Sl   Nov20   8:20 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id a7b794f3437d5ca79593ac0b5bef8519feb9808e2837d1d6203820bd1e81fe56 -address /run/k3s/containerd/containerd.sock
+65535       8966  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root        9106  0.0  0.6 1296536 25808 ?       Ssl  Nov20  16:08  \_ kube-proxy --cluster-cidr=10.42.0.0/16 --conntrack-max-per-core=0 --conntrack-tcp-timeout-close-wait=0s --conntrack-tcp-timeout-established=0s --healthz-bind-address=127.0.0.1 --hostname-override=w-guard-wg-cp-svtk6-lqtxw --kubeconfig=/var/lib/rancher/rke2/agent/kubeproxy.kubeconfig --proxy-mode=iptables
+root        8931  0.0  0.1 1243580 6568 ?        Sl   Nov20   8:31 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id c49b3ad6337f52f1ad7da04c432f89e8e0315b6e35eef8b536ca918db28a9c59 -address /run/k3s/containerd/containerd.sock
+65535       8978  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root        9014  4.1  3.2 11875336 130448 ?     Ssl  Nov20 867:34  \_ etcd --config-file=/var/lib/rancher/rke2/server/db/etcd/config
+root        9043  0.2  0.2 1243720 9324 ?        Sl   Nov20  61:16 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 279dd9977a1f8685a37be88cc42f4f25a96bbcfe5dec8ae3ef38a2bd2b07fe01 -address /run/k3s/containerd/containerd.sock
+65535       9065  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root        9110 11.5 28.7 2697276 1151424 ?     Ssl  Nov20 2382:43  \_ kube-apiserver --admission-control-config-file=/etc/rancher/rke2/rke2-pss.yaml --allow-privileged=true --anonymous-auth=false --api-audiences=https://kubernetes.default.svc.cluster.local,rke2 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --cert-dir=/var/lib/rancher/rke2/server/tls/temporary-certs --client-ca-file=/var/lib/rancher/rke2/server/tls/client-ca.crt --egress-selector-config-file=/var/lib/rancher/rke2/server/etc/egress-selector-config.yaml --enable-admission-plugins=NodeRestriction --enable-aggregator-routing=true --enable-bootstrap-token-auth=true --encryption-provider-config=/var/lib/rancher/rke2/server/cred/encryption-config.json --encryption-provider-config-automatic-reload=true --etcd-cafile=/var/lib/rancher/rke2/server/tls/etcd/server-ca.crt --etcd-certfile=/var/lib/rancher/rke2/server/tls/etcd/client.crt --etcd-keyfile=/var/lib/rancher/rke2/server/tls/etcd/client.key --etcd-servers=https://127.0.0.1:2379 --kubelet-certificate-authority=/var/lib/rancher/rke2/server/tls/server-ca.crt --kubelet-client-certificate=/var/lib/rancher/rke2/server/tls/client-kube-apiserver.crt --kubelet-client-key=/var/lib/rancher/rke2/server/tls/client-kube-apiserver.key --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname --profiling=false --proxy-client-cert-file=/var/lib/rancher/rke2/server/tls/client-auth-proxy.crt --proxy-client-key-file=/var/lib/rancher/rke2/server/tls/client-auth-proxy.key --requestheader-allowed-names=system:auth-proxy --requestheader-client-ca-file=/var/lib/rancher/rke2/server/tls/request-header-ca.crt --requestheader-extra-headers-prefix=X-Remote-Extra- --requestheader-group-headers=X-Remote-Group --requestheader-username-headers=X-Remote-User --secure-port=6443 --service-account-issuer=https://kubernetes.default.svc.cluster.local --service-account-key-file=/var/lib/rancher/rke2/server/tls/service.key --service-account-signing-key-file=/var/lib/rancher/rke2/server/tls/service.current.key --service-cluster-ip-range=10.43.0.0/16 --service-node-port-range=30000-32767 --storage-backend=etcd3 --tls-cert-file=/var/lib/rancher/rke2/server/tls/serving-kube-apiserver.crt --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305 --tls-private-key-file=/var/lib/rancher/rke2/server/tls/serving-kube-apiserver.key
+root        9165  0.0  0.1 1243580 5560 ?        Sl   Nov20   7:43 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 92e662250c3d316cab91ddf13a6f91e0997b3efd002e9e1c02d5b48dde7dd9bf -address /run/k3s/containerd/containerd.sock
+65535       9203  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root        9344  2.1  2.5 1385040 102320 ?      Ssl  Nov20 440:00  \_ kube-controller-manager --flex-volume-plugin-dir=/var/lib/kubelet/volumeplugins --terminated-pod-gc-threshold=1000 --permit-port-sharing=true --allocate-node-cidrs=true --authentication-kubeconfig=/var/lib/rancher/rke2/server/cred/controller.kubeconfig --authorization-kubeconfig=/var/lib/rancher/rke2/server/cred/controller.kubeconfig --bind-address=127.0.0.1 --cert-dir=/var/lib/rancher/rke2/server/tls/kube-controller-manager --cluster-cidr=10.42.0.0/16 --cluster-signing-kube-apiserver-client-cert-file=/var/lib/rancher/rke2/server/tls/client-ca.nochain.crt --cluster-signing-kube-apiserver-client-key-file=/var/lib/rancher/rke2/server/tls/client-ca.key --cluster-signing-kubelet-client-cert-file=/var/lib/rancher/rke2/server/tls/client-ca.nochain.crt --cluster-signing-kubelet-client-key-file=/var/lib/rancher/rke2/server/tls/client-ca.key --cluster-signing-kubelet-serving-cert-file=/var/lib/rancher/rke2/server/tls/server-ca.nochain.crt --cluster-signing-kubelet-serving-key-file=/var/lib/rancher/rke2/server/tls/server-ca.key --cluster-signing-legacy-unknown-cert-file=/var/lib/rancher/rke2/server/tls/server-ca.nochain.crt --cluster-signing-legacy-unknown-key-file=/var/lib/rancher/rke2/server/tls/server-ca.key --configure-cloud-routes=false --controllers=*,tokencleaner,-service,-route,-cloud-node-lifecycle --kubeconfig=/var/lib/rancher/rke2/server/cred/controller.kubeconfig --profiling=false --root-ca-file=/var/lib/rancher/rke2/server/tls/server-ca.crt --secure-port=10257 --service-account-private-key-file=/var/lib/rancher/rke2/server/tls/service.current.key --service-cluster-ip-range=10.43.0.0/16 --tls-cert-file=/var/lib/rancher/rke2/server/tls/kube-controller-manager/kube-controller-manager.crt --tls-private-key-file=/var/lib/rancher/rke2/server/tls/kube-controller-manager/kube-controller-manager.key --use-service-account-credentials=true
+root        9187  0.0  0.1 1243580 5780 ?        Sl   Nov20   7:59 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id c6ba6b62881783355b3bac90ba252e05a333f7843db6a149646d2454488c3108 -address /run/k3s/containerd/containerd.sock
+65535       9277  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root        9397  0.4  1.0 1297012 42536 ?       Ssl  Nov20  90:44  \_ kube-scheduler --permit-port-sharing=true --authentication-kubeconfig=/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig --authorization-kubeconfig=/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig --bind-address=127.0.0.1 --cert-dir=/var/lib/rancher/rke2/server/tls/kube-scheduler --kubeconfig=/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig --profiling=false --secure-port=10259 --tls-cert-file=/var/lib/rancher/rke2/server/tls/kube-scheduler/kube-scheduler.crt --tls-private-key-file=/var/lib/rancher/rke2/server/tls/kube-scheduler/kube-scheduler.key
+root        9457  0.0  0.1 1243324 6136 ?        Sl   Nov20   8:01 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id e10f56836c5bbdddf5ff89d21fa05e917e78dfcbe203fbdfdcfe2df7c96f63bf -address /run/k3s/containerd/containerd.sock
+65535       9481  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root        9628  0.3  0.6 1305368 25968 ?       Ssl  Nov20  62:02  \_ cloud-controller-manager 
+root       10487  0.0  0.1 1243324 4656 ?        Sl   Nov20   8:48 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id a8fc76ad725028cfb89bd6e8e0877d3cb1c57bda180cb0f01cfac4fd4f6f3f1c -address /run/k3s/containerd/containerd.sock
+65535      10511  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+10001      10634  0.4  1.4 1904184 59120 ?       Ssl  Nov20  87:39  \_ operator -manage-crds=false
+root       10731  0.0  0.1 1243720 6132 ?        Sl   Nov20  15:03 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 32c1e9380fca294eaf6f394ac268c82cba9dda82844fe1af9aba38baffa7a8df -address /run/k3s/containerd/containerd.sock
+65535      10754  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root       11565  0.0  0.0   4476    84 ?        Ss   Nov20   0:14  \_ /usr/local/bin/runsvdir -P /etc/service/enabled
+root       11734  0.0  0.0   4324    68 ?        Ss   Nov20   0:00      \_ runsv allocate-tunnel-addrs
+root       11747  0.0  0.0  12000   268 ?        S    Nov20   0:00      |   \_ /bin/bash ./run
+root       11787  0.0  0.0  12000   264 ?        S    Nov20   0:00      |   |   \_ /bin/bash ./run
+root       11791  0.0  0.0   4468    64 ?        S    Nov20   0:00      |   |   |   \_ svlogd -ttt /var/log/calico/allocate-tunnel-addrs
+root       11788  0.0  0.0  23144   188 ?        S    Nov20   0:00      |   |   \_ /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+root       11748  0.0  0.5 1828072 22364 ?       Sl   Nov20   4:05      |   \_ calico-node -allocate-tunnel-addrs
+root       11735  0.0  0.0   4324    68 ?        Ss   Nov20   0:00      \_ runsv monitor-addresses
+root       11742  0.0  0.0   4468    68 ?        S    Nov20   0:01      |   \_ svlogd /var/log/calico/monitor-addresses
+root       11743  0.0  0.6 1828072 24088 ?       Sl   Nov20   3:34      |   \_ calico-node -monitor-addresses
+root       11736  0.0  0.0   4324    68 ?        Ss   Nov20   0:00      \_ runsv node-status-reporter
+root       11744  0.0  0.0  12000   264 ?        S    Nov20   0:00      |   \_ /bin/bash ./run
+root       11778  0.0  0.0  12000   260 ?        S    Nov20   0:00      |   |   \_ /bin/bash ./run
+root       11786  0.0  0.0   4468    68 ?        S    Nov20   0:00      |   |   |   \_ svlogd -ttt /var/log/calico/node-status-reporter
+root       11779  0.0  0.0  23144   184 ?        S    Nov20   0:00      |   |   \_ /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+root       11745  0.0  0.5 1754340 21152 ?       Sl   Nov20   4:00      |   \_ calico-node -status-reporter
+root       11737  0.0  0.0   4324    64 ?        Ss   Nov20   0:00      \_ runsv felix
+root       11739  0.0  0.0  12000   264 ?        S    Nov20   0:00      |   \_ /bin/bash ./run
+root       11780  0.0  0.0  12000   260 ?        S    Nov20   0:00      |   |   \_ /bin/bash ./run
+root       11789  0.0  0.0   4468    84 ?        S    Nov20   0:02      |   |   |   \_ svlogd -ttt /var/log/calico/felix
+root       11781  0.0  0.0  23144   220 ?        S    Nov20   0:01      |   |   \_ /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+root       11740  1.6  1.3 2123768 52220 ?       Sl   Nov20 337:12      |   \_ calico-node -felix
+root       11738  0.0  0.0   4324    68 ?        Ss   Nov20   0:00      \_ runsv cni
+root       11741  0.0  0.0  12000   264 ?        S    Nov20   0:00          \_ /bin/bash ./run
+root       11770  0.0  0.0  12000   260 ?        S    Nov20   0:00          |   \_ /bin/bash ./run
+root       11777  0.0  0.0   4468    68 ?        S    Nov20   0:00          |   |   \_ svlogd -ttt /var/log/calico/cni
+root       11771  0.0  0.0  23144   184 ?        S    Nov20   0:00          |   \_ /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+root       11746  0.0  0.5 1827816 21148 ?       Sl   Nov20   2:02          \_ calico-node -monitor-token
+root       11243  0.0  0.1 1243580 5304 ?        Sl   Nov20   8:33 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 2fd7bf80b504bd29c83674b9e4a22e8134e7fd64701009904b9fbf845cea1af8 -address /run/k3s/containerd/containerd.sock
+65535      11323  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+10001      11423  0.2  0.7 1283752 29504 ?       Ssl  Nov20  49:41  \_ /usr/bin/calico-typha
+root       11640  0.0  0.1 1243440 6296 ?        Sl   Nov20   8:20 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 17c53b0de1d01cb3afb9cf25299887ecbe83279ee14700a8e6c74f6309a53279 -address /run/k3s/containerd/containerd.sock
+65535      11685  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root       11966  0.0  0.3 1276224 12136 ?       Ssl  Nov20   5:46  \_ /cluster-proportional-autoscaler --namespace=kube-system --configmap=rke2-coredns-rke2-coredns-autoscaler --target=Deployment/rke2-coredns-rke2-coredns --logtostderr=true --v=2
+root       12057  0.0  0.1 1243324 6816 ?        Sl   Nov20   8:09 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 5d43b62a8fbffd3a9a13072d0dce8788b4f6264f7ae214428c28ee27c558d0ed -address /run/k3s/containerd/containerd.sock
+65535      12082  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root       12325  0.1  0.5 1303944 20792 ?       Ssl  Nov20  29:24  \_ /coredns -conf /etc/coredns/Corefile
+root       12140  0.0  0.1 1243324 6532 ?        Sl   Nov20  17:31 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 476b5678753e2bb890c099d1df2b576092f2beaa3d40bcdfdde3c5fa837f7270 -address /run/k3s/containerd/containerd.sock
+65535      12165  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+lxd        12446  0.0  0.0 1242052 1928 ?        Ssl  Nov20   0:01  \_ /usr/bin/wrapper /usr/bin/kube-controllers
+lxd        12467  0.0  0.8 1287496 32276 ?       Sl   Nov20  14:13      \_ /usr/bin/kube-controllers
+root       14743  0.0  0.1 1243324 5612 ?        Sl   Nov20   8:33 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 341898d9d0b72a2f40ad7e2d020cf5d93fcf03b720e9a6991a8d7b83c26f5ea6 -address /run/k3s/containerd/containerd.sock
+65535      14767  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root       14798  0.0  0.0   2684   116 ?        Ss   Nov20   0:41  \_ tini -- agent
+root       14877  1.6  8.3 2252920 333816 ?      Sl   Nov20 339:18      \_ agent
+root       15557  0.0  0.1 1243324 5548 ?        Sl   Nov20   8:48 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id c4ca5c5b549027331cd6eb41b08932ecd4ade7d972cdfdb3637d3734a9b0c88c -address /run/k3s/containerd/containerd.sock
+65535      15584  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+root       15609  0.0  0.0   2684   116 ?        Ss   Nov20   0:41  \_ tini -- agent
+root       15675  1.3  6.9 2046892 278104 ?      Sl   Nov20 271:11      \_ agent
+root       15985  0.0  0.1 1243580 5564 ?        Sl   Nov20   8:01 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id d0605370bbd3078a435e5d06271a75304e653563a63bf175c93a140fac112003 -address /run/k3s/containerd/containerd.sock
+65535      16008  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+1000       16104  0.0  1.1 1351252 45836 ?       Ssl  Nov20  18:09  \_ webhook
+root       16893  0.0  0.1 1243580 6152 ?        Sl   Nov20   8:31 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 7cb893da735d94a6a7fbb59d547af99cc8edb19588347b0ce1b2561d387e40b0 -address /run/k3s/containerd/containerd.sock
+65535      16918  0.0  0.0    972     4 ?        Ss   Nov20   0:00  \_ /pause
+nobody     16975  0.0  0.3 1276324 13872 ?       Ssl  Nov20  19:59  \_ /bin/system-upgrade-controller
+root       27627  0.3  0.7 1285064 31052 ?       Ssl  Nov20  65:38 /usr/local/bin/rancher-system-agent sentinel
+systemd+  232703  0.0  0.0  16388  3500 ?        Ss   Nov20   0:24 /lib/systemd/systemd-networkd
+systemd+  232732  0.0  0.1  25916  7728 ?        Ss   Nov20   0:03 /lib/systemd/systemd-resolved
+root      232734  0.0  0.7 248028 30356 ?        S<s  Nov20   2:00 /lib/systemd/systemd-journald
+systemd+  232795  0.0  0.1  89364  4436 ?        Ssl  Nov20   0:02 /lib/systemd/systemd-timesyncd
+root      233492  0.0  0.0  22832  3932 ?        Ss   Nov20   0:01 /lib/systemd/systemd-udevd
+root      244192  0.0  0.1  15440  4792 ?        Ss   Nov20   1:36 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root     3381406  0.0  0.2  17200 10912 ?        Ss   09:13   0:00  \_ sshd: root@pts/0
+root     3381551  0.0  0.1   9152  5196 pts/0    Ss   09:13   0:00      \_ -bash
+root     3383226  0.0  0.1   9096  4856 pts/0    SN+  09:15   0:00          \_ /bin/bash ./rancher2_logs_collector.sh -s 7
+root     3383307  0.0  0.0   7904  3700 pts/0    RN+  09:15   0:00              \_ ps auxfww
+syslog    262849  0.0  0.0 222404  1512 ?        Ssl  Nov20   0:22 /usr/sbin/rsyslogd -n -iNONE
+root     1079882  0.0  0.3 1923992 14852 ?       Ssl  Nov21   2:00 /usr/lib/snapd/snapd
+root      791210  0.0  0.1 1243324 5752 ?        Sl   Nov26   5:25 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 2c57adac8693965e3e2da0630df8a5897c0cbba3de60b2f99420079836499daa -address /run/k3s/containerd/containerd.sock
+nobody    791236  0.0  0.0    972     4 ?        Ss   Nov26   0:00  \_ /pause
+nobody    791523  0.1  0.3 1242800 14060 ?       Ssl  Nov26  15:07  \_ /bin/node_exporter --path.procfs=/host/proc --path.sysfs=/host/sys --path.rootfs=/host/root --path.udev.data=/host/root/run/udev/data --web.listen-address=[0.0.0.0]:9796 --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/) --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+root      791257  0.0  0.0 1243324 3440 ?        Sl   Nov26   5:24 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id c1aa4c83bb5073d854a6934149efd0ddb75c9830d8b0aa9b99acb97417389ae6 -address /run/k3s/containerd/containerd.sock
+65535     791345  0.0  0.0    972     4 ?        Ss   Nov26   0:00  \_ /pause
+1000      791593  0.0  0.1 1235980 5540 ?        Ssl  Nov26   1:07  \_ pushprox-client --fqdn=134.199.165.191 --proxy-url=http://pushprox-kube-scheduler-proxy.cattle-monitoring-system.svc:8080 --allow-port=10259 --use-localhost --insecure-skip-verify --token-path=/var/run/secrets/kubernetes.io/serviceaccount/token
+root      791264  0.0  0.1 1243580 6016 ?        Sl   Nov26   5:29 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id fae52c7b54c031acb32e56f4de88969a179d61bb38b76f24bbc7f12ae7fca0f4 -address /run/k3s/containerd/containerd.sock
+65535     791359  0.0  0.0    972     4 ?        Ss   Nov26   0:00  \_ /pause
+1000      791596  0.0  0.1 1235724 5668 ?        Ssl  Nov26   1:01  \_ pushprox-client --fqdn=134.199.165.191 --proxy-url=http://pushprox-kube-etcd-proxy.cattle-monitoring-system.svc:8080 --allow-port=2381 --use-localhost
+root      791333  0.0  0.0 1243324 3680 ?        Sl   Nov26   5:16 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id f5775b0ab084b9714e5eeae2bd519642811365c5d685e61e4c00e5643d73ce0f -address /run/k3s/containerd/containerd.sock
+65535     791404  0.0  0.0    972     4 ?        Ss   Nov26   0:00  \_ /pause
+1000      791565  0.0  0.1 1235724 5980 ?        Ssl  Nov26   1:06  \_ pushprox-client --fqdn=134.199.165.191 --proxy-url=http://pushprox-kube-controller-manager-proxy.cattle-monitoring-system.svc:8080 --allow-port=10257 --use-localhost --insecure-skip-verify --token-path=/var/run/secrets/kubernetes.io/serviceaccount/token
+root      791338  0.0  0.1 1243324 5400 ?        Sl   Nov26   5:23 /var/lib/rancher/rke2/data/v1.32.7-rke2r1-6878c117238b/bin/containerd-shim-runc-v2 -namespace k8s.io -id 6fa02f5a99e3073f068ce423ed7b7a9be88fed0474b77e4574f67720b842254f -address /run/k3s/containerd/containerd.sock
+65535     791406  0.0  0.0    972     4 ?        Ss   Nov26   0:00  \_ /pause
+1000      791595  0.0  0.1 1235724 6056 ?        Ssl  Nov26   0:57  \_ pushprox-client --fqdn=134.199.165.191 --proxy-url=http://pushprox-kube-proxy-proxy.cattle-monitoring-system.svc:8080 --allow-port=10249 --use-localhost
+root     3381409  0.1  0.2  17848  9644 ?        Ss   09:13   0:00 /lib/systemd/systemd --user
+root     3381410  0.0  0.1 171540  5964 ?        S    09:13   0:00  \_ (sd-pam)

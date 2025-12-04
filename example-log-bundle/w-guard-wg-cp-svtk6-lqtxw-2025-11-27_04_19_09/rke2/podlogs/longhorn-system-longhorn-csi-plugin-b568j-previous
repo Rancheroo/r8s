@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "node-driver-registrar" in pod "longhorn-csi-plugin-b568j" not found

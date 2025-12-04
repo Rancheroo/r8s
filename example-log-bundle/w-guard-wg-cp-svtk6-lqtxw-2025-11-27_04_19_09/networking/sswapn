@@ -1,4 +1,0 @@
-State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                      
-UNCONN 0      0            0.0.0.0:6         0.0.0.0:*    users:(("droplet-agent",pid=8390,fd=3))     
-UNCONN 0      0             *%eth0:58              *:*    users:(("systemd-network",pid=232703,fd=21))
-UNCONN 0      0             *%eth1:58              *:*    users:(("systemd-network",pid=232703,fd=18))

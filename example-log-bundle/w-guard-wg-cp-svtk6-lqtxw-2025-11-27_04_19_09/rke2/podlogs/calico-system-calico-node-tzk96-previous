@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "install-cni" in pod "calico-node-tzk96" not found

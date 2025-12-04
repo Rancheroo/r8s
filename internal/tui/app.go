@@ -1464,6 +1464,58 @@ func (a *App) handleEnter() tea.Cmd {
 	selected := a.table.HighlightedRow().Data
 
 	switch a.currentView.viewType {
+	case ViewAttention:
+		// Jump to pod logs from attention dashboard (for pod issues)
+		if len(a.attentionItems) == 0 {
+			return nil
+		}
+
+		// Find matching attention item by pod name from selected row
+		// The table rows are built in the same order as attentionItems
+		podName := safeRowString(selected, "title")
+		if podName == "" {
+			return nil
+		}
+
+		// Find the attention item with matching title (pod name)
+		var matchedItem *AttentionItem
+		for i := range a.attentionItems {
+			if a.attentionItems[i].Title == podName {
+				matchedItem = &a.attentionItems[i]
+				break
+			}
+		}
+
+		if matchedItem == nil {
+			return nil
+		}
+
+		// Only navigate for pod-related issues
+		if matchedItem.ResourceType == "pod" && matchedItem.PodName != "" {
+			// Push current view to stack
+			a.viewStack = append(a.viewStack, a.currentView)
+
+			// Navigate to logs view with error/warning filter
+			a.currentView = ViewContext{
+				viewType:      ViewLogs,
+				clusterID:     matchedItem.ClusterID,
+				clusterName:   "",
+				projectID:     "",
+				projectName:   "",
+				namespaceID:   "",
+				namespaceName: matchedItem.Namespace,
+				podName:       matchedItem.PodName,
+				containerName: matchedItem.ContainerName,
+			}
+
+			// Set filter to show errors and warnings by default
+			a.filterLevel = "WARN"
+			a.loading = true
+			return a.fetchLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName)
+		}
+
+		return nil
+
 	case ViewClusters:
 		// Navigate to Projects for selected cluster
 		clusterName := safeRowString(selected, "name")

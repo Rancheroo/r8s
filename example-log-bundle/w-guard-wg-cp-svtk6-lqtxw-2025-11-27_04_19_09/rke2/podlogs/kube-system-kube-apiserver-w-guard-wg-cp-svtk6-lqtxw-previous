@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "kube-apiserver" in pod "kube-apiserver-w-guard-wg-cp-svtk6-lqtxw" not found

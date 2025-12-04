@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    component: kube-proxy
+    tier: control-plane
+  name: kube-proxy
+  namespace: kube-system
+  uid: 0b5081e484cd2fda3844a1873a90819a
+spec:
+  containers:
+  - args:
+    - --cluster-cidr=10.42.0.0/16
+    - --conntrack-max-per-core=0
+    - --conntrack-tcp-timeout-close-wait=0s
+    - --conntrack-tcp-timeout-established=0s
+    - --healthz-bind-address=127.0.0.1
+    - --hostname-override=w-guard-wg-cp-svtk6-lqtxw
+    - --kubeconfig=/var/lib/rancher/rke2/agent/kubeproxy.kubeconfig
+    - --proxy-mode=iptables
+    command:
+    - kube-proxy
+    env:
+    - name: FILE_HASH
+      value: 5479c9b93e28554f6585efe6e7da6ba9eef7150dbfa4720ac78d783d03407b81
+    - name: NO_PROXY
+      value: .svc,.cluster.local,10.42.0.0/16,10.43.0.0/16
+    image: index.docker.io/rancher/hardened-kubernetes:v1.32.7-rke2r1-build20250716
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: localhost
+        path: /healthz
+        port: 10256
+        scheme: HTTP
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+    name: kube-proxy
+    resources:
+      requests:
+        cpu: 250m
+        memory: 128Mi
+    securityContext:
+      privileged: true
+    startupProbe:
+      failureThreshold: 24
+      httpGet:
+        host: localhost
+        path: /healthz
+        port: 10256
+        scheme: HTTP
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+    volumeMounts:
+    - mountPath: /var/lib/rancher/rke2/agent/client-kube-proxy.crt
+      name: file0
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/agent/client-kube-proxy.key
+      name: file1
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/agent/kubeproxy.kubeconfig
+      name: file2
+      readOnly: true
+    - mountPath: /var/lib/rancher/rke2/agent/server-ca.crt
+      name: file3
+      readOnly: true
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  volumes:
+  - hostPath:
+      path: /var/lib/rancher/rke2/agent/client-kube-proxy.crt
+      type: File
+    name: file0
+  - hostPath:
+      path: /var/lib/rancher/rke2/agent/client-kube-proxy.key
+      type: File
+    name: file1
+  - hostPath:
+      path: /var/lib/rancher/rke2/agent/kubeproxy.kubeconfig
+      type: File
+    name: file2
+  - hostPath:
+      path: /var/lib/rancher/rke2/agent/server-ca.crt
+      type: File
+    name: file3
+status: {}

@@ -1,3 +1,0 @@
-NAMESPACE                  NAME                                           READY   AGE   CONTAINERS                                    IMAGES
-cattle-monitoring-system   alertmanager-rancher-monitoring-alertmanager   1/1     26h   alertmanager,config-reloader                  docker.io/rancher/mirrored-prometheus-alertmanager:v0.28.1,docker.io/rancher/mirrored-prometheus-operator-prometheus-config-reloader:v0.80.1
-cattle-monitoring-system   prometheus-rancher-monitoring-prometheus       1/1     26h   prometheus,config-reloader,prometheus-proxy   docker.io/rancher/prom-prometheus:v3.2.1,docker.io/rancher/mirrored-prometheus-operator-prometheus-config-reloader:v0.80.1,rancher/mirrored-library-nginx:1.27.2-alpine

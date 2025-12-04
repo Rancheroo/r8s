@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "prometheus-adapter" in pod "rancher-monitoring-prometheus-adapter-6dfb97b6d4-fmp49" not found

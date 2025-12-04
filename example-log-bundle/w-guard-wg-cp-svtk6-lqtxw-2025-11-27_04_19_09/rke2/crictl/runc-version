@@ -1,5 +1,0 @@
-runc version 1.2.6
-commit: v1.2.6-0-ge89a2992
-spec: 1.2.0
-go: go1.23.10 X:boringcrypto
-libseccomp: 2.5.4
