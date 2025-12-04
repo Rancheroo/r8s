@@ -433,6 +433,21 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.loading = true
 				return a, a.refreshCurrentView()
 			}
+		case "c":
+			// Navigate from Attention Dashboard to Clusters
+			if a.currentView.viewType == ViewAttention {
+				// Push current view to stack (though this is root, allows back navigation)
+				a.viewStack = append(a.viewStack, a.currentView)
+
+				// Navigate to Clusters
+				a.currentView = ViewContext{viewType: ViewClusters}
+				a.loading = true
+				return a, a.fetchClusters()
+			}
+			// Cycle through containers in logs view
+			if a.currentView.viewType == ViewLogs && len(a.containers) > 1 {
+				return a, a.cycleContainer()
+			}
 		case "i":
 			// Toggle CRD description caption in CRD view
 			if a.currentView.viewType == ViewCRDs {
@@ -454,11 +469,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return a, a.tickTail()
 				}
 				return a, nil
-			}
-		case "c":
-			// Cycle through containers in logs view
-			if a.currentView.viewType == ViewLogs && len(a.containers) > 1 {
-				return a, a.cycleContainer()
 			}
 		case "ctrl+e":
 			// Filter to ERROR logs only
