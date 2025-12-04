@@ -41,7 +41,8 @@ func safeRowString(rowData table.RowData, key string) string {
 type ViewType int
 
 const (
-	ViewClusters ViewType = iota
+	ViewAttention ViewType = iota // Attention Dashboard (default root view)
+	ViewClusters
 	ViewProjects
 	ViewNamespaces
 	ViewPods
@@ -126,6 +127,9 @@ type App struct {
 	offlineMode bool   // Flag to indicate running without live Rancher connection
 	bundleMode  bool   // Flag to indicate bundle mode
 	bundlePath  string // Path to loaded bundle
+
+	// Attention Dashboard
+	attentionItems []AttentionItem // Detected issues for attention dashboard
 
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
@@ -2839,6 +2843,11 @@ type describeMsg struct {
 // logsMsg represents a message containing log data
 type logsMsg struct {
 	logs []string
+}
+
+// attentionMsg represents attention dashboard analysis results
+type attentionMsg struct {
+	items []AttentionItem
 }
 
 // colorizeLogLine applies color styling based on log level
