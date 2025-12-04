@@ -32,6 +32,10 @@ type AttentionItem struct {
 	PodName       string
 	ContainerName string
 	ClusterID     string
+
+	// Expandable content for aggregate items (events)
+	AffectedPods      []string       // Top 10 pod names involved in this event
+	AffectedPodCounts map[string]int // Event count per pod
 }
 
 // ComputeAttentionItems runs all signal detectors and returns prioritized list of issues
@@ -295,17 +299,32 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 		return items
 	}
 
-	// Aggregate Warning events by reason
-	warningCounts := make(map[string]int)
+	// Aggregate Warning events by reason and track affected pods
+	type eventStats struct {
+		count int
+		pods  map[string]int // pod name -> event count
+	}
+	warningStats := make(map[string]*eventStats)
+
 	for _, event := range events {
 		if event.Type == "Warning" && event.Count > 0 {
-			warningCounts[event.Reason] += event.Count
+			if warningStats[event.Reason] == nil {
+				warningStats[event.Reason] = &eventStats{
+					pods: make(map[string]int),
+				}
+			}
+			warningStats[event.Reason].count += event.Count
+
+			// Track pod name if available
+			if event.PodName != "" {
+				warningStats[event.Reason].pods[event.PodName] += event.Count
+			}
 		}
 	}
 
-	// Report high-impact warning types (collapsed format)
-	for reason, count := range warningCounts {
-		if count >= 5 { // At least 5 occurrences
+	// Report high-impact warning types (collapsed format with pod names)
+	for reason, stats := range warningStats {
+		if stats.count >= 5 { // At least 5 occurrences
 			emoji := "🟨"
 			severity := SeverityWarning
 
@@ -317,21 +336,56 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 				severity = SeverityWarning // Keep as warning, but with red emoji
 			}
 
-			// Collapsed format: "467339× DNSConfigForming" instead of long description
+			// Get top 10 affected pods
+			affectedPods := getTopPods(stats.pods, 10)
+
+			// Collapsed format: "467339× DNSConfigForming" with expandable pod list
 			items = append(items, AttentionItem{
-				Severity:     severity,
-				Emoji:        emoji,
-				Title:        fmt.Sprintf("%d× %s", count, reason),
-				Description:  "Warning events",
-				Namespace:    "cluster",
-				Count:        count,
-				ResourceType: "event",
-				Timestamp:    time.Now(),
+				Severity:          severity,
+				Emoji:             emoji,
+				Title:             fmt.Sprintf("%d× %s", stats.count, reason),
+				Description:       "Warning events",
+				Namespace:         "cluster",
+				Count:             stats.count,
+				ResourceType:      "event",
+				AffectedPods:      affectedPods,
+				AffectedPodCounts: stats.pods, // Store full count map for display
+				Timestamp:         time.Now(),
 			})
 		}
 	}
 
 	return items
+}
+
+// getTopPods returns the top N pods by event count
+func getTopPods(pods map[string]int, n int) []string {
+	type podCount struct {
+		name  string
+		count int
+	}
+
+	var sorted []podCount
+	for name, count := range pods {
+		sorted = append(sorted, podCount{name, count})
+	}
+
+	// Simple bubble sort by count (descending)
+	for i := 0; i < len(sorted); i++ {
+		for j := i + 1; j < len(sorted); j++ {
+			if sorted[i].count < sorted[j].count {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			}
+		}
+	}
+
+	// Return top N names
+	result := []string{}
+	for i := 0; i < len(sorted) && i < n; i++ {
+		result = append(result, sorted[i].name)
+	}
+
+	return result
 }
 
 // detectSystemHealth detects system-level issues (bundle mode only)
