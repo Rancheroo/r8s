@@ -13,10 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CRITICAL: Dashboard keyboard navigation completely restored**
   - ↑/↓ or j/k moves focus with visible cyan highlight (inverted row)
   - 1-9 instant jump to issue lines
-  - Enter drills down to pod logs (pre-filtered to errors+warnings)
-  - → or l expands collapsed event lines (future feature placeholder)
+  - Enter drills down to pod logs (showing ALL logs by default)
+  - → or l expands collapsed event lines showing affected pods
+  - ← or h collapses expanded items or exits sub-navigation
   - c = classic cluster view, r = refresh, q = quit
   - All keys work instantly with no input delay
+- **CRITICAL: Launch errors now display cleanly in terminal**
+  - Invalid bundle paths print helpful error messages and exit immediately
+  - No more "Press Esc" messages when TUI can't start
+  - Clean CLI error handling with proper exit codes
+  - Eliminates confusing "could not open TTY" errors for initialization failures
 
 ### Changed
 - **Dashboard is now BUNDLE-ONLY** (architectural decision locked in permanently)
@@ -24,19 +30,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear message in live mode: "Live cluster browser — use --bundle for Attention Dashboard"
   - Removes all live-mode attention-related bugs permanently
   - Doubles development velocity by eliminating dual-mode complexity
+- **Log filter defaults to ALL** when navigating from dashboard
+  - Users can still apply Ctrl+E (ERROR) or Ctrl+W (WARN+ERROR) filters as needed
+  - Better default UX - see all context first, then filter down
 
 ### Added
 - Visible selection highlighting in dashboard (cyan background with inverted colors)
 - [BUNDLE] prefix in status bar when using bundle mode
 - Session state tracking for dashboard cursor position
-- Expandable event line infrastructure (placeholders for future expansion feature)
+- Expandable event line infrastructure with pod sub-navigation:
+  - Arrow down (↓) or 'j' enters pod list when item is expanded
+  - Arrow up/down navigates within pod list with visible highlighting
+  - Enter on selected pod jumps to that pod's logs
+  - Left arrow (←) or 'h' exits pod list back to main items
+- Pod event counts displayed next to each affected pod in expanded view
 
 ### Technical
-- Added `attentionCursor` and `expandedItems` state fields to App struct
+- Added `attentionCursor`, `expandedItems`, and `subCursor` state fields to App struct
+- Added `HasError()` and `GetError()` methods to App for pre-TUI error checking
 - Keyboard navigation handled before general table navigation in Update()
 - Initial view selection based on mode: bundle → Attention, live/mock → Clusters
 - Selection rendering uses `isSelected` parameter in `renderAttentionItem()`
+- Pod highlighting in expanded views uses `inSubNav` parameter
 - Cyan/dark-gray color scheme for maximum visibility
+- Error check in `cmd/tui.go` before launching Bubble Tea program
 
 ## [0.3.3] - 2025-12-04 (IN PROGRESS)
 

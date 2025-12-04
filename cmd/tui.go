@@ -69,6 +69,13 @@ func runTUI(cmd *cobra.Command, args []string) error {
 	// Create and start TUI with bundle path if provided
 	// NOTE: tui.NewApp still uses the old signature - this will be updated  after we refactor app.go
 	app := tui.NewApp(cfg, tuiBundlePath)
+
+	// Check if app initialization failed - print error and exit cleanly
+	// This prevents the TUI from trying to start when there's a fatal error
+	if app.HasError() {
+		return fmt.Errorf(app.GetError())
+	}
+
 	p := tea.NewProgram(
 		app,
 		tea.WithAltScreen(),

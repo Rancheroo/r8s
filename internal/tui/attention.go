@@ -82,7 +82,9 @@ func (a *App) renderAttentionDashboard() string {
 
 			// Show expanded content if this item is expanded
 			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
-				lines = append(lines, a.renderExpandedContent(item)...)
+				// Pass current position to know if we should highlight pods
+				inSubNav := (itemIdx == a.attentionCursor && a.subCursor >= 0)
+				lines = append(lines, a.renderExpandedContent(item, inSubNav)...)
 			}
 			itemIdx++
 		}
@@ -98,7 +100,8 @@ func (a *App) renderAttentionDashboard() string {
 
 			// Show expanded content if this item is expanded
 			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
-				lines = append(lines, a.renderExpandedContent(item)...)
+				inSubNav := (itemIdx == a.attentionCursor && a.subCursor >= 0)
+				lines = append(lines, a.renderExpandedContent(item, inSubNav)...)
 			}
 			itemIdx++
 		}
@@ -114,7 +117,8 @@ func (a *App) renderAttentionDashboard() string {
 
 			// Show expanded content if this item is expanded
 			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
-				lines = append(lines, a.renderExpandedContent(item)...)
+				inSubNav := (itemIdx == a.attentionCursor && a.subCursor >= 0)
+				lines = append(lines, a.renderExpandedContent(item, inSubNav)...)
 			}
 			itemIdx++
 		}
@@ -222,7 +226,7 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 }
 
 // renderExpandedContent renders the expanded pod list for event items
-func (a *App) renderExpandedContent(item AttentionItem) []string {
+func (a *App) renderExpandedContent(item AttentionItem, inSubNav bool) []string {
 	var lines []string
 
 	// Show top pods with event counts
@@ -250,8 +254,20 @@ func (a *App) renderExpandedContent(item AttentionItem) []string {
 		}
 
 		podText := fmt.Sprintf("%s%s (%d events)", prefix, podName, eventCount)
-		podLine := lipgloss.NewStyle().Foreground(colorGray).Render(podText)
-		lines = append(lines, podLine)
+
+		// Highlight if this pod is selected in sub-navigation
+		isSelectedPod := inSubNav && i == a.subCursor
+		if isSelectedPod {
+			podLine := lipgloss.NewStyle().
+				Background(colorCyan).
+				Foreground(colorDarkGray).
+				Bold(true).
+				Render(podText)
+			lines = append(lines, podLine)
+		} else {
+			podLine := lipgloss.NewStyle().Foreground(colorGray).Render(podText)
+			lines = append(lines, podLine)
+		}
 	}
 
 	return lines

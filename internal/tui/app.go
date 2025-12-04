@@ -132,9 +132,20 @@ type App struct {
 	attentionItems  []AttentionItem // Detected issues for attention dashboard
 	attentionCursor int             // Selected item index in dashboard
 	expandedItems   map[int]bool    // Which collapsed event items are expanded
+	subCursor       int             // Selected pod index within expanded event (-1 = not in sub-nav)
 
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
+}
+
+// HasError returns true if the app has an initialization error
+func (a *App) HasError() bool {
+	return a.error != ""
+}
+
+// GetError returns the app's error message
+func (a *App) GetError() string {
+	return a.error
 }
 
 // NewApp creates a new TUI application
@@ -314,13 +325,48 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// ATTENTION DASHBOARD NAVIGATION - Handle before general navigation
 		if a.currentView.viewType == ViewAttention && len(a.attentionItems) > 0 {
+			// Initialize subCursor if not set
+			if a.subCursor == 0 && a.expandedItems == nil {
+				a.subCursor = -1 // -1 means not in sub-navigation
+			}
+
 			switch msg.String() {
 			case "j", "down":
+				// Check if we're in sub-navigation mode
+				if a.subCursor >= 0 {
+					// Navigate within pod list
+					item := a.attentionItems[a.attentionCursor]
+					if a.subCursor < len(item.AffectedPods)-1 {
+						a.subCursor++
+					}
+					return a, nil
+				}
+
+				// Check if current item is expanded and has pods - enter sub-nav
+				currentItem := a.attentionItems[a.attentionCursor]
+				if a.expandedItems != nil && a.expandedItems[a.attentionCursor] && len(currentItem.AffectedPods) > 0 {
+					// Enter pod list
+					a.subCursor = 0
+					return a, nil
+				}
+
+				// Normal navigation
 				if a.attentionCursor < len(a.attentionItems)-1 {
 					a.attentionCursor++
 				}
 				return a, nil
+
 			case "k", "up":
+				// Check if we're in sub-navigation mode
+				if a.subCursor >= 0 {
+					// Navigate within pod list
+					if a.subCursor > 0 {
+						a.subCursor--
+					}
+					return a, nil
+				}
+
+				// Normal navigation
 				if a.attentionCursor > 0 {
 					a.attentionCursor--
 				}
@@ -333,6 +379,34 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return a, nil
 			case "enter":
+				// Check if we're in sub-navigation - navigate to selected pod's logs
+				if a.subCursor >= 0 && a.attentionCursor < len(a.attentionItems) {
+					item := a.attentionItems[a.attentionCursor]
+					if len(item.AffectedPods) > 0 && a.subCursor < len(item.AffectedPods) {
+						podName := item.AffectedPods[a.subCursor]
+
+						// Push current view to stack
+						a.viewStack = append(a.viewStack, a.currentView)
+
+						// Navigate to logs for selected pod
+						a.currentView = ViewContext{
+							viewType:      ViewLogs,
+							clusterID:     "", // TODO: get from bundle
+							clusterName:   "",
+							projectID:     "",
+							projectName:   "",
+							namespaceID:   "",
+							namespaceName: item.Namespace,
+							podName:       podName,
+							containerName: "",
+						}
+
+						a.filterLevel = "" // Show all logs by default
+						a.loading = true
+						return a, a.fetchLogs("", item.Namespace, podName)
+					}
+				}
+
 				// Navigate to logs for the selected item (pod issues only)
 				if a.attentionCursor < len(a.attentionItems) {
 					item := a.attentionItems[a.attentionCursor]
@@ -340,7 +414,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
-						// Navigate to logs view with error/warning filter
+						// Navigate to logs view - show all logs by default
 						a.currentView = ViewContext{
 							viewType:      ViewLogs,
 							clusterID:     item.ClusterID,
@@ -353,11 +427,22 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							containerName: item.ContainerName,
 						}
 
-						// Set filter to show errors and warnings by default
-						a.filterLevel = "WARN"
+						// Show all logs by default (user can filter with Ctrl+E/W)
+						a.filterLevel = ""
 						a.loading = true
 						return a, a.fetchLogs(item.ClusterID, item.Namespace, item.PodName)
 					}
+				}
+				return a, nil
+			case "left", "h":
+				// Exit sub-navigation if in it, otherwise collapse
+				if a.subCursor >= 0 {
+					a.subCursor = -1
+					return a, nil
+				}
+				// Collapse current item
+				if a.attentionCursor < len(a.attentionItems) && a.expandedItems != nil {
+					a.expandedItems[a.attentionCursor] = false
 				}
 				return a, nil
 			case "right", "l":
