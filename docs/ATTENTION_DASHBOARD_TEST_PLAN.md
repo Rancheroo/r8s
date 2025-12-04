@@ -41,6 +41,200 @@ example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09
 
 ## 🧪 Test Cases
 
+### TEST 0: Alert Generation Guide (Optional - For Live Cluster Testing)
+
+**Priority:** P0 (Setup)  
+**Objective:** Generate real alerts to verify detection works
+
+**Note:** These steps are OPTIONAL and should only be run on a **test cluster**, never production!
+
+#### 0a: ImagePullBackOff / ErrImagePull Alert
+
+Create a pod with a non-existent image:
+
+```bash
+kubectl run test-imagepull --image=nonexistent/invalid:tag --namespace=default
+# Wait 30 seconds
+kubectl get pods -n default | grep test-imagepull
+# Should show: ImagePullBackOff or ErrImagePull
+```
+
+**Expected Dashboard Alert:**
+- 🚫 test-imagepull | ImagePullBackOff | default
+
+**Cleanup:**
+```bash
+kubectl delete pod test-imagepull -n default
+```
+
+---
+
+#### 0b: CrashLoopBackOff Alert
+
+Create a pod that crashes immediately:
+
+```bash
+kubectl run test-crash --image=busybox --command -- /bin/sh -c "exit 1" --namespace=default
+# Wait 2-3 minutes for restart cycles
+kubectl get pods -n default | grep test-crash
+# Should show: CrashLoopBackOff
+```
+
+**Expected Dashboard Alert:**
+- 💀 test-crash | CrashLoopBackOff | default
+
+**Cleanup:**
+```bash
+kubectl delete pod test-crash -n default
+```
+
+---
+
+#### 0c: OOMKilled Alert
+
+Create a pod that exceeds memory limits:
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-oom
+  namespace: default
+spec:
+  containers:
+  - name: memory-hog
+    image: polinux/stress
+    resources:
+      limits:
+        memory: "50Mi"
+      requests:
+        memory: "50Mi"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "100M", "--vm-hang", "1"]
+EOF
+
+# Wait 30 seconds
+kubectl get pods -n default | grep test-oom
+# Should show: OOMKilled in status
+```
+
+**Expected Dashboard Alert:**
+- 💀 test-oom | OOMKilled | default
+
+**Cleanup:**
+```bash
+kubectl delete pod test-oom -n default
+```
+
+---
+
+#### 0d: High Restart Count Alert
+
+Create a pod that restarts frequently:
+
+```bash
+kubectl run test-restarts --image=busybox --command -- /bin/sh -c "sleep 5; exit 1" --namespace=default
+# Wait 5-10 minutes for restarts to accumulate
+kubectl get pods -n default | grep test-restarts
+# Check restart count in RESTARTS column (should be ≥3)
+```
+
+**Expected Dashboard Alert:**
+- 🔥 test-restarts | X restarts | default (where X ≥ 3)
+
+**Cleanup:**
+```bash
+kubectl delete pod test-restarts -n default
+```
+
+---
+
+#### 0e: Not Ready (Multi-Container) Alert
+
+Create a pod where one container fails:
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-notready
+  namespace: default
+spec:
+  containers:
+  - name: ok-container
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+  - name: failing-container
+    image: busybox
+    command: ["/bin/sh", "-c", "exit 1"]
+EOF
+
+# Wait 30 seconds
+kubectl get pods -n default | grep test-notready
+# Should show: 1/2 in READY column
+```
+
+**Expected Dashboard Alert:**
+- ⚠️ test-notready | Not ready (1/2) | default
+
+**Important:** This should trigger, but "2/2" should NOT trigger (that's the bug we fixed!)
+
+**Cleanup:**
+```bash
+kubectl delete pod test-notready -n default
+```
+
+---
+
+#### 0f: Quick Alert Test Script
+
+For convenience, create all alerts at once:
+
+```bash
+#!/bin/bash
+# test-alerts.sh - Generate all alert types
+
+echo "Creating test pods to trigger alerts..."
+
+# ImagePullBackOff
+kubectl run test-imagepull --image=nonexistent/invalid:tag -n default
+
+# CrashLoopBackOff
+kubectl run test-crash --image=busybox --command -- /bin/sh -c "exit 1" -n default
+
+# Multi-container not ready
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-notready
+  namespace: default
+spec:
+  containers:
+  - name: ok-container
+    image: nginx:alpine
+  - name: failing-container
+    image: busybox
+    command: ["/bin/sh", "-c", "exit 1"]
+EOF
+
+echo "Wait 2-3 minutes, then run r8s to see alerts"
+echo "To cleanup: kubectl delete pod test-imagepull test-crash test-notready -n default"
+```
+
+**Usage:**
+```bash
+chmod +x test-alerts.sh
+./test-alerts.sh
+# Wait 2-3 minutes
+./r8s  # Should show 3 alerts
+```
+
+---
+
 ### TEST 1: Dashboard Loads as Default View
 
 **Priority:** P0 (Critical)  
