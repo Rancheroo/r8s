@@ -34,7 +34,8 @@ type AttentionItem struct {
 	ClusterID     string
 
 	// Expandable content for aggregate items (events)
-	AffectedPods []string // Top 10 pod names involved in this event
+	AffectedPods      []string       // Top 10 pod names involved in this event
+	AffectedPodCounts map[string]int // Event count per pod
 }
 
 // ComputeAttentionItems runs all signal detectors and returns prioritized list of issues
@@ -340,15 +341,16 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 
 			// Collapsed format: "467339× DNSConfigForming" with expandable pod list
 			items = append(items, AttentionItem{
-				Severity:     severity,
-				Emoji:        emoji,
-				Title:        fmt.Sprintf("%d× %s", stats.count, reason),
-				Description:  "Warning events",
-				Namespace:    "cluster",
-				Count:        stats.count,
-				ResourceType: "event",
-				AffectedPods: affectedPods,
-				Timestamp:    time.Now(),
+				Severity:          severity,
+				Emoji:             emoji,
+				Title:             fmt.Sprintf("%d× %s", stats.count, reason),
+				Description:       "Warning events",
+				Namespace:         "cluster",
+				Count:             stats.count,
+				ResourceType:      "event",
+				AffectedPods:      affectedPods,
+				AffectedPodCounts: stats.pods, // Store full count map for display
+				Timestamp:         time.Now(),
 			})
 		}
 	}

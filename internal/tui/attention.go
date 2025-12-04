@@ -237,13 +237,20 @@ func (a *App) renderExpandedContent(item AttentionItem) []string {
 			break
 		}
 
-		// Format: "       ├─ pod-name-abc123"
+		// Get event count for this pod
+		eventCount := 0
+		if item.AffectedPodCounts != nil {
+			eventCount = item.AffectedPodCounts[podName]
+		}
+
+		// Format: "       ├─ pod-name-abc123 (123 events)"
 		prefix := "       ├─ "
 		if i == len(item.AffectedPods)-1 || i == 4 {
 			prefix = "       └─ "
 		}
 
-		podLine := lipgloss.NewStyle().Foreground(colorGray).Render(prefix + podName)
+		podText := fmt.Sprintf("%s%s (%d events)", prefix, podName, eventCount)
+		podLine := lipgloss.NewStyle().Foreground(colorGray).Render(podText)
 		lines = append(lines, podLine)
 	}
 
