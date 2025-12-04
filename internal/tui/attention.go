@@ -79,6 +79,11 @@ func (a *App) renderAttentionDashboard() string {
 			isSelected := (itemIdx == a.attentionCursor)
 			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
+
+			// Show expanded content if this item is expanded
+			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
+				lines = append(lines, a.renderExpandedContent(item)...)
+			}
 			itemIdx++
 		}
 	}
@@ -90,6 +95,11 @@ func (a *App) renderAttentionDashboard() string {
 			isSelected := (itemIdx == a.attentionCursor)
 			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
+
+			// Show expanded content if this item is expanded
+			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
+				lines = append(lines, a.renderExpandedContent(item)...)
+			}
 			itemIdx++
 		}
 	}
@@ -101,6 +111,11 @@ func (a *App) renderAttentionDashboard() string {
 			isSelected := (itemIdx == a.attentionCursor)
 			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
+
+			// Show expanded content if this item is expanded
+			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
+				lines = append(lines, a.renderExpandedContent(item)...)
+			}
 			itemIdx++
 		}
 	}
@@ -204,6 +219,35 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 	}
 
 	return style.Render(line)
+}
+
+// renderExpandedContent renders the expanded pod list for event items
+func (a *App) renderExpandedContent(item AttentionItem) []string {
+	var lines []string
+
+	// Show top pods with event counts
+	for i, podName := range item.AffectedPods {
+		if i >= 5 { // Show max 5 pods to avoid clutter
+			remaining := len(item.AffectedPods) - 5
+			if remaining > 0 {
+				hint := lipgloss.NewStyle().Foreground(colorGray).Render(
+					fmt.Sprintf("       ... and %d more pods (press Enter for logs)", remaining))
+				lines = append(lines, hint)
+			}
+			break
+		}
+
+		// Format: "       ├─ pod-name-abc123"
+		prefix := "       ├─ "
+		if i == len(item.AffectedPods)-1 || i == 4 {
+			prefix = "       └─ "
+		}
+
+		podLine := lipgloss.NewStyle().Foreground(colorGray).Render(prefix + podName)
+		lines = append(lines, podLine)
+	}
+
+	return lines
 }
 
 // renderAllGood renders the "all systems operational" screen
