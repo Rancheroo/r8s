@@ -1205,11 +1205,11 @@ func (a *App) updateTable() {
 	case ViewPods:
 		if len(a.pods) > 0 {
 			columns := []table.Column{
-				table.NewColumn("name", "NAME", 30),
-				table.NewColumn("namespace", "NAMESPACE", 20),
+				table.NewColumn("name", "NAME", 28),
+				table.NewColumn("namespace", "NAMESPACE", 18),
 				table.NewColumn("state", "STATE", 12),
-				table.NewColumn("we", "W/E", 6),
-				table.NewColumn("node", "NODE", 18),
+				table.NewColumn("we", "W/E", 8),
+				table.NewColumn("node", "NODE", 20),
 			}
 
 			rows := []table.Row{}
