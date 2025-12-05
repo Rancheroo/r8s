@@ -234,9 +234,10 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	}
 
 	// Bundle mode → Attention Dashboard (the killer feature)
+	// Mock mode → Attention Dashboard (for demo purposes)
 	// Live mode → Classic Clusters view (dashboard doesn't work well with live data)
 	var initialView ViewContext
-	if bundleMode {
+	if bundleMode || offlineMode {
 		initialView = ViewContext{viewType: ViewAttention}
 	} else {
 		initialView = ViewContext{viewType: ViewClusters}
