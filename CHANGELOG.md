@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2025-12-05
+
+### Fixed - Production Ready 🚀
+- **CRITICAL: --mockdata now auto-discovers newest bundle**
+  - Eliminated hard-coded bundle path from November
+  - Automatically finds newest bundle in example-log-bundle/ by timestamp
+  - Falls back gracefully if no bundles found
+  - Now truly "just works" with `./r8s tui --mockdata`
+  
+- **CRITICAL: Pod log drill-down now works reliably**
+  - Fixed "log file not found" error when navigating from dashboard to logs
+  - Root cause: container name matching too strict for bundle filename format
+  - Bundle logs use format `namespace-podname[-previous]` without container names
+  - Implemented flexible matching: match by namespace/pod, ignore empty container fields
+  - Graceful fallback: try current logs if previous logs not found
+  - Friendly error messages for genuinely missing logs (init containers, crashed pods)
+  - Proven to work: `./bin/r8s --verbose tui --bundle example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-12-04_09_15_57/`
+
+### Added - Enterprise Polish
+- **Log context header** shows pod/container details with statistics
+  - Displays: "Pod: name → container: name (142 lines · 7 errors · 12 warnings)"
+  - Live error/warning counts update instantly with filters
+  - Cyan bold styling for visual prominence
+  
+- **Better status bar** in log view
+  - Default: `[/] search  [Ctrl+E] errors only  [Ctrl+W] warnings  [Esc] back  [q] quit`
+  - Clear, actionable shortcuts always visible
+  - No more guessing which key does what
+
+### Changed
+- Demo mode (--mockdata) messaging improved: shows auto-discovery process with --verbose
+- Error messages for missing logs now educational instead of cryptic
+
+### Technical
+- Added `findNewestBundle()` function with timestamp-based sorting in `embedded.go`
+- Refactored `GetLogs()` in `bundle.go` with two-pass matching (exact → fallback)
+- Added `countLogLevel()` helper function for real-time log statistics
+- Updated log view rendering to include context header above viewport
+
 ## [0.3.3-final] - 2025-12-04
 
 ### Fixed

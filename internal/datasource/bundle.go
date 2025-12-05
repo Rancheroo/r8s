@@ -227,11 +227,13 @@ func (ds *BundleDataSource) GetCRDInstances(clusterID, group, version, plural st
 
 // GetLogs returns logs from bundle files
 func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string, previous bool) ([]string, error) {
-	// Find log file for this pod/container
+	// Bundle log filenames don't include container names (format: namespace-podname[-previous])
+	// So we need flexible matching: match by namespace/pod, ignore container field
+
+	// First pass: exact match on namespace, pod, previous flag
 	for _, logFile := range ds.bundle.LogFiles {
 		if logFile.Namespace == namespace &&
 			logFile.PodName == pod &&
-			logFile.ContainerName == container &&
 			logFile.IsPrevious == previous {
 
 			content, err := ds.bundle.ReadLogFile(&logFile)
@@ -251,7 +253,35 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 		}
 	}
 
-	return nil, fmt.Errorf("log file not found for pod %s/%s container %s", namespace, pod, container)
+	// Second pass: try without previous flag (fallback to current logs)
+	if previous {
+		for _, logFile := range ds.bundle.LogFiles {
+			if logFile.Namespace == namespace &&
+				logFile.PodName == pod &&
+				!logFile.IsPrevious {
+
+				content, err := ds.bundle.ReadLogFile(&logFile)
+				if err != nil {
+					return nil, fmt.Errorf("failed to read log file: %w", err)
+				}
+
+				lines := strings.Split(string(content), "\n")
+				if len(lines) > 0 && lines[len(lines)-1] == "" {
+					lines = lines[:len(lines)-1]
+				}
+
+				return lines, nil
+			}
+		}
+	}
+
+	// No logs found - return graceful error
+	return nil, fmt.Errorf("no logs captured for pod %s/%s\n\n"+
+		"This is common with:\n"+
+		"  • Init containers that completed before bundle collection\n"+
+		"  • Pods that crashed immediately on startup\n"+
+		"  • Pods that were deleted before log collection\n\n"+
+		"The pod may still have useful info in kubectl describe or events", namespace, pod)
 }
 
 // GetContainers returns containers from bundle pod info

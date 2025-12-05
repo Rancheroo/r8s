@@ -953,17 +953,34 @@ func (a *App) renderLogsView() string {
 	// Build breadcrumb
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
 
+	// Build log context header with pod/container details and stats
+	visibleLogs := a.getVisibleLogs()
+	errorCount := a.countLogLevel(visibleLogs, "ERROR")
+	warnCount := a.countLogLevel(visibleLogs, "WARN")
+
+	containerInfo := ""
+	if a.currentContainer != "" {
+		containerInfo = fmt.Sprintf(" → container: %s", a.currentContainer)
+	} else if len(a.containers) > 0 {
+		containerInfo = fmt.Sprintf(" → container: %s", a.containers[0])
+	}
+
+	contextHeader := fmt.Sprintf("Pod: %s%s (%d lines · %d errors · %d warnings)",
+		a.currentView.podName, containerInfo, len(visibleLogs), errorCount, warnCount)
+	contextHeaderStyled := lipgloss.NewStyle().
+		Foreground(colorCyan).
+		Bold(true).
+		Render(contextHeader)
+
 	// Build status text with search info
 	var statusText string
 	if a.searchMode {
 		statusText = fmt.Sprintf(" Search: %s_ | Press 'Enter' to search, 'Esc' to cancel ", a.searchQuery)
 	} else if len(a.searchMatches) > 0 {
-		// Show visible log count (respecting filters) in search results
-		visibleLogs := a.getVisibleLogs()
 		statusText = fmt.Sprintf(" %d lines | Match %d/%d | 'n'=next 'N'=prev '/'=new Esc=clear | q=quit ",
 			len(visibleLogs), a.currentMatch+1, len(a.searchMatches))
 	} else {
-		statusText = a.getStatusText()
+		statusText = " [/] search  [Ctrl+E] errors only  [Ctrl+W] warnings  [Esc] back  [q] quit "
 	}
 	status := statusStyle.Render(statusText)
 
@@ -981,10 +998,30 @@ func (a *App) renderLogsView() string {
 		lipgloss.Left,
 		breadcrumb,
 		"",
+		contextHeaderStyled,
+		"",
 		logsBox,
 		"",
 		status,
 	)
+}
+
+// countLogLevel counts logs matching a specific level
+func (a *App) countLogLevel(logs []string, level string) int {
+	count := 0
+	for _, line := range logs {
+		switch level {
+		case "ERROR":
+			if isErrorLog(line) {
+				count++
+			}
+		case "WARN":
+			if isWarnLog(line) {
+				count++
+			}
+		}
+	}
+	return count
 }
 
 // updateTable updates the table with current view data - handles all view types

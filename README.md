@@ -1,11 +1,13 @@
 # r8s
 
-> **r8s = fastest bundle troubleshooter on earth** · Instant problem detection · Live cluster browser
+> **r8s 0.3.4 — the fastest Kubernetes bundle troubleshooter on earth · just works**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates" or "Rancheroos") is a keyboard-driven terminal UI for browsing Rancher-managed Kubernetes clusters and analyzing RKE2 support bundles offline. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle.
+
+**What's new in 0.3.4:** `--mockdata` now truly stable · Auto-discovers newest bundle · Log drill-down fixed · Enterprise-grade polish
 
 ---
 
@@ -15,7 +17,7 @@ r8s (pronounced "rates" or "Rancheroos") is a keyboard-driven terminal UI for br
 ```bash
 git clone https://github.com/Rancheroo/r8s.git && cd r8s
 make build
-./bin/r8s --mockdata
+./bin/r8s tui --mockdata  # Instant demo — always works
 ```
 
 ### Live Cluster
