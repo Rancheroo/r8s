@@ -266,6 +266,7 @@ func parseKubectlAge(ageStr string) time.Time {
 
 // ParsePods parses kubectl get pods output from bundle
 // Format: NAMESPACE NAME READY STATUS RESTARTS AGE IP NODE NOMINATED_NODE READINESS_GATES
+// Note: RESTARTS field can be "8" or "8 (4m53s ago)" - we need to handle variable field count
 func ParsePods(extractPath string) ([]rancher.Pod, error) {
 	bundleRoot := getBundleRoot(extractPath)
 	path := filepath.Join(bundleRoot, "rke2/kubectl/pods")
@@ -284,27 +285,59 @@ func ParsePods(extractPath string) ([]rancher.Pod, error) {
 
 		fields := strings.Fields(line)
 		if len(fields) < 8 {
-			continue // Need at least namespace, name, ready, status, restarts, age, ip, node
+			continue // Need minimum fields
 		}
 
 		namespace := fields[0]
 		name := fields[1]
 		ready := fields[2]  // e.g., "1/1", "2/2"
 		status := fields[3] // Running, Completed, etc.
-		restartsStr := fields[4]
-		age := fields[5]
-		ip := fields[6]
-		node := fields[7]
 
-		// Parse readiness gates if present (fields 8 and 9)
-		readinessGates := "<none>"
-		if len(fields) >= 10 {
-			readinessGates = fields[9]
+		// Handle RESTARTS field which can be "8" or "8 (4m53s ago)"
+		// We need to find where NODE starts by looking for a field that looks like a node name or IP
+		var age string
+		var ip string
+		var node string
+		var restarts int
+
+		// Parse restart count from field[4]
+		fmt.Sscanf(fields[4], "%d", &restarts)
+
+		// Find the IP field (starts with numbers and dots, or is IPv6)
+		// IP is always before NODE
+		var ipIndex int
+		for idx := 5; idx < len(fields); idx++ {
+			// IP field contains dots (IPv4) or colons (IPv6)
+			if strings.Contains(fields[idx], ".") || strings.Contains(fields[idx], ":") {
+				// Verify it looks like an IP (starts with digit for IPv4)
+				if len(fields[idx]) > 0 && (fields[idx][0] >= '0' && fields[idx][0] <= '9') {
+					ip = fields[idx]
+					ipIndex = idx
+					break
+				}
+			}
 		}
 
-		// Parse restart count
-		var restarts int
-		fmt.Sscanf(restartsStr, "%d", &restarts)
+		// If we found IP, AGE is the field before it, NODE is the field after it
+		if ipIndex > 5 {
+			age = fields[ipIndex-1]
+			if ipIndex+1 < len(fields) {
+				node = fields[ipIndex+1]
+			}
+		} else {
+			// Fallback: assume fixed positions (for pods without timing in RESTARTS)
+			if len(fields) >= 8 {
+				age = fields[5]
+				ip = fields[6]
+				node = fields[7]
+			}
+		}
+
+		// Parse readiness gates if present (last field should be <none> or actual gate)
+		readinessGates := "<none>"
+		if len(fields) >= 10 {
+			readinessGates = fields[len(fields)-1]
+		}
 
 		pods = append(pods, rancher.Pod{
 			Name:                  name,
