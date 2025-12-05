@@ -210,24 +210,58 @@ func ParseNamespaces(extractPath string) ([]rancher.Namespace, error) {
 		}
 
 		fields := strings.Fields(line)
-		if len(fields) < 2 {
-			continue
+		if len(fields) < 3 {
+			continue // Need name, status, and age
 		}
 
 		name := fields[0]
 		status := fields[1]
-		// age := fields[2] if needed
+		ageStr := fields[2]
+
+		// Parse age from kubectl format (e.g., "14d", "8h", "30m", "45s")
+		created := parseKubectlAge(ageStr)
 
 		namespaces = append(namespaces, rancher.Namespace{
 			Name:      name,
 			State:     strings.ToLower(status),
 			ClusterID: "bundle",
 			ProjectID: "bundle-project",
-			Created:   time.Now(), // Not in kubectl output
+			Created:   created,
 		})
 	}
 
 	return namespaces, nil
+}
+
+// parseKubectlAge converts kubectl age format (e.g., "14d", "8h", "30m") to time.Time
+func parseKubectlAge(ageStr string) time.Time {
+	if ageStr == "" || ageStr == "<invalid>" {
+		return time.Time{} // Zero time for invalid ages
+	}
+
+	// Parse the age string - format: number + unit (d/h/m/s)
+	var value int
+	var unit string
+
+	n, err := fmt.Sscanf(ageStr, "%d%s", &value, &unit)
+	if err != nil || n != 2 {
+		return time.Time{} // Could not parse
+	}
+
+	// Calculate the timestamp by subtracting age from now
+	now := time.Now()
+	switch unit {
+	case "d":
+		return now.Add(-time.Duration(value) * 24 * time.Hour)
+	case "h":
+		return now.Add(-time.Duration(value) * time.Hour)
+	case "m":
+		return now.Add(-time.Duration(value) * time.Minute)
+	case "s":
+		return now.Add(-time.Duration(value) * time.Second)
+	default:
+		return time.Time{} // Unknown unit
+	}
 }
 
 // ParsePods parses kubectl get pods output from bundle
