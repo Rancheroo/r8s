@@ -711,3 +711,151 @@ func ComputeAttentionItems(ds datasource.DataSource) []AttentionItem {
 **Date**: December 4, 2025 - v0.3.3 Attention Dashboard Complete (Branches 1-3)
 **Next**: Branch 4 - Polish & Documentation + Code Audit  
 **Status**: Core feature complete, awaiting cleanup before user testing
+
+---
+
+## v0.3.4 Development: Production Hardening
+
+### Starting Development: December 5, 2025
+
+**Goal:** Ship first truly production-ready version - zero apologies required.
+
+**Mission:** Fix critical bugs preventing confident deployment to customers.
+
+### kubectl Parsing Bug: Variable Field Count
+
+**Problem:** NODE column showing "7d23h" instead of node names for some pods.
+
+**Root Cause:**
+- kubectl RESTARTS field can be "8" or "8 (4m53s ago)" (includes backoff timing)
+- Parser assumed fixed field positions: [NAMESPACE, NAME, READY, STATUS, RESTARTS, AGE, IP, NODE]
+- When RESTARTS expands to "8 (4m53s ago)", it becomes multiple fields
+- Field positions shift right, causing AGE data to land in NODE column
+
+**The Fix:**
+```go
+// OLD: Fixed positions (breaks with timing in RESTARTS)
+age := fields[5]
+ip := fields[6]
+node := fields[7]
+
+// NEW: Dynamic IP field detection
+for idx := 5; idx < len(fields); idx++ {
+    if strings.Contains(fields[idx], ".") {  // Find IP
+        ip = fields[idx]
+        ipIndex = idx
+        break
+    }
+}
+age = fields[ipIndex-1]  // AGE is before IP
+node = fields[ipIndex+1]  // NODE is after IP
+```
+
+**Lesson:** **Don't assume fixed field positions in whitespace-delimited output**
+
+**Key Insights:**
+1. kubectl output format varies based on pod state
+2. Fields with runtime data (RESTARTS timing) create variable column count
+3. Use marker fields (IP addresses) to determine positions
+4. Always provide fallback for parsing failures
+
+**Impact:**
+- ✅ Fixes node display for CrashLoopBackOff, ImagePullBackOff pods
+- ✅ Handles both "8" and "8 (4m53s ago)" RESTARTS formats
+- ✅ Maintains backward compatibility with simple RESTARTS format
+
+---
+
+### Mockdata UX: Always Show Best Demo
+
+**Problem:** `--mockdata` started at Clusters view instead of Attention Dashboard.
+
+**Root Cause:**
+- Initial logic: `if bundleMode { ViewAttention } else { ViewClusters }`
+- Mockdata set `offlineMode=true` but `bundleMode=false`
+- Demo users missed the killer feature on first launch
+
+**The Fix:**
+```go
+// OLD: Only bundle mode gets dashboard
+if bundleMode {
+    initialView = ViewContext{viewType: ViewAttention}
+} else {
+    initialView = ViewContext{viewType: ViewClusters}
+}
+
+// NEW: Demo and bundle modes both show dashboard
+if bundleMode || offlineMode {
+    initialView = ViewContext{viewType: ViewAttention}
+} else {
+    initialView = ViewContext{viewType: ViewClusters}
+}
+```
+
+**Lesson:** **Demo mode should showcase your best features first**
+
+**Key Insights:**
+1. First impression matters - show the "wow" feature immediately
+2. Mockdata is for demos/screenshots - optimize for impact
+3. Live mode can keep traditional flow (users know what they want)
+4. Mode logic should consider user intent, not just technical state
+
+**Impact:**
+- ✅ Demo users see Attention Dashboard immediately
+- ✅ Matches bundle mode behavior (consistency)
+- ✅ Better first impression for potential users
+
+---
+
+### UX Consistency: Enter Key Navigation
+
+**Problem:** Enter key behavior inconsistent across views.
+- Attention Dashboard: Enter = view logs ✅
+- Pods view: Enter = nothing, must use 'l' ❌
+
+**The Fix:**
+Added `case ViewPods:` handler in `handleEnter()`:
+```go
+case ViewPods:
+    // Navigate to logs for selected pod (UX consistency: Enter = logs)
+    podName := safeRowString(selected, "name")
+    namespaceName := safeRowString(selected, "namespace")
+    // ... navigate to logs view
+```
+
+**Lesson:** **Consistent keyboard shortcuts reduce cognitive load**
+
+**Key Insights:**
+1. Users develop muscle memory - inconsistency breaks flow
+2. Enter = "drill deeper" should work everywhere
+3. Keep alternative keys ('l' for logs) for power users
+4. Document primary interaction, mention alternatives
+
+**Impact:**
+- ✅ Enter key now works in Pods view (matches dashboard)
+- ✅ 'l' key still available as alternative
+- ✅ Consistent navigation pattern across all views
+
+---
+
+### Release Readiness Summary
+
+**v0.3.4 represents production-grade quality:**
+
+1. **Zero hard-coded paths** - mockdata auto-discovers bundles
+2. **Robust parsing** - handles kubectl output variations
+3. **Consistent UX** - Enter key works everywhere
+4. **Clear messaging** - users know what data they're seeing
+5. **No regressions** - all previous features still work
+
+**Testing Checklist:**
+- [x] Builds without errors
+- [x] kubectl parsing handles variable RESTARTS field
+- [x] Mockdata shows Attention Dashboard
+- [x] Enter key navigates to logs in Pods view
+- [x] Bundle mode still works
+- [x] Live mode still works
+
+**Ready to ship:** December 5, 2025
+
+---

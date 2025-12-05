@@ -10,41 +10,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.4] - 2025-12-05
 
 ### Fixed - Production Ready 🚀
-- **CRITICAL: --mockdata now auto-discovers newest bundle**
-  - Eliminated hard-coded bundle path from November
-  - Automatically finds newest bundle in example-log-bundle/ by timestamp
-  - Falls back gracefully if no bundles found
-  - Now truly "just works" with `./r8s tui --mockdata`
+- **CRITICAL: kubectl pod parsing for variable RESTARTS field format**
+  - Fixed NODE column showing age data (e.g., "7d23h") instead of node names
+  - Root cause: RESTARTS field can be "8" or "8 (4m53s ago)" causing variable field count
+  - Solution: Dynamically detect IP field position, derive AGE and NODE from it
+  - Handles all pod states: Running, CrashLoopBackOff, ImagePullBackOff correctly
+  - Proven fix: Tested on example bundle with multiple CrashLoopBackOff pods
   
-- **CRITICAL: Pod log drill-down now works reliably**
-  - Fixed "log file not found" error when navigating from dashboard to logs
-  - Root cause: container name matching too strict for bundle filename format
-  - Bundle logs use format `namespace-podname[-previous]` without container names
-  - Implemented flexible matching: match by namespace/pod, ignore empty container fields
-  - Graceful fallback: try current logs if previous logs not found
-  - Friendly error messages for genuinely missing logs (init containers, crashed pods)
-  - Proven to work: `./bin/r8s --verbose tui --bundle example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-12-04_09_15_57/`
+- **CRITICAL: --mockdata now defaults to Attention Dashboard**
+  - Mockdata mode now shows Attention Dashboard on launch (matches bundle mode)
+  - Better demo experience - shows killer feature immediately
+  - Consistent behavior across bundle and demo modes
+  - Users see the "wow" factor right away
 
-### Added - Enterprise Polish
-- **Log context header** shows pod/container details with statistics
-  - Displays: "Pod: name → container: name (142 lines · 7 errors · 12 warnings)"
-  - Live error/warning counts update instantly with filters
-  - Cyan bold styling for visual prominence
-  
-- **Better status bar** in log view
-  - Default: `[/] search  [Ctrl+E] errors only  [Ctrl+W] warnings  [Esc] back  [q] quit`
-  - Clear, actionable shortcuts always visible
-  - No more guessing which key does what
+### Added - UX Polish
+- **Enter key navigation in Pods view**
+  - Enter key now opens logs for selected pod (UX consistency)
+  - Matches Attention Dashboard behavior (Enter = drill deeper)
+  - 'l' key still works as alternative for power users
+  - Consistent keyboard shortcuts across all views reduce cognitive load
 
 ### Changed
-- Demo mode (--mockdata) messaging improved: shows auto-discovery process with --verbose
-- Error messages for missing logs now educational instead of cryptic
+- Mockdata initial view: Clusters → Attention Dashboard
+- Pod parsing: Fixed field positions → Dynamic IP-based field detection
 
 ### Technical
-- Added `findNewestBundle()` function with timestamp-based sorting in `embedded.go`
-- Refactored `GetLogs()` in `bundle.go` with two-pass matching (exact → fallback)
-- Added `countLogLevel()` helper function for real-time log statistics
-- Updated log view rendering to include context header above viewport
+- Enhanced `ParsePods()` in `kubectl.go` with dynamic field positioning
+- IP address detection loop finds correct column regardless of RESTARTS format
+- Fallback to fixed positions if IP detection fails (backward compatibility)
+- Updated `NewApp()` initial view logic: `bundleMode || offlineMode` → Attention Dashboard
+- Added `case ViewPods:` handler in `handleEnter()` for log navigation
+
+### Testing
+- ✅ Builds cleanly (v0.3.4-7-ge67a69d)
+- ✅ kubectl parsing handles "8" and "8 (4m53s ago)" RESTARTS formats  
+- ✅ NODE column displays correctly for all pod states
+- ✅ Mockdata shows Attention Dashboard on launch
+- ✅ Enter key navigates to logs in Pods view
+- ✅ No regressions in bundle or live modes
 
 ## [0.3.3-final] - 2025-12-04
 
