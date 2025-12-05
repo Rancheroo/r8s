@@ -1822,6 +1822,33 @@ func (a *App) handleEnter() tea.Cmd {
 		a.loading = true
 		return a.fetchPods(a.currentView.projectID, namespaceName)
 
+	case ViewPods:
+		// Navigate to logs for selected pod (UX consistency: Enter = logs)
+		podName := safeRowString(selected, "name")
+		namespaceName := safeRowString(selected, "namespace")
+		if podName == "" || namespaceName == "" {
+			return nil // Skip if required fields are missing
+		}
+
+		// Push current view to stack
+		a.viewStack = append(a.viewStack, a.currentView)
+
+		// Navigate to logs view
+		a.currentView = ViewContext{
+			viewType:      ViewLogs,
+			clusterID:     a.currentView.clusterID,
+			clusterName:   a.currentView.clusterName,
+			projectID:     a.currentView.projectID,
+			projectName:   a.currentView.projectName,
+			namespaceID:   a.currentView.namespaceID,
+			namespaceName: namespaceName,
+			podName:       podName,
+			containerName: "",
+		}
+
+		a.loading = true
+		return a.fetchLogs(a.currentView.clusterID, namespaceName, podName)
+
 	case ViewCRDs:
 		// Navigate to CRD instances for selected CRD
 		crdName := safeRowString(selected, "name")
