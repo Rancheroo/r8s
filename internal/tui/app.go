@@ -1164,7 +1164,17 @@ func (a *App) updateTable() {
 			for _, ns := range a.namespaces {
 				created := "N/A"
 				if !ns.Created.IsZero() {
-					created = fmt.Sprintf("%dd", int(time.Since(ns.Created).Hours()/24))
+					days := int(time.Since(ns.Created).Hours() / 24)
+					if days > 0 {
+						created = fmt.Sprintf("%dd", days)
+					} else {
+						hours := int(time.Since(ns.Created).Hours())
+						if hours > 0 {
+							created = fmt.Sprintf("%dh", hours)
+						} else {
+							created = fmt.Sprintf("%dm", int(time.Since(ns.Created).Minutes()))
+						}
+					}
 				}
 
 				rows = append(rows, table.NewRow(table.RowData{
@@ -1195,10 +1205,11 @@ func (a *App) updateTable() {
 	case ViewPods:
 		if len(a.pods) > 0 {
 			columns := []table.Column{
-				table.NewColumn("name", "NAME", 35),
-				table.NewColumn("namespace", "NAMESPACE", 25),
-				table.NewColumn("state", "STATE", 15),
-				table.NewColumn("node", "NODE", 20),
+				table.NewColumn("name", "NAME", 30),
+				table.NewColumn("namespace", "NAMESPACE", 20),
+				table.NewColumn("state", "STATE", 12),
+				table.NewColumn("we", "W/E", 6),
+				table.NewColumn("node", "NODE", 18),
 			}
 
 			rows := []table.Row{}
@@ -1218,10 +1229,30 @@ func (a *App) updateTable() {
 				// Get node name with fallback support
 				nodeName := a.getPodNodeName(pod)
 
+				// Get warning/error counts from kubectl events if available
+				weCount := "-"
+				if len(pod.KubectlEvents) > 0 {
+					warnCount := 0
+					errorCount := 0
+					for _, event := range pod.KubectlEvents {
+						eventUpper := strings.ToUpper(event)
+						if strings.Contains(eventUpper, "[WARNING]") || strings.Contains(eventUpper, "WARNING") {
+							warnCount++
+						}
+						if strings.Contains(eventUpper, "[ERROR]") || strings.Contains(eventUpper, "ERROR") {
+							errorCount++
+						}
+					}
+					if warnCount > 0 || errorCount > 0 {
+						weCount = fmt.Sprintf("%d/%d", warnCount, errorCount)
+					}
+				}
+
 				rows = append(rows, table.NewRow(table.RowData{
 					"name":      pod.Name,
 					"namespace": namespaceName,
 					"state":     pod.State,
+					"we":        weCount,
 					"node":      nodeName,
 				}))
 			}
