@@ -51,9 +51,8 @@ func ComputeAttentionItems(ds datasource.DataSource) []AttentionItem {
 	// Tier 3: Events (Warning)
 	items = append(items, detectEventIssues(ds)...)
 
-	// Tier 4: Logs (Info) - Sample only for performance
-	// Commented out for initial implementation - can be slow
-	// items = append(items, detectLogIssues(ds)...)
+	// Tier 4: Logs (Critical/Warning) - Sample logs for error/warn counts
+	items = append(items, detectLogIssues(ds)...)
 
 	// Tier 5: System Health (Bundle only)
 	items = append(items, detectSystemHealth(ds)...)
@@ -386,6 +385,158 @@ func getTopPods(pods map[string]int, n int) []string {
 	}
 
 	return result
+}
+
+// detectLogIssues scans pod logs for error and warning patterns
+// Samples first 500 lines per pod for performance
+func detectLogIssues(ds datasource.DataSource) []AttentionItem {
+	var items []AttentionItem
+
+	// Get all pods to scan their logs
+	pods, err := ds.GetAllPods()
+	if err != nil {
+		return items
+	}
+
+	// Sample max 10 pods to avoid performance issues
+	maxPodsToScan := 10
+	if len(pods) > maxPodsToScan {
+		pods = pods[:maxPodsToScan]
+	}
+
+	for _, pod := range pods {
+		// Extract namespace
+		namespace := pod.NamespaceID
+		if strings.Contains(namespace, ":") {
+			parts := strings.Split(namespace, ":")
+			if len(parts) > 1 {
+				namespace = parts[1]
+			}
+		}
+
+		// Try to get logs for this pod
+		logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+		if err != nil {
+			// Skip pods without logs (common for init containers, etc.)
+			continue
+		}
+
+		// Sample first 500 lines for performance
+		maxLines := 500
+		if len(logs) > maxLines {
+			logs = logs[:maxLines]
+		}
+
+		// Count errors and warnings using the same patterns as log view
+		errorCount := 0
+		warnCount := 0
+
+		for _, line := range logs {
+			if isErrorLine(line) {
+				errorCount++
+			} else if isWarnLine(line) {
+				warnCount++
+			}
+		}
+
+		// Report pods with significant error counts (>10 errors)
+		if errorCount > 10 {
+			items = append(items, AttentionItem{
+				Severity:     SeverityCritical,
+				Emoji:        "🔥",
+				Title:        pod.Name,
+				Description:  fmt.Sprintf("%d ERR, %d WARN", errorCount, warnCount),
+				Namespace:    namespace,
+				Count:        errorCount,
+				ResourceType: "pod",
+				PodName:      pod.Name,
+				Timestamp:    time.Now(),
+			})
+		} else if warnCount > 20 {
+			// Report pods with many warnings but few errors
+			items = append(items, AttentionItem{
+				Severity:     SeverityWarning,
+				Emoji:        "⚠️",
+				Title:        pod.Name,
+				Description:  fmt.Sprintf("%d WARN, %d ERR", warnCount, errorCount),
+				Namespace:    namespace,
+				Count:        warnCount,
+				ResourceType: "pod",
+				PodName:      pod.Name,
+				Timestamp:    time.Now(),
+			})
+		}
+	}
+
+	return items
+}
+
+// isErrorLine detects error patterns in log lines (same as app.go patterns)
+func isErrorLine(line string) bool {
+	lineUpper := strings.ToUpper(line)
+
+	// Enhanced error patterns (case-insensitive)
+	errorPatterns := []string{
+		"[ERROR]",
+		"ERROR:",
+		"ERR=",
+		"FAILED",
+		"FATAL",
+		"PANIC",
+		"OOMKILLED",
+		"CRASHLOOP",
+		"BACK-OFF",
+		"BACKOFF",
+		"UNAUTHORIZED",
+		"DENIED",
+		"EXCEPTION",
+		"LEVEL=ERROR",
+	}
+
+	for _, pattern := range errorPatterns {
+		if strings.Contains(lineUpper, pattern) {
+			return true
+		}
+	}
+
+	// K8s format: E1120, E0102, etc. (E followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'E' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// isWarnLine detects warning patterns in log lines (same as app.go patterns)
+func isWarnLine(line string) bool {
+	lineUpper := strings.ToUpper(line)
+
+	// Warning patterns
+	if strings.Contains(lineUpper, "[WARN]") ||
+		strings.Contains(lineUpper, "LEVEL=WARN") {
+		return true
+	}
+
+	// K8s format: W1120, W0102, etc. (W followed by 4 digits)
+	if len(line) > 5 {
+		for i := 0; i < len(line)-5; i++ {
+			if line[i] == 'W' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
+				isDigit(line[i+3]) && isDigit(line[i+4]) {
+				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 // detectSystemHealth detects system-level issues (bundle mode only)

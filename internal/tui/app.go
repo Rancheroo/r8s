@@ -1230,22 +1230,32 @@ func (a *App) updateTable() {
 				// Get node name with fallback support
 				nodeName := a.getPodNodeName(pod)
 
-				// Get warning/error counts from kubectl events if available
+				// Get warning/error counts by scanning pod logs (same as dashboard)
 				weCount := "-"
-				if len(pod.KubectlEvents) > 0 {
-					warnCount := 0
-					errorCount := 0
-					for _, event := range pod.KubectlEvents {
-						eventUpper := strings.ToUpper(event)
-						if strings.Contains(eventUpper, "[WARNING]") || strings.Contains(eventUpper, "WARNING") {
-							warnCount++
+				if a.dataSource != nil {
+					// Try to fetch logs for this pod (first 100 lines for performance)
+					logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
+					if err == nil && len(logs) > 0 {
+						// Limit scan to first 100 lines for table performance
+						scanLines := logs
+						if len(scanLines) > 100 {
+							scanLines = scanLines[:100]
 						}
-						if strings.Contains(eventUpper, "[ERROR]") || strings.Contains(eventUpper, "ERROR") {
-							errorCount++
+
+						warnCount := 0
+						errorCount := 0
+						for _, line := range scanLines {
+							if isErrorLog(line) {
+								errorCount++
+							} else if isWarnLog(line) {
+								warnCount++
+							}
 						}
-					}
-					if warnCount > 0 || errorCount > 0 {
-						weCount = fmt.Sprintf("%d/%d", warnCount, errorCount)
+
+						// Only show if there are actual errors/warnings
+						if warnCount > 0 || errorCount > 0 {
+							weCount = fmt.Sprintf("%d/%d", warnCount, errorCount)
+						}
 					}
 				}
 
@@ -3025,12 +3035,15 @@ func (a *App) getVisibleLogs() []string {
 }
 
 // isErrorLog detects ERROR level logs in both bracketed and K8s formats
+// Enhanced patterns to catch: error, err=, failed, fatal, panic, oomkilled, crashloop, back-off, unauthorized, denied
 func isErrorLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
+
 	// Bracketed format: [ERROR]
 	if strings.Contains(lineUpper, "[ERROR]") {
 		return true
 	}
+
 	// K8s format: E1120, E0102, etc. (E followed by 4 digits)
 	if len(line) > 5 {
 		for i := 0; i < len(line)-5; i++ {
@@ -3043,10 +3056,34 @@ func isErrorLog(line string) bool {
 			}
 		}
 	}
-	// Also check for level=error format
+
+	// level=error format
 	if strings.Contains(lineUpper, "LEVEL=ERROR") {
 		return true
 	}
+
+	// Enhanced patterns (case-insensitive)
+	errorPatterns := []string{
+		"ERROR:",
+		"ERR=",
+		"FAILED",
+		"FATAL",
+		"PANIC",
+		"OOMKILLED",
+		"CRASHLOOP",
+		"BACK-OFF",
+		"BACKOFF",
+		"UNAUTHORIZED",
+		"DENIED",
+		"EXCEPTION",
+	}
+
+	for _, pattern := range errorPatterns {
+		if strings.Contains(lineUpper, pattern) {
+			return true
+		}
+	}
+
 	return false
 }
 

@@ -7,7 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.4] - 2025-12-05
+## [0.3.4] - 2025-12-08
+
+### Fixed - Demo Parity Complete 🎯
+- **CRITICAL: Logs now load in mockdata mode**
+  - Root cause: GetLogs() returned error when no log file found instead of generating demo logs
+  - Solution: Always generate demo logs when bundle has no log files for a pod
+  - Impact: Dashboard log scanner and classic pod view now work in mockdata mode
+  - All pods detected by attention dashboard can now be drilled into successfully
+
+- **CRITICAL: W/E column in classic Pods view now works**
+  - Root cause: Column scanned kubectl events which don't exist in mockdata
+  - Solution: Scan first 100 lines of pod logs for errors/warnings (same as dashboard)
+  - Impact: Classic pod list now shows "18/22" (WARN/ERR) counts immediately
+  - Provides instant error visibility without opening logs
+
+### Enhanced - Error Detection
+- **Enhanced error pattern matching (12 new patterns)**
+  - Added: ERR=, FAILED, FATAL, PANIC, OOMKILLED, CRASHLOOP, BACK-OFF, BACKOFF
+  - Added: UNAUTHORIZED, DENIED, EXCEPTION, LEVEL=ERROR
+  - All patterns case-insensitive for maximum coverage
+  - Impact: Dashboard and log views detect vastly more error types
+
+- **Realistic demo logs for every pod**
+  - Default pods: 22 errors + 18 warnings (57 lines total)
+  - Crash scenarios: 127 errors for pods with "crash" in name
+  - Impact: Every demo pod shows realistic error/warning patterns
+  - Better demonstration of dashboard and log viewing capabilities
+
+- **Dashboard log scanner active**
+  - Scans first 500 lines of up to 10 pods for performance
+  - Shows pods with >10 errors as 🔥 CRITICAL with "X ERR, Y WARN" counts
+  - Shows pods with >20 warnings as ⚠️ WARNING with "Y WARN, X ERR" counts
+  - Impact: Attention Dashboard now actively displays log-based issues
+
+### Technical
+- Modified `GetLogs()` in bundle.go to return demo logs instead of error
+- Added `generateDemoLogs()` and `generateCrashLogs()` helper functions
+- Implemented `detectLogIssues()` in attention_signals.go
+- Enhanced `isErrorLog()` with 12 additional patterns
+- Updated pod table rendering to scan logs for W/E column
+
+### Testing
+- ✅ Builds cleanly (v0.3.4-8-g9c47b69)
+- ✅ Mockdata mode: Dashboard shows ERR counts
+- ✅ Mockdata mode: Logs load for all pods
+- ✅ Classic view: W/E column populated with log scan results
+- ✅ Bundle mode: No regressions, real logs still load correctly
+
+## [0.3.4-initial] - 2025-12-05
 
 ### Fixed - Production Ready 🚀
 - **CRITICAL: kubectl pod parsing for variable RESTARTS field format**

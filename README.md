@@ -7,7 +7,7 @@
 
 r8s (pronounced "rates" or "Rancheroos") is a keyboard-driven terminal UI for browsing Rancher-managed Kubernetes clusters and analyzing RKE2 support bundles offline. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle.
 
-**What's new in 0.3.4:** `--mockdata` now truly stable · Auto-discovers newest bundle · Log drill-down fixed · Enterprise-grade polish
+**What's new in 0.3.4:** Demo parity complete · Logs load in mockdata · W/E column works · 12+ error patterns · Dashboard log scanner active
 
 ---
 
