@@ -1,15 +1,14 @@
-// Package datasource provides a unified interface for data retrieval across different modes.
-// It eliminates mode-specific logic by abstracting Live API, Bundle files, and Demo data
-// behind a single interface. The TUI layer only depends on this interface, making the
-// codebase mode-agnostic and maintainable.
+// Package datasource provides a unified interface for data retrieval from bundle sources.
+// It abstracts Bundle files and embedded Demo data behind a single interface, making the
+// TUI layer bundle-agnostic and maintainable.
 package datasource
 
 import (
 	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
-// DataSource abstracts data retrieval for the TUI across all modes.
-// Implementations: LiveDataSource (Rancher API), BundleDataSource (log bundles), EmbeddedDataSource (demo)
+// DataSource abstracts data retrieval for the TUI from bundle sources.
+// Implementations: BundleDataSource (log bundles), EmbeddedDataSource (demo)
 type DataSource interface {
 	// GetClusters returns all available clusters
 	GetClusters() ([]rancher.Cluster, error)
