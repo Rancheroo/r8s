@@ -94,5 +94,5 @@ func init() {
 
 	// TUI-specific flags
 	tuiCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to extracted log bundle folder")
-	tuiCmd.Flags().IntVar(&scanDepth, "scan", 200, "number of log lines to scan for error/warning detection (default: 200)")
+	// Note: --scan flag is now a global flag on rootCmd.PersistentFlags
 }

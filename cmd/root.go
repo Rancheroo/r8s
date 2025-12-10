@@ -66,6 +66,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose error output for debugging")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
+	rootCmd.PersistentFlags().IntVar(&scanDepth, "scan", 200, "number of log lines to scan for error/warning detection")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
