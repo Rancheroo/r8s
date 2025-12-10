@@ -76,8 +76,7 @@ type ViewContext struct {
 // App represents the main TUI application
 type App struct {
 	config     *config.Config
-	client     *rancher.Client
-	dataSource datasource.DataSource // Abstracted data source (live or bundle)
+	dataSource datasource.DataSource // Abstracted data source (bundle or demo)
 	width      int
 	height     int
 
@@ -150,18 +149,8 @@ func (a *App) GetError() string {
 
 // NewApp creates a new TUI application
 func NewApp(cfg *config.Config, bundlePath string) *App {
-	// Get current profile
-	profile, err := cfg.GetCurrentProfile()
-	if err != nil {
-		return &App{
-			config: cfg,
-			error:  fmt.Sprintf("Failed to get profile: %v", err),
-		}
-	}
-
 	// Determine data source based on mode
 	var ds datasource.DataSource
-	var client *rancher.Client
 	var bundleMode bool
 	var offlineMode bool
 
@@ -185,10 +174,10 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		}
 		ds = bds
 		bundleMode = true
-		offlineMode = false // Bundle mode is not "offline", it's bundle analysis
-	} else if cfg.MockMode {
-		// Demo/Mock mode - explicitly requested via --mockdata flag
-		// Uses the example bundle from the repo
+		offlineMode = false
+	} else {
+		// Default: Demo mode - uses the embedded example bundle from the repo
+		// This makes r8s work out-of-the-box with zero configuration
 		eds, err := datasource.NewEmbeddedDataSource(cfg.Verbose)
 		if err != nil {
 			return &App{
@@ -196,56 +185,21 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 				error: fmt.Sprintf(
 					"Failed to load demo bundle: %v\n\n"+
 						"The demo bundle may be missing from the repo.\n"+
-						"Try using --bundle with the example-log-bundle/ directory instead.",
+						"Try specifying a bundle path: r8s /path/to/bundle",
 					err,
 				),
 			}
 		}
 		ds = eds
-		offlineMode = true // Display as offline in UI
-		bundleMode = false // It's demo, not user bundle
-	} else {
-		// Live mode - use Rancher client
-		client = rancher.NewClient(
-			profile.URL,
-			profile.GetToken(),
-			cfg.Insecure || profile.Insecure,
-		)
-
-		// Test connection - fail hard if it doesn't work
-		if err := client.TestConnection(); err != nil {
-			return &App{
-				config: cfg,
-				error: fmt.Sprintf(
-					"Cannot connect to Rancher API at %s\n\n"+
-						"Error: %v\n\n"+
-						"Options:\n"+
-						"  • Check RANCHER_URL and RANCHER_TOKEN\n"+
-						"  • Use --mockdata flag for demo mode\n"+
-						"  • Use --bundle flag to analyze log bundles\n"+
-						"  • Run 'r8s config init' to set up configuration",
-					profile.URL, err,
-				),
-			}
-		}
-
-		ds = datasource.NewLiveDataSource(client)
-		offlineMode = false
+		offlineMode = true
+		bundleMode = false
 	}
 
-	// Bundle mode → Attention Dashboard (the killer feature)
-	// Mock mode → Attention Dashboard (for demo purposes)
-	// Live mode → Classic Clusters view (dashboard doesn't work well with live data)
-	var initialView ViewContext
-	if bundleMode || offlineMode {
-		initialView = ViewContext{viewType: ViewAttention}
-	} else {
-		initialView = ViewContext{viewType: ViewClusters}
-	}
+	// Always start with Attention Dashboard (the killer feature)
+	initialView := ViewContext{viewType: ViewAttention}
 
 	return &App{
 		config:      cfg,
-		client:      client,
 		dataSource:  ds,
 		offlineMode: offlineMode,
 		bundleMode:  bundleMode,

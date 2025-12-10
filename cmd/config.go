@@ -313,7 +313,7 @@ EXAMPLES:
 		}
 
 		// Determine which profile to modify
-		profileName := profile
+		profileName := ""
 		if profileName == "" {
 			profileName = cfg.CurrentProfile
 		}
