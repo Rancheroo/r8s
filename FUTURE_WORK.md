@@ -2,7 +2,15 @@
 
 This document tracks feature ideas and enhancements that have been identified but deferred to future releases.
 
-## 🎯 High Priority (Next Release - v0.3.8)
+## ✅ Recently Completed
+
+### Tunable Scan Depth (v0.3.9)
+- **Status**: ✅ Shipped in v0.3.9
+- **Description**: User-controllable scan depth via `--scan` flag
+- **Impact**: Users can now tune speed/accuracy trade-off based on bundle size
+- **Usage**: `r8s --scan 500 ./bundle/` (default: 200 lines)
+
+## 🎯 High Priority (Next Release - v0.4.0)
 
 ### Smart Sorting by Error Count
 - **Priority**: Medium
@@ -140,4 +148,4 @@ This document tracks feature ideas and enhancements that have been identified bu
 - Community suggestions welcome via GitHub issues
 - Mark items as ✅ when moved to active development
 
-Last updated: 2025-12-10 (v0.3.7 planning)
+Last updated: 2025-12-10 (v0.3.9 - Tunable scan depth shipped)
