@@ -5,12 +5,27 @@ This document tracks feature ideas and enhancements that have been identified bu
 ## ✅ Recently Completed
 
 ### Tunable Scan Depth (v0.3.9)
-- **Status**: ✅ Shipped in v0.3.9
+- **Status**: ✅ Shipped in v0.3.9 (with known limitation)
 - **Description**: User-controllable scan depth via `--scan` flag
 - **Impact**: Users can now tune speed/accuracy trade-off based on bundle size
 - **Usage**: `r8s --scan 500 ./bundle/` (default: 200 lines)
+- **Known Limitation**: High --scan values (500+) detect too many issues, breaking dashboard UX with 80+ items filling screen. Dashboard needs scrolling implementation or smart capping.
 
 ## 🎯 High Priority (Next Release - v0.4.0)
+
+### Dashboard Scrolling & Item Capping (URGENT)
+- **Priority**: HIGH
+- **Complexity**: Low-Medium
+- **Impact**: HIGH
+- **Description**: Fix dashboard usability when --scan finds 80+ issues
+- **Problem**: High --scan values (500-1000) detect more issues, creating 80+ dashboard items that fill entire screen and break UX. Navigation becomes impossible.
+- **Requirements**:
+  - Implement proper scrolling in Attention Dashboard (j/k should scroll through all items)
+  - OR: Cap at top-20 issues with "...and 66 more (press 'm' to see all)" indicator
+  - OR: Pagination (Page Up/Down to see more items)
+  - Smart default: Show top-20 critical, press key to expand to full list
+- **Triggered by**: User feedback on v0.3.9 --scan flag
+- **Workaround**: Use lower --scan values (50-200) until fixed
 
 ### Smart Sorting by Error Count
 - **Priority**: Medium
