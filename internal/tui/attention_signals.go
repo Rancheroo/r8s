@@ -421,20 +421,20 @@ func detectLogIssues(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Sample first 500 lines for performance
-		maxLines := 500
+		// Sample first 200 lines for performance (matches W/E column and log view)
+		maxLines := 200
 		if len(logs) > maxLines {
 			logs = logs[:maxLines]
 		}
 
-		// Count errors and warnings using the same patterns as log view
+		// Count errors and warnings using the same detection functions as log view
 		errorCount := 0
 		warnCount := 0
 
 		for _, line := range logs {
-			if isErrorLine(line) {
+			if isErrorLog(line) {
 				errorCount++
-			} else if isWarnLine(line) {
+			} else if isWarnLog(line) {
 				warnCount++
 			}
 		}
@@ -471,88 +471,7 @@ func detectLogIssues(ds datasource.DataSource) []AttentionItem {
 	return items
 }
 
-// isErrorLine detects error patterns in log lines (same as app.go patterns)
-func isErrorLine(line string) bool {
-	lineUpper := strings.ToUpper(line)
-
-	// Enhanced error patterns (case-insensitive)
-	errorPatterns := []string{
-		"[ERROR]",
-		"ERROR:",
-		"ERR=",
-		"FAILED",
-		"FATAL",
-		"PANIC",
-		"OOMKILLED",
-		"CRASHLOOP",
-		"BACK-OFF",
-		"BACKOFF",
-		"UNAUTHORIZED",
-		"DENIED",
-		"EXCEPTION",
-		"LEVEL=ERROR",
-	}
-
-	for _, pattern := range errorPatterns {
-		if strings.Contains(lineUpper, pattern) {
-			return true
-		}
-	}
-
-	// K8s format: E1120, E0102, etc. (E followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'E' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
-	}
-
-	return false
-}
-
-// isWarnLine detects warning patterns in log lines (same as app.go patterns)
-func isWarnLine(line string) bool {
-	lineUpper := strings.ToUpper(line)
-
-	// Enhanced warning patterns (case-insensitive)
-	warnPatterns := []string{
-		"[WARN]",
-		"[WARNING]",
-		"WARNING:",
-		"WARN:",
-		"WARN=",
-		"LEVEL=WARN",
-		"LEVEL=WARNING",
-		"DEPRECATED",
-		"DEPRECATION",
-		"ALERT:",
-		"ALERT=",
-	}
-
-	for _, pattern := range warnPatterns {
-		if strings.Contains(lineUpper, pattern) {
-			return true
-		}
-	}
-
-	// K8s format: W1120, W0102, etc. (W followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'W' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
-	}
-
-	return false
-}
+// NOTE: isErrorLog and isWarnLog are defined in app.go and reused here (same package)
 
 // detectSystemHealth detects system-level issues (bundle mode only)
 func detectSystemHealth(ds datasource.DataSource) []AttentionItem {

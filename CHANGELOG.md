@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.8] - 2025-12-10 "Count Consistency Fix"
+
+### Fixed 🐛
+- **CRITICAL: Error/Warning counts now consistent across all views**
+  - Root cause: Dashboard, W/E column, and log view used different scan depths and detection functions
+  - Dashboard scanned 500 lines with `isErrorLine/isWarnLine` (old patterns)
+  - W/E column scanned 200 lines with `isErrorLog/isWarnLog` (v0.3.7 corrected patterns)
+  - Log view counted ALL lines with `isErrorLog/isWarnLog`
+  - Result: Dashboard showed "22 ERR, 14 WARN" while log view showed "19 errors · 17 warnings"
+  - Solution: 
+    - Unified scan depth to **200 lines** everywhere (dashboard + W/E column + log view header)
+    - Unified detection functions to use `isErrorLog/isWarnLog` across all components
+  - Impact: **100% count consistency** - same numbers everywhere users look
+
+### Technical
+- Changed dashboard scan depth from 500 → 200 lines in `detectLogIssues()`
+- Replaced `isErrorLine/isWarnLine` with shared `isErrorLog/isWarnLog` functions
+- All three view types now use identical counting logic
+- Functions defined once in app.go, reused in attention_signals.go (same package)
+
+### Impact Summary
+- ✅ **Dashboard count** = **W/E column** = **Log view header** (perfect sync)
+- ✅ Faster dashboard scans (200 vs 500 lines)
+- ✅ Reduced code duplication (removed 130 lines of duplicate detection logic)
+- ✅ Single source of truth for error/warning patterns
+
 ## [0.3.7] - 2025-12-10 "Issue Hunter Hotfix"
 
 ### Fixed 🐛
