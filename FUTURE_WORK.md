@@ -50,6 +50,30 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ## 📋 Medium Priority (v0.4.0)
 
+### Namespace Health Ranking & Smart Filtering
+- **Priority**: Medium-High
+- **Complexity**: Medium
+- **Impact**: High
+- **Description**: Rank and sort namespaces by problem severity for quick detection of most problematic areas
+- **Problem**: With 25+ namespaces, no quick way to identify which ones have the most issues. All show as "active" with no health indicators.
+- **Requirements**:
+  - Add "ISSUES" column to namespace view showing error/warning counts
+  - Sort namespaces by total issue count (highest problems first)
+  - Color-code namespace rows: Red (>50 errors), Yellow (>20 warnings), Green (healthy)
+  - Filter options: "Show only namespaces with issues" (press 'f')
+  - Quick jump to most problematic namespace (press 'e' for highest errors)
+  - Aggregate pod-level errors per namespace for ranking score
+- **Use Case**: "Which namespace should I investigate first?"
+- **Example**: 
+  ```
+  NAME                  STATE    ISSUES       PROJECT
+  kube-system          active   🔥 127E/89W  bundle-project
+  gpu-operator         active   ⚠️  22E/67W  bundle-project  
+  longhorn-system      active   ✅  2E/5W    bundle-project
+  calico-system        active   ✅  0E/0W    bundle-project
+  ```
+- **Triggered by**: User feedback viewing 25-namespace bundle
+
 ### Journald Log Scanning
 - **Priority**: Medium
 - **Complexity**: High
