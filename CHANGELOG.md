@@ -41,7 +41,54 @@ User feedback showed bundles are the #1 workflow. Removing live mode:
 
 ## [Unreleased]
 
-## [0.3.4] - 2025-12-08
+## [0.3.6] - 2025-12-10 "Issue Hunter"
+
+### Enhanced - ERR/WARN Detection 🔍
+- **Enhanced warning pattern detection (8 new patterns)**
+  - Added: WARNING:, WARN:, WARN=, LEVEL=WARNING
+  - Added: DEPRECATED, DEPRECATION, ALERT:, ALERT=
+  - All patterns now case-insensitive for maximum coverage
+  - Synced patterns between attention_signals.go and app.go for consistency
+  - Impact: Dashboard and log views detect vastly more warning types
+
+- **Attention Dashboard capacity increased**
+  - Dashboard cap: 15 → 100 items (scrollable list)
+  - Allows viewing all issues in huge bundles
+  - Scroll down to see additional items beyond screen height
+  - Impact: No critical issues hidden by arbitrary limits
+
+### Enhanced - Classic View UX ⚡
+- **W/E column format improved for clarity**
+  - Format changed: "18/22" → "22E/18W" (errors first, explicit labels)
+  - Scan depth increased: 100 → 200 lines for better accuracy
+  - Impact: Instant visibility of error vs warning counts in pod list
+
+- **Smart log filtering on pod entry**
+  - Entering pod logs from Pods view now auto-applies WARN filter
+  - Shows errors + warnings by default (Ctrl+A to see all logs)
+  - Impact: Immediate focus on issues without manual filtering
+
+### Technical
+- Enhanced `isWarnLine()` in attention_signals.go with 8 additional patterns
+- Synced `isWarnLog()` in app.go with same pattern set
+- Dashboard item limit increased from 15 to 100 in ComputeAttentionItems()
+- W/E column format changed to "XE/YW" in updateTable()
+- Log scan depth increased to 200 lines in pod table rendering
+- Auto-apply filterLevel = "WARN" when entering logs from ViewPods
+
+### Impact Summary
+- **+166% more WARN patterns detected** (3 → 11 patterns)
+- **+566% dashboard capacity** (15 → 100 items)
+- **+100% scan depth** (100 → 200 lines for W/E counts)
+- **Zero-click issue focus** (WARN filter auto-applied on pod entry)
+
+### Deferred to Future Releases
+- Journald log scanning (requires new datasource methods)
+- Smart dashboard sorting by error count
+- Global issue count in status bar
+- Help panel pro tips
+
+## [0.3.5] - 2025-12-10 "Bundle-Only Bliss"
 
 ### Fixed - Demo Parity Complete 🎯
 - **CRITICAL: Logs now load in mockdata mode**

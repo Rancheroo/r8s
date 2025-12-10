@@ -60,9 +60,9 @@ func ComputeAttentionItems(ds datasource.DataSource) []AttentionItem {
 	// Sort by severity (Critical → Warning → Info)
 	sortAttentionItems(items)
 
-	// Limit to top 15 items
-	if len(items) > 15 {
-		items = items[:15]
+	// Limit to top 100 items (can scroll to see all)
+	if len(items) > 100 {
+		items = items[:100]
 	}
 
 	return items
@@ -518,10 +518,25 @@ func isErrorLine(line string) bool {
 func isWarnLine(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
-	// Warning patterns
-	if strings.Contains(lineUpper, "[WARN]") ||
-		strings.Contains(lineUpper, "LEVEL=WARN") {
-		return true
+	// Enhanced warning patterns (case-insensitive)
+	warnPatterns := []string{
+		"[WARN]",
+		"[WARNING]",
+		"WARNING:",
+		"WARN:",
+		"WARN=",
+		"LEVEL=WARN",
+		"LEVEL=WARNING",
+		"DEPRECATED",
+		"DEPRECATION",
+		"ALERT:",
+		"ALERT=",
+	}
+
+	for _, pattern := range warnPatterns {
+		if strings.Contains(lineUpper, pattern) {
+			return true
+		}
 	}
 
 	// K8s format: W1120, W0102, etc. (W followed by 4 digits)

@@ -1187,13 +1187,13 @@ func (a *App) updateTable() {
 				// Get warning/error counts by scanning pod logs (same as dashboard)
 				weCount := "-"
 				if a.dataSource != nil {
-					// Try to fetch logs for this pod (first 100 lines for performance)
+					// Try to fetch logs for this pod (first 200 lines for better accuracy)
 					logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
 					if err == nil && len(logs) > 0 {
-						// Limit scan to first 100 lines for table performance
+						// Limit scan to first 200 lines for table performance
 						scanLines := logs
-						if len(scanLines) > 100 {
-							scanLines = scanLines[:100]
+						if len(scanLines) > 200 {
+							scanLines = scanLines[:200]
 						}
 
 						warnCount := 0
@@ -1206,9 +1206,9 @@ func (a *App) updateTable() {
 							}
 						}
 
-						// Only show if there are actual errors/warnings
+						// Only show if there are actual errors/warnings - format: "XE/YW"
 						if warnCount > 0 || errorCount > 0 {
-							weCount = fmt.Sprintf("%d/%d", warnCount, errorCount)
+							weCount = fmt.Sprintf("%dE/%dW", errorCount, warnCount)
 						}
 					}
 				}
@@ -1797,7 +1797,7 @@ func (a *App) handleEnter() tea.Cmd {
 		// Push current view to stack
 		a.viewStack = append(a.viewStack, a.currentView)
 
-		// Navigate to logs view
+		// Navigate to logs view with WARN filter (shows errors + warnings by default)
 		a.currentView = ViewContext{
 			viewType:      ViewLogs,
 			clusterID:     a.currentView.clusterID,
@@ -1810,6 +1810,8 @@ func (a *App) handleEnter() tea.Cmd {
 			containerName: "",
 		}
 
+		// Auto-apply WARN filter to show errors and warnings
+		a.filterLevel = "WARN"
 		a.loading = true
 		return a.fetchLogs(a.currentView.clusterID, namespaceName, podName)
 
@@ -3044,10 +3046,28 @@ func isErrorLog(line string) bool {
 // isWarnLog detects WARN level logs in both bracketed and K8s formats
 func isWarnLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
-	// Bracketed format: [WARN]
-	if strings.Contains(lineUpper, "[WARN]") {
-		return true
+
+	// Enhanced warning patterns (case-insensitive) - synced with attention_signals.go
+	warnPatterns := []string{
+		"[WARN]",
+		"[WARNING]",
+		"WARNING:",
+		"WARN:",
+		"WARN=",
+		"LEVEL=WARN",
+		"LEVEL=WARNING",
+		"DEPRECATED",
+		"DEPRECATION",
+		"ALERT:",
+		"ALERT=",
 	}
+
+	for _, pattern := range warnPatterns {
+		if strings.Contains(lineUpper, pattern) {
+			return true
+		}
+	}
+
 	// K8s format: W1120, W0102, etc. (W followed by 4 digits)
 	if len(line) > 5 {
 		for i := 0; i < len(line)-5; i++ {
@@ -3059,10 +3079,6 @@ func isWarnLog(line string) bool {
 				}
 			}
 		}
-	}
-	// Also check for level=warn/warning format
-	if strings.Contains(lineUpper, "LEVEL=WARN") {
-		return true
 	}
 	return false
 }
