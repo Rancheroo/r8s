@@ -7,18 +7,56 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// renderAttentionDashboard renders the attention dashboard view
+// Default dashboard cap - show top N items before requiring expansion
+const defaultDashboardCap = 20
+
+// getDisplayedItems returns items to display based on expansion state and cap
+func (a *App) getDisplayedItems() []AttentionItem {
+	// If expanded or total items <= cap, show all
+	if a.attentionExpanded || len(a.attentionItems) <= defaultDashboardCap {
+		return a.attentionItems
+	}
+	// Otherwise, show top N items (capped)
+	return a.attentionItems[:defaultDashboardCap]
+}
+
+// ensureCursorVisible scrolls viewport to keep cursor visible
+func (a *App) ensureCursorVisible() {
+	if a.currentView.viewType != ViewAttention {
+		return
+	}
+
+	// Calculate line number of cursor position
+	// For now, simple approach: scroll to cursor line
+	// Each item is ~1-2 lines depending on expansion
+	lineNum := a.attentionCursor * 2 // Approximate
+
+	// Scroll viewport to show this line
+	viewportHeight := a.attentionViewport.Height
+	if lineNum < a.attentionViewport.YOffset {
+		// Cursor above viewport - scroll up
+		a.attentionViewport.SetYOffset(lineNum)
+	} else if lineNum >= a.attentionViewport.YOffset+viewportHeight {
+		// Cursor below viewport - scroll down
+		a.attentionViewport.SetYOffset(lineNum - viewportHeight + 1)
+	}
+}
+
+// renderAttentionDashboard renders the attention dashboard view with scrolling
 func (a *App) renderAttentionDashboard() string {
 	if len(a.attentionItems) == 0 {
 		return a.renderAllGood()
 	}
+
+	// Get displayed items (respects capping/expansion)
+	displayedItems := a.getDisplayedItems()
 
 	// Group items by severity
 	critical := []AttentionItem{}
 	warning := []AttentionItem{}
 	info := []AttentionItem{}
 
-	for _, item := range a.attentionItems {
+	for _, item := range displayedItems {
 		switch item.Severity {
 		case SeverityCritical:
 			critical = append(critical, item)
@@ -48,6 +86,7 @@ func (a *App) renderAttentionDashboard() string {
 	}
 
 	totalIssues := len(a.attentionItems)
+	displayedCount := len(displayedItems)
 	criticalCount := len(critical)
 	warningCount := len(warning)
 
@@ -124,19 +163,17 @@ func (a *App) renderAttentionDashboard() string {
 		}
 	}
 
-	content := strings.Join(lines, "\n")
-
-	// Pad content to fill screen
-	contentHeight := a.height - 6
-	contentLines := strings.Split(content, "\n")
-	if len(contentLines) < contentHeight {
-		padding := make([]string, contentHeight-len(contentLines))
-		for i := range padding {
-			padding[i] = ""
-		}
-		content = content + "\n" + strings.Join(padding, "\n")
+	// Add capping indicator if items are hidden
+	if displayedCount < totalIssues {
+		hiddenCount := totalIssues - displayedCount
+		cappingMsg := fmt.Sprintf("\n...and %d more issues (press 'm' to show all)", hiddenCount)
+		lines = append(lines, "")
+		lines = append(lines, lipgloss.NewStyle().Foreground(colorGray).Italic(true).Render(cappingMsg))
 	}
 
+	content := strings.Join(lines, "\n")
+
+	// Create bordered box for content
 	box := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(colorRed).
@@ -144,7 +181,20 @@ func (a *App) renderAttentionDashboard() string {
 		Width(a.width - 4).
 		Render(content)
 
-	status := statusStyle.Render(" [1-9] jump · [Enter] logs · [→] expand · [c] classic · [r] refresh · [Esc] back ")
+	// Build status with position indicator
+	var statusParts []string
+	if displayedCount < totalIssues {
+		statusParts = append(statusParts, fmt.Sprintf("Showing %d/%d", displayedCount, totalIssues))
+	} else {
+		statusParts = append(statusParts, fmt.Sprintf("%d items", displayedCount))
+	}
+	statusParts = append(statusParts, "[m]=expand")
+	statusParts = append(statusParts, "[g/G]=top/bottom")
+	statusParts = append(statusParts, "[Enter]=logs")
+	statusParts = append(statusParts, "[c]=classic")
+
+	statusText := " " + strings.Join(statusParts, " · ") + " "
+	status := statusStyle.Render(statusText)
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,

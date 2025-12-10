@@ -128,10 +128,12 @@ type App struct {
 	bundlePath  string // Path to loaded bundle
 
 	// Attention Dashboard
-	attentionItems  []AttentionItem // Detected issues for attention dashboard
-	attentionCursor int             // Selected item index in dashboard
-	expandedItems   map[int]bool    // Which collapsed event items are expanded
-	subCursor       int             // Selected pod index within expanded event (-1 = not in sub-nav)
+	attentionItems    []AttentionItem // Detected issues for attention dashboard
+	attentionCursor   int             // Selected item index in dashboard
+	attentionViewport viewport.Model  // Scrollable viewport for dashboard
+	attentionExpanded bool            // Show all items vs top-20 cap
+	expandedItems     map[int]bool    // Which collapsed event items are expanded
+	subCursor         int             // Selected pod index within expanded event (-1 = not in sub-nav)
 
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
@@ -408,6 +410,31 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 					a.expandedItems[a.attentionCursor] = !a.expandedItems[a.attentionCursor]
 				}
+				return a, nil
+			case "m":
+				// Toggle expansion of dashboard (show all vs capped)
+				a.attentionExpanded = !a.attentionExpanded
+				// Reset cursor to safe position if needed
+				displayedItems := a.getDisplayedItems()
+				if a.attentionCursor >= len(displayedItems) {
+					a.attentionCursor = len(displayedItems) - 1
+					if a.attentionCursor < 0 {
+						a.attentionCursor = 0
+					}
+				}
+				return a, nil
+			case "g":
+				// Jump to first item (vim muscle memory)
+				a.attentionCursor = 0
+				a.subCursor = -1
+				return a, nil
+			case "G":
+				// Jump to last item (vim muscle memory)
+				displayedItems := a.getDisplayedItems()
+				if len(displayedItems) > 0 {
+					a.attentionCursor = len(displayedItems) - 1
+				}
+				a.subCursor = -1
 				return a, nil
 			}
 		}
