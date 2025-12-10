@@ -13,32 +13,32 @@ import (
 
 // tuiCmd represents the tui command
 var tuiCmd = &cobra.Command{
-	Use:   "tui",
-	Short: "Launch interactive terminal UI",
-	Long: `Launch the interactive TUI for browsing Rancher clusters or log bundles.
+	Use:   "tui [bundle-path]",
+	Short: "Launch interactive TUI for log bundle analysis",
+	Long: `Launch the interactive TUI for analyzing RKE2 log bundles.
 
-The TUI requires either:
-  1. A valid Rancher API connection (RANCHER_URL and RANCHER_TOKEN)
-  2. A log bundle via --bundle flag
-  3. Demo mode via --mockdata flag
+QUICKSTART:
+  1. Extract your RKE2 support bundle: tar -xzf support-bundle.tar.gz
+  2. Launch r8s: r8s ./extracted-bundle/
+  3. Use Attention Dashboard to find issues
 
 EXAMPLES:
-  # Live mode - connect to Rancher API
+  # Analyze extracted bundle
+  r8s tui ./w-guard-wg-cp-xyz/
+
+  # Launch with embedded demo bundle
   r8s tui
 
-  # Demo mode - mock data for testing/screenshots
-  r8s tui --mockdata
-
-  # Bundle mode - extract first, then analyze
-  tar -xzf support-bundle.tar.gz
-  r8s tui --bundle=./w-guard-wg-cp-xyz/
-
 KEYBOARD SHORTCUTS:
-  Enter  - Navigate into selected resource
-  Esc    - Go back to previous view
+  Enter  - Navigate into selected item / view logs
+  Esc/b  - Go back to previous view
   d      - Describe selected resource (JSON)
   l      - View logs for selected pod
   /      - Search in logs
+  g/G    - Jump to first/last log line
+  w      - Toggle word wrap
+  Ctrl+E - Filter to errors only
+  Ctrl+W - Filter to warnings
   r      - Refresh current view
   ?      - Show help
   q      - Quit`,
@@ -47,16 +47,13 @@ KEYBOARD SHORTCUTS:
 
 // runTUI handles launching the TUI application
 func runTUI(cmd *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := config.Load(cfgFile, profile)
+	// Load configuration (simplified for bundle-only mode)
+	cfg, err := config.Load(cfgFile, "")
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	// Override config with CLI flags
-	if insecure {
-		cfg.Insecure = true
-	}
 	if contextName != "" {
 		cfg.Context = contextName
 	}
@@ -64,14 +61,11 @@ func runTUI(cmd *cobra.Command, args []string) error {
 		cfg.Namespace = namespace
 	}
 	cfg.Verbose = verbose
-	cfg.MockMode = demoMode
 
-	// Create and start TUI with bundle path if provided
-	// NOTE: tui.NewApp still uses the old signature - this will be updated  after we refactor app.go
+	// Create and start TUI with bundle path
 	app := tui.NewApp(cfg, tuiBundlePath)
 
 	// Check if app initialization failed - print error and exit cleanly
-	// This prevents the TUI from trying to start when there's a fatal error
 	if app.HasError() {
 		return fmt.Errorf(app.GetError())
 	}
@@ -93,6 +87,5 @@ func init() {
 	rootCmd.AddCommand(tuiCmd)
 
 	// TUI-specific flags
-	tuiCmd.Flags().BoolVar(&demoMode, "mockdata", false, "enable demo mode with mock data (no API required)")
 	tuiCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to extracted log bundle folder")
 }

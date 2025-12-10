@@ -10,13 +10,10 @@ import (
 
 var (
 	cfgFile       string
-	profile       string
-	insecure      bool
 	contextName   string
 	namespace     string
 	tuiBundlePath string // Path to bundle for TUI offline mode
 	verbose       bool   // Enable verbose error output
-	demoMode      bool   // Enable demo mode with mock data
 
 	versionInfo struct {
 		Version string
@@ -29,33 +26,31 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "r8s [bundle-path]",
 	Args:  cobra.MaximumNArgs(1), // Allow 0 or 1 positional argument (bundle path)
-	Short: "r8s - Rancher Cluster Navigator & Log Analyzer",
-	Long: `r8s (Rancheroos) - A TUI for browsing Rancher-managed Kubernetes clusters and analyzing log bundles.
+	Short: "r8s - The fastest way to understand a broken Kubernetes cluster from a log bundle",
+	Long: `r8s — the fastest way to understand a broken Kubernetes cluster from a log bundle.
 
 FEATURES:
-  • Interactive TUI for navigating Rancher clusters, projects, namespaces
-  • View pods, deployments, services, and CRDs with live data
-  • Analyze RKE2 log bundles offline (no API required)
-  • Color-coded log viewing with search and filtering
-  • Demo mode with mock data for testing and screenshots
+  • Attention Dashboard - Instantly see all cluster issues ranked by severity
+  • Interactive TUI for browsing pods, deployments, services, and CRDs
+  • Color-coded log viewing with search and filtering (errors/warnings highlighted)
+  • Smart log analysis - detects crashes, OOM kills, connection failures
+  • Bundle-first design - works offline, no API required
 
-CONFIGURATION:
-  r8s uses a config file at ~/.r8s/config.yaml or via environment variables:
-    export RANCHER_URL=https://rancher.example.com
-    export RANCHER_TOKEN=token-xxxxx:yyyyyyyy
+QUICKSTART:
+  1. Extract your RKE2 support bundle
+  2. Run: r8s /path/to/extracted-bundle
+  3. Navigate the Attention Dashboard to find issues
+  4. Press Enter on any issue to view pod logs
 
 EXAMPLES:
-  # Launch TUI with live Rancher connection
-  r8s
-
-  # Analyze an extracted bundle (auto-launches TUI)
+  # Analyze an extracted bundle (instant dashboard)
   r8s ./extracted-bundle-folder/
 
-  # Launch TUI with demo/mock data (no API required)
-  r8s --mockdata
+  # Launch with embedded demo bundle
+  r8s
 
-  # Set up configuration
-  r8s config init`,
+  # Enable verbose error output for debugging
+  r8s -v ./bundle/`,
 	RunE: runRoot,
 }
 
@@ -67,14 +62,9 @@ func Execute() error {
 func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.r8s/config.yaml)")
-	rootCmd.PersistentFlags().StringVar(&profile, "profile", "", "Rancher profile to use (default is from config)")
-	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip TLS certificate verification")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose error output for debugging")
 	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
 	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
-
-	// Root command flags (for direct TUI launch)
-	rootCmd.Flags().BoolVar(&demoMode, "mockdata", false, "enable demo mode with mock data (no API required)")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)

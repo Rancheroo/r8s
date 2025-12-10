@@ -93,7 +93,7 @@ EXAMPLES:
 		}
 
 		// Load config
-		cfg, err := config.Load(cfgFile, profile)
+		cfg, err := config.Load(cfgFile, "")
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
