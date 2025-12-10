@@ -986,3 +986,69 @@ case ViewPods:
 **Ready to ship:** December 5, 2025
 
 ---
+
+---
+
+## v0.3.5 Development: "Bundle-Only Bliss" - Removing Live Mode
+
+### December 10, 2025 - The Simplification Release
+
+**Goal:** Remove live Rancher API mode entirely. Focus 100% on bundle analysis.
+
+**Why This Change:**
+User feedback showed bundles are the #1 workflow. When clusters break, teams capture bundles. Live mode added complexity for a secondary use case.
+
+**Lesson:** **Removing features is the highest-leverage simplification you can do**
+
+**What We Removed (~1,200 lines, 11.7% of codebase):**
+- `internal/datasource/live.go` (230 lines)
+- `internal/rancher/client.go` (300 lines)  
+- `internal/rancher/client_test.go` (100 lines)
+- Live mode logic in cmd files
+- Profile-based authentication
+- `--profile`, `--insecure`, `--mockdata` flags
+
+**Impact:**
+- ✅ Zero configuration needed (no API tokens)
+- ✅ Works 100% offline
+- ✅ Faster startup (no API connection attempts)
+- ✅ Simpler codebase (easier to maintain)
+- ✅ Better UX for primary use case
+
+**Development Time:** 22 minutes from audit to tagged release
+
+**Key Insights:**
+
+1. **Removal is a feature** - Less code = fewer bugs, faster onboarding
+2. **Focus beats flexibility** - Do one thing excellently vs many things poorly
+3. **User data drives decisions** - Bundle analysis dominated usage patterns
+4. **Embedded demo = zero friction** - Default launches with demo bundle instantly
+
+**Process That Worked:**
+1. **Audit first** (3 min) - Document what exists, identify removal targets
+2. **Delete files** (5 min) - Remove 3 files, 630 lines gone
+3. **Update interfaces** (8 min) - Simplify cmd files, rewrite NewApp()
+4. **Test build** (1 min) - Verify compilation
+5. **Update docs** (5 min) - README, CHANGELOG, LESSONS-LEARNED
+
+**Anti-Pattern Avoided:**
+- Did NOT add a flag to "disable live mode"
+- Did NOT keep code but comment it out
+- Did NOT create a separate "lite" version
+- Just **deleted it completely**
+
+**Migration Strategy:**
+- Tagged final live-mode version (v0.3.4) for users who need it
+- Clear documentation: "Use v0.3.4 for live mode"
+- Zero apologizing - we're better for this decision
+
+**Lesson:** **The best code is no code. Delete fearlessly when usage data supports it.**
+
+---
+
+**Date**: December 10, 2025 - v0.3.5 "Bundle-Only Bliss" Complete
+**Branch**: `remove-live-mode` → `docs-and-release`
+**Tag**: `v0.3.5-phase2-live-mode-removed`
+**Status**: Production ready, docs updated, ready to ship
+
+---

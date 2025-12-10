@@ -30,8 +30,8 @@ func TestNewApp(t *testing.T) {
 					},
 				},
 			},
-			wantOffline:  false, // Changed: live mode now fails explicitly instead of silently going offline
-			wantViewType: ViewClusters,
+			wantOffline:  true,          // Bundle-only mode: always starts with demo bundle
+			wantViewType: ViewAttention, // Bundle-only: always start with Attention Dashboard
 			wantError:    false,
 		},
 		{
@@ -40,8 +40,8 @@ func TestNewApp(t *testing.T) {
 				CurrentProfile: "missing",
 				Profiles:       []config.Profile{},
 			},
-			wantOffline:  false,
-			wantViewType: ViewClusters,
+			wantOffline:  true,          // Bundle-only mode
+			wantViewType: ViewAttention, // Bundle-only: Attention Dashboardf
 			wantError:    true,
 		},
 	}

@@ -1,9 +1,43 @@
 # Changelog
 
-All notable changes to the r8s project will be documented in this file.
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.5] - 2025-12-10 "Bundle-Only Bliss"
+
+### 🎉 Major Changes
+- **BREAKING:** Removed live Rancher API mode entirely  
+- **NEW:** Default launches with embedded demo bundle (zero config)
+- **NEW:** Always starts with Attention Dashboard
+- Simplified architecture: bundle-first design
+
+### Removed
+- Live Rancher API client (~300 lines)
+- Live datasource implementation (~230 lines)
+- Profile-based authentication (~100 lines)
+- `--profile`, `--insecure`, `--mockdata` flags
+- Client test files and live mode logic
+- **Total:** ~1,200 lines removed (11.7% of codebase)
+
+### Changed
+- Default behavior: `./r8s` now launches demo bundle instantly
+- CLI help text updated to emphasize bundle workflows
+- Simplified NewApp() to only handle bundle/demo modes
+- All docs updated to remove live mode references
+
+### Why This Change?
+User feedback showed bundles are the #1 workflow. Removing live mode:
+- ✅ Eliminates configuration complexity
+- ✅ Works 100% offline
+- ✅ Faster startup
+- ✅ Cleaner codebase
+- ✅ Better UX for primary use case
+
+**Migration:** Users needing live cluster browsing should stay on v0.3.4 or use native Rancher UI.
+
+**Development time:** 22 minutes from audit to tagged release.
 
 ## [Unreleased]
 

@@ -1,46 +1,44 @@
 # r8s
 
-> **r8s 0.3.4 — the fastest Kubernetes bundle troubleshooter on earth · just works**
+> **r8s 0.3.5 — the fastest way to understand a broken Kubernetes cluster from a log bundle**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-r8s (pronounced "rates" or "Rancheroos") is a keyboard-driven terminal UI for browsing Rancher-managed Kubernetes clusters and analyzing RKE2 support bundles offline. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle.
+r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**What's new in 0.3.4:** Demo parity complete · Logs load in mockdata · W/E column works · 12+ error patterns · Dashboard log scanner active
+**What's new in 0.3.5:** Bundle-only bliss · Live mode removed · Zero config · Instant demo bundle · Attention Dashboard first
 
 ---
 
 ## Quick Start
 
-### Demo Mode (Zero Setup)
 ```bash
+# 1. Install
 git clone https://github.com/Rancheroo/r8s.git && cd r8s
 make build
-./bin/r8s tui --mockdata  # Instant demo — always works
+
+# 2. Try the demo
+./bin/r8s  # Instantly loads embedded demo bundle
+
+# 3. Analyze your bundle
+tar -xzf support-bundle.tar.gz
+./bin/r8s ./extracted-bundle/
 ```
 
-### Live Cluster
-```bash
-# 1. Initialize config
-./bin/r8s config init
+**That's it.** No configuration, no API keys, no clusters needed.
 
-# 2. Add your credentials
-export EDITOR=vim  # or nano, code, etc.
-./bin/r8s config edit
+---
 
-# 3. Launch
-./bin/r8s
-```
+## Features
 
-### Bundle Analysis (Offline)
-```bash
-# Extract bundle first
-tar -xzf example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09.tar.gz
-
-# Then analyze
-./bin/r8s ./example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09/
-```
+✅ **Attention Dashboard** - See all cluster issues ranked by severity  
+✅ **Bundle Analysis** - Works offline, no API required  
+✅ **Demo Mode** - Embedded demo bundle (zero setup)  
+✅ **Smart Log Analysis** - Detects crashes, OOM kills, connection failures  
+✅ **Log Viewer** - Search, filter (ERROR/WARN), color-coded, word wrap  
+✅ **Resource Views** - Pods, Deployments, Services, CRDs  
+✅ **Describe** - Full JSON details for any resource  
 
 ---
 
@@ -48,13 +46,12 @@ tar -xzf example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09.tar.gz
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `↑`/`↓` or `j`/`k` | Navigate | `Enter` | Select |
+| `↑`/`↓` or `j`/`k` | Navigate | `Enter` | Drill down / View logs |
 | `Esc` or `b` | Back | `q` | Quit |
-| `d` | Describe (JSON) | `l` | View logs |
-| `1`/`2`/`3` | Pods/Deploys/Services | `r` | Refresh |
+| `d` | Describe (JSON) | `r` | Refresh |
 | `/` | Search logs | `?` | Help |
 | `g` | Jump to top (logs) | `G` | Jump to bottom (logs) |
-| `w` | Toggle wrap (logs) | | |
+| `w` | Toggle wrap (logs) | `Ctrl+E` | Filter errors only |
 
 ---
 
@@ -73,74 +70,42 @@ make build
 
 ---
 
-## Features
+## Workflows
 
-✅ **Live Mode** - Browse Rancher clusters, projects, namespaces  
-✅ **Bundle Mode** - Analyze RKE2 bundles offline (no API needed)  
-✅ **Demo Mode** - Test with mock data (`--mockdata`)  
-✅ **Resource Views** - Pods, Deployments, Services, CRDs  
-✅ **Log Viewer** - Search, filter (ERROR/WARN), tail mode  
-✅ **Describe** - Full JSON details for resources  
-✅ **Multi-Profile** - Switch between Rancher environments  
-
----
-
-## Common Workflows
-
-**First-Time Setup:**
+### First-Time Demo
 ```bash
-./bin/r8s config init && ./bin/r8s config edit && ./bin/r8s
+./bin/r8s  # Instant embedded demo — no setup needed
 ```
 
-**Bundle Troubleshooting:**
+### Analyze Production Bundle
 ```bash
-# Extract bundle first
+# 1. Extract the bundle
 tar -xzf rke2-support-bundle-*.tar.gz
 
-# Then analyze
-./bin/r8s ./rke2-support-bundle-*/
+# 2. Launch r8s
+./bin/r8s ./w-guard-wg-cp-xyz-*/
+
+# 3. Navigate the Attention Dashboard
+#    - Press Enter on any issue to view pod logs
+#    - Use Ctrl+E to filter to errors only
+#    - Press ? for help
 ```
 
-**Multiple Environments:**
+### Using the Example Bundle
 ```bash
-./bin/r8s --profile=production
-./bin/r8s --profile=staging  
-./bin/r8s --profile=dev
+./bin/r8s ./example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-12-04_09_15_57/
 ```
 
 ---
 
 ## Documentation
 
-- **[CLI Reference](docs/USAGE.md)** - Complete command documentation
 - **[Bundle Format](docs/BUNDLE-FORMAT.md)** - RKE2 bundle structure
+- **[CLI Reference](docs/USAGE.md)** - Complete command documentation
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues & solutions
 - **[Architecture](docs/ARCHITECTURE.md)** - Technical design
 - **[Contributing](CONTRIBUTING.md)** - Development guide
-- **[Lessons Learned](LESSONS-LEARNED.md)** - Project insights
-
----
-
-## Configuration
-
-**Default location:** `~/.r8s/config.yaml`
-
-```yaml
-currentProfile: production
-profiles:
-  - name: production
-    url: https://rancher.example.com
-    bearerToken: token-xxxxx:yyyyyyyy
-    insecure: false
-```
-
-**Environment variables:**
-```bash
-export RANCHER_URL=https://rancher.example.com
-export RANCHER_TOKEN=token-xxxxx:yyyyyyyy
-```
-
-See [docs/USAGE.md](docs/USAGE.md) for details.
+- **[Lessons Learned](LESSONS-LEARNED.md)** - Project wisdom
 
 ---
 
@@ -152,9 +117,8 @@ See [docs/USAGE.md](docs/USAGE.md) for details.
 |-------|----------|
 | "could not open TTY" | Run from interactive terminal, not CI/pipe |
 | "not a directory" | Extract bundle: `tar -xzf bundle.tar.gz` |
-| "connection refused" | Check Rancher URL and network |
-| "authentication failed" | Regenerate API token |
-| "not a valid bundle" | Point to extracted folder with `rke2/` dir |
+| "failed to load bundle" | Point to extracted folder with `rke2/` dir |
+| "no logs captured" | Some pods may not have logs in the bundle |
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for complete guide.
 
@@ -164,17 +128,19 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for complete guide.
 
 Found a bug? [Report it](https://github.com/Rancheroo/r8s/issues/new?template=bug_report.md) with:
 - `r8s version` output
-- Mode used (live/bundle/mock)
-- Verbose output (`r8s --verbose tui ...`)
-- Bundle details (if applicable)
+- Bundle details (if using custom bundle)
+- Verbose output (`r8s -v /path/to/bundle`)
 
 ---
 
 ## Development
 
 ```bash
-# Run from source
-go run main.go tui --mockdata
+# Run from source (demo mode)
+go run main.go
+
+# Run with example bundle
+go run main.go ./example-log-bundle/w-guard-wg-cp-svtk6-lqtxw-2025-12-04_09_15_57/
 
 # Run tests
 make test
@@ -184,6 +150,21 @@ make build
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+---
+
+## What Happened to Live Mode?
+
+As of v0.3.5, we removed live Rancher API support to focus 100% on bundle analysis. This decision came from user feedback: bundles are captured when clusters are broken, making them the #1 troubleshooting workflow.
+
+**Benefits:**
+- ✅ Zero configuration (no API tokens)
+- ✅ Works offline
+- ✅ Faster startup
+- ✅ Simpler codebase (-1,200 lines)
+- ✅ Better UX for the primary use case
+
+If you need live cluster browsing, use v0.3.4 or earlier.
 
 ---
 
@@ -197,8 +178,8 @@ Apache License 2.0 - See [LICENSE](LICENSE)
 
 - [k9s](https://k9scli.io/) - Inspiration
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI framework
-- [Rancher](https://rancher.com/) - Multi-cluster management
+- [Rancher](https://rancher.com/) - Kubernetes management platform
 
 ---
 
-**Made with ❤️ for the Rancher community**
+**Made with ❤️ for Kubernetes troubleshooters**
