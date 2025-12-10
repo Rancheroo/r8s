@@ -62,6 +62,12 @@ func runTUI(cmd *cobra.Command, args []string) error {
 	}
 	cfg.Verbose = verbose
 
+	// Set scan depth (default 200, tunable via --scan flag)
+	if scanDepth <= 0 {
+		scanDepth = 200 // Ensure positive value
+	}
+	cfg.ScanDepth = scanDepth
+
 	// Create and start TUI with bundle path
 	app := tui.NewApp(cfg, tuiBundlePath)
 
@@ -88,4 +94,5 @@ func init() {
 
 	// TUI-specific flags
 	tuiCmd.Flags().StringVar(&tuiBundlePath, "bundle", "", "path to extracted log bundle folder")
+	tuiCmd.Flags().IntVar(&scanDepth, "scan", 200, "number of log lines to scan for error/warning detection (default: 200)")
 }

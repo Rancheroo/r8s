@@ -25,6 +25,7 @@ type Config struct {
 	Namespace string
 	MockMode  bool // Enable demo mode with mock data
 	Verbose   bool // Enable verbose error output for debugging
+	ScanDepth int  // Number of log lines to scan for error/warning detection (default: 200)
 }
 
 // Profile represents a Rancher connection profile

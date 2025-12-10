@@ -1187,13 +1187,19 @@ func (a *App) updateTable() {
 				// Get warning/error counts by scanning pod logs (same as dashboard)
 				weCount := "-"
 				if a.dataSource != nil {
-					// Try to fetch logs for this pod (first 200 lines for better accuracy)
+					// Try to fetch logs for this pod
 					logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
 					if err == nil && len(logs) > 0 {
-						// Limit scan to first 200 lines for table performance
+						// Get scan depth from config (tunable via --scan flag, default 200)
+						scanDepth := a.config.ScanDepth
+						if scanDepth <= 0 {
+							scanDepth = 200
+						}
+
+						// Limit scan to first N lines for table performance
 						scanLines := logs
-						if len(scanLines) > 200 {
-							scanLines = scanLines[:200]
+						if len(scanLines) > scanDepth {
+							scanLines = scanLines[:scanDepth]
 						}
 
 						warnCount := 0
@@ -2723,8 +2729,14 @@ func (a *App) fetchAttention() tea.Cmd {
 			return errMsg{fmt.Errorf("no data source available")}
 		}
 
+		// Get scan depth from config (default 200 if not set)
+		scanDepth := a.config.ScanDepth
+		if scanDepth <= 0 {
+			scanDepth = 200
+		}
+
 		// Detect all issues across the cluster
-		items := ComputeAttentionItems(a.dataSource)
+		items := ComputeAttentionItems(a.dataSource, scanDepth)
 
 		return attentionMsg{items: items}
 	}

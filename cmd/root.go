@@ -14,6 +14,7 @@ var (
 	namespace     string
 	tuiBundlePath string // Path to bundle for TUI offline mode
 	verbose       bool   // Enable verbose error output
+	scanDepth     int    // Number of log lines to scan for error/warning detection (default: 200)
 
 	versionInfo struct {
 		Version string

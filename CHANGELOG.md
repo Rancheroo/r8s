@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.9] - 2025-12-10 "Tunable Scan Depth"
+
+### Added ✨
+- **--scan flag for customizable error/warning detection depth**
+  - New CLI flag: `r8s --scan 500` sets scan depth to 500 lines
+  - Default remains 200 lines for optimal performance
+  - Applies consistently to: Attention Dashboard, W/E column, and log view header
+  - Higher values = more accurate counts but slower performance
+  - Lower values = faster scans but may miss issues deeper in logs
+  
+### Use Cases
+- **Large logs**: `r8s --scan 1000` for thorough deep scanning
+- **Quick triage**: `r8s --scan 50` for instant dashboard with recent errors only
+- **Production bundles**: Tune based on typical log volume and performance needs
+
+### Technical
+- Added `ScanDepth` field to config.Config struct
+- Added `--scan` flag to tui command (default: 200)
+- Updated `ComputeAttentionItems()` to accept scanDepth parameter
+- Updated `detectLogIssues()` to use tunable scan depth
+- Updated W/E column rendering to use config.ScanDepth
+- Scan depth validation: negative values default to 200
+
+### Impact Summary
+- ✅ **User control** - Adjust trade-off between speed and accuracy
+- ✅ **Consistent behavior** - Same scan depth across all views
+- ✅ **Performance tuning** - Optimize for your bundle sizes
+- ✅ **Backward compatible** - Default 200 lines unchanged
+
 ## [0.3.8] - 2025-12-10 "Count Consistency Fix"
 
 ### Fixed 🐛

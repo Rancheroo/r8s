@@ -39,8 +39,13 @@ type AttentionItem struct {
 }
 
 // ComputeAttentionItems runs all signal detectors and returns prioritized list of issues
-func ComputeAttentionItems(ds datasource.DataSource) []AttentionItem {
+func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionItem {
 	var items []AttentionItem
+
+	// Default scan depth if not set
+	if scanDepth <= 0 {
+		scanDepth = 200
+	}
 
 	// Tier 1: Pod Health (Critical)
 	items = append(items, detectPodHealth(ds)...)
@@ -52,7 +57,7 @@ func ComputeAttentionItems(ds datasource.DataSource) []AttentionItem {
 	items = append(items, detectEventIssues(ds)...)
 
 	// Tier 4: Logs (Critical/Warning) - Sample logs for error/warn counts
-	items = append(items, detectLogIssues(ds)...)
+	items = append(items, detectLogIssues(ds, scanDepth)...)
 
 	// Tier 5: System Health (Bundle only)
 	items = append(items, detectSystemHealth(ds)...)
@@ -388,8 +393,8 @@ func getTopPods(pods map[string]int, n int) []string {
 }
 
 // detectLogIssues scans pod logs for error and warning patterns
-// Samples first 500 lines per pod for performance
-func detectLogIssues(ds datasource.DataSource) []AttentionItem {
+// Samples first N lines per pod for performance (N = scanDepth, tunable via --scan flag)
+func detectLogIssues(ds datasource.DataSource, scanDepth int) []AttentionItem {
 	var items []AttentionItem
 
 	// Get all pods to scan their logs
@@ -421,10 +426,9 @@ func detectLogIssues(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Sample first 200 lines for performance (matches W/E column and log view)
-		maxLines := 200
-		if len(logs) > maxLines {
-			logs = logs[:maxLines]
+		// Sample first N lines for performance (tunable via --scan flag)
+		if len(logs) > scanDepth {
+			logs = logs[:scanDepth]
 		}
 
 		// Count errors and warnings using the same detection functions as log view
