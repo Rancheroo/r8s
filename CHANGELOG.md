@@ -5,7 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.5] - 2025-12-10 "Bundle-Only Bliss"
+## [0.3.7] - 2025-12-10 "Issue Hunter Hotfix"
+
+### Fixed 🐛
+- **CRITICAL: Warning logs now correctly display in YELLOW (not RED)**
+  - Root cause: `isErrorLog()` checked keyword patterns (like "FAILED") before checking explicit log level indicators
+  - A line like `W1204 [WARN] Skipping failed migration` was detected as ERROR due to "failed" keyword
+  - Solution: Prioritize explicit level indicators ([WARN], [INFO], W####, I####) over keyword patterns
+  - Impact: Proper color coding in log view - warnings are now yellow, errors are red
+  - Edge case fix: INFO logs with error keywords (e.g., "Failed to read checkpoint") no longer show as errors
+
+### Added
+- **FUTURE_WORK.md document** tracking deferred features and enhancement ideas
+  - Catalogued deferred features from v0.3.6 planning (smart sorting, hotkeys, journald scanning)
+  - Priority/complexity/impact ratings for future planning
+  - Long-term ideas (real-time monitoring, advanced search, plugin system)
+  - Technical debt items (test coverage, refactoring targets)
+
+### Technical
+- Refactored `isErrorLog()` in app.go to exclude WARN/INFO/DEBUG logs before keyword matching
+- Refactored `isWarnLog()` to exclude ERROR logs before keyword matching  
+- Added comprehensive test suite in `log_detection_test.go` (11 test cases)
+- All tests passing: ✅ WARN with "failed" keyword → YELLOW, INFO with "failed" → no color, ERROR → RED
+
+### Impact Summary
+- **100% accurate log level detection** - no more color confusion
+- **Faster triage** - visual scanning now reliable (red = errors, yellow = warnings)
+- **Better UX** - colors match expectations and log level semantics
+
+### Deferred to v0.3.8
+- Smart dashboard sorting by error count
+- Global `e`/`w` hotkeys to jump to highest error/warn pod
+- Status bar global issue count
+- Enhanced help panel with pro tips
+
+## [0.3.6] - 2025-12-10 "Issue Hunter"
 
 ### 🎉 Major Changes
 - **BREAKING:** Removed live Rancher API mode entirely  

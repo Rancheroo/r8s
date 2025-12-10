@@ -2990,27 +2990,58 @@ func (a *App) getVisibleLogs() []string {
 	return filteredLogs
 }
 
-// isErrorLog detects ERROR level logs in both bracketed and K8s formats
-// Enhanced patterns to catch: error, err=, failed, fatal, panic, oomkilled, crashloop, back-off, unauthorized, denied
+// isErrorLog detects ERROR level logs with explicit indicator priority
+// Priority: [ERROR] or E#### > keyword patterns
+// This prevents "W1204 [WARN] failed..." or "I1127 [INFO] Failed..." from being detected as ERROR
 func isErrorLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
+	// PRIORITY 1: Check for explicit non-ERROR indicators first (to exclude these lines)
+	// This prevents false positives from keyword matching
+
+	// Exclude WARN logs
+	if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, "[WARNING]") {
+		return false
+	}
+
+	// K8s WARN format at line start: W####
+	if len(line) >= 5 && line[0] == 'W' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return false
+	}
+
+	// Exclude INFO logs
+	if strings.Contains(lineUpper, "[INFO]") {
+		return false
+	}
+
+	// K8s INFO format at line start: I####
+	if len(line) >= 5 && line[0] == 'I' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return false
+	}
+
+	// Exclude DEBUG logs
+	if strings.Contains(lineUpper, "[DEBUG]") {
+		return false
+	}
+
+	// K8s DEBUG format at line start: D####
+	if len(line) >= 5 && line[0] == 'D' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return false
+	}
+
+	// PRIORITY 2: Explicit ERROR indicators
 	// Bracketed format: [ERROR]
 	if strings.Contains(lineUpper, "[ERROR]") {
 		return true
 	}
 
-	// K8s format: E1120, E0102, etc. (E followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'E' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				// Check if followed by space or colon
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
+	// K8s format at line start: E####
+	if len(line) >= 5 && line[0] == 'E' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return true
 	}
 
 	// level=error format
@@ -3018,7 +3049,7 @@ func isErrorLog(line string) bool {
 		return true
 	}
 
-	// Enhanced patterns (case-insensitive)
+	// PRIORITY 3: Keyword patterns (only if no explicit level indicator present)
 	errorPatterns := []string{
 		"ERROR:",
 		"ERR=",
@@ -3043,43 +3074,55 @@ func isErrorLog(line string) bool {
 	return false
 }
 
-// isWarnLog detects WARN level logs in both bracketed and K8s formats
+// isWarnLog detects WARN level logs with explicit indicator priority
 func isWarnLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
-	// Enhanced warning patterns (case-insensitive) - synced with attention_signals.go
-	warnPatterns := []string{
-		"[WARN]",
-		"[WARNING]",
-		"WARNING:",
-		"WARN:",
+	// PRIORITY 1: Explicit WARN indicators
+	// Bracketed formats
+	if strings.Contains(lineUpper, "[WARN]") || strings.Contains(lineUpper, "[WARNING]") {
+		return true
+	}
+
+	// K8s format at line start: W#### (check first 5 chars only)
+	if len(line) >= 5 && line[0] == 'W' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return true
+	}
+
+	// Colon-based formats
+	if strings.Contains(lineUpper, "WARNING:") || strings.Contains(lineUpper, "WARN:") {
+		return true
+	}
+
+	// level=warn format
+	if strings.Contains(lineUpper, "LEVEL=WARN") || strings.Contains(lineUpper, "LEVEL=WARNING") {
+		return true
+	}
+
+	// PRIORITY 2: Keyword patterns (only if no explicit ERROR indicator)
+	if strings.Contains(lineUpper, "[ERROR]") {
+		return false
+	}
+	if len(line) >= 5 && line[0] == 'E' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return false
+	}
+
+	warnKeywords := []string{
 		"WARN=",
-		"LEVEL=WARN",
-		"LEVEL=WARNING",
 		"DEPRECATED",
 		"DEPRECATION",
 		"ALERT:",
 		"ALERT=",
 	}
 
-	for _, pattern := range warnPatterns {
+	for _, pattern := range warnKeywords {
 		if strings.Contains(lineUpper, pattern) {
 			return true
 		}
 	}
 
-	// K8s format: W1120, W0102, etc. (W followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'W' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				// Check if followed by space or colon
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
-	}
 	return false
 }
 
