@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -173,13 +174,29 @@ func (a *App) renderAttentionDashboard() string {
 
 	content := strings.Join(lines, "\n")
 
-	// Create bordered box for content
+	// Use viewport for scrollable content when expanded
+	contentHeight := a.height - 10 // Reserve space for header, summary, status
+
+	// Initialize or update viewport
+	if a.attentionViewport.Width == 0 {
+		a.attentionViewport = viewport.New(a.width-8, contentHeight)
+		a.attentionViewport.SetContent(content)
+	} else {
+		a.attentionViewport.Width = a.width - 8
+		a.attentionViewport.Height = contentHeight
+		a.attentionViewport.SetContent(content)
+	}
+
+	// Get scrollable viewport view
+	viewportContent := a.attentionViewport.View()
+
+	// Create bordered box around viewport
 	box := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(colorRed).
 		Padding(1, 2).
 		Width(a.width - 4).
-		Render(content)
+		Render(viewportContent)
 
 	// Build status with position indicator
 	var statusParts []string

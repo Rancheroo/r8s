@@ -822,6 +822,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// Update viewport if in attention dashboard view (for scrolling)
+	if a.currentView.viewType == ViewAttention && a.attentionViewport.Width > 0 {
+		newViewport, cmd := a.attentionViewport.Update(msg)
+		a.attentionViewport = newViewport
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+
 	return a, tea.Batch(cmds...)
 }
 
