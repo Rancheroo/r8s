@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-12-11 "Dashboard Scrolling & Smart Capping"
+
+### Added ✨
+- **Smart capping with expansion for Attention Dashboard**
+  - Default cap at top-20 most critical issues (sorted by severity)
+  - Press 'm' to toggle between capped and expanded (all items) view
+  - Position indicator shows "Showing X/Y" when items are capped
+  - Clear message "...and X more issues (press 'm' to show all)" displayed when capped
+  - Session-only preference (no persistence needed)
+  
+- **Enhanced navigation hotkeys**
+  - 'g' - Jump to first item (vim muscle memory)
+  - 'G' - Jump to last item (vim muscle memory)
+  - 'm' - Toggle dashboard expansion (capped ↔ all items)
+  - Smooth navigation through 200+ items without screen overflow
+
+### Fixed 🐛
+- **CRITICAL: Dashboard overflow with high --scan values**
+  - Root cause: --scan=500+ detected 80+ issues, all rendered at once causing screen overflow
+  - Dashboard would fill entire terminal height with no scrolling or pagination
+  - Solution: Smart cap at top-20 by default with toggle to see all
+  - Impact: High --scan values (500-1000) now usable without UX degradation
+
+### Use Cases
+- **Large bundles**: Use --scan=1000 confidently - dashboard stays clean with top-20 cap
+- **Power users**: Press 'm' to expand and see all detected issues
+- **Quick triage**: Default top-20 view focuses on most critical problems first
+
+### Technical
+- Added `attentionExpanded` boolean state field to App struct
+- Implemented `getDisplayedItems()` helper with capping logic
+- Added 'm', 'g', 'G' key bindings in attention dashboard navigation
+- Smart cursor reset when toggling between capped/expanded modes
+- Position indicator automatically updates based on displayed vs total count
+
+### Impact Summary
+- ✅ **--scan=1000 now usable** - previously caused dashboard overflow
+- ✅ **Clean default UX** - Top-20 most critical issues shown by default
+- ✅ **No data hidden** - Everything accessible via 'm' toggle
+- ✅ **Vim-style navigation** - g/G for jump-to-top/bottom feels natural
+- ✅ **Session simplicity** - No persistence needed, instant toggle
+
 ## [0.3.9] - 2025-12-10 "Tunable Scan Depth"
 
 ### Added ✨

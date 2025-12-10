@@ -4,28 +4,27 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ## ✅ Recently Completed
 
+### Dashboard Scrolling & Item Capping (v0.4.0)
+- **Status**: ✅ Shipped in v0.4.0
+- **Description**: Smart capping with expansion for high --scan values
+- **Impact**: Dashboard now handles 80+ issues gracefully without screen overflow
+- **Features**:
+  - Default cap at top-20 issues (sorted by severity)
+  - Press 'm' to toggle between capped/expanded view
+  - Press 'g/G' to jump to top/bottom of list
+  - Position indicator shows "Showing X/Y" when capped
+  - "...and X more (press 'm')" message when items hidden
+  - Smooth navigation through unlimited items
+- **Usage**: Works automatically with `--scan` flag at any value
+- **Result**: High --scan values (500-1000) now usable without UX degradation
+
 ### Tunable Scan Depth (v0.3.9)
-- **Status**: ✅ Shipped in v0.3.9 (with known limitation)
+- **Status**: ✅ Shipped in v0.3.9
 - **Description**: User-controllable scan depth via `--scan` flag
 - **Impact**: Users can now tune speed/accuracy trade-off based on bundle size
 - **Usage**: `r8s --scan 500 ./bundle/` (default: 200 lines)
-- **Known Limitation**: High --scan values (500+) detect too many issues, breaking dashboard UX with 80+ items filling screen. Dashboard needs scrolling implementation or smart capping.
 
-## 🎯 High Priority (Next Release - v0.4.0)
-
-### Dashboard Scrolling & Item Capping (URGENT)
-- **Priority**: HIGH
-- **Complexity**: Low-Medium
-- **Impact**: HIGH
-- **Description**: Fix dashboard usability when --scan finds 80+ issues
-- **Problem**: High --scan values (500-1000) detect more issues, creating 80+ dashboard items that fill entire screen and break UX. Navigation becomes impossible.
-- **Requirements**:
-  - Implement proper scrolling in Attention Dashboard (j/k should scroll through all items)
-  - OR: Cap at top-20 issues with "...and 66 more (press 'm' to see all)" indicator
-  - OR: Pagination (Page Up/Down to see more items)
-  - Smart default: Show top-20 critical, press key to expand to full list
-- **Triggered by**: User feedback on v0.3.9 --scan flag
-- **Workaround**: Use lower --scan values (50-200) until fixed
+## 🎯 High Priority (Next Release - v0.5.0)
 
 ### Smart Sorting by Error Count
 - **Priority**: Medium
@@ -37,16 +36,6 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Add sort toggle (by severity vs. by count)
   - Persist sort preference in config
 
-### Hotkeys for Quick Navigation
-- **Priority**: Medium  
-- **Complexity**: Low
-- **Impact**: High
-- **Description**: Global hotkeys to jump directly to highest error/warn pod
-- **Requirements**:
-  - `e` hotkey: Jump to pod with most errors
-  - `w` hotkey: Jump to pod with most warnings
-  - Works from any view (global binding)
-  - Visual indicator showing which pod would be selected
 
 ## 📋 Medium Priority (v0.4.0)
 

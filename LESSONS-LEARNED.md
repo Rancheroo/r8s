@@ -1052,3 +1052,88 @@ User feedback showed bundles are the #1 workflow. When clusters break, teams cap
 **Status**: Production ready, docs updated, ready to ship
 
 ---
+
+## v0.4.0 Development: Dashboard Scrolling & Smart Capping
+
+### December 11, 2025 - Scrolling Unlocks High --scan Values
+
+**Goal:** Fix dashboard overflow when --scan=500+ detects 80+ issues.
+
+**Lesson:** **Always audit for overflow edge cases before shipping**
+
+**Problem:** 
+- v0.3.9 shipped tunable --scan flag (great!)
+- High values (500-1000) detected 80+ issues (working as intended!)
+- Dashboard rendered ALL items at once - screen exploded with 80 lines
+- No scrolling, no pagination - just hope your terminal is tall enough
+
+**Why We Missed It:**
+- Tested with default --scan=200 (produces ~10-20 issues)
+- Never tested edge case of --scan=1000 on large bundle
+- Assumed current rendering would scale
+
+**The Fix (Smart Capping + Scrolling):**
+```go
+// Top-20 default cap with expansion
+const defaultDashboardCap = 20
+
+func (a *App) getDisplayedItems() []AttentionItem {
+    if a.attentionExpanded || len(a.attentionItems) <= defaultDashboardCap {
+        return a.attentionItems  // Show all
+    }
+    return a.attentionItems[:defaultDashboardCap]  // Capped
+}
+```
+
+**New Hotkeys:**
+- `m` - Toggle between capped (top-20) and expanded (all) view
+- `g` - Jump to first item
+- `G` - Jump to last item
+
+**UX Improvements:**
+- Position indicator: "Showing 20/86"
+- Capping message: "...and 66 more issues (press 'm' to show all)"
+- Cursor tracking ensures selected item always visible
+
+**Impact:**
+- ✅ --scan=1000 now usable without overflow
+- ✅ Default UX still clean (top-20 most critical)
+- ✅ Power users can expand to see all
+- ✅ Smooth navigation through 200+ items
+
+**Development Time:** ~30 minutes from plan to commit
+
+**Key Insights:**
+
+1. **Test your features at 10x scale** - If --scan goes to 1000, test with 1000
+2. **UI overflow is insidious** - Works fine at scale 10, explodes at scale 100
+3. **Smart defaults > configuration** - Cap by default, let users expand
+4. **Vim keys are intuitive** - g/G for top/bottom feels natural to TUI users
+
+**Pattern: Progressive Disclosure**
+- Show most important items by default (top-20)
+- Provide easy escape hatch to see everything (`m` key)
+- Indicate what's hidden with count ("...and 66 more")
+- Make expansion reversible (toggle, not one-way)
+
+**This Prevents:**
+- Screen-filling chaos when features work "too well"
+- Users feeling overwhelmed by data volume
+- Need to filter/paginate manually
+
+**Why This Approach Worked:**
+1. **Session-only** - No persistence needed, toggle is instant
+2. **Severity sorting** - Top-20 are most critical anyway
+3. **Clear messaging** - User knows items are hidden and how to see them
+4. **No regressions** - Enter still drills down, j/k still navigate
+
+**Lesson:** **When adding tunable parameters, always test at max values. Features that "work too well" can break UX in unexpected ways.**
+
+---
+
+**Date**: December 11, 2025 - v0.4.0 "Dashboard Scrolling & Smart Capping" Complete
+**Branch**: `implement-scroll-cap`
+**Tag**: `v0.4.0`
+**Status**: Production ready, unblocks high --scan usage
+
+---
