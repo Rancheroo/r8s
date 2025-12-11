@@ -1186,11 +1186,11 @@ func (a *App) updateTable() {
 			}
 
 			columns := []table.Column{
-				table.NewColumn("name", "NAME", 30),
-				table.NewColumn("issues", "ISSUES", 15),
-				table.NewColumn("state", "STATE", 12),
-				table.NewColumn("project", "PROJECT", 18),
-				table.NewColumn("created", "AGE", 10),
+				table.NewColumn("name", "NAME", 32),
+				table.NewColumn("issues", "ISSUES", 18),
+				table.NewColumn("state", "STATE", 10),
+				table.NewColumn("project", "PROJECT", 16),
+				table.NewColumn("created", "AGE", 8),
 			}
 
 			rows := []table.Row{}
