@@ -746,6 +746,69 @@ func SortPodsBySeverity(pods []rancher.Pod) []rancher.Pod {
 	return sorted
 }
 
+// NamespaceHealth tracks error/warning counts for a namespace
+type NamespaceHealth struct {
+	Errors   int
+	Warnings int
+	Total    int
+}
+
+// ComputeNamespaceHealth scans all pods and returns health stats per namespace
+func ComputeNamespaceHealth(ds datasource.DataSource, scanDepth int) map[string]NamespaceHealth {
+	health := make(map[string]NamespaceHealth)
+
+	if scanDepth <= 0 {
+		scanDepth = 200
+	}
+
+	// Get all pods across all namespaces
+	pods, err := ds.GetAllPods()
+	if err != nil {
+		return health
+	}
+
+	// Scan each pod and aggregate by namespace
+	for _, pod := range pods {
+		// Extract namespace
+		namespace := extractNamespace(pod.NamespaceID)
+		if namespace == "" {
+			namespace = "default"
+		}
+
+		// Try to get logs for this pod
+		logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+		if err != nil || len(logs) == 0 {
+			continue
+		}
+
+		// Limit scan to first N lines
+		scanLines := logs
+		if len(scanLines) > scanDepth {
+			scanLines = scanLines[:scanDepth]
+		}
+
+		// Count errors and warnings
+		errorCount := 0
+		warnCount := 0
+		for _, line := range scanLines {
+			if isErrorLog(line) {
+				errorCount++
+			} else if isWarnLog(line) {
+				warnCount++
+			}
+		}
+
+		// Accumulate to namespace total
+		stats := health[namespace]
+		stats.Errors += errorCount
+		stats.Warnings += warnCount
+		stats.Total += errorCount + warnCount
+		health[namespace] = stats
+	}
+
+	return health
+}
+
 // extractNamespace extracts namespace from NamespaceID (handles "cluster:namespace" format)
 func extractNamespace(namespaceID string) string {
 	if strings.Contains(namespaceID, ":") {

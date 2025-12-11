@@ -1161,15 +1161,40 @@ func (a *App) updateTable() {
 
 	case ViewNamespaces:
 		if len(a.namespaces) > 0 {
+			// Compute namespace health (scan all pods for E/W counts)
+			scanDepth := a.config.ScanDepth
+			if scanDepth <= 0 {
+				scanDepth = 200
+			}
+			nsHealth := ComputeNamespaceHealth(a.dataSource, scanDepth)
+
+			// Sort namespaces by total issue count (worst first)
+			sortedNS := make([]rancher.Namespace, len(a.namespaces))
+			copy(sortedNS, a.namespaces)
+
+			// Bubble sort by total issues descending
+			for i := 0; i < len(sortedNS); i++ {
+				for j := i + 1; j < len(sortedNS); j++ {
+					health1 := nsHealth[sortedNS[i].Name]
+					health2 := nsHealth[sortedNS[j].Name]
+
+					// Sort descending (highest count first)
+					if health1.Total < health2.Total {
+						sortedNS[i], sortedNS[j] = sortedNS[j], sortedNS[i]
+					}
+				}
+			}
+
 			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("state", "STATE", 15),
-				table.NewColumn("project", "PROJECT", 20),
-				table.NewColumn("created", "AGE", 15),
+				table.NewColumn("name", "NAME", 30),
+				table.NewColumn("issues", "ISSUES", 15),
+				table.NewColumn("state", "STATE", 12),
+				table.NewColumn("project", "PROJECT", 18),
+				table.NewColumn("created", "AGE", 10),
 			}
 
 			rows := []table.Row{}
-			for _, ns := range a.namespaces {
+			for _, ns := range sortedNS {
 				created := "N/A"
 				if !ns.Created.IsZero() {
 					days := int(time.Since(ns.Created).Hours() / 24)
@@ -1185,8 +1210,28 @@ func (a *App) updateTable() {
 					}
 				}
 
+				// Format ISSUES column with color coding
+				health := nsHealth[ns.Name]
+				issuesDisplay := "✅ Clean"
+
+				if health.Total > 0 {
+					// Color coding logic:
+					// Red (🔥): >50 errors
+					// Yellow (⚠️): >20 warnings OR 1-50 errors
+					// Green: Minor issues
+					emoji := "✅"
+					if health.Errors > 50 {
+						emoji = "🔥"
+					} else if health.Warnings > 20 || health.Errors > 0 {
+						emoji = "⚠️"
+					}
+
+					issuesDisplay = fmt.Sprintf("%s %dE/%dW", emoji, health.Errors, health.Warnings)
+				}
+
 				rows = append(rows, table.NewRow(table.RowData{
 					"name":    ns.Name,
+					"issues":  issuesDisplay,
 					"state":   ns.State,
 					"project": ns.ProjectID,
 					"created": created,
