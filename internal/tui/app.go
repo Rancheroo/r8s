@@ -1208,6 +1208,9 @@ func (a *App) updateTable() {
 
 	case ViewPods:
 		if len(a.pods) > 0 {
+			// Pre-populate cache with E/W counts for sorting
+			a.populatePodCounts()
+
 			// Apply sorting based on current sort mode
 			sortMode, exists := a.sortModes[ViewPods]
 			if !exists {

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -646,19 +647,82 @@ func SortPodsByCount(pods []rancher.Pod, counts map[string]PodCounts) []rancher.
 
 // SortPodsByName sorts pods alphabetically by name
 func SortPodsByName(pods []rancher.Pod) []rancher.Pod {
-	// Make a copy to avoid modifying original
 	sorted := make([]rancher.Pod, len(pods))
 	copy(sorted, pods)
 
-	for i := 0; i < len(sorted); i++ {
-		for j := i + 1; j < len(sorted); j++ {
-			if sorted[i].Name > sorted[j].Name {
-				sorted[i], sorted[j] = sorted[j], sorted[i]
-			}
-		}
-	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Name < sorted[j].Name
+	})
 
 	return sorted
+}
+
+// populatePodCounts scans all pods and populates the error/warning count cache
+// This is called before sorting to ensure the cache is fresh
+func (a *App) populatePodCounts() {
+	if a.dataSource == nil {
+		return
+	}
+
+	// Get scan depth from config
+	scanDepth := a.config.ScanDepth
+	if scanDepth <= 0 {
+		scanDepth = 200
+	}
+
+	// Scan each pod and cache counts
+	for _, pod := range a.pods {
+		// Extract namespace name
+		namespaceName := "default"
+		if pod.NamespaceID != "" {
+			if strings.Contains(pod.NamespaceID, ":") {
+				parts := strings.Split(pod.NamespaceID, ":")
+				if len(parts) > 1 {
+					namespaceName = parts[1]
+				}
+			} else {
+				namespaceName = pod.NamespaceID
+			}
+		}
+
+		// Create cache key
+		key := namespaceName + "/" + pod.Name
+
+		// Skip if already cached (performance optimization)
+		if _, exists := a.cachedPodCounts[key]; exists {
+			continue
+		}
+
+		// Fetch and scan logs
+		logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
+		if err != nil || len(logs) == 0 {
+			continue
+		}
+
+		// Limit scan to first N lines
+		scanLines := logs
+		if len(scanLines) > scanDepth {
+			scanLines = scanLines[:scanDepth]
+		}
+
+		// Count errors and warnings
+		errorCount := 0
+		warnCount := 0
+		for _, line := range scanLines {
+			if isErrorLog(line) {
+				errorCount++
+			} else if isWarnLog(line) {
+				warnCount++
+			}
+		}
+
+		// Store in cache
+		a.cachedPodCounts[key] = PodCounts{
+			Errors:   errorCount,
+			Warnings: warnCount,
+			Total:    errorCount + warnCount,
+		}
+	}
 }
 
 // SortPodsBySeverity sorts pods by state severity (errors first, then warnings, then ok)
