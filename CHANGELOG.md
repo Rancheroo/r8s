@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-12-11 "Smart Sorting"
+
+### Added ✨
+- **Smart Sorting for Dashboard and Classic Pod List**
+  - Default sort: Highest total ERR+WARN count descending (worst offenders at top)
+  - Toggle with 's' key: Dashboard cycles Count → Severity → Name, Pods toggle Count ↔ Name
+  - Per-view sort state preserved during session
+  - Status bar shows current sort mode: "Sort: Count ▼" / "Sort: Name" / "Sort: Severity"
+  - Cached pod E/W counts for instant re-sorting (no log re-scanning)
+
+- **W/E Column in Classic Pod List**
+  - Every pod row shows live "127E/89W" counts (or "-" if no issues)
+  - Format: "XE/YW" (errors first for quick scanning)
+  - Consistent with dashboard detection (same scan depth and patterns)
+  - Enables quick issue identification without entering logs
+
+### Technical
+- Added `SortMode` enum (Count, Severity, Name) in attention_signals.go
+- Implemented `SortPodsByCount()`, `SortPodsBySeverity()`, `SortPodsByName()`
+- Added `populatePodCounts()` for efficient E/W count caching
+- Per-view sort state tracking in `sortModes map[ViewType]SortMode`
+- Dashboard sorting applied in `renderAttentionDashboard()`
+- Pod view sorting applied in `updateTable()` for ViewPods case
+- 's' key handler with view-specific behavior
+
+### Impact Summary
+- ✅ **Instant triage** - Worst pods always visible at top of list
+- ✅ **Flexible views** - Toggle between count-based and alphabetical sorting
+- ✅ **Zero latency** - Cached counts enable instant re-sort
+- ✅ **Consistent UX** - Same sorting logic across dashboard and classic views
+
 ## [0.4.0] - 2025-12-11 "Dashboard Scrolling & Smart Capping"
 
 ### Added ✨
