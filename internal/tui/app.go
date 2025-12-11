@@ -37,6 +37,36 @@ func safeRowString(rowData table.RowData, key string) string {
 	return ""
 }
 
+// formatCount formats large numbers with K/M/B abbreviation for display
+// Examples: 999 → "999", 1500 → "1.5K", 2500000 → "2.5M"
+func formatCount(count int) string {
+	if count < 1000 {
+		return fmt.Sprintf("%d", count)
+	}
+	if count < 1000000 {
+		// Format as K (thousands)
+		k := float64(count) / 1000.0
+		if k < 10 {
+			return fmt.Sprintf("%.1fK", k)
+		}
+		return fmt.Sprintf("%dK", int(k))
+	}
+	if count < 1000000000 {
+		// Format as M (millions)
+		m := float64(count) / 1000000.0
+		if m < 10 {
+			return fmt.Sprintf("%.1fM", m)
+		}
+		return fmt.Sprintf("%dM", int(m))
+	}
+	// Format as B (billions)
+	b := float64(count) / 1000000000.0
+	if b < 10 {
+		return fmt.Sprintf("%.1fB", b)
+	}
+	return fmt.Sprintf("%dB", int(b))
+}
+
 // ViewType represents different view types
 type ViewType int
 
@@ -1226,7 +1256,10 @@ func (a *App) updateTable() {
 						emoji = "⚠️"
 					}
 
-					issuesDisplay = fmt.Sprintf("%s %dE/%dW", emoji, health.Errors, health.Warnings)
+					// Format with K/M abbreviation for large numbers
+					errStr := formatCount(health.Errors)
+					warnStr := formatCount(health.Warnings)
+					issuesDisplay = fmt.Sprintf("%s %sE/%sW", emoji, errStr, warnStr)
 				}
 
 				rows = append(rows, table.NewRow(table.RowData{
