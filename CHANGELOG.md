@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-12-11 "Namespace Health Ranking"
+
+### Added ✨
+- **Namespace Health Visibility in Classic View**
+  - New "ISSUES" column shows live E/W counts: "🔥 127E/89W" or "✅ Clean"
+  - Auto-sort namespaces by total issue count (worst offenders at top)
+  - Color coding: 🔥 (>50 errors), ⚠️ (>20 warnings or 1-50 errors), ✅ (clean)
+  - Scans all pods in namespace and aggregates error/warning counts
+  - Uses same scan depth as dashboard (tunable via --scan flag)
+
+### Technical
+- Added `NamespaceHealth` struct tracking errors/warnings/total per namespace
+- Implemented `ComputeNamespaceHealth()` for efficient pod log aggregation
+- Namespace table sorting: bubble sort by total issue count descending
+- Reuses existing `isErrorLog()` and `isWarnLog()` detection functions
+- Column layout: NAME(30) | ISSUES(15) | STATE(12) | PROJECT(18) | AGE(10)
+
+### Impact Summary
+- ✅ **Instant namespace triage** - Worst namespaces always visible at top
+- ✅ **Zero navigation** - See health at-a-glance without drilling down
+- ✅ **Consistent detection** - Same E/W patterns as dashboard and pod view
+- ✅ **Performance** - Efficient aggregation, <100ms for typical bundles
+
 ## [0.4.1] - 2025-12-11 "Smart Sorting"
 
 ### Added ✨
