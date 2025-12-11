@@ -135,6 +135,11 @@ type App struct {
 	expandedItems     map[int]bool    // Which collapsed event items are expanded
 	subCursor         int             // Selected pod index within expanded event (-1 = not in sub-nav)
 
+	// Sorting state
+	sortMode        SortMode              // Current sort mode (global default)
+	sortModes       map[ViewType]SortMode // Per-view sort mode
+	cachedPodCounts map[string]PodCounts  // Cached E/W counts (key: "namespace/podname")
+
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
 }
@@ -201,13 +206,16 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	initialView := ViewContext{viewType: ViewAttention}
 
 	return &App{
-		config:      cfg,
-		dataSource:  ds,
-		offlineMode: offlineMode,
-		bundleMode:  bundleMode,
-		bundlePath:  bundlePath,
-		loading:     true,
-		currentView: initialView,
+		config:          cfg,
+		dataSource:      ds,
+		offlineMode:     offlineMode,
+		bundleMode:      bundleMode,
+		bundlePath:      bundlePath,
+		loading:         true,
+		currentView:     initialView,
+		sortMode:        SortByCount,                 // Default to count-based sorting
+		sortModes:       make(map[ViewType]SortMode), // Per-view sort state
+		cachedPodCounts: make(map[string]PodCounts),  // Pod E/W count cache
 	}
 }
 
@@ -703,6 +711,11 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Re-render with new wrap setting
 				a.logViewport.SetContent(a.renderLogsWithColors())
 				return a, nil
+			}
+		case "s":
+			// Cycle sort mode (works in Dashboard, Pods, Namespaces views)
+			if a.currentView.viewType == ViewAttention || a.currentView.viewType == ViewPods || a.currentView.viewType == ViewNamespaces {
+				return a, a.cycleSortMode()
 			}
 		}
 
@@ -2904,6 +2917,25 @@ func (a *App) restoreSelection() {
 	// 3. Using a different table library
 	// For now, selection resets to top (simple behavior)
 	a.savedRowName = "" // Clear any saved state
+}
+
+// cycleSortMode cycles through sort modes: Count → Severity → Name → Count
+func (a *App) cycleSortMode() tea.Cmd {
+	// Get current sort mode for this view (default to global if not set)
+	currentMode, exists := a.sortModes[a.currentView.viewType]
+	if !exists {
+		currentMode = a.sortMode // Use global default
+	}
+
+	// Cycle to next mode
+	nextMode := (currentMode + 1) % 3
+
+	// Store per-view preference
+	a.sortModes[a.currentView.viewType] = nextMode
+
+	// Trigger refresh to re-sort
+	a.loading = true
+	return a.refreshCurrentView()
 }
 
 // isNamespaceResourceView returns true if the current view is a namespace-scoped resource view

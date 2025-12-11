@@ -17,6 +17,36 @@ const (
 	SeverityInfo     AttentionSeverity = 2
 )
 
+// SortMode defines how attention items should be sorted
+type SortMode int
+
+const (
+	SortByCount    SortMode = iota // Default: highest ERR+WARN total descending
+	SortBySeverity                 // Current behavior (Critical→Warning→Info)
+	SortByName                     // Alphabetical by title
+)
+
+// String returns human-readable sort mode name for status bar
+func (s SortMode) String() string {
+	switch s {
+	case SortByCount:
+		return "Count ▼"
+	case SortBySeverity:
+		return "Severity"
+	case SortByName:
+		return "Name"
+	default:
+		return "Unknown"
+	}
+}
+
+// PodCounts holds cached error/warning counts for a pod
+type PodCounts struct {
+	Errors   int
+	Warnings int
+	Total    int
+}
+
 // AttentionItem represents a single issue requiring attention
 type AttentionItem struct {
 	Severity     AttentionSeverity
@@ -541,4 +571,44 @@ func sortAttentionItems(items []AttentionItem) {
 			}
 		}
 	}
+}
+
+// sortItemsByCount sorts items by total error+warning count (descending)
+func sortItemsByCount(items []AttentionItem) {
+	for i := 0; i < len(items); i++ {
+		for j := i + 1; j < len(items); j++ {
+			if items[i].Count < items[j].Count {
+				items[i], items[j] = items[j], items[i]
+			}
+		}
+	}
+}
+
+// sortItemsByName sorts items alphabetically by title
+func sortItemsByName(items []AttentionItem) {
+	for i := 0; i < len(items); i++ {
+		for j := i + 1; j < len(items); j++ {
+			if items[i].Title > items[j].Title {
+				items[i], items[j] = items[j], items[i]
+			}
+		}
+	}
+}
+
+// GetSortedAttentionItems returns items sorted by the specified mode
+func GetSortedAttentionItems(items []AttentionItem, mode SortMode) []AttentionItem {
+	// Make a copy to avoid modifying original
+	sorted := make([]AttentionItem, len(items))
+	copy(sorted, items)
+
+	switch mode {
+	case SortByCount:
+		sortItemsByCount(sorted)
+	case SortBySeverity:
+		sortAttentionItems(sorted)
+	case SortByName:
+		sortItemsByName(sorted)
+	}
+
+	return sorted
 }
