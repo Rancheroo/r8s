@@ -1208,6 +1208,23 @@ func (a *App) updateTable() {
 
 	case ViewPods:
 		if len(a.pods) > 0 {
+			// Apply sorting based on current sort mode
+			sortMode, exists := a.sortModes[ViewPods]
+			if !exists {
+				sortMode = a.sortMode // Use global default
+			}
+
+			// Sort pods according to mode
+			sortedPods := a.pods
+			switch sortMode {
+			case SortByCount:
+				sortedPods = SortPodsByCount(a.pods, a.cachedPodCounts)
+			case SortBySeverity:
+				sortedPods = SortPodsBySeverity(a.pods)
+			case SortByName:
+				sortedPods = SortPodsByName(a.pods)
+			}
+
 			columns := []table.Column{
 				table.NewColumn("name", "NAME", 28),
 				table.NewColumn("namespace", "NAMESPACE", 18),
@@ -1217,7 +1234,7 @@ func (a *App) updateTable() {
 			}
 
 			rows := []table.Row{}
-			for _, pod := range a.pods {
+			for _, pod := range sortedPods {
 				namespaceName := "default"
 				if pod.NamespaceID != "" {
 					if strings.Contains(pod.NamespaceID, ":") {
@@ -1566,7 +1583,12 @@ func (a *App) getStatusText() string {
 
 	case ViewPods:
 		count := len(a.pods)
-		status = fmt.Sprintf(" %s%d pods | 'l'=logs 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		// Add sort mode indicator
+		sortMode, exists := a.sortModes[ViewPods]
+		if !exists {
+			sortMode = a.sortMode
+		}
+		status = fmt.Sprintf(" %s%d pods | Sort: %s | 's'=sort 'l'=logs 'd'=describe '1/2/3'=switch | '?'=help 'q'=quit ", offlinePrefix, count, sortMode.String())
 
 	case ViewDeployments:
 		count := len(a.deployments)
