@@ -102,10 +102,11 @@ var (
 	logDebugStyle = lipgloss.NewStyle().
 			Foreground(colorGray)
 
-	// Search match highlighting
+	// Search match highlighting - high contrast for visibility
 	searchMatchStyle = lipgloss.NewStyle().
-				Background(colorYellow).
-				Foreground(lipgloss.Color("0")) // Black text on yellow background
+				Background(lipgloss.Color("226")). // Bright yellow (#FFFF00)
+				Foreground(lipgloss.Color("0")).   // Black text
+				Bold(true)                         // Bold for extra visibility
 
 	// Help screen style
 	helpStyle = lipgloss.NewStyle().
