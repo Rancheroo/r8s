@@ -13,6 +13,7 @@ const defaultDashboardCap = 20
 
 // getDisplayedItems returns items to display based on expansion state and cap
 // Items are sorted according to the current sort mode before display
+// CRITICAL GUARANTEE: ALL critical severity items are ALWAYS included, even if beyond cap
 func (a *App) getDisplayedItems() []AttentionItem {
 	// Get current sort mode for this view
 	sortMode, exists := a.sortModes[ViewAttention]
@@ -27,8 +28,27 @@ func (a *App) getDisplayedItems() []AttentionItem {
 	if a.attentionExpanded || len(items) <= defaultDashboardCap {
 		return items
 	}
-	// Otherwise, show top N items (capped)
-	return items[:defaultDashboardCap]
+
+	// CRITICAL-SAFE CAPPING: Ensure ALL criticals are included
+	// Dynamic cap expansion if needed to show all critical severity items
+	cap := defaultDashboardCap
+
+	// Count criticals in the full sorted list
+	criticalCount := 0
+	lastCriticalPosition := -1
+	for i, item := range items {
+		if item.Severity == SeverityCritical {
+			criticalCount++
+			lastCriticalPosition = i
+		}
+	}
+
+	// If any critical is beyond the cap, expand the cap to include it
+	if lastCriticalPosition >= cap {
+		cap = lastCriticalPosition + 1
+	}
+
+	return items[:cap]
 }
 
 // ensureCursorVisible scrolls viewport to keep cursor visible

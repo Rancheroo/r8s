@@ -3486,6 +3486,7 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 }
 
 // renderLogsWithColors renders logs with color coding and search highlighting
+// FIXED: Colors are now applied AFTER wrapping to prevent ANSI escape code splits
 func (a *App) renderLogsWithColors() string {
 	visibleLogs := a.getVisibleLogs()
 
@@ -3498,7 +3499,8 @@ func (a *App) renderLogsWithColors() string {
 		return strings.Join(coloredLines, "\n")
 	}
 
-	// Word wrap enabled - wrap long lines to viewport width
+	// Word wrap enabled - wrap FIRST, then colorize EACH segment
+	// This prevents ANSI escape codes from being split across wrapped lines
 	var wrappedLines []string
 	wrapWidth := a.logViewport.Width
 	if wrapWidth <= 0 {
@@ -3506,21 +3508,46 @@ func (a *App) renderLogsWithColors() string {
 	}
 
 	for i, line := range visibleLogs {
-		colorizedLine := a.colorizeLogLine(line, i)
+		// Check if this is the current search match
+		isCurrentMatch := false
+		if len(a.searchMatches) > 0 && a.currentMatch >= 0 && a.currentMatch < len(a.searchMatches) {
+			if i == a.searchMatches[a.currentMatch] {
+				isCurrentMatch = true
+			}
+		}
 
-		// Simple wrapping: break at wrapWidth
 		if len(line) <= wrapWidth {
-			wrappedLines = append(wrappedLines, colorizedLine)
+			// No wrap needed - colorize entire line
+			wrappedLines = append(wrappedLines, a.colorizeLogLine(line, i))
 		} else {
-			// Wrap line into multiple lines
-			for len(line) > 0 {
-				if len(line) <= wrapWidth {
-					wrappedLines = append(wrappedLines, a.colorizeLogLine(line, i))
-					break
+			// Wrap raw text into segments FIRST
+			remainingLine := line
+			for len(remainingLine) > 0 {
+				// Determine segment length
+				segmentEnd := wrapWidth
+				if segmentEnd > len(remainingLine) {
+					segmentEnd = len(remainingLine)
 				}
-				// Take wrapWidth characters
-				wrappedLines = append(wrappedLines, a.colorizeLogLine(line[:wrapWidth], i))
-				line = line[wrapWidth:]
+
+				segment := remainingLine[:segmentEnd]
+
+				// Apply color styling to EACH wrapped segment
+				// This preserves colors across all wrapped lines
+				if isCurrentMatch {
+					wrappedLines = append(wrappedLines, searchMatchStyle.Render(segment))
+				} else if isErrorLog(line) {
+					wrappedLines = append(wrappedLines, logErrorStyle.Render(segment))
+				} else if isWarnLog(line) {
+					wrappedLines = append(wrappedLines, logWarnStyle.Render(segment))
+				} else if isInfoLog(line) {
+					wrappedLines = append(wrappedLines, logInfoStyle.Render(segment))
+				} else if isDebugLog(line) {
+					wrappedLines = append(wrappedLines, logDebugStyle.Render(segment))
+				} else {
+					wrappedLines = append(wrappedLines, segment)
+				}
+
+				remainingLine = remainingLine[segmentEnd:]
 			}
 		}
 	}
