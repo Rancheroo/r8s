@@ -713,9 +713,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, nil
 			}
 		case "s":
-			// Cycle sort mode (works in Dashboard, Pods, Namespaces views)
-			if a.currentView.viewType == ViewAttention || a.currentView.viewType == ViewPods || a.currentView.viewType == ViewNamespaces {
+			// Cycle sort mode
+			if a.currentView.viewType == ViewAttention {
+				// Dashboard: 3-mode cycle (Count → Severity → Name)
 				return a, a.cycleSortMode()
+			} else if a.currentView.viewType == ViewPods {
+				// Classic Pod view: 2-mode toggle (Count ↔ Name)
+				return a, a.togglePodSortMode()
 			}
 		}
 
@@ -2944,7 +2948,7 @@ func (a *App) restoreSelection() {
 	a.savedRowName = "" // Clear any saved state
 }
 
-// cycleSortMode cycles through sort modes: Count → Severity → Name → Count
+// cycleSortMode cycles through sort modes: Count → Severity → Name → Count (Dashboard)
 func (a *App) cycleSortMode() tea.Cmd {
 	// Get current sort mode for this view (default to global if not set)
 	currentMode, exists := a.sortModes[a.currentView.viewType]
@@ -2957,6 +2961,30 @@ func (a *App) cycleSortMode() tea.Cmd {
 
 	// Store per-view preference
 	a.sortModes[a.currentView.viewType] = nextMode
+
+	// Trigger refresh to re-sort
+	a.loading = true
+	return a.refreshCurrentView()
+}
+
+// togglePodSortMode toggles between Count ↔ Name (Pod view only)
+func (a *App) togglePodSortMode() tea.Cmd {
+	// Get current sort mode for pod view
+	currentMode, exists := a.sortModes[ViewPods]
+	if !exists {
+		currentMode = a.sortMode // Use global default
+	}
+
+	// Toggle: Count ↔ Name (skip Severity for pod view)
+	var nextMode SortMode
+	if currentMode == SortByCount {
+		nextMode = SortByName
+	} else {
+		nextMode = SortByCount
+	}
+
+	// Store per-view preference
+	a.sortModes[ViewPods] = nextMode
 
 	// Trigger refresh to re-sort
 	a.loading = true
