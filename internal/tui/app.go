@@ -135,6 +135,11 @@ type App struct {
 	expandedItems     map[int]bool    // Which collapsed event items are expanded
 	subCursor         int             // Selected pod index within expanded event (-1 = not in sub-nav)
 
+	// Sorting state
+	sortMode        SortMode              // Current sort mode (global default)
+	sortModes       map[ViewType]SortMode // Per-view sort mode
+	cachedPodCounts map[string]PodCounts  // Cached E/W counts (key: "namespace/podname")
+
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
 }
@@ -201,13 +206,16 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	initialView := ViewContext{viewType: ViewAttention}
 
 	return &App{
-		config:      cfg,
-		dataSource:  ds,
-		offlineMode: offlineMode,
-		bundleMode:  bundleMode,
-		bundlePath:  bundlePath,
-		loading:     true,
-		currentView: initialView,
+		config:          cfg,
+		dataSource:      ds,
+		offlineMode:     offlineMode,
+		bundleMode:      bundleMode,
+		bundlePath:      bundlePath,
+		loading:         true,
+		currentView:     initialView,
+		sortMode:        SortByCount,                 // Default to count-based sorting
+		sortModes:       make(map[ViewType]SortMode), // Per-view sort state
+		cachedPodCounts: make(map[string]PodCounts),  // Pod E/W count cache
 	}
 }
 
@@ -704,6 +712,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.logViewport.SetContent(a.renderLogsWithColors())
 				return a, nil
 			}
+		case "s":
+			// Cycle sort mode
+			if a.currentView.viewType == ViewAttention {
+				// Dashboard: 3-mode cycle (Count → Severity → Name)
+				return a, a.cycleSortMode()
+			} else if a.currentView.viewType == ViewPods {
+				// Classic Pod view: 2-mode toggle (Count ↔ Name)
+				return a, a.togglePodSortMode()
+			}
 		}
 
 	case tea.WindowSizeMsg:
@@ -1195,6 +1212,26 @@ func (a *App) updateTable() {
 
 	case ViewPods:
 		if len(a.pods) > 0 {
+			// Pre-populate cache with E/W counts for sorting
+			a.populatePodCounts()
+
+			// Apply sorting based on current sort mode
+			sortMode, exists := a.sortModes[ViewPods]
+			if !exists {
+				sortMode = a.sortMode // Use global default
+			}
+
+			// Sort pods according to mode
+			sortedPods := a.pods
+			switch sortMode {
+			case SortByCount:
+				sortedPods = SortPodsByCount(a.pods, a.cachedPodCounts)
+			case SortBySeverity:
+				sortedPods = SortPodsBySeverity(a.pods)
+			case SortByName:
+				sortedPods = SortPodsByName(a.pods)
+			}
+
 			columns := []table.Column{
 				table.NewColumn("name", "NAME", 28),
 				table.NewColumn("namespace", "NAMESPACE", 18),
@@ -1204,7 +1241,7 @@ func (a *App) updateTable() {
 			}
 
 			rows := []table.Row{}
-			for _, pod := range a.pods {
+			for _, pod := range sortedPods {
 				namespaceName := "default"
 				if pod.NamespaceID != "" {
 					if strings.Contains(pod.NamespaceID, ":") {
@@ -1553,7 +1590,12 @@ func (a *App) getStatusText() string {
 
 	case ViewPods:
 		count := len(a.pods)
-		status = fmt.Sprintf(" %s%d pods | 'l'=logs 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		// Add sort mode indicator
+		sortMode, exists := a.sortModes[ViewPods]
+		if !exists {
+			sortMode = a.sortMode
+		}
+		status = fmt.Sprintf(" %s%d pods | Sort: %s | 's'=sort 'l'=logs 'd'=describe '1/2/3'=switch | '?'=help 'q'=quit ", offlinePrefix, count, sortMode.String())
 
 	case ViewDeployments:
 		count := len(a.deployments)
@@ -2904,6 +2946,49 @@ func (a *App) restoreSelection() {
 	// 3. Using a different table library
 	// For now, selection resets to top (simple behavior)
 	a.savedRowName = "" // Clear any saved state
+}
+
+// cycleSortMode cycles through sort modes: Count → Severity → Name → Count (Dashboard)
+func (a *App) cycleSortMode() tea.Cmd {
+	// Get current sort mode for this view (default to global if not set)
+	currentMode, exists := a.sortModes[a.currentView.viewType]
+	if !exists {
+		currentMode = a.sortMode // Use global default
+	}
+
+	// Cycle to next mode
+	nextMode := (currentMode + 1) % 3
+
+	// Store per-view preference
+	a.sortModes[a.currentView.viewType] = nextMode
+
+	// Trigger refresh to re-sort
+	a.loading = true
+	return a.refreshCurrentView()
+}
+
+// togglePodSortMode toggles between Count ↔ Name (Pod view only)
+func (a *App) togglePodSortMode() tea.Cmd {
+	// Get current sort mode for pod view
+	currentMode, exists := a.sortModes[ViewPods]
+	if !exists {
+		currentMode = a.sortMode // Use global default
+	}
+
+	// Toggle: Count ↔ Name (skip Severity for pod view)
+	var nextMode SortMode
+	if currentMode == SortByCount {
+		nextMode = SortByName
+	} else {
+		nextMode = SortByCount
+	}
+
+	// Store per-view preference
+	a.sortModes[ViewPods] = nextMode
+
+	// Trigger refresh to re-sort
+	a.loading = true
+	return a.refreshCurrentView()
 }
 
 // isNamespaceResourceView returns true if the current view is a namespace-scoped resource view

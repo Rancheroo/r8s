@@ -2,10 +2,12 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/Rancheroo/r8s/internal/datasource"
+	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
 // AttentionSeverity represents the severity level of an attention item
@@ -16,6 +18,36 @@ const (
 	SeverityWarning  AttentionSeverity = 1
 	SeverityInfo     AttentionSeverity = 2
 )
+
+// SortMode defines how attention items should be sorted
+type SortMode int
+
+const (
+	SortByCount    SortMode = iota // Default: highest ERR+WARN total descending
+	SortBySeverity                 // Current behavior (Critical→Warning→Info)
+	SortByName                     // Alphabetical by title
+)
+
+// String returns human-readable sort mode name for status bar
+func (s SortMode) String() string {
+	switch s {
+	case SortByCount:
+		return "Count ▼"
+	case SortBySeverity:
+		return "Severity"
+	case SortByName:
+		return "Name"
+	default:
+		return "Unknown"
+	}
+}
+
+// PodCounts holds cached error/warning counts for a pod
+type PodCounts struct {
+	Errors   int
+	Warnings int
+	Total    int
+}
 
 // AttentionItem represents a single issue requiring attention
 type AttentionItem struct {
@@ -541,4 +573,216 @@ func sortAttentionItems(items []AttentionItem) {
 			}
 		}
 	}
+}
+
+// sortItemsByCount sorts items by total error+warning count (descending)
+func sortItemsByCount(items []AttentionItem) {
+	for i := 0; i < len(items); i++ {
+		for j := i + 1; j < len(items); j++ {
+			if items[i].Count < items[j].Count {
+				items[i], items[j] = items[j], items[i]
+			}
+		}
+	}
+}
+
+// sortItemsByName sorts items alphabetically by title
+func sortItemsByName(items []AttentionItem) {
+	for i := 0; i < len(items); i++ {
+		for j := i + 1; j < len(items); j++ {
+			if items[i].Title > items[j].Title {
+				items[i], items[j] = items[j], items[i]
+			}
+		}
+	}
+}
+
+// GetSortedAttentionItems returns items sorted by the specified mode
+func GetSortedAttentionItems(items []AttentionItem, mode SortMode) []AttentionItem {
+	// Make a copy to avoid modifying original
+	sorted := make([]AttentionItem, len(items))
+	copy(sorted, items)
+
+	switch mode {
+	case SortByCount:
+		sortItemsByCount(sorted)
+	case SortBySeverity:
+		sortAttentionItems(sorted)
+	case SortByName:
+		sortItemsByName(sorted)
+	}
+
+	return sorted
+}
+
+// SortPodsByCount sorts pods by their E/W count (descending)
+// Note: This is a simplified version that will be enhanced with actual counts from cache
+func SortPodsByCount(pods []rancher.Pod, counts map[string]PodCounts) []rancher.Pod {
+	// Make a copy to avoid modifying original
+	sorted := make([]rancher.Pod, len(pods))
+	copy(sorted, pods)
+
+	// Bubble sort by count
+	for i := 0; i < len(sorted); i++ {
+		for j := i + 1; j < len(sorted); j++ {
+			// Extract namespace from NamespaceID
+			ns1 := extractNamespace(sorted[i].NamespaceID)
+			ns2 := extractNamespace(sorted[j].NamespaceID)
+
+			key1 := ns1 + "/" + sorted[i].Name
+			key2 := ns2 + "/" + sorted[j].Name
+
+			count1 := counts[key1].Total
+			count2 := counts[key2].Total
+
+			// Sort descending (highest count first)
+			if count1 < count2 {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			}
+		}
+	}
+
+	return sorted
+}
+
+// SortPodsByName sorts pods alphabetically by name
+func SortPodsByName(pods []rancher.Pod) []rancher.Pod {
+	sorted := make([]rancher.Pod, len(pods))
+	copy(sorted, pods)
+
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Name < sorted[j].Name
+	})
+
+	return sorted
+}
+
+// populatePodCounts scans all pods and populates the error/warning count cache
+// This is called before sorting to ensure the cache is fresh
+func (a *App) populatePodCounts() {
+	if a.dataSource == nil {
+		return
+	}
+
+	// Get scan depth from config
+	scanDepth := a.config.ScanDepth
+	if scanDepth <= 0 {
+		scanDepth = 200
+	}
+
+	// Scan each pod and cache counts
+	for _, pod := range a.pods {
+		// Extract namespace name
+		namespaceName := "default"
+		if pod.NamespaceID != "" {
+			if strings.Contains(pod.NamespaceID, ":") {
+				parts := strings.Split(pod.NamespaceID, ":")
+				if len(parts) > 1 {
+					namespaceName = parts[1]
+				}
+			} else {
+				namespaceName = pod.NamespaceID
+			}
+		}
+
+		// Create cache key
+		key := namespaceName + "/" + pod.Name
+
+		// Skip if already cached (performance optimization)
+		if _, exists := a.cachedPodCounts[key]; exists {
+			continue
+		}
+
+		// Fetch and scan logs
+		logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
+		if err != nil || len(logs) == 0 {
+			continue
+		}
+
+		// Limit scan to first N lines
+		scanLines := logs
+		if len(scanLines) > scanDepth {
+			scanLines = scanLines[:scanDepth]
+		}
+
+		// Count errors and warnings
+		errorCount := 0
+		warnCount := 0
+		for _, line := range scanLines {
+			if isErrorLog(line) {
+				errorCount++
+			} else if isWarnLog(line) {
+				warnCount++
+			}
+		}
+
+		// Store in cache
+		a.cachedPodCounts[key] = PodCounts{
+			Errors:   errorCount,
+			Warnings: warnCount,
+			Total:    errorCount + warnCount,
+		}
+	}
+}
+
+// SortPodsBySeverity sorts pods by state severity (errors first, then warnings, then ok)
+func SortPodsBySeverity(pods []rancher.Pod) []rancher.Pod {
+	// Make a copy to avoid modifying original
+	sorted := make([]rancher.Pod, len(pods))
+	copy(sorted, pods)
+
+	for i := 0; i < len(sorted); i++ {
+		for j := i + 1; j < len(sorted); j++ {
+			severity1 := getPodStateSeverity(sorted[i].State)
+			severity2 := getPodStateSeverity(sorted[j].State)
+
+			// Sort by severity (critical first)
+			if severity1 > severity2 {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			}
+		}
+	}
+
+	return sorted
+}
+
+// extractNamespace extracts namespace from NamespaceID (handles "cluster:namespace" format)
+func extractNamespace(namespaceID string) string {
+	if strings.Contains(namespaceID, ":") {
+		parts := strings.Split(namespaceID, ":")
+		if len(parts) > 1 {
+			return parts[1]
+		}
+	}
+	return namespaceID
+}
+
+// getPodStateSeverity assigns severity score to pod states (lower = more critical)
+func getPodStateSeverity(state string) int {
+	stateLower := strings.ToLower(state)
+
+	// Critical states (0-9)
+	if strings.Contains(stateLower, "crash") || strings.Contains(stateLower, "error") ||
+		strings.Contains(stateLower, "failed") || strings.Contains(stateLower, "oom") {
+		return 0
+	}
+	if strings.Contains(stateLower, "imagepull") || strings.Contains(stateLower, "evicted") {
+		return 5
+	}
+
+	// Warning states (10-19)
+	if strings.Contains(stateLower, "pending") || strings.Contains(stateLower, "unknown") {
+		return 10
+	}
+
+	// Normal states (20+)
+	if strings.Contains(stateLower, "running") {
+		return 20
+	}
+	if strings.Contains(stateLower, "completed") || strings.Contains(stateLower, "succeeded") {
+		return 25
+	}
+
+	// Unknown states
+	return 30
 }
