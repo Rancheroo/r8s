@@ -49,8 +49,9 @@ tar -xzf support-bundle.tar.gz
 | `↑`/`↓` or `j`/`k` | Navigate | `Enter` | Drill down / View logs |
 | `Esc` or `b` | Back | `q` | Quit |
 | `d` | Describe (JSON) | `r` | Refresh |
+| `m` | Expand/collapse dashboard | `c` | Classic cluster view |
 | `/` | Search logs | `?` | Help |
-| `g` | Jump to top (logs) | `G` | Jump to bottom (logs) |
+| `g` | Jump to top | `G` | Jump to bottom |
 | `w` | Toggle wrap (logs) | `Ctrl+E` | Filter errors only |
 
 ---
@@ -82,14 +83,19 @@ make build
 # 1. Extract the bundle
 tar -xzf rke2-support-bundle-*.tar.gz
 
-# 2. Launch r8s
+# 2. Launch r8s (optionally with deep log scanning)
 ./bin/r8s ./w-guard-wg-cp-xyz-*/
+# Or: ./bin/r8s --scan=1000 ./bundle/  # Scan 1000 lines per pod
 
 # 3. Navigate the Attention Dashboard
+#    - Shows top-20 critical issues by default
+#    - Press 'm' to expand and see all issues (scroll with j/k)
 #    - Press Enter on any issue to view pod logs
 #    - Use Ctrl+E to filter to errors only
 #    - Press ? for help
 ```
+
+**Pro tip:** Use `--scan=500` or higher for large clusters. The dashboard smartly caps display to top-20 issues but you can press `m` to expand and scroll through all detected problems.
 
 ### Using the Example Bundle
 ```bash
