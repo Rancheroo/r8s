@@ -228,8 +228,33 @@ func (a *App) renderAttentionDashboard() string {
 		Width(a.width - 4).
 		Render(viewportContent)
 
-	// Build status with position indicator and sort mode
+	// Build status with critical count visibility, position indicator, and sort mode
 	var statusParts []string
+
+	// Count total criticals in full list (not just displayed)
+	totalCriticals := 0
+	displayedCriticals := 0
+	for _, item := range a.attentionItems {
+		if item.Severity == SeverityCritical {
+			totalCriticals++
+		}
+	}
+	for _, item := range displayedItems {
+		if item.Severity == SeverityCritical {
+			displayedCriticals++
+		}
+	}
+
+	// CRITICAL COUNT FIRST (highest visibility)
+	if totalCriticals > 0 {
+		if displayedCriticals < totalCriticals {
+			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d/%d shown", displayedCriticals, totalCriticals))
+		} else {
+			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d", totalCriticals))
+		}
+	}
+
+	// Item count indicator
 	if displayedCount < totalIssues {
 		statusParts = append(statusParts, fmt.Sprintf("Showing %d/%d", displayedCount, totalIssues))
 	} else {
