@@ -12,13 +12,23 @@ import (
 const defaultDashboardCap = 20
 
 // getDisplayedItems returns items to display based on expansion state and cap
+// Items are sorted according to the current sort mode before display
 func (a *App) getDisplayedItems() []AttentionItem {
+	// Get current sort mode for this view
+	sortMode, exists := a.sortModes[ViewAttention]
+	if !exists {
+		sortMode = a.sortMode // Use global default
+	}
+
+	// Apply sorting based on current mode (returns sorted copy)
+	items := GetSortedAttentionItems(a.attentionItems, sortMode)
+
 	// If expanded or total items <= cap, show all
-	if a.attentionExpanded || len(a.attentionItems) <= defaultDashboardCap {
-		return a.attentionItems
+	if a.attentionExpanded || len(items) <= defaultDashboardCap {
+		return items
 	}
 	// Otherwise, show top N items (capped)
-	return a.attentionItems[:defaultDashboardCap]
+	return items[:defaultDashboardCap]
 }
 
 // ensureCursorVisible scrolls viewport to keep cursor visible
@@ -198,13 +208,22 @@ func (a *App) renderAttentionDashboard() string {
 		Width(a.width - 4).
 		Render(viewportContent)
 
-	// Build status with position indicator
+	// Build status with position indicator and sort mode
 	var statusParts []string
 	if displayedCount < totalIssues {
 		statusParts = append(statusParts, fmt.Sprintf("Showing %d/%d", displayedCount, totalIssues))
 	} else {
 		statusParts = append(statusParts, fmt.Sprintf("%d items", displayedCount))
 	}
+
+	// Add sort mode indicator
+	sortMode, exists := a.sortModes[ViewAttention]
+	if !exists {
+		sortMode = a.sortMode
+	}
+	statusParts = append(statusParts, fmt.Sprintf("Sort: %s", sortMode.String()))
+
+	statusParts = append(statusParts, "[s]=sort")
 	statusParts = append(statusParts, "[m]=expand")
 	statusParts = append(statusParts, "[g/G]=top/bottom")
 	statusParts = append(statusParts, "[Enter]=logs")
