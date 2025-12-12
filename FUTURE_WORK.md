@@ -26,6 +26,28 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ## 🎯 High Priority (Next Release - v0.5.0)
 
+### Dashboard Log Scanning (REMOVED in v0.4.3)
+- **Priority**: HIGH - Was displaying false information
+- **Complexity**: Medium-High
+- **Impact**: High
+- **Status**: ❌ REMOVED in v0.4.3 due to inaccurate counts
+- **Description**: Re-implement accurate per-pod log error/warning detection for dashboard
+- **Problem Identified**: 
+  - Dashboard showed identical ERR/WARN counts across different pods (e.g., all argocd pods showing "19 ERR, 17 WARN")
+  - Actual pod logs showed different counts (e.g., "1 errors · 0 warnings")
+  - Root cause: `detectLogIssues()` was reusing/caching counts incorrectly
+  - Also noticed in namespace view - counts appear inconsistent
+- **Requirements for Re-implementation**:
+  - Fix GetLogs() calls to ensure correct namespace/pod parameters
+  - Verify no caching/reuse of counts across different pods
+  - Add per-pod verification: dashboard count MUST match log view count
+  - Test with namespace-level aggregation
+  - Add debug mode to verify which pod's logs are being scanned
+  - Only re-enable once 100% verified accurate
+- **Current State**: Real-time log counting in individual pod view works perfectly - keep that
+- **Principle**: r8s only displays truth. Better to show no count than a wrong count.
+- **Triggered by**: User-reported critical bug in v0.4.2
+
 ### Smart Sorting by Error Count
 - **Priority**: Medium
 - **Complexity**: Medium

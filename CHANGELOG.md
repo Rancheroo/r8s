@@ -5,44 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.3] - 2025-12-12 "Diamond-Cut UX"
+## [0.4.3] - 2025-12-12 "Truth Only™"
 
 ### Fixed 🐛
 
-- **CRITICAL: Dashboard now force-includes ALL critical severity items**
-  - Root cause: Default top-20 cap could hide criticals when sorted by count with many high-count warnings
-  - Solution: Dynamic cap expansion (e.g., show 25 if 6 criticals exist beyond position 20)
-  - Impact: **100% critical visibility guarantee** - no critical item ever hidden on default view
-  - Example: 86 issues with 1 critical → critical always visible even if sorted by count
+- **CRITICAL: Removed inaccurate dashboard log detection**
+  - **Problem**: Dashboard showed identical fake ERR/WARN counts across different pods
+    - Example: All argocd pods showed "19 ERR, 17 WARN" when actual logs showed "1 errors · 0 warnings"
+    - This violated r8s core principle: **ONLY DISPLAY TRUTH**
+  - **Root cause**: `detectLogIssues()` was reusing/caching log counts incorrectly across pods
+  - **Solution**: Removed Tier 4 (log scanning) from dashboard entirely
+  - **Dashboard now shows ONLY verified signals**:
+    - ✅ Pod state (CrashLoopBackOff, OOMKilled, restarts)
+    - ✅ Cluster health (nodes, etcd alarms)
+    - ✅ Warning events (aggregated by type)
+    - ✅ System metrics
+    - ❌ **REMOVED**: Per-pod log ERR/WARN counts
+  - **Impact**: Dashboard displays only accurate, verified data
+  - **Note**: Real-time log counting in individual pod view remains 100% accurate
 
-- **CRITICAL: Log word-wrap now preserves colors perfectly**
-  - Root cause: Colors applied before wrapping caused ANSI escape codes to split across lines
-  - Solution: Wrap raw text first, then apply colors to each wrapped segment independently
-  - Impact: No more color artifacts, bleed, or broken highlighting during scroll/wrap toggle
-  - Perfect rendering on long error lines with word-wrap enabled
-
-### Enhanced ✨
-
-- **Enhanced status bar with critical count visibility**
-  - Format: "🔥 Criticals: 1" or "🔥 Criticals: 1/6 shown" when capped
-  - Placed first in status bar for highest visibility
-  - Updates dynamically as user toggles expansion or changes sort mode
-  - Instant awareness of critical count without manual counting
+- **Search highlighting visibility improved**
+  - **Problem**: Search matches were hard to see with dull yellow background
+  - **Solution**: 
+    - Bright yellow background (color 226 vs 11)
+    - Bold text for extra emphasis
+    - Maximum contrast for accessibility
+  - **Impact**: Search matches now highly visible in log view
 
 ### Technical - v0.4.3
 
-- Modified `getDisplayedItems()` in attention.go with critical-safe capping logic
-- Refactored `renderLogsWithColors()` to apply styling after text wrapping
-- Added critical count tracking in status bar rendering
-- All changes tested with large bundles (--scan=1000) with zero regressions
+- Removed `detectLogIssues()` call from `ComputeAttentionItems()` in attention_signals.go
+- Updated `searchMatchStyle` in styles.go with brighter color and bold
+- Added detailed notes in FUTURE_WORK.md for future log scanning re-implementation
+- All changes committed with detailed rationale
 
 ### Impact Summary - v0.4.3
 
-- ✅ **Zero critical items ever hidden** - dynamic cap expansion guarantees visibility
-- ✅ **Perfect log color rendering** - no artifacts across wrapped lines
-- ✅ **Instant critical awareness** - status bar shows count at-a-glance
-- ✅ **Production-ready** - tested with bundles containing 200+ issues
-- ✅ **Zero regressions** - all existing functionality preserved
+- ✅ **r8s displays ONLY truth** - no more fake/misleading data
+- ✅ **Search highlighting clear** - matches easy to spot
+- ✅ **Trust restored** - dashboard shows verified signals only
+- ✅ **Principle upheld**: Better to show less information than wrong information
+
+### Principle Established
+
+**r8s only displays truth.** We removed a feature that was displaying false information. Log scanning will be re-implemented in v0.5.0 once it can be verified to show accurate per-pod counts. See FUTURE_WORK.md for details.
 
 ## [0.4.2] - 2025-12-11 "Namespace Health Ranking"
 
