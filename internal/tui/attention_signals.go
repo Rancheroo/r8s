@@ -88,8 +88,9 @@ func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionI
 	// Tier 3: Events (Warning)
 	items = append(items, detectEventIssues(ds)...)
 
-	// Tier 4: Logs (Critical/Warning) - Sample logs for error/warn counts
-	items = append(items, detectLogIssues(ds, scanDepth)...)
+	// Tier 4: Log scanning REMOVED - was displaying inaccurate counts
+	// Log errors/warnings are accurately counted in real-time when viewing individual pod logs
+	// Dashboard only shows verified signals: pod state, cluster health, events, system metrics
 
 	// Tier 5: System Health (Bundle only)
 	items = append(items, detectSystemHealth(ds)...)
