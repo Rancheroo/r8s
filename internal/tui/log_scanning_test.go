@@ -146,8 +146,16 @@ func TestDashboardLogAccuracy_NoCaching(t *testing.T) {
 		"pod-C": 25,
 	}
 
+	// Verify each pod's count independently with proper namespace
+	podNamespaces := map[string]string{
+		"pod-A": "ns1",
+		"pod-B": "ns2",
+		"pod-C": "ns1",
+	}
+
 	for podName, expectedCount := range expectedCounts {
-		logs, _ := ds.GetLogs("", "", podName, "", false)
+		namespace := podNamespaces[podName]
+		logs, _ := ds.GetLogs("", namespace, podName, "", false)
 		actualCount := 0
 		for _, line := range logs {
 			if isErrorLog(line) {
@@ -217,6 +225,9 @@ type mockDataSource struct {
 	logs         map[string][]string
 	getLogsCalls []string
 }
+
+// Compile-time interface verification
+var _ datasource.DataSource = (*mockDataSource)(nil)
 
 func (m *mockDataSource) Close() error {
 	return nil
