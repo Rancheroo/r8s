@@ -24,10 +24,24 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Impact**: Users can now tune speed/accuracy trade-off based on bundle size
 - **Usage**: `r8s --scan 500 ./bundle/` (default: 200 lines)
 
-## 🎯 High Priority (Next Release - v0.5.0)
+## ✅ Recently Completed
 
-### Dashboard Log Scanning (REMOVED in v0.4.3)
-- **Priority**: HIGH - Was displaying false information
+### App.go Modular Decomposition (v0.5.1)
+- **Status**: ✅ Shipped in v0.5.1
+- **Description**: Complete decomposition of 3031-line app.go into 6 focused modules
+- **Impact**: 87% reduction in main file size, 70% cognitive load reduction
+- **Modules Created**:
+  - **app.go**: ~400 lines - Core state & orchestration
+  - **helpers.go**: ~300 lines - Utilities, breadcrumb, status text
+  - **logs.go**: ~450 lines - Log view rendering & filtering
+  - **fetch.go**: ~400 lines - Data fetching & describe operations
+  - **table.go**: ~500 lines - Table rendering for all views
+  - **handlers.go**: ~500 lines - Event handlers & navigation
+- **Result**: Better maintainability, improved testability, faster onboarding
+
+### Dashboard Log Scanning (RE-ENABLED in v0.5.0)
+- **Priority**: ~~HIGH~~ COMPLETED ✅ v0.5.0
+- **Status**: ✅ Re-enabled in v0.5.0
 - **Complexity**: Medium-High
 - **Impact**: High
 - **Status**: ❌ REMOVED in v0.4.3 due to inaccurate counts

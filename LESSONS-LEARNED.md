@@ -1313,6 +1313,78 @@ Used real user scenario reproduction:
 
 ---
 
+## v0.5.0 Development: Mock Mode Removal & Log Scanning Re-enabled
+
+### January 2, 2026 - Complete Feature Removal
+
+**Goal:** Ship v0.5.0 by fully completing mock mode removal and re-enabling dashboard log scanning.
+
+**Lesson:** **Complete feature removals prevent tech debt - dangling references kill velocity**
+
+**What We Removed (~698 lines):**
+- All 9 getMock* functions from app.go (getMockPods, getMockDeployments, getMockServices, getMockClusters, getMockProjects, getMockNamespaces, getMockCRDs, getMockCRDInstances)
+- generateMockLogs function (~57 lines)
+- Mock mode check in fetchLogs() (~5 lines)
+- TestMockDataGeneration test (~59 lines)
+- Result: app.go reduced from 3643 → 3031 lines (**17% reduction**)
+
+**What We Re-enabled:**
+- Dashboard log scanning (detectLogIssues call in ComputeAttentionItems)
+- Changed comment from "REMOVED" to "re-enabled with test-verified accuracy"
+- Now shows pods with >10 errors or >20 warnings
+- Uses same detection functions as log view (isErrorLog, isWarnLog)
+
+**Development Time:** ~45 minutes from start to documentation complete
+
+**Key Insights:**
+
+1. **Partial removal creates confusion** - Commit 28cc946 started mock removal but left functions in place
+2. **Dangling references = compilation errors** - Mock functions needed complete deletion
+3. **Test removal is critical** - TestMockDataGeneration referenced deleted functions
+4. **Build verification essential** - `make build` caught issues immediately
+5. **Re-enabling requires test verification** - Log scanning accuracy must be verified
+
+**Process That Worked:**
+1. **Search for all references** - Used grep to find all getMock* and generateMock* functions
+2. **Delete systematically** - Removed functions one-by-one with verification
+3. **Remove tests** - Deleted TestMockDataGeneration that depended on mock functions
+4. **Verify build** - `make build` passed after all deletions
+5. **Re-enable feature** - Changed detectLogIssues comment and call
+6. **Update docs** - CHANGELOG, LESSONS-LEARNED, README, FUTURE_WORK
+
+**Pattern: Complete Feature Removal**
+
+When removing features:
+```go
+// DON'T: Comment out and leave code
+// func getMockPods() { ... }  // Disabled for now
+
+// DO: Delete completely
+// [function removed entirely]
+```
+
+**Benefits:**
+- Zero ambiguity about feature state
+- No orphaned code
+- Cleaner git blame/history
+- Forces full commit to removal
+
+**Deferred to v0.5.1:**
+- App.go decomposition (3031 lines → modular architecture)
+- Plan: Split into helpers.go, fetch.go, handlers.go, table.go, logs.go, navigation.go
+- Each module ~400-600 lines
+- Tests migrated accordingly
+
+**Impact:**
+- ✅ 17% leaner codebase
+- ✅ Zero mock mode complexity
+- ✅ Dashboard log scanning restored with accuracy
+- ✅ Clean foundation for v0.5.1 modular refactor
+
+**Lesson:** **When removing features, go all the way. Partial removals accumulate tech debt that compounds over time. Complete removal = clean slate.**
+
+---
+
 ## v0.4.4 Development: Post-Audit Improvements
 
 ### January 2, 2026 - Comprehensive Codebase Audit
@@ -1544,5 +1616,84 @@ VERSION?=$(shell git describe --tags --always --dirty)
 - ✅ Support can diagnose version mismatches
 
 **Key Insight:** Version info is determined at **compile time**, not runtime. Always build after tagging for releases.
+
+---
+
+## v0.5.1 Development: God-File Decomposition & Branch Hygiene
+
+### January 2, 2026 - Git Branch Cleanup: The 30-Day Rule
+
+**Lesson:** **Regular branch hygiene prevents merge hell - automate after releases**
+
+**Problem:** 7 stale branches accumulated over 3 weeks in r8s repository, all fully merged but lingering in local workspace causing mental overhead and risk of accidental commits to old branches.
+
+**Analysis Results:**
+- 10 total branches (80% were stale merged branches)
+- 7 branches >20 days old, all completed work already in main
+- Only 1 branch with active unmerged work (feature/v0.5.0-refactor-app)
+- 1 merged branch had remote tracking requiring cleanup
+
+**Solution - The 30-Day Rule:**
+1. **After each release:** Identify merged branches >20 days old
+2. **Delete immediately:** Local-only merged branches  
+3. **Clean remotes:** Both local and remote for branches with tracking
+4. **Protect active work:** Current branch + any unmerged commits
+
+**Automated Commands for Future Cleanups:**
+```bash
+# Find branches merged into main
+git branch --merged main | grep -v main
+
+# Find stale branches (>30 days)  
+git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
+  awk '$2 < "'$(date -d '30 days ago' '+%Y-%m-%d')'"'
+
+# Safe cleanup (merged branches only)
+git branch --merged main | grep -v main | xargs -n 1 git branch -d
+```
+
+**Impact of January 2026 Cleanup:**
+- **80% branch reduction** (10 → 2 branches)  
+- Eliminated mental overhead of stale branches
+- Zero risk to active work (protected feature/v0.5.0-refactor-app)
+- Clear workspace for continued development
+
+**Key Insights:**
+
+1. **Merged branches are technical debt** - They accumulate mental overhead without value
+2. **30-day rule prevents hoarding** - If merged and >30 days old, delete automatically
+3. **Protect unmerged work religiously** - Current branch + any commits ahead of main
+4. **Remote cleanup matters** - Delete both local and remote for complete hygiene
+5. **Post-release ritual** - Make branch cleanup part of release process
+
+**Pattern: Branch Lifecycle Management**
+
+**Create → Work → Merge → Delete** (not Create → Work → Merge → Forget)
+
+```bash
+# Healthy branch lifecycle
+git checkout -b feature/new-work
+# ... do work, commit, push, PR, merge to main
+git checkout main
+git pull origin main
+git branch -d feature/new-work        # ← This step often forgotten!
+git push origin --delete feature/new-work  # ← And this one!
+```
+
+**Anti-Pattern to Avoid:**
+- Keeping merged branches "just in case" (creates clutter)
+- Not cleaning remote branches (leaves GitHub/origin messy)
+- Deleting unmerged work without investigation (data loss risk)
+- No post-release cleanup ritual (accumulates technical debt)
+
+**Future Automation Opportunity:**
+Consider Git hooks or GitHub Actions for automatic branch cleanup post-merge.
+
+**The "Fresh Clone" Test:**
+Your local repo should feel as clean as a fresh clone. If `git branch` shows more than 2-3 active branches, it's time to clean house.
+
+**Development Time:** 15 minutes analysis + 2 minutes execution = instant productivity boost
+
+**Lesson:** **Clean repositories accelerate development. Branch sprawl is cognitive overhead that compounds over time. Delete early, delete often, protect only active work.**
 
 ---
