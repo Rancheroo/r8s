@@ -34,8 +34,8 @@ func LoadFromPath(path string, opts ImportOptions) (*Bundle, error) {
 	}
 
 	// Step 3: Validate bundle structure
-	if err := validateBundleStructure(absPath, opts.Verbose); err != nil {
-		return nil, fmt.Errorf("invalid bundle directory: %w", err)
+	if err := ValidateBundle(absPath); err != nil {
+		return nil, err
 	}
 
 	// Step 4: Load bundle from directory

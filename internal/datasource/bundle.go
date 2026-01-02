@@ -18,7 +18,7 @@ type BundleDataSource struct {
 func NewBundleDataSource(bundlePath string, verbose bool) (*BundleDataSource, error) {
 	opts := bundle.ImportOptions{
 		Path:    bundlePath,
-		MaxSize: 100 * 1024 * 1024, // 100MB for TUI mode
+		MaxSize: 200 * 1024 * 1024, // 200MB for TUI mode (increased from 100MB for real-world bundles)
 		Verbose: verbose,
 	}
 
