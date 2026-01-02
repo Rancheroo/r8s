@@ -1,6 +1,6 @@
 # r8s
 
-> **r8s 0.5.0-dev — the fastest way to understand a broken Kubernetes cluster from a log bundle**
+> **r8s 0.5.0 — the fastest way to understand a broken Kubernetes cluster from a log bundle**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)

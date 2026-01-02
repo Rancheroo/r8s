@@ -5,24 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0-dev] - In Progress "Architecture Refactor"
+## [0.5.0] - 2026-01-02 "Test-First Foundation"
 
-### Goal
-Decompose app.go (3643 lines → modular architecture) for 10/10 codebase health.
+### Added ✨
+- **Comprehensive test suite for dashboard log scanning accuracy**
+  - TestDashboardLogAccuracy_MatchesLogView: Verifies dashboard counts match log view (Truth Only™ principle)
+  - TestDashboardLogAccuracy_NoCaching: Ensures independent pod scanning (no cache bugs)
+  - TestDashboardLogAccuracy_ScanDepthRespected: Validates --scan flag behavior
+  - Mock datasource with compile-time interface verification
+  - 339 lines of test-first infrastructure ready for implementation
 
-### In Progress
-- Extracting mock data generation
-- Extracting helper functions
-- Extracting data fetching logic
-- Extracting rendering logic
-- Extracting keyboard handlers
-- Adding comprehensive test coverage
+### Removed 🗑️
+- **Mock mode completely deleted** (-612 lines)
+  - Removed all getMock* functions (getMockPods, getMockDeployments, etc.)
+  - Removed generateMockLogs function
+  - Removed mock mode check from fetchLogs
+  - r8s now works out-of-box with embedded demo bundle
+  - Simpler codebase, easier maintenance
 
-### Target
-- app.go reduced to <600 lines
-- 6 focused modules instead of 1 monolith
-- 80%+ test coverage
-- Zero regressions
+### Technical - v0.5.0
+- Created `internal/tui/log_scanning_test.go` with 3 critical test cases
+- Removed mock mode infrastructure from app.go (3643 → 3031 lines, -17%)
+- Added compile-time interface verification for test mocks
+- Fixed empty namespace bug in test GetLogs() calls
+- Branch: feature/v0.5.0-refactor-app
+
+### Impact Summary - v0.5.0
+- ✅ **Test-first development** - Requirements defined before implementation
+- ✅ **17% leaner codebase** - Mock mode removed safely
+- ✅ **Clear success criteria** - Tests define accurate dashboard behavior
+- ✅ **Foundation for 10/10** - Ready for Week 2 implementation phase
+
+### In Progress (Week 2)
+- Dashboard log scanning re-implementation (accuracy-verified)
+- App.go decomposition (3031 lines → modular architecture) deferred to Week 3
+
+### Lessons Applied
+- Version synchronized (README + CHANGELOG before merge)
+- Test-first development (write failing tests, then implement)
+- No silent failures (namespace parameter required, not empty)
+- Interface contracts enforced at compile time
 
 ## [0.4.4] - 2026-01-02 "Post-Audit Improvements"
 
