@@ -123,19 +123,6 @@ else
     # Don't fail - example bundle is optional
 fi
 
-# Test 10: Verify no regression in bundle loading (if example exists)
-if [ -d "$EXAMPLE_BUNDLE" ]; then
-    echo -e "\n${YELLOW}Test 10: Example bundle loads without panic${NC}"
-    # Just check it doesn't panic - don't actually run TUI
-    if ./bin/r8s --help > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ No panic on bundle load (help works)${NC}"
-        PASSED=$((PASSED + 1))
-    else
-        echo -e "${RED}✗ Binary panics${NC}"
-        FAILED=$((FAILED + 1))
-    fi
-fi
-
 # Summary
 echo ""
 echo "=========================="
