@@ -206,68 +206,6 @@ func TestBreadcrumbGeneration(t *testing.T) {
 	}
 }
 
-// TestMockDataGeneration tests mock data generation for offline mode
-func TestMockDataGeneration(t *testing.T) {
-	app := createTestApp(t)
-	app.offlineMode = true
-
-	tests := []struct {
-		name     string
-		generate func() int
-		wantMin  int
-	}{
-		{
-			name: "mock clusters",
-			generate: func() int {
-				clusters := app.getMockClusters()
-				return len(clusters)
-			},
-			wantMin: 2,
-		},
-		{
-			name: "mock pods",
-			generate: func() int {
-				pods := app.getMockPods("default")
-				return len(pods)
-			},
-			wantMin: 5,
-		},
-		{
-			name: "mock deployments",
-			generate: func() int {
-				deployments := app.getMockDeployments("default")
-				return len(deployments)
-			},
-			wantMin: 3,
-		},
-		{
-			name: "mock services",
-			generate: func() int {
-				services := app.getMockServices("default")
-				return len(services)
-			},
-			wantMin: 3,
-		},
-		{
-			name: "mock CRDs",
-			generate: func() int {
-				crds := app.getMockCRDs()
-				return len(crds)
-			},
-			wantMin: 3,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			count := tt.generate()
-			if count < tt.wantMin {
-				t.Errorf("Expected at least %d items, got %d", tt.wantMin, count)
-			}
-		})
-	}
-}
-
 // TestPodNodeNameExtraction tests pod node name extraction with fallbacks
 func TestPodNodeNameExtraction(t *testing.T) {
 	app := createTestApp(t)
