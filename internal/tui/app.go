@@ -2164,8 +2164,6 @@ func (a *App) fetchLogs(clusterID, namespace, podName string) tea.Cmd {
 	}
 }
 
-// generateMockLogs generates realistic mock logs for testing
-}
 
 // handleViewLogs navigates to logs view for the selected pod
 func (a *App) handleViewLogs() tea.Cmd {
