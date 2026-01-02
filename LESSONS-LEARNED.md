@@ -1313,6 +1313,91 @@ Used real user scenario reproduction:
 
 ---
 
+## v0.4.4 Development: Post-Audit Improvements
+
+### January 2, 2026 - Comprehensive Codebase Audit
+
+**Goal:** Ensure r8s is the fastest, most robust log-bundle triage tool post-pivot.
+
+**Lesson:** **Post-release audits catch systemic issues before they accumulate**
+
+**What We Did:**
+- Comprehensive 200× principal architect audit of entire codebase
+- Analyzed commit history, architecture health, performance, UX
+- Identified 5 priority improvements
+- Documented findings in AUDIT_POST_PIVOT.md
+
+**Key Findings:**
+- Overall score: 7/10 (good, with clear path to 10/10)
+- 0% test coverage on critical paths (bundle parsing, signal detection)
+- 3643-line app.go monolith (36% of codebase!)
+- Dashboard log scanning removed (v0.4.3) was correct but leaves gap
+- No bundle validation = confusing errors
+
+**Implemented Immediately:**
+1. ✅ Increased bundle size limit 100MB → 200MB (real bundles often 150-300MB)
+2. ✅ Added bundle validation with helpful error messages
+3. ✅ Created CI stress test suite (blocks future regressions)
+
+**Deferred to v0.5.0:**
+- Decompose app.go into focused modules
+- Re-implement dashboard log scanning with accuracy verification
+- Add comprehensive test coverage
+
+**Impact:**
+- Better error messages prevent user confusion
+- Larger bundles now supported
+- CI tests prevent regression on edge cases
+- Clear roadmap to 10/10 score
+
+---
+
+## Lessons from Audit: New Principles
+
+### **"Test at 10× scale before shipping"**
+
+**Problem:** v0.4.0 dashboard overflow when `--scan=1000` detected 80+ issues.
+
+**Root cause:** Only tested with default `--scan=200` (produces 10-20 issues).
+
+**Lesson:** If a parameter goes to 1000, test with 1000. UI scaling breaks exponentially.
+
+**Solution:** Smart capping + expansion toggle ('m' key).
+
+**Applied to v0.4.4:** Created stress test suite testing bundle validation, size limits, error messages.
+
+---
+
+### **"Sort modes multiply edge cases exponentially"**
+
+**Problem:** v0.4.3 bug — critical item at position 25 hidden by Count sort + top-20 cap.
+
+**Root cause:** 3 sort modes × 2 cap modes × severity tiers = 12+ permutations untested.
+
+**Lesson:** Each sorting axis needs dedicated edge case testing.
+
+**Solution:** Critical-safe dynamic capping (always include ALL criticals).
+
+**Impact:** Dashboard now guarantees critical visibility regardless of sort mode.
+
+---
+
+### **"Feature removal is a feature when accuracy cannot be guaranteed"**
+
+**Problem:** v0.4.3 dashboard showed fake identical log counts across pods.
+
+**Decision:** Remove `detectLogIssues()` entirely rather than debug.
+
+**Impact:** Better to show no data than wrong data.
+
+**Principle:** r8s only displays truth — established as core value.
+
+**This is now the "Truth Only™" principle** — documented in LESSONS-LEARNED and CHANGELOG.
+
+---
+
+---
+
 ## v0.4.3 Development Continued: The "Truth Only™" Principle
 
 ### December 12, 2025 - User Reports Critical Data Accuracy Bug

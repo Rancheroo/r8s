@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2026-01-02 "Post-Audit Improvements"
+
+### Added ✨
+- **Bundle validation** with helpful error messages
+  - New `ValidateBundle()` function checks bundle structure before loading
+  - Clear errors: "Not a valid RKE2 bundle - missing rke2/ directory"
+  - Helpful hints: "Did you forget to extract? tar -xzf bundle.tar.gz"
+  - Points user to expected structure when directory is wrong
+
+- **CI stress test suite** (`scripts/test-bundle-stress.sh`)
+  - Tests bundle validation error messages
+  - Verifies 200MB size limit
+  - Checks integration of new features
+  - Prevents regressions on edge cases
+  - 9 tests covering critical paths
+
+### Changed 🔄
+- **Bundle size limit increased** 100MB → 200MB
+  - Real-world support bundles often 150-300MB
+  - Updated in `internal/datasource/bundle.go`
+  - Documented in comments
+
+### Technical - v0.4.4
+- Added `internal/bundle/validate.go` with `ValidateBundle()` function
+- Integrated validation into bundle loader before loading
+- Created comprehensive stress test suite for CI
+- Updated LESSONS-LEARNED.md with audit findings and new principles
+
+### Impact Summary - v0.4.4
+- ✅ **Better error messages** - Users know exactly what's wrong
+- ✅ **Larger bundles supported** - 200MB limit handles real-world use cases
+- ✅ **CI prevents regressions** - Automated tests block edge case bugs
+- ✅ **Clear roadmap to 10/10** - Audit documented path forward
+
+### Audit Findings (AUDIT_POST_PIVOT.md)
+- Overall codebase score: 7/10 (good, with clear improvement path)
+- Identified 5 priorities:
+  1. ✅ CI stress tests (implemented)
+  2. ⏳ Decompose app.go (3643 lines → deferred to v0.5.0)
+  3. ⏳ Re-implement dashboard log scanning (deferred to v0.5.0)
+  4. ✅ Increase bundle size limit (implemented)
+  5. ✅ Add bundle validation (implemented)
+
 ## [0.4.3] - 2025-12-12 "Truth Only™"
 
 ### Fixed 🐛
