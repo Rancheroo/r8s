@@ -1501,3 +1501,48 @@ Immediate appreciation for removing false data. Quote: "This is a CRITICAL FAULT
 **Status**: Production ready, principle established, shipped
 
 ---
+
+## v0.4.4 Continued: Build Version Synchronization
+
+### January 2, 2026 - Version Tagging & Build Order
+
+**Problem:** After creating git tag v0.4.4, `./bin/r8s version` showed old version:
+```
+r8s v0.4.3-3-g05f657c (commit: 05f657c, built: 2025-12-12T00:06:40Z)
+```
+
+**Root Cause:**
+- Binary was built **BEFORE** git tag was created
+- Makefile uses `git describe --tags` to determine version at build time
+- Pre-tagged binary shows previous tag + commit distance
+
+**The Fix:**
+```bash
+# Always rebuild AFTER tagging
+git tag -a v0.4.4 -m "Release v0.4.4"
+git push origin v0.4.4
+make clean build  # ← REBUILD to pick up new tag
+```
+
+**Lesson:** **Git tags must exist BEFORE building for version to be correct**
+
+**Build Version Mechanism:**
+```makefile
+VERSION?=$(shell git describe --tags --always --dirty)
+# Outputs: v0.4.4 (clean) or v0.4.4-dirty (uncommitted changes)
+```
+
+**Best Practice:**
+1. Commit all changes
+2. Create and push git tag
+3. **Then** build binary (picks up tag)
+4. Version command shows correct tag
+
+**Impact:**
+- ✅ Ensures binary version matches release
+- ✅ Users can verify they have correct version
+- ✅ Support can diagnose version mismatches
+
+**Key Insight:** Version info is determined at **compile time**, not runtime. Always build after tagging for releases.
+
+---
