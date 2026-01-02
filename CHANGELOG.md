@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0-dev] - In Progress "Architecture Refactor"
+
+### Goal
+Decompose app.go (3643 lines → modular architecture) for 10/10 codebase health.
+
+### In Progress
+- Extracting mock data generation
+- Extracting helper functions
+- Extracting data fetching logic
+- Extracting rendering logic
+- Extracting keyboard handlers
+- Adding comprehensive test coverage
+
+### Target
+- app.go reduced to <600 lines
+- 6 focused modules instead of 1 monolith
+- 80%+ test coverage
+- Zero regressions
+
 ## [0.4.4] - 2026-01-02 "Post-Audit Improvements"
 
 ### Added ✨

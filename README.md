@@ -1,13 +1,15 @@
 # r8s
 
-> **r8s 0.3.5 — the fastest way to understand a broken Kubernetes cluster from a log bundle**
+> **r8s 0.5.0-dev — the fastest way to understand a broken Kubernetes cluster from a log bundle**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**What's new in 0.3.5:** Bundle-only bliss · Live mode removed · Zero config · Instant demo bundle · Attention Dashboard first
+**What's new in 0.5.0:** Modular architecture refactor · Enhanced test coverage · Improved maintainability
+
+**Previous:** 0.4.4 - Bundle validation, CI tests, 200MB limit
 
 ---
 
