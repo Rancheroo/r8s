@@ -5,9 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-01-03 "Documentation & Code Quality"
+## [0.5.2] - 2026-01-03 "Truth & Accuracy"
 
-### Fixed 🐛
+### Fixed 🐛 CRITICAL
+- **CRITICAL: Identical error/warning counts bug**
+  - **Problem**: ALL pods showed identical "19 ERR, 17 WARN" in dashboard and classic view
+  - **Root cause**: `generateDemoLogs()` returned same hardcoded 57-line log for every pod when log files empty/missing
+  - **Impact**: Attention Dashboard showed "19 ERR, 17 WARN" for all items, Classic Pod View showed "19E/17W" for all pods
+  - **Fix**: Removed fake demo log generation for real bundles - return empty []string{} instead
+  - **Result**: Pods now show accurate, different E/W counts based on actual log content
+  - **Namespace view was correct** (used different aggregation logic)
+  - **Principle restored**: Truth Only™ - real bundles show only accurate data
+
 - **Documentation consistency across repository**
   - Updated all version references from v0.5.1 to v0.5.2 (README.md, POST_MERGE_CLEANUP.md)
   - Added blank lines before subheadings in FUTURE_WORK.md for markdown linting compliance
@@ -15,47 +24,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verified all v0.5.1 references are correctly in historical documentation
 
 - **Code quality improvements**
-  - Refactored 4 sorting functions to use sort.Slice/sort.SliceStable (sortAttentionItems, sortItemsByCount, sortItemsByName, getTopPods)
-  - Replaced manual bubble-sort O(n²) implementations with sort.Slice O(n log n) for better performance
+  - Refactored 4 sorting functions to use sort.Slice/sort.SliceStable 
+  - Replaced manual bubble-sort O(n²) implementations with sort.Slice O(n log n)
   - Maintained stable ordering using sort.SliceStable where needed for tie-breaker logic
 
 ### Added ✨
+- **Future work documented in FUTURE_WORK.md**
+  - UX improvements: CrashLoopBackOff with no logs indicator, empty namespace intelligence, age display consistency
+  - Simplification proposals: Remove sort mode complexity, remove log filter modes, remove view switching hotkeys
+  - Philosophy: "The best feature is no feature - smart defaults beat options"
+  - Total potential: ~350+ lines removed across 3 simplification proposals
+  
 - **Post-merge cleanup documentation**
-  - Added 30-day branch cleanup rule to CONTRIBUTING.md with link to POST_MERGE_CLEANUP.md
-  - Documented safe commands for finding merged/stale branches and cleanup automation suggestions
+  - Added 30-day branch cleanup rule to CONTRIBUTING.md
+  - Documented safe commands for finding merged/stale branches
   
 - **UTF-8 encoding prevention**
   - Added comprehensive UTF-8 linting recommendation to LESSONS-LEARNED.md
-  - Documented pre-commit hook approach to prevent replacement character (�) regressions
-  - Included instructions for CI lint step integration and developer setup
+  - Documented pre-commit hook approach to prevent � character regressions
 
-- **Simplification proposal documented**
-  - Added "Remove Sort Mode Complexity" proposal to FUTURE_WORK.md (v0.5.3+)
-  - Philosophy: "The best feature is no feature - smart defaults beat options"
-  - Estimated impact: ~200 lines removed, reduced cognitive load, better UX
-  - Rationale: 95% of users want "worst first" (count-based) sorting
-
-### Technical
-- 7 files modified: CONTRIBUTING.md, FUTURE_WORK.md, LESSONS-LEARNED.md, POST_MERGE_CLEANUP.md, README.md, GIT_BRANCH_CLEANUP_PLAN.md, attention_signals.go
+### Technical - v0.5.2
+- 8 files modified: bundle.go, CONTRIBUTING.md, FUTURE_WORK.md, LESSONS-LEARNED.md, POST_MERGE_CLEANUP.md, README.md, GIT_BRANCH_CLEANUP_PLAN.md, attention_signals.go
 - All sorting functions now use Go stdlib (sort.Slice/sort.SliceStable)
 - Version consistency verified across entire repository
+- Git tag: v0.5.2
 - Branch: ship-v052
+- Commits: 152dd76 (docs), 49b45be (critical fix)
 
-### Impact Summary
+### Impact Summary - v0.5.2
+- ✅ **CRITICAL FIX** - Accurate per-pod error/warning counts (no more fake "19/17")
 - ✅ **Version consistency** - All user-facing docs show v0.5.2
 - ✅ **Better performance** - Sort functions use O(n log n) algorithms
 - ✅ **Future-proof** - UTF-8 linting prevents encoding regressions
-- ✅ **Simplified roadmap** - Clear path to remove unnecessary complexity
-- ✅ **Repository hygiene** - 30-day cleanup rule prevents branch sprawl
+- ✅ **Clear roadmap** - 6 concrete simplification + UX improvement proposals for v0.5.3+
+- ✅ **Truth Only™** - Real bundles show only accurate data, no fake demo logs
 
-### Deferred
-- Complete remaining sort function refactoring (SortPodsByCount, SortPodsBySeverity use manual loops)
-- handlers.go issues (viewport scrolling, restoreSelection stub, container selection, loading state)
-- helpers.go dimension guards
-- logs.go whitespace trimming logic
-- table.go namespace parsing deduplication and pod log scanning optimization
+### Known Issues & Deferred (documented in FUTURE_WORK.md)
+- CrashLoopBackOff pods with no logs show "✅ Clean" (misleading) - FIX in v0.5.3
+- Empty namespaces show "✅ Clean" instead of "📭 Empty" - FIX in v0.5.3
+- Sort mode complexity (3 modes, rarely used) - REMOVE in v0.5.3
+- Log filter modes (3 modes, manual toggling) - SIMPLIFY in v0.5.4
 
-## [0.5.2] - 2026-01-03 "Silky TUI"
+---
+
+## [0.5.1.1] - 2026-01-03 "Code Quality Polish (Pre-v0.5.2)"
 
 ### Fixed 🐛
 - **Dashboard navigation improvements**
