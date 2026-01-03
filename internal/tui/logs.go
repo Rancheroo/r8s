@@ -12,6 +12,11 @@ import (
 
 // renderLogsView renders the logs view for a pod with viewport scrolling
 func (a *App) renderLogsView() string {
+	// Auto-show helpful message when logs are empty (Show, Don't Ask philosophy)
+	if len(a.logs) == 0 {
+		return a.renderEmptyLogsHelp()
+	}
+
 	// Build breadcrumb
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
 
@@ -418,4 +423,61 @@ func isDebugLog(line string) bool {
 // isDigit checks if a byte is an ASCII digit
 func isDigit(b byte) bool {
 	return b >= '0' && b <= '9'
+}
+
+// renderEmptyLogsHelp renders helpful guidance when logs are empty
+// Auto-displays without button presses (Show, Don't Ask philosophy)
+func (a *App) renderEmptyLogsHelp() string {
+	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
+
+	// Build helpful message
+	helpTitle := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render("📭 No Logs Available")
+
+	helpText := `This pod has no logs to display.
+
+Possible reasons:
+  • Pod hasn't generated any logs yet
+  • Pod recently restarted (try Ctrl+P for previous logs)
+  • Container hasn't started successfully
+
+Next steps:
+  • Press 'd' to describe pod (check status/events)
+  • Press Esc to go back and check pod state
+  • Look for errors in pod description`
+
+	helpBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorYellow).
+		Padding(2, 4).
+		Width(a.width - 8).
+		Render(helpText)
+
+	// Calculate padding for vertical centering
+	contentHeight := 12 // Approximate lines of content
+	availableHeight := a.height - 10
+	topPadding := (availableHeight - contentHeight) / 2
+	if topPadding < 0 {
+		topPadding = 0
+	}
+
+	var paddingLines []string
+	for i := 0; i < topPadding; i++ {
+		paddingLines = append(paddingLines, "")
+	}
+
+	centeredContent := strings.Join(append(paddingLines, helpTitle, "", helpBox), "\n")
+
+	status := statusStyle.Render(" [d]=describe pod  [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		centeredContent,
+		"",
+		status,
+	)
 }
