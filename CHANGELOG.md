@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - v0.5.2 "Silky TUI"
+
+### Fixed 🐛
+- **Dashboard navigation improvements**
+  - Cursor-index sync on sort mode changes (prevents jumpy navigation)
+  - Sub-navigation state validation (prevents crashes on edge cases)
+  - Scroll position maintained after 's'/'m'/'g'/'G' key presses
+  
+- **Log view UX enhancements**
+  - Empty logs show helpful guidance with actionable next steps
+  - Auto-suggest describe command when no logs available
+  
+- **Table rendering polish**
+  - Dynamic column widths adapt to terminal size (80-200 cols)
+  - Async log fetch performance improved (cached counts)
+  - Consistent truncation with ellipsis across all views
+
+### Added ✨
+- **Enhanced help panel** with contextual pro tips per view
+- **'e' hotkey** - Jump to worst error pod from dashboard/pod views
+- **'w' hotkey** - Show bundle parse warnings (if any)
+- **Parse warning count** in status bar when errors detected
+
+### Technical - v0.5.2
+- Cursor tracking by item Title instead of raw index
+- Bounds validation for sub-navigation cursors
+- Terminal-responsive column width calculations
+- Pod count caching for instant table rendering
+- Integration test suite for navigation edge cases
+
+### Impact - v0.5.2
+- ✅ **Smooth navigation** - j/k/Enter work perfectly on all sort modes
+- ✅ **Zero crashes** - Validated bounds prevent edge case panics
+- ✅ **Terminal responsive** - Tables scale from 80 to 200 columns
+- ✅ **Faster** - Cached counts eliminate redundant log fetches
+- ✅ **Helpful** - Empty states provide clear next actions
+
+---
+
 ## [0.5.1.1] - 2026-01-03 "Code Quality Polish"
 
 ### Fixed 🐛
