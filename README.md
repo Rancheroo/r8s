@@ -1,13 +1,13 @@
 # r8s
 
-> **r8s v0.5.1 "Modular Core" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
+> **r8s v0.5.2 "Modular Core" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**What's new in 0.5.1:** Complete app.go decomposition into 6 modules · 70% cognitive load reduction · Improved testability
+**What's new in 0.5.2:** Complete app.go decomposition into 6 modules · 70% cognitive load reduction · Improved testability
 
 **Previous:** 0.4.4 - Bundle validation, CI tests, 200MB limit
 

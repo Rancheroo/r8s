@@ -1759,6 +1759,17 @@ statusParts = append(statusParts, "🔥 Criticals: %d")
 
 Always save files with UTF-8 encoding to preserve emojis.
 
+**Next Step - Prevent Future UTF-8 Regressions:**
+
+Add a pre-commit hook or CI lint step to catch UTF-8 replacement characters (�) before they reach the repository:
+
+1. **Define a pre-commit hook** that scans files for the � character and rejects commits containing it
+2. **Add to CI pipeline**: Include a lint step that verifies all files are valid UTF-8 and flags any containing replacement characters
+3. **Update CONTRIBUTING.md**: Add instructions for developers on enabling the pre-commit hook locally (e.g., using git hooks or pre-commit framework)
+4. **Add to CI**: Include the UTF-8 validation check in GitHub Actions or similar CI to catch issues on PR submission
+
+This prevents encoding issues from being committed in the first place, rather than fixing them repeatedly during cleanup passes.
+
 **Pattern: Avoiding Slice Aliasing**
 
 When sorting might modify original data:

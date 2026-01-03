@@ -5,42 +5,113 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - v0.5.2 "Silky TUI"
+## [0.5.2] - 2026-01-03 "Truth & Accuracy"
+
+### Fixed 🐛 CRITICAL
+- **CRITICAL: Identical error/warning counts bug**
+  - **Problem**: ALL pods showed identical "19 ERR, 17 WARN" in dashboard and classic view
+  - **Root cause**: `generateDemoLogs()` returned same hardcoded 57-line log for every pod when log files empty/missing
+  - **Impact**: Attention Dashboard showed "19 ERR, 17 WARN" for all items, Classic Pod View showed "19E/17W" for all pods
+  - **Fix**: Removed fake demo log generation for real bundles - return empty []string{} instead
+  - **Result**: Pods now show accurate, different E/W counts based on actual log content
+  - **Namespace view was correct** (used different aggregation logic)
+  - **Principle restored**: Truth Only™ - real bundles show only accurate data
+
+- **Documentation consistency across repository**
+  - Updated all version references from v0.5.1 to v0.5.2 (README.md, POST_MERGE_CLEANUP.md)
+  - Added blank lines before subheadings in FUTURE_WORK.md for markdown linting compliance
+  - Removed trailing comma from date field in GIT_BRANCH_CLEANUP_PLAN.md
+  - Verified all v0.5.1 references are correctly in historical documentation
+
+- **Code quality improvements**
+  - Refactored 4 sorting functions to use sort.Slice/sort.SliceStable 
+  - Replaced manual bubble-sort O(n²) implementations with sort.Slice O(n log n)
+  - Maintained stable ordering using sort.SliceStable where needed for tie-breaker logic
+
+### Added ✨
+- **Future work documented in FUTURE_WORK.md**
+  - UX improvements: CrashLoopBackOff with no logs indicator, empty namespace intelligence, age display consistency
+  - Simplification proposals: Remove sort mode complexity, remove log filter modes, remove view switching hotkeys
+  - Philosophy: "The best feature is no feature - smart defaults beat options"
+  - Total potential: ~350+ lines removed across 3 simplification proposals
+  
+- **Post-merge cleanup documentation**
+  - Added 30-day branch cleanup rule to CONTRIBUTING.md
+  - Documented safe commands for finding merged/stale branches
+  
+- **UTF-8 encoding prevention**
+  - Added comprehensive UTF-8 linting recommendation to LESSONS-LEARNED.md
+  - Documented pre-commit hook approach to prevent � character regressions
+
+### Technical - v0.5.2
+- 8 files modified: bundle.go, CONTRIBUTING.md, FUTURE_WORK.md, LESSONS-LEARNED.md, POST_MERGE_CLEANUP.md, README.md, GIT_BRANCH_CLEANUP_PLAN.md, attention_signals.go
+- All sorting functions now use Go stdlib (sort.Slice/sort.SliceStable)
+- Version consistency verified across entire repository
+- Git tag: v0.5.2
+- Branch: ship-v052
+- Commits: 152dd76 (docs), 49b45be (critical fix)
+
+### Impact Summary - v0.5.2
+- ✅ **CRITICAL FIX** - Accurate per-pod error/warning counts (no more fake "19/17")
+- ✅ **Version consistency** - All user-facing docs show v0.5.2
+- ✅ **Better performance** - Sort functions use O(n log n) algorithms
+- ✅ **Future-proof** - UTF-8 linting prevents encoding regressions
+- ✅ **Clear roadmap** - 6 concrete simplification + UX improvement proposals for v0.5.3+
+- ✅ **Truth Only™** - Real bundles show only accurate data, no fake demo logs
+
+### Known Issues & Deferred (documented in FUTURE_WORK.md)
+- CrashLoopBackOff pods with no logs show "✅ Clean" (misleading) - FIX in v0.5.3
+- Empty namespaces show "✅ Clean" instead of "📭 Empty" - FIX in v0.5.3
+- Sort mode complexity (3 modes, rarely used) - REMOVE in v0.5.3
+- Log filter modes (3 modes, manual toggling) - SIMPLIFY in v0.5.4
+
+---
+
+## [0.5.1.1] - 2026-01-03 "Code Quality Polish (Pre-v0.5.2)"
 
 ### Fixed 🐛
 - **Dashboard navigation improvements**
   - Cursor-index sync on sort mode changes (prevents jumpy navigation)
-  - Sub-navigation state validation (prevents crashes on edge cases)
   - Scroll position maintained after 's'/'m'/'g'/'G' key presses
-  
-- **Log view UX enhancements**
-  - Empty logs show helpful guidance with actionable next steps
-  - Auto-suggest describe command when no logs available
+  - Title-based cursor tracking maintains selection during sorts
   
 - **Table rendering polish**
   - Dynamic column widths adapt to terminal size (80-200 cols)
-  - Async log fetch performance improved (cached counts)
-  - Consistent truncation with ellipsis across all views
+  - Terminal-responsive layouts for all 9 view types
+  - Smart word wrapping breaks at whitespace, not mid-word
+  - Consistent ellipsis truncation across all views
+  
+- **Performance optimizations** 
+  - Package-level pattern arrays (allocated once, not per call)
+  - Cached error/warning counts for instant table rendering
+  - Reduced GC pressure during log rendering
 
 ### Added ✨
 - **Enhanced help panel** with contextual pro tips per view
-- **'e' hotkey** - Jump to worst error pod from dashboard/pod views
-- **'w' hotkey** - Show bundle parse warnings (if any)
-- **Parse warning count** in status bar when errors detected
+  - Dashboard tips: Sort cycling, health display, expansion
+  - Pod tips: W/E column meaning, error sorting, quick actions
+  - Log tips: Ctrl+W filter, search workflow, vim navigation
+  - Auto-displayed based on current view (Show, Don't Ask principle)
+
+- **"Show, Don't Ask" UX Philosophy**
+  - Tables auto-adapt to terminal width (no manual resizing)
+  - Cursor position auto-restored after sorting (no manual re-finding)
+  - Age display enhanced: shows hours/minutes for recent resources
+  - Health summary auto-displayed in dashboard status bar
 
 ### Technical - v0.5.2
-- Cursor tracking by item Title instead of raw index
-- Bounds validation for sub-navigation cursors
-- Terminal-responsive column width calculations
-- Pod count caching for instant table rendering
-- Integration test suite for navigation edge cases
+- Dynamic column width system with proportional ratios
+- Cursor tracking by Title instead of index for sort stability
+- View-specific contextual help system
+- Cross-platform git commands (Linux/macOS/POSIX)
+- Better error message formatting across all fetch functions
 
 ### Impact - v0.5.2
-- ✅ **Smooth navigation** - j/k/Enter work perfectly on all sort modes
-- ✅ **Zero crashes** - Validated bounds prevent edge case panics
-- ✅ **Terminal responsive** - Tables scale from 80 to 200 columns
-- ✅ **Faster** - Cached counts eliminate redundant log fetches
-- ✅ **Helpful** - Empty states provide clear next actions
+- ✅ **Smooth navigation** - cursor stays on same item after sorts
+- ✅ **Terminal responsive** - tables perfect on 80-200 col terminals
+- ✅ **Better performance** - optimized pattern matching and caching
+- ✅ **Context-aware help** - tips automatically shown per view
+- ✅ **Show, Don't Ask** - information displayed proactively
 
 ---
 

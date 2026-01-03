@@ -249,12 +249,8 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 				lines = lines[:len(lines)-1]
 			}
 
-			// Demo mode enhancement: if logs are empty, generate realistic mock logs
-			// This provides a better demo experience for bundles with empty log files
-			if len(lines) == 0 || (len(lines) == 1 && lines[0] == "") {
-				return generateDemoLogs(pod, namespace), nil
-			}
-
+			// Return empty logs if file is empty - DON'T generate fake demo logs for real bundles
+			// Real bundles with empty log files should show as empty, not fake data
 			return lines, nil
 		}
 	}
@@ -276,19 +272,15 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 					lines = lines[:len(lines)-1]
 				}
 
-				// Demo mode enhancement for empty logs
-				if len(lines) == 0 || (len(lines) == 1 && lines[0] == "") {
-					return generateDemoLogs(pod, namespace), nil
-				}
-
+				// Return empty logs if file is empty - consistent with first pass
 				return lines, nil
 			}
 		}
 	}
 
-	// No logs found - generate demo logs for better UX in mockdata/demo mode
-	// This provides a realistic demonstration experience
-	return generateDemoLogs(pod, namespace), nil
+	// No logs found - return empty for real bundles (don't generate fake data)
+	// Real bundles should show accurate data only
+	return []string{}, nil
 }
 
 // generateDemoLogs creates realistic mock logs for demo purposes
