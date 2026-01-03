@@ -132,7 +132,56 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Huge bundles: Cap dashboard at top-N with "and X more..." indicator
   - Parse errors: Show count in bundle load warning
 
-## 🚀 Long-Term Ideas (v0.5.0+)
+## 💡 UX Philosophy: "Show, Don't Ask" (v0.5.2+)
+
+**Core Principle**: Information should surface automatically without requiring button presses.
+
+### Auto-Display Health Indicators
+- **Priority**: High
+- **Complexity**: Low
+- **Impact**: High
+- **Description**: Show critical system health automatically in dashboard header
+- **Requirements**:
+  - Dashboard header shows "🔥 2 critical · ⚠ 5 warnings · ✅ 12 healthy" always visible
+  - No button press needed - appears on load
+  - Updates automatically when data refreshes
+- **Philosophy**: User sees cluster health at a glance, no navigation required
+
+### Auto-Show Parse Warnings
+- **Priority**: Medium
+- **Complexity**: Low
+- **Impact**: Medium
+- **Description**: Display bundle parse issues automatically in status bar
+- **Requirements**:
+  - Status bar shows "⚠ 3 parse issues" when bundle has parsing errors
+  - Appears automatically on bundle load
+  - No hotkey needed - information surfaces immediately
+- **Philosophy**: Problems should announce themselves, not hide behind buttons
+
+### Progressive Information Disclosure
+- **Priority**: Medium
+- **Complexity**: Medium
+- **Impact**: High
+- **Description**: Each view automatically shows most important info without drilling down
+- **Requirements**:
+  - Namespace view: Shows error counts automatically in ISSUES column
+  - Pod view: Shows W/E counts in every row by default
+  - Dashboard: Worst items sorted to top automatically
+  - Log view: Empty state shows helpful next steps automatically
+- **Philosophy**: Critical data visible by default, details available on demand
+
+### Smart Defaults Over Configuration
+- **Priority**: Medium
+- **Complexity**: Low
+- **Impact**: Medium
+- **Description**: System chooses best defaults, reduces need for user configuration
+- **Requirements**:
+  - Default sort = count (worst first) - no need to press 's'
+  - Default filter = all logs - user adds filters only when needed
+  - Scan depth auto-adjusts based on bundle size
+- **Philosophy**: Software should be intelligent enough to make good choices automatically
+
+## 🚀 Long-Term Ideas (v0.6.0+)
 
 ### Real-Time Monitoring
 - **Description**: Support live cluster monitoring (not just bundles)
@@ -169,7 +218,7 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Custom pattern matching
   - User-defined issue types
 
-## 📝 Documentation Enhancements
+## � Documentation Enhancements
 
 ### Video Tutorials
 - Quick start (3 min)
