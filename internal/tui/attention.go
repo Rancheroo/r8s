@@ -120,9 +120,14 @@ func (a *App) renderAttentionDashboard() string {
 	displayedCount := len(displayedItems)
 	criticalCount := len(critical)
 	warningCount := len(warning)
+	infoCount := len(info)
 
 	headerText := fmt.Sprintf("🚨 ATTENTION DASHBOARD       %s%s", mode, clusterName)
-	summaryText := fmt.Sprintf("%d issues (%d critical, %d warning)", totalIssues, criticalCount, warningCount)
+
+	// Auto-display health summary (Show, Don't Ask philosophy)
+	// Show health breakdown without requiring any button press
+	summaryText := fmt.Sprintf("🔥 %d critical · ⚠️  %d warnings · ℹ️  %d info  (%d total)",
+		criticalCount, warningCount, infoCount, totalIssues)
 
 	header := lipgloss.NewStyle().
 		Foreground(colorWhite).
@@ -250,7 +255,7 @@ func (a *App) renderAttentionDashboard() string {
 		if displayedCriticals < totalCriticals {
 			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d/%d shown", displayedCriticals, totalCriticals))
 		} else {
-			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d", totalCriticals))
+			statusParts = append(statusParts, fmt.Sprintf("� Criticals: %d", totalCriticals))
 		}
 	}
 
