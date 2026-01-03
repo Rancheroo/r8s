@@ -346,7 +346,14 @@ func (a *App) restoreSelection() {
 }
 
 // cycleSortMode cycles through sort modes: Count → Severity → Name → Count (Dashboard)
+// FIX: Track cursor by Title to maintain selection after sort (v0.5.2 "Show, Don't Ask")
 func (a *App) cycleSortMode() tea.Cmd {
+	// Save currently selected item's Title BEFORE sorting (for Dashboard)
+	var selectedTitle string
+	if a.currentView.viewType == ViewAttention && a.attentionCursor < len(a.attentionItems) {
+		selectedTitle = a.attentionItems[a.attentionCursor].Title
+	}
+
 	// Get current sort mode for this view (default to global if not set)
 	currentMode, exists := a.sortModes[a.currentView.viewType]
 	if !exists {
@@ -358,6 +365,10 @@ func (a *App) cycleSortMode() tea.Cmd {
 
 	// Store per-view preference
 	a.sortModes[a.currentView.viewType] = nextMode
+
+	// For Dashboard: restore cursor position after sort
+	// Store title for restoration after data refresh
+	a.savedRowName = selectedTitle
 
 	// Trigger refresh to re-sort
 	a.loading = true
