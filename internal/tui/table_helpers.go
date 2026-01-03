@@ -108,7 +108,7 @@ func getPodColumnSpecs() []ColumnSpec {
 		{"name", "NAME", 0.30, 18},           // 30% for pod name
 		{"namespace", "NAMESPACE", 0.22, 12}, // 22% for namespace
 		{"state", "STATE", 0.18, 10},         // 18% for state
-		{"we", "W/E", 0.10, 6},               // 10% for warning/error count
+		{"we", "E/W", 0.10, 6},               // 10% for error/warning count
 		{"node", "NODE", 0.20, 12},           // 20% for node
 	}
 }

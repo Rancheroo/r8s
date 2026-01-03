@@ -257,38 +257,15 @@ func (a *App) updateTable() {
 				// Get node name with fallback support
 				nodeName := a.getPodNodeName(pod)
 
-				// Get warning/error counts by scanning pod logs (same as dashboard)
-				weCount := "-"
-				if a.dataSource != nil {
-					// Try to fetch logs for this pod
-					logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
-					if err == nil && len(logs) > 0 {
-						// Get scan depth from config (tunable via --scan flag, default 200)
-						scanDepth := a.config.ScanDepth
-						if scanDepth <= 0 {
-							scanDepth = 200
-						}
-
-						// Limit scan to first N lines for table performance
-						scanLines := logs
-						if len(scanLines) > scanDepth {
-							scanLines = scanLines[:scanDepth]
-						}
-
-						warnCount := 0
-						errorCount := 0
-						for _, line := range scanLines {
-							if isErrorLog(line) {
-								errorCount++
-							} else if isWarnLog(line) {
-								warnCount++
-							}
-						}
-
-						// Only show if there are actual errors/warnings - format: "XE/YW"
-						if warnCount > 0 || errorCount > 0 {
-							weCount = fmt.Sprintf("%dE/%dW", errorCount, warnCount)
-						}
+				// Get error/warning counts from cache (matches namespace view approach)
+				weCount := "✅" // Default clean state
+				cacheKey := fmt.Sprintf("%s/%s", namespaceName, pod.Name)
+				if counts, exists := a.cachedPodCounts[cacheKey]; exists {
+					if counts.Errors > 0 || counts.Warnings > 0 {
+						// Format like namespace view: use formatCount() for large numbers
+						errStr := formatCount(counts.Errors)
+						warnStr := formatCount(counts.Warnings)
+						weCount = fmt.Sprintf("%sE/%sW", errStr, warnStr)
 					}
 				}
 
