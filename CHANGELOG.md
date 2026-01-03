@@ -5,42 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - v0.5.2 "Silky TUI"
+## [0.5.2] - 2026-01-03 "Silky TUI"
 
 ### Fixed 🐛
 - **Dashboard navigation improvements**
   - Cursor-index sync on sort mode changes (prevents jumpy navigation)
-  - Sub-navigation state validation (prevents crashes on edge cases)
   - Scroll position maintained after 's'/'m'/'g'/'G' key presses
-  
-- **Log view UX enhancements**
-  - Empty logs show helpful guidance with actionable next steps
-  - Auto-suggest describe command when no logs available
+  - Title-based cursor tracking maintains selection during sorts
   
 - **Table rendering polish**
   - Dynamic column widths adapt to terminal size (80-200 cols)
-  - Async log fetch performance improved (cached counts)
-  - Consistent truncation with ellipsis across all views
+  - Terminal-responsive layouts for all 9 view types
+  - Smart word wrapping breaks at whitespace, not mid-word
+  - Consistent ellipsis truncation across all views
+  
+- **Performance optimizations** 
+  - Package-level pattern arrays (allocated once, not per call)
+  - Cached error/warning counts for instant table rendering
+  - Reduced GC pressure during log rendering
 
 ### Added ✨
 - **Enhanced help panel** with contextual pro tips per view
-- **'e' hotkey** - Jump to worst error pod from dashboard/pod views
-- **'w' hotkey** - Show bundle parse warnings (if any)
-- **Parse warning count** in status bar when errors detected
+  - Dashboard tips: Sort cycling, health display, expansion
+  - Pod tips: W/E column meaning, error sorting, quick actions
+  - Log tips: Ctrl+W filter, search workflow, vim navigation
+  - Auto-displayed based on current view (Show, Don't Ask principle)
+
+- **"Show, Don't Ask" UX Philosophy**
+  - Tables auto-adapt to terminal width (no manual resizing)
+  - Cursor position auto-restored after sorting (no manual re-finding)
+  - Age display enhanced: shows hours/minutes for recent resources
+  - Health summary auto-displayed in dashboard status bar
 
 ### Technical - v0.5.2
-- Cursor tracking by item Title instead of raw index
-- Bounds validation for sub-navigation cursors
-- Terminal-responsive column width calculations
-- Pod count caching for instant table rendering
-- Integration test suite for navigation edge cases
+- Dynamic column width system with proportional ratios
+- Cursor tracking by Title instead of index for sort stability
+- View-specific contextual help system
+- Cross-platform git commands (Linux/macOS/POSIX)
+- Better error message formatting across all fetch functions
 
 ### Impact - v0.5.2
-- ✅ **Smooth navigation** - j/k/Enter work perfectly on all sort modes
-- ✅ **Zero crashes** - Validated bounds prevent edge case panics
-- ✅ **Terminal responsive** - Tables scale from 80 to 200 columns
-- ✅ **Faster** - Cached counts eliminate redundant log fetches
-- ✅ **Helpful** - Empty states provide clear next actions
+- ✅ **Smooth navigation** - cursor stays on same item after sorts
+- ✅ **Terminal responsive** - tables perfect on 80-200 col terminals
+- ✅ **Better performance** - optimized pattern matching and caching
+- ✅ **Context-aware help** - tips automatically shown per view
+- ✅ **Show, Don't Ask** - information displayed proactively
 
 ---
 
