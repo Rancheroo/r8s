@@ -867,7 +867,7 @@ func (a *App) View() string {
 	}
 
 	if a.showHelp {
-		return renderHelp()
+		return renderHelp(a.currentView.viewType)
 	}
 
 	if a.showingDescribe {

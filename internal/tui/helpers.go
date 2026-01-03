@@ -292,28 +292,30 @@ func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
 }
 
 // renderHelp shows comprehensive keybinding reference
-func renderHelp() string {
+// renderHelp renders the help screen with contextual tips ("Show, Don't Ask")
+func renderHelp(viewType ViewType) string {
+	// Base help content
 	help := `r8s HELP - KEYBINDINGS
 
 NAVIGATION
   ↑/↓, j/k    Move selection up/down
   Enter       Navigate into selection
   b or Esc    Go back one level
-  
+
 ACTIONS
   l           View logs (Pod view)
   d           Describe resource (Pods/Deployments/Services)
   r           Refresh current view
-  
+
 VIEW SWITCHING (Namespace Context)
   1           Switch to Pods
   2           Switch to Deployments
   3           Switch to Services
-  
+
 CLUSTER VIEWS
   C           Jump to CRDs (from Cluster/Project view)
   i           Toggle CRD description (in CRD view)
-  
+
 LOG VIEWING (when viewing logs)
   g           Jump to first line
   G           Jump to last line
@@ -333,11 +335,76 @@ LOG FILTERS (in log view)
 GENERAL
   ?           Show/hide this help
   q           Quit application
-  Ctrl+C      Force quit
-  
-Press Esc or ? to close this help`
+  Ctrl+C      Force quit`
+
+	// Add contextual tips based on current view (Show, Don't Ask principle)
+	tips := getContextualTips(viewType)
+	if len(tips) > 0 {
+		help += "\n\n💡 CONTEXTUAL TIPS FOR THIS VIEW:\n"
+		for _, tip := range tips {
+			help += "  " + tip + "\n"
+		}
+	}
+
+	help += "\n\nPress Esc or ? to close this help"
 
 	return helpStyle.Render(help)
+}
+
+// getContextualTips returns view-specific pro tips auto-displayed in help
+// Implements "Show, Don't Ask" - shows relevant tips automatically
+func getContextualTips(viewType ViewType) []string {
+	switch viewType {
+	case ViewAttention:
+		return []string{
+			"🔍 Dashboard shows worst issues first (sorted by error count)",
+			"📊 Health summary auto-displayed in status bar",
+			"🚀 Press 's' to cycle sort: Count → Severity → Name",
+			"📝 Press 'm' to toggle expansion (show all vs top 20)",
+		}
+	case ViewPods:
+		return []string{
+			"⚡ W/E column shows actual error/warning counts from logs",
+			"🔄 Press 's' to sort by error count vs alphabetical",
+			"🔍 Enter key jumps directly to pod logs with WARN filter",
+			"📱 Press 'l' for logs, 'd' for describe, '1/2/3' to switch views",
+		}
+	case ViewLogs:
+		return []string{
+			"🚨 Use Ctrl+W to filter to warnings+errors (most useful)",
+			"🔍 Search with '/' then 'n'/'N' to jump between matches",
+			"📜 'g'/'G' jumps to top/bottom (vim style)",
+			"🔄 't' toggles tail mode for live monitoring",
+		}
+	case ViewNamespaces:
+		return []string{
+			"🚨 ISSUES column auto-ranks namespaces by error/warning count",
+			"⏱️ AGE column shows hours/minutes for recent namespaces",
+			"🔍 Enter key navigates to pod view sorted by issues",
+		}
+	case ViewClusters:
+		return []string{
+			"🔗 Press 'C' to jump directly to CRDs in any cluster",
+			"📊 Tables auto-adapt to your terminal width",
+		}
+	case ViewCRDs:
+		return []string{
+			"ℹ️ Press 'i' to toggle detailed CRD descriptions",
+			"🔍 Enter key browses instances for the selected CRD",
+		}
+	case ViewDeployments:
+		return []string{
+			"📊 READY column shows current/desired replica counts",
+			"🔍 Press 'd' to describe deployment details",
+		}
+	case ViewServices:
+		return []string{
+			"🌐 CLUSTER-IP column shows internal service addresses",
+			"🔗 PORT(S) column displays all exposed ports",
+		}
+	default:
+		return nil
+	}
 }
 
 // renderDescribeView renders the describe modal
