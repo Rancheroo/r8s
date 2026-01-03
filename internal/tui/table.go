@@ -18,13 +18,8 @@ func (a *App) updateTable() {
 	switch a.currentView.viewType {
 	case ViewCRDs:
 		if len(a.crds) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 35),
-				table.NewColumn("group", "GROUP", 25),
-				table.NewColumn("kind", "KIND", 18),
-				table.NewColumn("scope", "SCOPE", 12),
-				table.NewColumn("instances", "INSTANCES", 10),
-			}
+			// Dynamic column widths - auto-adapt to terminal size ("Show, Don't Ask")
+			columns := a.calculateColumnWidths(getCRDColumnSpecs())
 
 			rows := []table.Row{}
 			for _, crd := range a.crds {
@@ -59,12 +54,8 @@ func (a *App) updateTable() {
 
 	case ViewClusters:
 		if len(a.clusters) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("provider", "PROVIDER", 20),
-				table.NewColumn("state", "STATE", 15),
-				table.NewColumn("created", "AGE", 15),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getClusterColumnSpecs())
 
 			rows := []table.Row{}
 			for _, cluster := range a.clusters {
@@ -100,12 +91,8 @@ func (a *App) updateTable() {
 
 	case ViewProjects:
 		if len(a.projects) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("displayName", "DISPLAY NAME", 30),
-				table.NewColumn("state", "STATE", 12),
-				table.NewColumn("namespaces", "NAMESPACES", 12),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getProjectColumnSpecs())
 
 			rows := []table.Row{}
 			for _, project := range a.projects {
@@ -156,13 +143,8 @@ func (a *App) updateTable() {
 			// Sort by total issues descending using sort.Slice
 			SortNamespacesByHealth(sortedNS, nsHealth)
 
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 32),
-				table.NewColumn("issues", "ISSUES", 18),
-				table.NewColumn("state", "STATE", 10),
-				table.NewColumn("project", "PROJECT", 16),
-				table.NewColumn("created", "AGE", 8),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getNamespaceColumnSpecs())
 
 			rows := []table.Row{}
 			for _, ns := range sortedNS {
@@ -255,13 +237,8 @@ func (a *App) updateTable() {
 				copy(sortedPods, a.pods)
 			}
 
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 28),
-				table.NewColumn("namespace", "NAMESPACE", 18),
-				table.NewColumn("state", "STATE", 12),
-				table.NewColumn("we", "W/E", 8),
-				table.NewColumn("node", "NODE", 20),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getPodColumnSpecs())
 
 			rows := []table.Row{}
 			for _, pod := range sortedPods {
@@ -343,13 +320,8 @@ func (a *App) updateTable() {
 
 	case ViewDeployments:
 		if len(a.deployments) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 35),
-				table.NewColumn("namespace", "NAMESPACE", 20),
-				table.NewColumn("ready", "READY", 12),
-				table.NewColumn("uptodate", "UP-TO-DATE", 12),
-				table.NewColumn("available", "AVAILABLE", 12),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getDeploymentColumnSpecs())
 
 			rows := []table.Row{}
 			for _, deployment := range a.deployments {
@@ -415,13 +387,8 @@ func (a *App) updateTable() {
 
 	case ViewServices:
 		if len(a.services) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 30),
-				table.NewColumn("namespace", "NAMESPACE", 20),
-				table.NewColumn("type", "TYPE", 15),
-				table.NewColumn("cluster_ip", "CLUSTER-IP", 18),
-				table.NewColumn("ports", "PORT(S)", 20),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getServiceColumnSpecs())
 
 			rows := []table.Row{}
 			for _, service := range a.services {
@@ -476,12 +443,8 @@ func (a *App) updateTable() {
 
 	case ViewCRDInstances:
 		if len(a.crdInstances) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("namespace", "NAMESPACE", 25),
-				table.NewColumn("age", "AGE", 15),
-				table.NewColumn("status", "STATUS", 20),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getCRDInstanceColumnSpecs())
 
 			rows := []table.Row{}
 			for _, instance := range a.crdInstances {
@@ -569,13 +532,8 @@ func (a *App) updateTable() {
 				Focused(false).
 				BorderRounded()
 		} else {
-			// Build attention dashboard with issues
-			columns := []table.Column{
-				table.NewColumn("severity", "🚨", 4),
-				table.NewColumn("title", "ISSUE", 50),
-				table.NewColumn("context", "CONTEXT", 25),
-				table.NewColumn("count", "COUNT", 10),
-			}
+			// Build attention dashboard with issues - dynamic column widths
+			columns := a.calculateColumnWidths(getAttentionColumnSpecs())
 
 			// Get items to display (respect expansion state)
 			displayedItems := a.attentionItems
