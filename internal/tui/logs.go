@@ -10,6 +10,30 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Package-level pattern slices allocated once for performance
+var errorPatterns = []string{
+	"ERROR:",
+	"ERR=",
+	"FAILED",
+	"FATAL",
+	"PANIC",
+	"OOMKILLED",
+	"CRASHLOOP",
+	"BACK-OFF",
+	"BACKOFF",
+	"UNAUTHORIZED",
+	"DENIED",
+	"EXCEPTION",
+}
+
+var warnKeywords = []string{
+	"WARN=",
+	"DEPRECATED",
+	"DEPRECATION",
+	"ALERT:",
+	"ALERT=",
+}
+
 // renderLogsView renders the logs view for a pod with viewport scrolling
 func (a *App) renderLogsView() string {
 	// Auto-show helpful message when logs are empty (Show, Don't Ask philosophy)
@@ -163,16 +187,38 @@ func (a *App) renderLogsWithColors() string {
 			// No wrap needed - colorize entire line
 			wrappedLines = append(wrappedLines, a.colorizeLogLine(line, i))
 		} else {
-			// Wrap raw text into segments FIRST
+			// Wrap raw text into segments FIRST, preferring to break at whitespace
 			remainingLine := line
 			for len(remainingLine) > 0 {
-				// Determine segment length
+				// Determine segment length, preferring whitespace breaks
 				segmentEnd := wrapWidth
 				if segmentEnd > len(remainingLine) {
 					segmentEnd = len(remainingLine)
 				}
 
+				// If we're not at the end, try to find last whitespace before wrapWidth
+				if segmentEnd < len(remainingLine) {
+					// Look for the last space/whitespace before wrapWidth
+					lastSpace := -1
+					for idx := segmentEnd - 1; idx >= 0; idx-- {
+						r := rune(remainingLine[idx])
+						if r == ' ' || r == '\t' {
+							lastSpace = idx
+							break
+						}
+					}
+					// Use the whitespace break if found, otherwise use wrapWidth
+					if lastSpace > 0 {
+						segmentEnd = lastSpace
+					}
+				}
+
 				segment := remainingLine[:segmentEnd]
+
+				// Trim leading spaces on wrapped segments (not first segment)
+				if len(wrappedLines) > 0 {
+					segment = strings.TrimLeft(segment, " \t")
+				}
 
 				// Apply color styling to EACH wrapped segment
 				// This preserves colors across all wrapped lines
@@ -292,21 +338,7 @@ func isErrorLog(line string) bool {
 	}
 
 	// PRIORITY 3: Keyword patterns (only if no explicit level indicator present)
-	errorPatterns := []string{
-		"ERROR:",
-		"ERR=",
-		"FAILED",
-		"FATAL",
-		"PANIC",
-		"OOMKILLED",
-		"CRASHLOOP",
-		"BACK-OFF",
-		"BACKOFF",
-		"UNAUTHORIZED",
-		"DENIED",
-		"EXCEPTION",
-	}
-
+	// Use package-level errorPatterns slice
 	for _, pattern := range errorPatterns {
 		if strings.Contains(lineUpper, pattern) {
 			return true
@@ -351,14 +383,7 @@ func isWarnLog(line string) bool {
 		return false
 	}
 
-	warnKeywords := []string{
-		"WARN=",
-		"DEPRECATED",
-		"DEPRECATION",
-		"ALERT:",
-		"ALERT=",
-	}
-
+	// Use package-level warnKeywords slice
 	for _, pattern := range warnKeywords {
 		if strings.Contains(lineUpper, pattern) {
 			return true
@@ -449,12 +474,9 @@ Next steps:
 		topPadding = 0
 	}
 
-	var paddingLines []string
-	for i := 0; i < topPadding; i++ {
-		paddingLines = append(paddingLines, "")
-	}
-
-	centeredContent := strings.Join(append(paddingLines, helpTitle, "", helpBox), "\n")
+	// Use strings.Repeat for vertical padding
+	paddingStr := strings.Repeat("\n", topPadding)
+	centeredContent := paddingStr + strings.Join([]string{helpTitle, "", helpBox}, "\n")
 
 	status := statusStyle.Render(" [d]=describe pod  [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
 

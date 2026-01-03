@@ -85,9 +85,9 @@ func (a *App) fetchPods(projectID, namespaceName string) tea.Cmd {
 		pods, err := a.dataSource.GetPods(projectID, namespaceName)
 		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch pods: %w\n\n"+
-					"Context: projectID=%s, namespace=%s\n"+
-					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+				return errMsg{fmt.Errorf("failed to fetch pods for projectID=%s, namespace=%s: %w\n\n"+
+					"Context: DataSource fetch\n"+
+					"Hint: Check bundle data or API connectivity", projectID, namespaceName, err)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch pods: %w", err)}
 		}
@@ -106,9 +106,9 @@ func (a *App) fetchDeployments(projectID, namespaceName string) tea.Cmd {
 		deployments, err := a.dataSource.GetDeployments(projectID, namespaceName)
 		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch deployments: %w\n\n"+
-					"Context: projectID=%s, namespace=%s\n"+
-					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+				return errMsg{fmt.Errorf("failed to fetch deployments for projectID=%s, namespace=%s: %w\n\n"+
+					"Context: DataSource fetch\n"+
+					"Hint: Check bundle data or API connectivity", projectID, namespaceName, err)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch deployments: %w", err)}
 		}
@@ -127,9 +127,9 @@ func (a *App) fetchServices(projectID, namespaceName string) tea.Cmd {
 		services, err := a.dataSource.GetServices(projectID, namespaceName)
 		if err != nil {
 			if a.config.Verbose {
-				return errMsg{fmt.Errorf("failed to fetch services: %w\n\n"+
-					"Context: projectID=%s, namespace=%s\n"+
-					"Hint: Check bundle data or API connectivity", err, projectID, namespaceName)}
+				return errMsg{fmt.Errorf("failed to fetch services for projectID=%s, namespace=%s: %w\n\n"+
+					"Context: DataSource fetch\n"+
+					"Hint: Check bundle data or API connectivity", projectID, namespaceName, err)}
 			}
 			return errMsg{fmt.Errorf("failed to fetch services: %w", err)}
 		}
@@ -218,9 +218,9 @@ func (a *App) fetchLogs(clusterID, namespace, podName, container string, showPre
 
 		// FIX BUG #13: NO SILENT FALLBACK - return error with context
 		if a.config.Verbose {
-			return errMsg{fmt.Errorf("failed to fetch logs from data source: %w\n\n"+
-				"Context: cluster=%s, namespace=%s, pod=%s, container=%s\n"+
-				"Hint: Check bundle data or pod status", err, clusterID, namespace, podName, container)}
+			return errMsg{fmt.Errorf("failed to fetch logs from data source for cluster=%s, namespace=%s, pod=%s, container=%s: %w\n\n"+
+				"Context: DataSource fetch\n"+
+				"Hint: Check bundle data or pod status", clusterID, namespace, podName, container, err)}
 		}
 		return errMsg{fmt.Errorf("failed to fetch logs: %w", err)}
 	}

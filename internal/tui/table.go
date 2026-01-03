@@ -501,10 +501,19 @@ func (a *App) updateTable() {
 						namespace = "cluster-scoped"
 					}
 					if ct, ok := metadata["creationTimestamp"].(string); ok {
-						// Parse and calculate age
+						// Parse and calculate age with human-readable format (same as namespace view)
 						if t, err := time.Parse(time.RFC3339, ct); err == nil {
 							days := int(time.Since(t).Hours() / 24)
-							createdTime = fmt.Sprintf("%dd", days)
+							if days > 0 {
+								createdTime = fmt.Sprintf("%dd", days)
+							} else {
+								hours := int(time.Since(t).Hours())
+								if hours > 0 {
+									createdTime = fmt.Sprintf("%dh", hours)
+								} else {
+									createdTime = fmt.Sprintf("%dm", int(time.Since(t).Minutes()))
+								}
+							}
 						}
 					}
 				}

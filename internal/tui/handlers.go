@@ -57,7 +57,7 @@ func (a *App) handleEnter() tea.Cmd {
 			a.currentView = ViewContext{
 				viewType:      ViewLogs,
 				clusterID:     matchedItem.ClusterID,
-				clusterName:   "",
+				clusterName:   matchedItem.ClusterName,
 				projectID:     "",
 				projectName:   "",
 				namespaceID:   "",
@@ -327,6 +327,10 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchServices(a.currentView.projectID, a.currentView.namespaceName)
 	case ViewCRDs:
 		return a.fetchCRDs(a.currentView.clusterID)
+	case ViewCRDInstances:
+		return a.fetchCRDInstances(a.currentView.clusterID, a.currentView.crdGroup, a.currentView.crdVersion, a.currentView.crdResource)
+	case ViewLogs:
+		return a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName, a.currentContainer, a.showPrevious)
 	default:
 		return nil
 	}

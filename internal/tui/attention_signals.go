@@ -64,6 +64,7 @@ type AttentionItem struct {
 	PodName       string
 	ContainerName string
 	ClusterID     string
+	ClusterName   string
 
 	// Expandable content for aggregate items (events)
 	AffectedPods      []string       // Top 10 pod names involved in this event

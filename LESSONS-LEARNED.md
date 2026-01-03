@@ -1644,9 +1644,18 @@ VERSION?=$(shell git describe --tags --always --dirty)
 # Find branches merged into main
 git branch --merged main | grep -v main
 
-# Find stale branches (>30 days)  
+# Find stale branches (>30 days)
+# Linux (GNU date):
 git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
   awk '$2 < "'$(date -d '30 days ago' '+%Y-%m-%d')'"'
+
+# macOS/BSD (use -v flag):
+git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
+  awk '$2 < "'$(date -v-30d '+%Y-%m-%d')'"'
+
+# POSIX-portable (using perl):
+git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
+  awk '$2 < "'$(perl -e 'print((localtime(time-30*86400))[5]+1900)."-".sprintf("%02d",(localtime(time-30*86400))[4]+1)."-".sprintf("%02d",(localtime(time-30*86400))[3])')'"'
 
 # Safe cleanup (merged branches only)
 git branch --merged main | grep -v main | xargs -n 1 git branch -d
