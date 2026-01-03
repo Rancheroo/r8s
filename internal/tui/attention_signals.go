@@ -820,6 +820,16 @@ func extractNamespace(namespaceID string) string {
 	return namespaceID
 }
 
+// SortNamespacesByHealth sorts namespaces by total issue count descending
+func SortNamespacesByHealth(namespaces []rancher.Namespace, nsHealth map[string]NamespaceHealth) {
+	sort.Slice(namespaces, func(i, j int) bool {
+		health1 := nsHealth[namespaces[i].Name]
+		health2 := nsHealth[namespaces[j].Name]
+		// Sort descending (highest count first)
+		return health1.Total > health2.Total
+	})
+}
+
 // getPodStateSeverity assigns severity score to pod states (lower = more critical)
 func getPodStateSeverity(state string) int {
 	stateLower := strings.ToLower(state)

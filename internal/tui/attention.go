@@ -255,7 +255,7 @@ func (a *App) renderAttentionDashboard() string {
 		if displayedCriticals < totalCriticals {
 			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d/%d shown", displayedCriticals, totalCriticals))
 		} else {
-			statusParts = append(statusParts, fmt.Sprintf("� Criticals: %d", totalCriticals))
+			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d", totalCriticals))
 		}
 	}
 

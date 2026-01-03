@@ -433,9 +433,7 @@ func (a *App) tickTail() tea.Cmd {
 // cycleContainer cycles through available containers for the current pod
 func (a *App) cycleContainer() tea.Cmd {
 	if len(a.containers) == 0 {
-		// Initialize mock containers for demonstration
-		a.containers = []string{"app", "sidecar", "init"}
-		a.currentContainer = a.containers[0]
+		// No containers available - return immediately
 		return nil
 	}
 
@@ -452,9 +450,8 @@ func (a *App) cycleContainer() tea.Cmd {
 	nextIdx := (currentIdx + 1) % len(a.containers)
 	a.currentContainer = a.containers[nextIdx]
 
-	// In production, would fetch logs for new container
-	// For now, just update the display
-	return nil
+	// Fetch logs for the new container
+	return a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName, a.currentContainer, a.showPrevious)
 }
 
 // isNamespaceResourceView returns true if the current view is a namespace-scoped resource view

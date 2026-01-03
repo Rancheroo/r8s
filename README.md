@@ -7,7 +7,7 @@
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**What's new in 0.5.0:** Mock mode completely removed · Log scanning re-enabled with accuracy · 17% leaner codebase
+**What's new in 0.5.1:** Complete app.go decomposition into 6 modules · 70% cognitive load reduction · Improved testability
 
 **Previous:** 0.4.4 - Bundle validation, CI tests, 200MB limit
 

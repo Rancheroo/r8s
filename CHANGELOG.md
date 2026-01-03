@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.1] - 2026-01-02 "Modular Core"
+## [0.5.1] - 2026-01-03 "Modular Core"
+
+### Fixed 🐛
+- **Code quality pass (11 fixes across 7 files)**
+  - Fixed UTF-8 encoding issues (� → 📚 and 🔥 emojis)
+  - Removed hardcoded mock container initialization in handlers
+  - Changed misleading "[MOCK]" label to "[DEMO]" 
+  - Fixed K8s log marker checks to only match at line start (consistent detection)
+  - Removed redundant else blocks
+  - Fixed slice aliasing bug (sortedPods now creates copy before sorting)
+  - Replaced manual bubble sort with sort.Slice for better performance (O(n log n))
+  - Fixed duplicate section headings and date formatting in documentation
+  - Updated version references (0.5.0 → 0.5.1)
 
 ### Refactored 🔧
 

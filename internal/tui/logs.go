@@ -375,19 +375,12 @@ func isInfoLog(line string) bool {
 	if strings.Contains(lineUpper, "[INFO]") {
 		return true
 	}
-	// K8s format: I1120, I0102, etc. (I followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'I' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				// Check if followed by space or colon
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
+	// K8s format at line start: I#### (check first 5 chars only)
+	if len(line) >= 5 && line[0] == 'I' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return true
 	}
-	// Also check for level=info format
+	// Also check for level=info format (anywhere in line)
 	if strings.Contains(lineUpper, "LEVEL=INFO") {
 		return true
 	}
@@ -401,19 +394,12 @@ func isDebugLog(line string) bool {
 	if strings.Contains(lineUpper, "[DEBUG]") {
 		return true
 	}
-	// K8s format: D1120, D0102, etc. (D followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'D' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				// Check if followed by space or colon
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
+	// K8s format at line start: D#### (check first 5 chars only)
+	if len(line) >= 5 && line[0] == 'D' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return true
 	}
-	// Also check for level=debug format
+	// Also check for level=debug format (anywhere in line)
 	if strings.Contains(lineUpper, "LEVEL=DEBUG") {
 		return true
 	}

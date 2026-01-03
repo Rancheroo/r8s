@@ -24,8 +24,6 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Impact**: Users can now tune speed/accuracy trade-off based on bundle size
 - **Usage**: `r8s --scan 500 ./bundle/` (default: 200 lines)
 
-## ✅ Recently Completed
-
 ### App.go Modular Decomposition (v0.5.1)
 - **Status**: ✅ Shipped in v0.5.1
 - **Description**: Complete decomposition of 3031-line app.go into 6 focused modules
@@ -218,7 +216,7 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Custom pattern matching
   - User-defined issue types
 
-## � Documentation Enhancements
+## 📚 Documentation Enhancements
 
 ### Video Tutorials
 - Quick start (3 min)

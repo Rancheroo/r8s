@@ -67,7 +67,7 @@ func (a *App) getBreadcrumb() string {
 	if a.bundleMode {
 		modeIndicator = "[BUNDLE] "
 	} else if a.offlineMode {
-		modeIndicator = "[MOCK] "
+		modeIndicator = "[DEMO] "
 	}
 
 	switch a.currentView.viewType {

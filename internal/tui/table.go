@@ -153,18 +153,8 @@ func (a *App) updateTable() {
 			sortedNS := make([]rancher.Namespace, len(a.namespaces))
 			copy(sortedNS, a.namespaces)
 
-			// Bubble sort by total issues descending
-			for i := 0; i < len(sortedNS); i++ {
-				for j := i + 1; j < len(sortedNS); j++ {
-					health1 := nsHealth[sortedNS[i].Name]
-					health2 := nsHealth[sortedNS[j].Name]
-
-					// Sort descending (highest count first)
-					if health1.Total < health2.Total {
-						sortedNS[i], sortedNS[j] = sortedNS[j], sortedNS[i]
-					}
-				}
-			}
+			// Sort by total issues descending using sort.Slice
+			SortNamespacesByHealth(sortedNS, nsHealth)
 
 			columns := []table.Column{
 				table.NewColumn("name", "NAME", 32),
@@ -250,8 +240,8 @@ func (a *App) updateTable() {
 				sortMode = a.sortMode // Use global default
 			}
 
-			// Sort pods according to mode
-			sortedPods := a.pods
+			// Sort pods according to mode (create a copy to avoid in-place modification)
+			var sortedPods []rancher.Pod
 			switch sortMode {
 			case SortByCount:
 				sortedPods = SortPodsByCount(a.pods, a.cachedPodCounts)
@@ -259,6 +249,10 @@ func (a *App) updateTable() {
 				sortedPods = SortPodsBySeverity(a.pods)
 			case SortByName:
 				sortedPods = SortPodsByName(a.pods)
+			default:
+				// Default: copy the slice to avoid aliasing
+				sortedPods = make([]rancher.Pod, len(a.pods))
+				copy(sortedPods, a.pods)
 			}
 
 			columns := []table.Column{
@@ -588,8 +582,6 @@ func (a *App) updateTable() {
 					severityEmoji = "🔥"
 				} else if item.Severity == SeverityWarning {
 					severityEmoji = "⚠️"
-				} else {
-					severityEmoji = "ℹ️"
 				}
 
 				// Format context (namespace/resource type)
