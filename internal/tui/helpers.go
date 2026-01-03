@@ -254,7 +254,9 @@ func (a *App) getPodNodeName(pod rancher.Pod) string {
 }
 
 // selectBestCRDVersion selects the best version from a CRD's version list
-// Priority: storage+served > storage > first served > error
+// selectBestCRDVersion selects the best CRD version name from the provided slice.
+// It prefers a version that is both `storage` and `served`, then a `storage` version,
+// then the first `served` version; returns an error if no served or storage version can be chosen.
 func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
 	var storageVersion string
 	var firstServedVersion string
@@ -292,7 +294,8 @@ func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
 }
 
 // renderHelp shows comprehensive keybinding reference
-// renderHelp renders the help screen with contextual tips ("Show, Don't Ask")
+// renderHelp renders the help screen for the given view type, listing keybindings and appending view-specific contextual tips when available.
+// The resulting string is formatted for display.
 func renderHelp(viewType ViewType) string {
 	// Base help content
 	help := `r8s HELP - KEYBINDINGS
@@ -352,7 +355,8 @@ GENERAL
 }
 
 // getContextualTips returns view-specific pro tips auto-displayed in help
-// Implements "Show, Don't Ask" - shows relevant tips automatically
+// getContextualTips returns contextual help tips for the specified ViewType.
+// Each element is a concise, user-facing tip to show on the help screen; it returns nil when no tips are defined for the view.
 func getContextualTips(viewType ViewType) []string {
 	switch viewType {
 	case ViewAttention:

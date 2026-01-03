@@ -45,7 +45,9 @@ func (a *App) calculateColumnWidths(specs []ColumnSpec) []table.Column {
 
 // truncateWithEllipsis truncates text consistently across all tables
 // If text exceeds maxWidth, truncate and add "..."
-// Implements consistent truncation behavior (audit issue #9)
+// truncateWithEllipsis truncates text to fit within maxWidth characters, appending "..." when truncation occurs.
+// If maxWidth is less than or equal to 0 it returns an empty string. If maxWidth is 1–3 it returns that many dots.
+// If text already fits within maxWidth it is returned unchanged.
 func truncateWithEllipsis(text string, maxWidth int) string {
 	if maxWidth <= 0 {
 		return ""
@@ -63,7 +65,9 @@ func truncateWithEllipsis(text string, maxWidth int) string {
 }
 
 // Common column specifications for different view types
-// These define the proportional layouts that auto-adapt to terminal width
+// getCRDColumnSpecs defines proportional column specifications for the CRD view.
+// Each ColumnSpec specifies the column key, header title, proportional width (ratio) and minimum width in characters; ratios are applied to available table width when computing final column sizes.
+// The returned slice contains specs for the columns: name, group, kind, scope, and instances.
 
 func getCRDColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
@@ -75,6 +79,8 @@ func getCRDColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getClusterColumnSpecs returns column specifications for the clusters table.
+// Each ColumnSpec defines the column key, header title, proportional width ratio, and minimum width used to layout cluster list views.
 func getClusterColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.40, 20},         // 40% for cluster names
@@ -84,6 +90,8 @@ func getClusterColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getProjectColumnSpecs returns the column specifications for the projects table.
+// The slice defines columns: project name (key "name", 35% ratio, min width 20), display name (key "displayName", 35% ratio, min width 15), state (key "state", 15% ratio, min width 10), and namespaces (key "namespaces", 15% ratio, min width 8).
 func getProjectColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.35, 20},                // 35% for project name
@@ -93,6 +101,9 @@ func getProjectColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getNamespaceColumnSpecs returns the column specifications for the namespace table view.
+// Each ColumnSpec defines the column key, header title, proportional width (Ratio), and minimum width in characters.
+// The specs allocate space as: name (35%, min 18), issues (20%, min 12), state (15%, min 8), project (20%, min 12), created/age (10%, min 6).
 func getNamespaceColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.35, 18},       // 35% for namespace name
@@ -103,6 +114,10 @@ func getNamespaceColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getPodColumnSpecs returns the default ColumnSpec slice used to render pod table views.
+// Columns: "name" (NAME) — pod name, 30% ratio, min width 18; "namespace" (NAMESPACE) — 22% ratio, min 12;
+// "state" (STATE) — 18% ratio, min 10; "we" (E/W) — error/warning count, 10% ratio, min 6;
+// "node" (NODE) — 20% ratio, min 12.
 func getPodColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.30, 18},           // 30% for pod name
@@ -113,6 +128,8 @@ func getPodColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getDeploymentColumnSpecs returns the default ColumnSpec slice used to render the deployments table.
+// Each spec defines the column Key, Title, proportional Ratio (0.0–1.0) of available width, and a minimum width in characters.
 func getDeploymentColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.35, 20},           // 35% for deployment name
@@ -123,6 +140,8 @@ func getDeploymentColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getServiceColumnSpecs returns column specifications for the services table view.
+// Columns provided: "name", "namespace", "type", "cluster_ip", and "ports" with suggested proportional ratios and minimum widths for terminal layout.
 func getServiceColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.25, 15},             // 25% for service name
@@ -133,6 +152,9 @@ func getServiceColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getCRDInstanceColumnSpecs returns the column specifications for the CRD instance table view.
+// The returned slice defines columns and their proportional widths and minimums: name (35%, min 20),
+// namespace (25%, min 12), age (15%, min 8), and status (25%, min 12).
 func getCRDInstanceColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.35, 20},           // 35% for instance name
@@ -142,6 +164,8 @@ func getCRDInstanceColumnSpecs() []ColumnSpec {
 	}
 }
 
+// getAttentionColumnSpecs returns the default column specifications for the attention table view.
+// The specs define columns for severity, title, context, and count, including each column's display title, proportional width ratio, and minimum character width.
 func getAttentionColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"severity", "🚨", 0.05, 4},       // 5% for severity emoji
