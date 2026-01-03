@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1.1] - 2026-01-03 "Code Quality Polish"
+
+### Fixed 🐛
+- **Systematic code quality pass (11 improvements)**
+  - UTF-8 encoding fixes: � → 📚 and 🔥 emojis render correctly
+  - K8s log marker consistency: I####/D#### patterns only match at line start
+  - Slice aliasing bug: sortedPods now creates copy before sorting
+  - Performance: Replaced manual bubble sort with sort.Slice (O(n²) → O(n log n))
+  - Terminology: [MOCK] → [DEMO] for embedded bundle
+  - Code cleanup: Removed redundant else blocks and debug code
+
+### Added ✨
+- **UX improvements**
+  - Auto-display health breakdown in dashboard: "🔥 X critical · ⚠️ X warnings"
+  - Auto-display helpful message for empty logs with next steps
+  - "Show, Don't Ask" UX philosophy documented in FUTURE_WORK.md
+
+### Impact - v0.5.1.1
+- ✅ **Perfect emoji rendering** - Multi-byte UTF-8 characters handled correctly
+- ✅ **Consistent log detection** - K8s markers uniform across all views
+- ✅ **Zero aliasing bugs** - All sorting operations create copies
+- ✅ **Better performance** - O(n log n) sorting everywhere
+- ✅ **Improved UX** - Information displayed proactively, not on demand
+
+### Technical - v0.5.1.1
+- Reviewer feedback incorporated from code quality audit
+- All patterns documented in LESSONS-LEARNED.md
+- Build verified: `make build && make test` pass cleanly
+- 5 commits of polish post-v0.5.1 release
+
 ## [0.5.1] - 2026-01-03 "Modular Core"
 
 ### Fixed 🐛
