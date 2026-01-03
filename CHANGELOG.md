@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-01-03 "Documentation & Code Quality"
+
+### Fixed 🐛
+- **Documentation consistency across repository**
+  - Updated all version references from v0.5.1 to v0.5.2 (README.md, POST_MERGE_CLEANUP.md)
+  - Added blank lines before subheadings in FUTURE_WORK.md for markdown linting compliance
+  - Removed trailing comma from date field in GIT_BRANCH_CLEANUP_PLAN.md
+  - Verified all v0.5.1 references are correctly in historical documentation
+
+- **Code quality improvements**
+  - Refactored 4 sorting functions to use sort.Slice/sort.SliceStable (sortAttentionItems, sortItemsByCount, sortItemsByName, getTopPods)
+  - Replaced manual bubble-sort O(n²) implementations with sort.Slice O(n log n) for better performance
+  - Maintained stable ordering using sort.SliceStable where needed for tie-breaker logic
+
+### Added ✨
+- **Post-merge cleanup documentation**
+  - Added 30-day branch cleanup rule to CONTRIBUTING.md with link to POST_MERGE_CLEANUP.md
+  - Documented safe commands for finding merged/stale branches and cleanup automation suggestions
+  
+- **UTF-8 encoding prevention**
+  - Added comprehensive UTF-8 linting recommendation to LESSONS-LEARNED.md
+  - Documented pre-commit hook approach to prevent replacement character (�) regressions
+  - Included instructions for CI lint step integration and developer setup
+
+- **Simplification proposal documented**
+  - Added "Remove Sort Mode Complexity" proposal to FUTURE_WORK.md (v0.5.3+)
+  - Philosophy: "The best feature is no feature - smart defaults beat options"
+  - Estimated impact: ~200 lines removed, reduced cognitive load, better UX
+  - Rationale: 95% of users want "worst first" (count-based) sorting
+
+### Technical
+- 7 files modified: CONTRIBUTING.md, FUTURE_WORK.md, LESSONS-LEARNED.md, POST_MERGE_CLEANUP.md, README.md, GIT_BRANCH_CLEANUP_PLAN.md, attention_signals.go
+- All sorting functions now use Go stdlib (sort.Slice/sort.SliceStable)
+- Version consistency verified across entire repository
+- Branch: ship-v052
+
+### Impact Summary
+- ✅ **Version consistency** - All user-facing docs show v0.5.2
+- ✅ **Better performance** - Sort functions use O(n log n) algorithms
+- ✅ **Future-proof** - UTF-8 linting prevents encoding regressions
+- ✅ **Simplified roadmap** - Clear path to remove unnecessary complexity
+- ✅ **Repository hygiene** - 30-day cleanup rule prevents branch sprawl
+
+### Deferred
+- Complete remaining sort function refactoring (SortPodsByCount, SortPodsBySeverity use manual loops)
+- handlers.go issues (viewport scrolling, restoreSelection stub, container selection, loading state)
+- helpers.go dimension guards
+- logs.go whitespace trimming logic
+- table.go namespace parsing deduplication and pod log scanning optimization
+
 ## [0.5.2] - 2026-01-03 "Silky TUI"
 
 ### Fixed 🐛

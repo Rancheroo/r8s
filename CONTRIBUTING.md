@@ -325,6 +325,16 @@ func TestConfig_Validate(t *testing.T) {
 - [ ] No race conditions (`go test -race` passes)
 - [ ] Commit messages follow guidelines
 
+### Post-Merge Cleanup
+
+After your PR is merged, follow the **30-Day Branch Cleanup Rule** to maintain repository hygiene:
+
+- Delete your local feature branch after merge
+- Delete the remote branch (if not auto-deleted)
+- Every 30 days, clean up stale merged branches
+
+See [POST_MERGE_CLEANUP.md](POST_MERGE_CLEANUP.md) for detailed commands and the complete cleanup process. This prevents branch sprawl and keeps the repository clean for all contributors.
+
 ---
 
 ## Commit Guidelines

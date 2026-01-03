@@ -1,4 +1,4 @@
-# Post-Merge Cleanup Instructions - v0.5.1
+# Post-Merge Cleanup Instructions - v0.5.2
 
 ## After PR is merged to main
 

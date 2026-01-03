@@ -407,14 +407,10 @@ func getTopPods(pods map[string]int, n int) []string {
 		sorted = append(sorted, podCount{name, count})
 	}
 
-	// Simple bubble sort by count (descending)
-	for i := 0; i < len(sorted); i++ {
-		for j := i + 1; j < len(sorted); j++ {
-			if sorted[i].count < sorted[j].count {
-				sorted[i], sorted[j] = sorted[j], sorted[i]
-			}
-		}
-	}
+	// Sort by count descending
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].count > sorted[j].count
+	})
 
 	// Return top N names
 	result := []string{}
@@ -566,36 +562,23 @@ func isHealthyReadyStatus(ready string) bool {
 
 // sortAttentionItems sorts items by severity (Critical first)
 func sortAttentionItems(items []AttentionItem) {
-	// Simple bubble sort by severity
-	for i := 0; i < len(items); i++ {
-		for j := i + 1; j < len(items); j++ {
-			if items[i].Severity > items[j].Severity {
-				items[i], items[j] = items[j], items[i]
-			}
-		}
-	}
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Severity < items[j].Severity
+	})
 }
 
 // sortItemsByCount sorts items by total error+warning count (descending)
 func sortItemsByCount(items []AttentionItem) {
-	for i := 0; i < len(items); i++ {
-		for j := i + 1; j < len(items); j++ {
-			if items[i].Count < items[j].Count {
-				items[i], items[j] = items[j], items[i]
-			}
-		}
-	}
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Count > items[j].Count
+	})
 }
 
 // sortItemsByName sorts items alphabetically by title
 func sortItemsByName(items []AttentionItem) {
-	for i := 0; i < len(items); i++ {
-		for j := i + 1; j < len(items); j++ {
-			if items[i].Title > items[j].Title {
-				items[i], items[j] = items[j], items[i]
-			}
-		}
-	}
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Title < items[j].Title
+	})
 }
 
 // GetSortedAttentionItems returns items sorted by the specified mode

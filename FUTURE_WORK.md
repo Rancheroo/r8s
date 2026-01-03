@@ -179,6 +179,30 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Scan depth auto-adjusts based on bundle size
 - **Philosophy**: Software should be intelligent enough to make good choices automatically
 
+### Remove Sort Mode Complexity (v0.5.3+)
+- **Priority**: High
+- **Complexity**: Low (removal)
+- **Impact**: High (simplification)
+- **Description**: Eliminate sort mode toggles - always use smart default (highest error count first)
+- **Current State**: 
+  - 3 sort modes: Count, Severity, Name
+  - Toggle hotkey 's' cycles through modes
+  - Status bar shows current mode
+  - ~200 lines of sorting code
+- **Proposed Change**:
+  - Remove `SortMode` enum entirely
+  - Remove sort toggle functionality
+  - Always sort by error count descending (worst first)
+  - Remove status bar sort indicator
+  - Delete unused sorting functions
+- **Rationale**:
+  - 95% of users want "worst first" (count-based)
+  - Sorting options add cognitive load without value
+  - Smart default eliminates need for configuration
+  - Fewer features = better UX
+- **Code Reduction**: ~200 lines removed
+- **Philosophy**: "The best feature is no feature - smart defaults beat options"
+
 ## 🚀 Long-Term Ideas (v0.6.0+)
 
 ### Real-Time Monitoring
