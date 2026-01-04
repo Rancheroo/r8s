@@ -40,6 +40,7 @@
 ### Branch Analysis
 
 **Unmerged Branches** (as of 2026-01-04):
+
 ```bash
 * ship-v052 (1 commit ahead of main)
   - Commit: 284b509 "cleanup: Remove dead code - unused generateDemoLogs()"
@@ -111,7 +112,8 @@
 | 4 | `chore/version-bump-054` | Bump version, update CHANGELOG, FUTURE_WORK audit | 10 min | ✅ Clean build, docs updated |
 
 **Simplification Impact**:
-```
+
+```text
 BEFORE v0.5.4:
 - Sort modes: 3 (Count, Severity, Name) → User must choose
 - Log filters: 3 (ALL, ERROR, WARN) → Manual toggling
@@ -158,7 +160,8 @@ AFTER v0.5.4:
 | 5 | `chore/version-bump-055` | Bump version, document test improvements | 10 min | ✅ Coverage report in CHANGELOG |
 
 **Test Strategy**:
-```
+
+```text
 internal/bundle/bundle.go:
   - Test tarball extraction edge cases
   - Test bundle structure validation
@@ -208,7 +211,8 @@ Integration (new):
 | 3 | `docs/v060-prep` | Document v0.6.0 scope (multi-bundle, journald) | 20 min | ✅ FUTURE_WORK updated |
 
 **Total Simplification Impact (v0.5.4 + v0.5.6)**:
-```
+
+```text
 Lines Removed: ~300
 States Removed: 11 → 2
 - 3 sort modes → 1 default
@@ -267,7 +271,7 @@ git push origin --delete <branch-name>
 
 ### Branch Naming Convention
 
-```
+```text
 fix/      — Bug fixes (crashes, test failures)
 feat/     — New features or enhancements
 test/     — Test-only changes (no behavior change)

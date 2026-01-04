@@ -141,7 +141,7 @@ func (a *App) updateTable() {
 			copy(sortedNS, a.namespaces)
 
 			// Sort by total issues descending using sort.Slice
-			SortNamespacesByHealth(sortedNS, nsHealth)
+			sortedNS = SortNamespacesByHealth(sortedNS, nsHealth)
 
 			// Dynamic column widths - auto-adapt to terminal size
 			columns := a.calculateColumnWidths(getNamespaceColumnSpecs())
@@ -514,8 +514,8 @@ func (a *App) updateTable() {
 
 			// Get items to display (respect expansion state)
 			displayedItems := a.attentionItems
-			if !a.attentionExpanded && len(a.attentionItems) > 20 {
-				displayedItems = a.attentionItems[:20]
+			if !a.attentionExpanded && len(a.attentionItems) > defaultDashboardCap {
+				displayedItems = a.attentionItems[:defaultDashboardCap]
 			}
 
 			rows := []table.Row{}

@@ -8,6 +8,7 @@
 ## 📊 BRANCH AUDIT RESULTS
 
 ### Current State
+
 - **Total branches:** 10 (9 local + 1 remote)
 - **Fully merged to main:** 8 branches
 - **Unmerged work-in-progress:** 1 branch  
@@ -32,6 +33,7 @@
 ## 🗑️ PROPOSED CLEANUP ACTIONS
 
 ### BUCKET 1: Safe to Delete Immediately (7 branches)
+
 **Criteria:** Fully merged + >20 days old + local-only
 
 ```bash
@@ -46,6 +48,7 @@ git branch -d remove-live-mode
 ```
 
 ### BUCKET 2: Clean Up Remote Branch (1 branch)
+
 **Criteria:** Fully merged + has remote tracking
 
 ```bash
@@ -55,6 +58,7 @@ git push origin --delete feature/v0.4.4-post-audit-improvements
 ```
 
 ### BUCKET 3: PROTECT - Active Work (1 branch)
+
 **Criteria:** Current branch + unmerged commits
 
 - **feature/v0.5.0-refactor-app** - KEEP (current branch, 5 commits ahead of main)
@@ -67,6 +71,7 @@ git push origin --delete feature/v0.4.4-post-audit-improvements
 ## 🎯 EXECUTION PLAN
 
 ### Phase 1: Immediate Cleanup
+
 **Time estimate:** 2 minutes  
 **Risk level:** ZERO (all merged branches)
 
@@ -83,6 +88,7 @@ git push origin --delete feature/v0.4.4-post-audit-improvements
 ```
 
 ### Phase 2: Verification
+
 ```bash
 # Confirm clean state
 git branch -vv
@@ -113,17 +119,21 @@ git branch -r
 ## 🛡️ SAFETY MEASURES
 
 ### What We're Protecting:
+
 - **feature/v0.5.0-refactor-app** - Current decomposition work (5 unmerged commits)
 - **main** - Production branch
 - All work is preserved (merged branches' code is in main)
 
 ### What We're NOT Deleting:
-- Any unmerged commits  
+
+- Any unmerged commits
 - Current working branch
 - Any branch with recent activity (<7 days)
 
 ### Rollback Plan:
+
 If anything goes wrong, all deleted branches can be recovered via:
+
 ```bash
 # Find the commit hash from git log
 git checkout -b <branch-name> <commit-hash>

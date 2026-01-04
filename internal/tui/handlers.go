@@ -364,8 +364,8 @@ func (a *App) cycleSortMode() tea.Cmd {
 		currentMode = a.sortMode // Use global default
 	}
 
-	// Cycle to next mode
-	nextMode := (currentMode + 1) % 3
+	// Cycle to next mode (total modes = last enum value + 1)
+	nextMode := SortMode((int(currentMode) + 1) % (int(SortByName) + 1))
 
 	// Store per-view preference
 	a.sortModes[a.currentView.viewType] = nextMode

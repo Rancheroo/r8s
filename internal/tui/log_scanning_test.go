@@ -96,7 +96,7 @@ func TestDashboardLogAccuracy_MatchesLogView(t *testing.T) {
 					}
 
 					// If we have significant issues, verify they're in the dashboard
-					if actualErrors > 10 || actualWarns > 10 {
+					if actualErrors >= 10 || actualWarns >= 10 {
 						if item.Count == 0 {
 							t.Errorf("Pod has %d errors/%d warnings but dashboard shows 0", actualErrors, actualWarns)
 						}
@@ -105,7 +105,7 @@ func TestDashboardLogAccuracy_MatchesLogView(t *testing.T) {
 			}
 
 			// Pods with significant issues should be in dashboard
-			if tc.expectedErrors > 10 || tc.expectedWarns > 10 {
+			if tc.expectedErrors >= 10 || tc.expectedWarns >= 10 {
 				if !found {
 					t.Errorf("Pod %s with %dE/%dW not in dashboard", tc.podName, tc.expectedErrors, tc.expectedWarns)
 				}
