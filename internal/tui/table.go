@@ -18,13 +18,8 @@ func (a *App) updateTable() {
 	switch a.currentView.viewType {
 	case ViewCRDs:
 		if len(a.crds) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 35),
-				table.NewColumn("group", "GROUP", 25),
-				table.NewColumn("kind", "KIND", 18),
-				table.NewColumn("scope", "SCOPE", 12),
-				table.NewColumn("instances", "INSTANCES", 10),
-			}
+			// Dynamic column widths - auto-adapt to terminal size ("Show, Don't Ask")
+			columns := a.calculateColumnWidths(getCRDColumnSpecs())
 
 			rows := []table.Row{}
 			for _, crd := range a.crds {
@@ -59,12 +54,8 @@ func (a *App) updateTable() {
 
 	case ViewClusters:
 		if len(a.clusters) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("provider", "PROVIDER", 20),
-				table.NewColumn("state", "STATE", 15),
-				table.NewColumn("created", "AGE", 15),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getClusterColumnSpecs())
 
 			rows := []table.Row{}
 			for _, cluster := range a.clusters {
@@ -100,12 +91,8 @@ func (a *App) updateTable() {
 
 	case ViewProjects:
 		if len(a.projects) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("displayName", "DISPLAY NAME", 30),
-				table.NewColumn("state", "STATE", 12),
-				table.NewColumn("namespaces", "NAMESPACES", 12),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getProjectColumnSpecs())
 
 			rows := []table.Row{}
 			for _, project := range a.projects {
@@ -153,26 +140,11 @@ func (a *App) updateTable() {
 			sortedNS := make([]rancher.Namespace, len(a.namespaces))
 			copy(sortedNS, a.namespaces)
 
-			// Bubble sort by total issues descending
-			for i := 0; i < len(sortedNS); i++ {
-				for j := i + 1; j < len(sortedNS); j++ {
-					health1 := nsHealth[sortedNS[i].Name]
-					health2 := nsHealth[sortedNS[j].Name]
+			// Sort by total issues descending using sort.Slice
+			SortNamespacesByHealth(sortedNS, nsHealth)
 
-					// Sort descending (highest count first)
-					if health1.Total < health2.Total {
-						sortedNS[i], sortedNS[j] = sortedNS[j], sortedNS[i]
-					}
-				}
-			}
-
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 32),
-				table.NewColumn("issues", "ISSUES", 18),
-				table.NewColumn("state", "STATE", 10),
-				table.NewColumn("project", "PROJECT", 16),
-				table.NewColumn("created", "AGE", 8),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getNamespaceColumnSpecs())
 
 			rows := []table.Row{}
 			for _, ns := range sortedNS {
@@ -250,8 +222,8 @@ func (a *App) updateTable() {
 				sortMode = a.sortMode // Use global default
 			}
 
-			// Sort pods according to mode
-			sortedPods := a.pods
+			// Sort pods according to mode (create a copy to avoid in-place modification)
+			var sortedPods []rancher.Pod
 			switch sortMode {
 			case SortByCount:
 				sortedPods = SortPodsByCount(a.pods, a.cachedPodCounts)
@@ -259,15 +231,14 @@ func (a *App) updateTable() {
 				sortedPods = SortPodsBySeverity(a.pods)
 			case SortByName:
 				sortedPods = SortPodsByName(a.pods)
+			default:
+				// Default: copy the slice to avoid aliasing
+				sortedPods = make([]rancher.Pod, len(a.pods))
+				copy(sortedPods, a.pods)
 			}
 
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 28),
-				table.NewColumn("namespace", "NAMESPACE", 18),
-				table.NewColumn("state", "STATE", 12),
-				table.NewColumn("we", "W/E", 8),
-				table.NewColumn("node", "NODE", 20),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getPodColumnSpecs())
 
 			rows := []table.Row{}
 			for _, pod := range sortedPods {
@@ -286,38 +257,15 @@ func (a *App) updateTable() {
 				// Get node name with fallback support
 				nodeName := a.getPodNodeName(pod)
 
-				// Get warning/error counts by scanning pod logs (same as dashboard)
-				weCount := "-"
-				if a.dataSource != nil {
-					// Try to fetch logs for this pod
-					logs, err := a.dataSource.GetLogs("", namespaceName, pod.Name, "", false)
-					if err == nil && len(logs) > 0 {
-						// Get scan depth from config (tunable via --scan flag, default 200)
-						scanDepth := a.config.ScanDepth
-						if scanDepth <= 0 {
-							scanDepth = 200
-						}
-
-						// Limit scan to first N lines for table performance
-						scanLines := logs
-						if len(scanLines) > scanDepth {
-							scanLines = scanLines[:scanDepth]
-						}
-
-						warnCount := 0
-						errorCount := 0
-						for _, line := range scanLines {
-							if isErrorLog(line) {
-								errorCount++
-							} else if isWarnLog(line) {
-								warnCount++
-							}
-						}
-
-						// Only show if there are actual errors/warnings - format: "XE/YW"
-						if warnCount > 0 || errorCount > 0 {
-							weCount = fmt.Sprintf("%dE/%dW", errorCount, warnCount)
-						}
+				// Get error/warning counts from cache (matches namespace view approach)
+				weCount := "✅" // Default clean state
+				cacheKey := fmt.Sprintf("%s/%s", namespaceName, pod.Name)
+				if counts, exists := a.cachedPodCounts[cacheKey]; exists {
+					if counts.Errors > 0 || counts.Warnings > 0 {
+						// Format like namespace view: use formatCount() for large numbers
+						errStr := formatCount(counts.Errors)
+						warnStr := formatCount(counts.Warnings)
+						weCount = fmt.Sprintf("%sE/%sW", errStr, warnStr)
 					}
 				}
 
@@ -349,13 +297,8 @@ func (a *App) updateTable() {
 
 	case ViewDeployments:
 		if len(a.deployments) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 35),
-				table.NewColumn("namespace", "NAMESPACE", 20),
-				table.NewColumn("ready", "READY", 12),
-				table.NewColumn("uptodate", "UP-TO-DATE", 12),
-				table.NewColumn("available", "AVAILABLE", 12),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getDeploymentColumnSpecs())
 
 			rows := []table.Row{}
 			for _, deployment := range a.deployments {
@@ -421,13 +364,8 @@ func (a *App) updateTable() {
 
 	case ViewServices:
 		if len(a.services) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 30),
-				table.NewColumn("namespace", "NAMESPACE", 20),
-				table.NewColumn("type", "TYPE", 15),
-				table.NewColumn("cluster_ip", "CLUSTER-IP", 18),
-				table.NewColumn("ports", "PORT(S)", 20),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getServiceColumnSpecs())
 
 			rows := []table.Row{}
 			for _, service := range a.services {
@@ -482,12 +420,8 @@ func (a *App) updateTable() {
 
 	case ViewCRDInstances:
 		if len(a.crdInstances) > 0 {
-			columns := []table.Column{
-				table.NewColumn("name", "NAME", 40),
-				table.NewColumn("namespace", "NAMESPACE", 25),
-				table.NewColumn("age", "AGE", 15),
-				table.NewColumn("status", "STATUS", 20),
-			}
+			// Dynamic column widths - auto-adapt to terminal size
+			columns := a.calculateColumnWidths(getCRDInstanceColumnSpecs())
 
 			rows := []table.Row{}
 			for _, instance := range a.crdInstances {
@@ -507,10 +441,19 @@ func (a *App) updateTable() {
 						namespace = "cluster-scoped"
 					}
 					if ct, ok := metadata["creationTimestamp"].(string); ok {
-						// Parse and calculate age
+						// Parse and calculate age with human-readable format (same as namespace view)
 						if t, err := time.Parse(time.RFC3339, ct); err == nil {
 							days := int(time.Since(t).Hours() / 24)
-							createdTime = fmt.Sprintf("%dd", days)
+							if days > 0 {
+								createdTime = fmt.Sprintf("%dd", days)
+							} else {
+								hours := int(time.Since(t).Hours())
+								if hours > 0 {
+									createdTime = fmt.Sprintf("%dh", hours)
+								} else {
+									createdTime = fmt.Sprintf("%dm", int(time.Since(t).Minutes()))
+								}
+							}
 						}
 					}
 				}
@@ -566,13 +509,8 @@ func (a *App) updateTable() {
 				Focused(false).
 				BorderRounded()
 		} else {
-			// Build attention dashboard with issues
-			columns := []table.Column{
-				table.NewColumn("severity", "🚨", 4),
-				table.NewColumn("title", "ISSUE", 50),
-				table.NewColumn("context", "CONTEXT", 25),
-				table.NewColumn("count", "COUNT", 10),
-			}
+			// Build attention dashboard with issues - dynamic column widths
+			columns := a.calculateColumnWidths(getAttentionColumnSpecs())
 
 			// Get items to display (respect expansion state)
 			displayedItems := a.attentionItems
@@ -588,8 +526,6 @@ func (a *App) updateTable() {
 					severityEmoji = "🔥"
 				} else if item.Severity == SeverityWarning {
 					severityEmoji = "⚠️"
-				} else {
-					severityEmoji = "ℹ️"
 				}
 
 				// Format context (namespace/resource type)

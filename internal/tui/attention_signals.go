@@ -64,6 +64,7 @@ type AttentionItem struct {
 	PodName       string
 	ContainerName string
 	ClusterID     string
+	ClusterName   string
 
 	// Expandable content for aggregate items (events)
 	AffectedPods      []string       // Top 10 pod names involved in this event
@@ -394,7 +395,8 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 	return items
 }
 
-// getTopPods returns the top N pods by event count
+// getTopPods returns the top N pod names from a map of pod names to event counts, ordered by descending count.
+// If the map contains fewer than N entries, the function returns all pod names.
 func getTopPods(pods map[string]int, n int) []string {
 	type podCount struct {
 		name  string
@@ -406,14 +408,10 @@ func getTopPods(pods map[string]int, n int) []string {
 		sorted = append(sorted, podCount{name, count})
 	}
 
-	// Simple bubble sort by count (descending)
-	for i := 0; i < len(sorted); i++ {
-		for j := i + 1; j < len(sorted); j++ {
-			if sorted[i].count < sorted[j].count {
-				sorted[i], sorted[j] = sorted[j], sorted[i]
-			}
-		}
-	}
+	// Sort by count descending
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].count > sorted[j].count
+	})
 
 	// Return top N names
 	result := []string{}
@@ -563,38 +561,26 @@ func isHealthyReadyStatus(ready string) bool {
 	return parts[0] == parts[1]
 }
 
-// sortAttentionItems sorts items by severity (Critical first)
+// sortAttentionItems sorts the slice of AttentionItem in place by Severity so that items with more severe attention (lower Severity value) appear first.
 func sortAttentionItems(items []AttentionItem) {
-	// Simple bubble sort by severity
-	for i := 0; i < len(items); i++ {
-		for j := i + 1; j < len(items); j++ {
-			if items[i].Severity > items[j].Severity {
-				items[i], items[j] = items[j], items[i]
-			}
-		}
-	}
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Severity < items[j].Severity
+	})
 }
 
-// sortItemsByCount sorts items by total error+warning count (descending)
+// sortItemsByCount sorts items in-place by the Count field in descending order,
+// preserving the original order for items with equal counts.
 func sortItemsByCount(items []AttentionItem) {
-	for i := 0; i < len(items); i++ {
-		for j := i + 1; j < len(items); j++ {
-			if items[i].Count < items[j].Count {
-				items[i], items[j] = items[j], items[i]
-			}
-		}
-	}
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Count > items[j].Count
+	})
 }
 
-// sortItemsByName sorts items alphabetically by title
+// sortItemsByName sorts the given AttentionItem slice in place by Title in ascending lexicographic order.
 func sortItemsByName(items []AttentionItem) {
-	for i := 0; i < len(items); i++ {
-		for j := i + 1; j < len(items); j++ {
-			if items[i].Title > items[j].Title {
-				items[i], items[j] = items[j], items[i]
-			}
-		}
-	}
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].Title < items[j].Title
+	})
 }
 
 // GetSortedAttentionItems returns items sorted by the specified mode
@@ -809,7 +795,8 @@ func ComputeNamespaceHealth(ds datasource.DataSource, scanDepth int) map[string]
 	return health
 }
 
-// extractNamespace extracts namespace from NamespaceID (handles "cluster:namespace" format)
+// extractNamespace returns the namespace portion of a NamespaceID.
+// If the input uses the "cluster:namespace" form, it returns the substring after the first colon; otherwise it returns the original string.
 func extractNamespace(namespaceID string) string {
 	if strings.Contains(namespaceID, ":") {
 		parts := strings.Split(namespaceID, ":")
@@ -820,7 +807,26 @@ func extractNamespace(namespaceID string) string {
 	return namespaceID
 }
 
-// getPodStateSeverity assigns severity score to pod states (lower = more critical)
+// SortNamespacesByHealth sorts the given slice of namespaces in-place by their total
+// issue count from nsHealth in descending order (highest total first). Namespaces
+// with no entry in nsHealth are treated as having a total of zero.
+func SortNamespacesByHealth(namespaces []rancher.Namespace, nsHealth map[string]NamespaceHealth) {
+	sort.Slice(namespaces, func(i, j int) bool {
+		health1 := nsHealth[namespaces[i].Name]
+		health2 := nsHealth[namespaces[j].Name]
+		// Sort descending (highest count first)
+		return health1.Total > health2.Total
+	})
+}
+
+// getPodStateSeverity assigns a numeric severity score for a pod state where lower
+// values indicate more critical conditions. It returns:
+//   - 0 for crash/error/failed/oom states,
+//   - 5 for image pull failure or evicted states,
+//   - 10 for pending or unknown states,
+//   - 20 for running,
+//   - 25 for completed or succeeded,
+//   - 30 for any other/unknown state.
 func getPodStateSeverity(state string) int {
 	stateLower := strings.ToLower(state)
 

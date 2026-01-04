@@ -57,7 +57,7 @@ func (a *App) handleEnter() tea.Cmd {
 			a.currentView = ViewContext{
 				viewType:      ViewLogs,
 				clusterID:     matchedItem.ClusterID,
-				clusterName:   "",
+				clusterName:   matchedItem.ClusterName,
 				projectID:     "",
 				projectName:   "",
 				namespaceID:   "",
@@ -327,6 +327,10 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchServices(a.currentView.projectID, a.currentView.namespaceName)
 	case ViewCRDs:
 		return a.fetchCRDs(a.currentView.clusterID)
+	case ViewCRDInstances:
+		return a.fetchCRDInstances(a.currentView.clusterID, a.currentView.crdGroup, a.currentView.crdVersion, a.currentView.crdResource)
+	case ViewLogs:
+		return a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName, a.currentContainer, a.showPrevious)
 	default:
 		return nil
 	}
@@ -346,7 +350,14 @@ func (a *App) restoreSelection() {
 }
 
 // cycleSortMode cycles through sort modes: Count → Severity → Name → Count (Dashboard)
+// FIX: Track cursor by Title to maintain selection after sort (v0.5.2 "Show, Don't Ask")
 func (a *App) cycleSortMode() tea.Cmd {
+	// Save currently selected item's Title BEFORE sorting (for Dashboard)
+	var selectedTitle string
+	if a.currentView.viewType == ViewAttention && a.attentionCursor < len(a.attentionItems) {
+		selectedTitle = a.attentionItems[a.attentionCursor].Title
+	}
+
 	// Get current sort mode for this view (default to global if not set)
 	currentMode, exists := a.sortModes[a.currentView.viewType]
 	if !exists {
@@ -358,6 +369,10 @@ func (a *App) cycleSortMode() tea.Cmd {
 
 	// Store per-view preference
 	a.sortModes[a.currentView.viewType] = nextMode
+
+	// For Dashboard: restore cursor position after sort
+	// Store title for restoration after data refresh
+	a.savedRowName = selectedTitle
 
 	// Trigger refresh to re-sort
 	a.loading = true
@@ -433,9 +448,7 @@ func (a *App) tickTail() tea.Cmd {
 // cycleContainer cycles through available containers for the current pod
 func (a *App) cycleContainer() tea.Cmd {
 	if len(a.containers) == 0 {
-		// Initialize mock containers for demonstration
-		a.containers = []string{"app", "sidecar", "init"}
-		a.currentContainer = a.containers[0]
+		// No containers available - return immediately
 		return nil
 	}
 
@@ -452,9 +465,8 @@ func (a *App) cycleContainer() tea.Cmd {
 	nextIdx := (currentIdx + 1) % len(a.containers)
 	a.currentContainer = a.containers[nextIdx]
 
-	// In production, would fetch logs for new container
-	// For now, just update the display
-	return nil
+	// Fetch logs for the new container
+	return a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName, a.currentContainer, a.showPrevious)
 }
 
 // isNamespaceResourceView returns true if the current view is a namespace-scoped resource view

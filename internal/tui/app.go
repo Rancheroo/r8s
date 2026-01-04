@@ -410,11 +410,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						a.attentionCursor = 0
 					}
 				}
+				a.ensureCursorVisible() // FIX: Scroll to keep cursor visible (v0.5.2)
 				return a, nil
 			case "g":
 				// Jump to first item (vim muscle memory)
 				a.attentionCursor = 0
 				a.subCursor = -1
+				a.ensureCursorVisible() // FIX: Scroll to top (v0.5.2)
 				return a, nil
 			case "G":
 				// Jump to last item (vim muscle memory)
@@ -423,6 +425,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					a.attentionCursor = len(displayedItems) - 1
 				}
 				a.subCursor = -1
+				a.ensureCursorVisible() // FIX: Scroll to bottom (v0.5.2)
 				return a, nil
 			}
 		}
@@ -799,6 +802,20 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.attentionItems = msg.items
 		a.error = ""
 
+		// FIX: Restore cursor position by Title after sort (v0.5.2 "Show, Don't Ask")
+		// This prevents cursor jumping when user cycles sort modes
+		if a.savedRowName != "" && a.currentView.viewType == ViewAttention {
+			// Find the item with matching Title in newly sorted list
+			for i, item := range a.attentionItems {
+				if item.Title == a.savedRowName {
+					a.attentionCursor = i
+					a.ensureCursorVisible() // Scroll to keep cursor visible
+					break
+				}
+			}
+			a.savedRowName = "" // Clear after restoration
+		}
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
@@ -850,7 +867,7 @@ func (a *App) View() string {
 	}
 
 	if a.showHelp {
-		return renderHelp()
+		return renderHelp(a.currentView.viewType)
 	}
 
 	if a.showingDescribe {

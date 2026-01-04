@@ -10,8 +10,37 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Package-level pattern slices allocated once for performance
+var errorPatterns = []string{
+	"ERROR:",
+	"ERR=",
+	"FAILED",
+	"FATAL",
+	"PANIC",
+	"OOMKILLED",
+	"CRASHLOOP",
+	"BACK-OFF",
+	"BACKOFF",
+	"UNAUTHORIZED",
+	"DENIED",
+	"EXCEPTION",
+}
+
+var warnKeywords = []string{
+	"WARN=",
+	"DEPRECATED",
+	"DEPRECATION",
+	"ALERT:",
+	"ALERT=",
+}
+
 // renderLogsView renders the logs view for a pod with viewport scrolling
 func (a *App) renderLogsView() string {
+	// Auto-show helpful message when logs are empty (Show, Don't Ask philosophy)
+	if len(a.logs) == 0 {
+		return a.renderEmptyLogsHelp()
+	}
+
 	// Build breadcrumb
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
 
@@ -158,16 +187,38 @@ func (a *App) renderLogsWithColors() string {
 			// No wrap needed - colorize entire line
 			wrappedLines = append(wrappedLines, a.colorizeLogLine(line, i))
 		} else {
-			// Wrap raw text into segments FIRST
+			// Wrap raw text into segments FIRST, preferring to break at whitespace
 			remainingLine := line
 			for len(remainingLine) > 0 {
-				// Determine segment length
+				// Determine segment length, preferring whitespace breaks
 				segmentEnd := wrapWidth
 				if segmentEnd > len(remainingLine) {
 					segmentEnd = len(remainingLine)
 				}
 
+				// If we're not at the end, try to find last whitespace before wrapWidth
+				if segmentEnd < len(remainingLine) {
+					// Look for the last space/whitespace before wrapWidth
+					lastSpace := -1
+					for idx := segmentEnd - 1; idx >= 0; idx-- {
+						r := rune(remainingLine[idx])
+						if r == ' ' || r == '\t' {
+							lastSpace = idx
+							break
+						}
+					}
+					// Use the whitespace break if found, otherwise use wrapWidth
+					if lastSpace > 0 {
+						segmentEnd = lastSpace
+					}
+				}
+
 				segment := remainingLine[:segmentEnd]
+
+				// Trim leading spaces on wrapped segments (not first segment)
+				if len(wrappedLines) > 0 {
+					segment = strings.TrimLeft(segment, " \t")
+				}
 
 				// Apply color styling to EACH wrapped segment
 				// This preserves colors across all wrapped lines
@@ -229,7 +280,13 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 
 // isErrorLog detects ERROR level logs with explicit indicator priority
 // Priority: [ERROR] or E#### > keyword patterns
-// This prevents "W1204 [WARN] failed..." or "I1127 [INFO] Failed..." from being detected as ERROR
+// isErrorLog reports whether the given log line should be classified as an ERROR-level entry.
+// 
+// It performs case-insensitive checks in priority order: first it excludes lines that explicitly
+// indicate non-error levels (WARN, INFO, DEBUG and Kubernetes-style W/I/D prefixes at line start),
+// then it accepts explicit error indicators ([ERROR], Kubernetes E#### at line start, or "LEVEL=ERROR"),
+// and finally it matches configured keyword patterns from the package-level errorPatterns slice.
+// Returns true if any error indicator is found, false otherwise.
 func isErrorLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
@@ -287,21 +344,7 @@ func isErrorLog(line string) bool {
 	}
 
 	// PRIORITY 3: Keyword patterns (only if no explicit level indicator present)
-	errorPatterns := []string{
-		"ERROR:",
-		"ERR=",
-		"FAILED",
-		"FATAL",
-		"PANIC",
-		"OOMKILLED",
-		"CRASHLOOP",
-		"BACK-OFF",
-		"BACKOFF",
-		"UNAUTHORIZED",
-		"DENIED",
-		"EXCEPTION",
-	}
-
+	// Use package-level errorPatterns slice
 	for _, pattern := range errorPatterns {
 		if strings.Contains(lineUpper, pattern) {
 			return true
@@ -311,7 +354,8 @@ func isErrorLog(line string) bool {
 	return false
 }
 
-// isWarnLog detects WARN level logs with explicit indicator priority
+// isWarnLog reports whether the given log line indicates a warning level.
+// It recognizes explicit warning markers (e.g., "[WARN]", "[WARNING]", "WARN:"/"WARNING:", "LEVEL=WARN") and Kubernetes-style "W####" prefixes, and also matches configured warning keyword patterns; lines containing explicit error indicators are treated as errors and do not qualify as warnings.
 func isWarnLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
@@ -346,14 +390,7 @@ func isWarnLog(line string) bool {
 		return false
 	}
 
-	warnKeywords := []string{
-		"WARN=",
-		"DEPRECATED",
-		"DEPRECATION",
-		"ALERT:",
-		"ALERT=",
-	}
-
+	// Use package-level warnKeywords slice
 	for _, pattern := range warnKeywords {
 		if strings.Contains(lineUpper, pattern) {
 			return true
@@ -363,59 +400,100 @@ func isWarnLog(line string) bool {
 	return false
 }
 
-// isInfoLog detects INFO level logs in both bracketed and K8s formats
+// 3. Key-value form: contains "LEVEL=INFO".
 func isInfoLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 	// Bracketed format: [INFO]
 	if strings.Contains(lineUpper, "[INFO]") {
 		return true
 	}
-	// K8s format: I1120, I0102, etc. (I followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'I' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				// Check if followed by space or colon
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
+	// K8s format at line start: I#### (check first 5 chars only)
+	if len(line) >= 5 && line[0] == 'I' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return true
 	}
-	// Also check for level=info format
+	// Also check for level=info format (anywhere in line)
 	if strings.Contains(lineUpper, "LEVEL=INFO") {
 		return true
 	}
 	return false
 }
 
-// isDebugLog detects DEBUG level logs in both bracketed and K8s formats
+// isDebugLog reports whether the log line indicates DEBUG level.
+// It recognizes bracketed "[DEBUG]", Kubernetes-style "D####" at the start (checks the first five characters), and a case-insensitive "LEVEL=DEBUG" anywhere in the line.
 func isDebugLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 	// Bracketed format: [DEBUG]
 	if strings.Contains(lineUpper, "[DEBUG]") {
 		return true
 	}
-	// K8s format: D1120, D0102, etc. (D followed by 4 digits)
-	if len(line) > 5 {
-		for i := 0; i < len(line)-5; i++ {
-			if line[i] == 'D' && isDigit(line[i+1]) && isDigit(line[i+2]) &&
-				isDigit(line[i+3]) && isDigit(line[i+4]) {
-				// Check if followed by space or colon
-				if i+5 < len(line) && (line[i+5] == ' ' || line[i+5] == ':') {
-					return true
-				}
-			}
-		}
+	// K8s format at line start: D#### (check first 5 chars only)
+	if len(line) >= 5 && line[0] == 'D' && isDigit(line[1]) && isDigit(line[2]) &&
+		isDigit(line[3]) && isDigit(line[4]) {
+		return true
 	}
-	// Also check for level=debug format
+	// Also check for level=debug format (anywhere in line)
 	if strings.Contains(lineUpper, "LEVEL=DEBUG") {
 		return true
 	}
 	return false
 }
 
-// isDigit checks if a byte is an ASCII digit
+// isDigit reports whether b is an ASCII digit ('0' through '9').
 func isDigit(b byte) bool {
 	return b >= '0' && b <= '9'
+}
+
+// renderEmptyLogsHelp renders helpful guidance when logs are empty
+// Auto-displays without button presses (Show, Don't Ask philosophy)
+func (a *App) renderEmptyLogsHelp() string {
+	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
+
+	// Build helpful message
+	helpTitle := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render("📭 No Logs Available")
+
+	helpText := `This pod has no logs to display.
+
+Possible reasons:
+  • Pod hasn't generated any logs yet
+  • Pod recently restarted (try Ctrl+P for previous logs)
+  • Container hasn't started successfully
+
+Next steps:
+  • Press 'd' to describe pod (check status/events)
+  • Press Esc to go back and check pod state
+  • Look for errors in pod description`
+
+	helpBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorYellow).
+		Padding(2, 4).
+		Width(a.width - 8).
+		Render(helpText)
+
+	// Calculate padding for vertical centering
+	contentHeight := 12 // Approximate lines of content
+	availableHeight := a.height - 10
+	topPadding := (availableHeight - contentHeight) / 2
+	if topPadding < 0 {
+		topPadding = 0
+	}
+
+	// Use strings.Repeat for vertical padding
+	paddingStr := strings.Repeat("\n", topPadding)
+	centeredContent := paddingStr + strings.Join([]string{helpTitle, "", helpBox}, "\n")
+
+	status := statusStyle.Render(" [d]=describe pod  [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		centeredContent,
+		"",
+		status,
+	)
 }

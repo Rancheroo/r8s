@@ -1644,9 +1644,18 @@ VERSION?=$(shell git describe --tags --always --dirty)
 # Find branches merged into main
 git branch --merged main | grep -v main
 
-# Find stale branches (>30 days)  
+# Find stale branches (>30 days)
+# Linux (GNU date):
 git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
   awk '$2 < "'$(date -d '30 days ago' '+%Y-%m-%d')'"'
+
+# macOS/BSD (use -v flag):
+git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
+  awk '$2 < "'$(date -v-30d '+%Y-%m-%d')'"'
+
+# POSIX-portable (using perl):
+git for-each-ref --format='%(refname:short) %(committerdate)' refs/heads | \
+  awk '$2 < "'$(perl -e 'print((localtime(time-30*86400))[5]+1900)."-".sprintf("%02d",(localtime(time-30*86400))[4]+1)."-".sprintf("%02d",(localtime(time-30*86400))[3])')'"'
 
 # Safe cleanup (merged branches only)
 git branch --merged main | grep -v main | xargs -n 1 git branch -d
@@ -1695,5 +1704,138 @@ Your local repo should feel as clean as a fresh clone. If `git branch` shows mor
 **Development Time:** 15 minutes analysis + 2 minutes execution = instant productivity boost
 
 **Lesson:** **Clean repositories accelerate development. Branch sprawl is cognitive overhead that compounds over time. Delete early, delete often, protect only active work.**
+
+---
+
+## v0.5.1 Continued: Code Quality & Polish Pass
+
+### January 3, 2026 - Systematic Code Quality Fixes
+
+**Goal:** Clean up encoding issues, remove debug code, improve consistency across codebase before release.
+
+**Lesson:** **Small quality fixes compound - fix them systematically before they become accepted**
+
+**What We Fixed (11 issues across 7 files):**
+
+1. **Encoding Issues (3 fixes)**
+   - FUTURE_WORK.md line 221: � → 📚 (Documentation Enhancements heading)
+   - internal/tui/attention.go line 258: � → 🔥 (fire emoji in status bar)
+   - README.md version mismatch: "0.5.0" → "0.5.1" in What's New section
+
+2. **Debug/Mock Code Removal (2 fixes)**
+   - internal/tui/handlers.go lines 433-458: Removed hardcoded mock container initialization
+   - internal/tui/helpers.go lines 64-100: Changed misleading "[MOCK]" → "[DEMO]" label
+
+3. **Code Consistency (4 fixes)**
+   - internal/tui/logs.go lines 379-395: Fixed K8s marker checks to only match at line start
+   - internal/tui/table.go lines 586-593: Removed redundant else block
+   - internal/tui/table.go lines 253-262: Fixed sortedPods aliasing issue
+   - internal/tui/table.go lines 156-167: Replaced bubble sort with sort.Slice
+
+4. **Documentation Fixes (2 fixes)**
+   - FUTURE_WORK.md line 27: Removed duplicate "Recently Completed" heading
+   - GIT_BRANCH_CLEANUP_PLAN.md line 2: Added trailing comma to date format
+
+**Development Time:** ~90 minutes for systematic cleanup
+
+**Key Insights:**
+
+1. **UTF-8 encoding matters** - Replacement characters (�) break emoji rendering
+2. **Demo vs Mock terminology** - "[DEMO]" better represents embedded bundle than "[MOCK]"
+3. **Consistency prevents bugs** - K8s markers should be checked uniformly across all log levels
+4. **Aliasing is subtle** - `sortedPods := a.pods` creates shared reference, not copy
+5. **Redundant code is noise** - Else blocks that reassign default values add confusion
+
+**Pattern: Fixing Encoding Issues**
+
+When you see � in your code:
+```go
+// DON'T: Leave replacement characters
+statusParts = append(statusParts, "� Criticals: %d")
+
+// DO: Use proper UTF-8 emoji
+statusParts = append(statusParts, "🔥 Criticals: %d")
+```
+
+Always save files with UTF-8 encoding to preserve emojis.
+
+**Next Step - Prevent Future UTF-8 Regressions:**
+
+Add a pre-commit hook or CI lint step to catch UTF-8 replacement characters (�) before they reach the repository:
+
+1. **Define a pre-commit hook** that scans files for the � character and rejects commits containing it
+2. **Add to CI pipeline**: Include a lint step that verifies all files are valid UTF-8 and flags any containing replacement characters
+3. **Update CONTRIBUTING.md**: Add instructions for developers on enabling the pre-commit hook locally (e.g., using git hooks or pre-commit framework)
+4. **Add to CI**: Include the UTF-8 validation check in GitHub Actions or similar CI to catch issues on PR submission
+
+This prevents encoding issues from being committed in the first place, rather than fixing them repeatedly during cleanup passes.
+
+**Pattern: Avoiding Slice Aliasing**
+
+When sorting might modify original data:
+```go
+// DON'T: Alias creates shared reference
+sortedPods := a.pods  // Both point to same array!
+sort.Slice(sortedPods, ...)  // Modifies a.pods in-place
+
+// DO: Create actual copy
+sortedPods := make([]Pod, len(a.pods))
+copy(sortedPods, a.pods)
+sort.Slice(sortedPods, ...)  // Only modifies copy
+```
+
+**Pattern: Consistent Prefix Checking**
+
+When detecting log levels with K8s short-form markers:
+```go
+// DON'T: Check anywhere in line (inconsistent)
+for i := 0; i < len(line)-5; i++ {
+    if line[i] == 'I' && isDigit(line[i+1]) ...  // Matches "FOO I1234"
+}
+
+// DO: Only check line start (consistent with ERROR/WARN)
+if len(line) >= 5 && line[0] == 'I' && isDigit(line[1]) ...  // Only "I1234..."
+```
+
+**Pattern: Using stdlib Over Manual Implementations**
+
+Replace manual sorting with Go standard library:
+```go
+// DON'T: Manual bubble sort (slow, verbose)
+for i := 0; i < len(items); i++ {
+    for j := i + 1; j < len(items); j++ {
+        if items[i].Total < items[j].Total {
+            items[i], items[j] = items[j], items[i]
+        }
+    }
+}
+
+// DO: Use sort.Slice (fast, concise)
+sort.Slice(items, func(i, j int) bool {
+    return items[i].Total > items[j].Total
+})
+```
+
+**Impact Summary:**
+
+- ✅ **UTF-8 encoding fixed** - All emojis render correctly
+- ✅ **Zero debug code** - No hardcoded mock data in production paths
+- ✅ **Consistent detection** - All log level checks follow same pattern  
+- ✅ **No aliasing bugs** - Sorting creates copies, doesn't modify originals
+- ✅ **Better performance** - sort.Slice O(n log n) vs bubble sort O(n²)
+
+**Testing Performed:**
+- Verified all files save with UTF-8 encoding
+- Confirmed emojis render in terminal
+- Tested sort order preservation
+- Verified no regressions in TUI
+
+**Lesson:** **Code quality fixes are investments. Each fix prevents confusion, ensures consistency, and improves maintainability. Do them systematically before release, not reactively after bugs.**
+
+---
+
+**Date**: January 3, 2026 - v0.5.1 Code Quality Pass Complete
+**Branch**: `main` (direct fixes)
+**Status**: Ready for final v0.5.1 release
 
 ---
