@@ -13,6 +13,9 @@ import (
 	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
+// offlineModeIndicator is the consistent label used across the UI for offline mode
+const offlineModeIndicator = "[OFFLINE MODE - Mock Data] "
+
 // safeRowString safely extracts a string value from table row data.
 // Returns empty string if key doesn't exist or value is nil/wrong type.
 // This prevents panics from nil interface conversions in bundle mode.
@@ -67,7 +70,7 @@ func (a *App) getBreadcrumb() string {
 	if a.bundleMode {
 		modeIndicator = "[BUNDLE] "
 	} else if a.offlineMode {
-		modeIndicator = "[DEMO] "
+		modeIndicator = offlineModeIndicator
 	}
 
 	switch a.currentView.viewType {
@@ -105,7 +108,7 @@ func (a *App) getStatusText() string {
 	offlinePrefix := ""
 
 	if a.offlineMode {
-		offlinePrefix = "[OFFLINE MODE - Mock Data] "
+		offlinePrefix = offlineModeIndicator
 	}
 
 	switch a.currentView.viewType {
