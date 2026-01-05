@@ -138,7 +138,16 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			description := "CrashLoopBackOff"
 			logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
 			if err != nil || len(logs) == 0 {
-				description = "CrashLoopBackOff ⚠️ No Logs"
+				// Enrich with restart count when no logs available
+				restartCount := pod.RestartCount
+				if pod.KubectlRestarts > 0 {
+					restartCount = pod.KubectlRestarts
+				}
+				if restartCount > 0 {
+					description = fmt.Sprintf("CrashLoopBackOff ⚠️ No Logs • %d restarts", restartCount)
+				} else {
+					description = "CrashLoopBackOff ⚠️ No Logs"
+				}
 			}
 
 			items = append(items, AttentionItem{
