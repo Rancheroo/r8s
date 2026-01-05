@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Rancheroo/r8s/internal/rancher"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -283,7 +284,7 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 // isErrorLog detects ERROR level logs with explicit indicator priority
 // Priority: [ERROR] or E#### > keyword patterns
 // isErrorLog reports whether the given log line should be classified as an ERROR-level entry.
-// 
+//
 // It performs case-insensitive checks in priority order: first it excludes lines that explicitly
 // indicate non-error levels (WARN, INFO, DEBUG and Kubernetes-style W/I/D prefixes at line start),
 // then it accepts explicit error indicators ([ERROR], Kubernetes E#### at line start, or "LEVEL=ERROR"),
@@ -457,7 +458,59 @@ func (a *App) renderEmptyLogsHelp() string {
 		Bold(true).
 		Render("📭 No Logs Available")
 
-	helpText := `This pod has no logs to display.
+	// Get pod information to enrich the diagnostic panel
+	// Fetch from dataSource directly (not a.pods which may be empty if coming from Dashboard)
+	var podInfo string
+	var foundPod *rancher.Pod
+
+	if a.dataSource != nil {
+		pods, err := a.dataSource.GetAllPods()
+		if err == nil {
+			for _, pod := range pods {
+				if pod.Name == a.currentView.podName {
+					foundPod = &pod
+					break
+				}
+			}
+		}
+	}
+
+	if foundPod != nil {
+		// Extract diagnostics from pod data
+		state := foundPod.KubectlStatus
+		if state == "" {
+			state = foundPod.State
+		}
+		restarts := foundPod.KubectlRestarts
+		if restarts == 0 {
+			restarts = foundPod.RestartCount
+		}
+		ready := foundPod.KubectlReady
+		node := foundPod.NodeName
+		if node == "" {
+			node = foundPod.NodeID
+		}
+		age := foundPod.KubectlAge
+
+		podInfo = fmt.Sprintf(`POD DIAGNOSTICS:
+
+  State:       %s
+  Restarts:    %d
+  Ready:       %s
+  Node:        %s
+  Age:         %s
+
+⚠️  No container logs available
+
+Investigation suggestions:
+  • Press 'd' to describe pod (check events/status)
+  • High restart count = crash loop issue
+  • Check node health if pod can't schedule
+  • Review pod events for specific failure reasons`,
+			state, restarts, ready, node, age)
+	} else {
+		// Fallback if pod not found in list
+		podInfo = `No container logs available
 
 Possible reasons:
   • Pod hasn't generated any logs yet
@@ -468,6 +521,9 @@ Next steps:
   • Press 'd' to describe pod (check status/events)
   • Press Esc to go back and check pod state
   • Look for errors in pod description`
+	}
+
+	helpText := podInfo
 
 	helpBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).

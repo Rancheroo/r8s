@@ -267,6 +267,41 @@ func (a *App) handleDescribe() tea.Cmd {
 	selected := a.table.HighlightedRow().Data
 
 	switch a.currentView.viewType {
+	case ViewAttention:
+		// Describe pod from attention dashboard
+		if len(a.attentionItems) == 0 {
+			return nil
+		}
+
+		// Find matching attention item by pod name
+		podName := safeRowString(selected, "title")
+		if podName == "" {
+			return nil
+		}
+
+		var matchedItem *AttentionItem
+		for i := range a.attentionItems {
+			if a.attentionItems[i].Title == podName {
+				matchedItem = &a.attentionItems[i]
+				break
+			}
+		}
+
+		if matchedItem == nil || matchedItem.ResourceType != "pod" || matchedItem.PodName == "" {
+			a.error = "Describe is not yet implemented for this resource type"
+			return nil
+		}
+
+		return a.describePod(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName)
+
+	case ViewLogs:
+		// Describe pod from log view (including "No Logs" screen)
+		if a.currentView.podName == "" || a.currentView.namespaceName == "" {
+			a.error = "No pod information available"
+			return nil
+		}
+		return a.describePod(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName)
+
 	case ViewPods:
 		podName := safeRowString(selected, "name")
 		namespaceName := safeRowString(selected, "namespace")

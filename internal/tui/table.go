@@ -140,8 +140,8 @@ func (a *App) updateTable() {
 			sortedNS := make([]rancher.Namespace, len(a.namespaces))
 			copy(sortedNS, a.namespaces)
 
-			// Sort by total issues descending using sort.Slice
-			sortedNS = SortNamespacesByHealth(sortedNS, nsHealth)
+			// Sort by total issues descending using sort.Slice (sorts in-place)
+			SortNamespacesByHealth(sortedNS, nsHealth)
 
 			// Dynamic column widths - auto-adapt to terminal size
 			columns := a.calculateColumnWidths(getNamespaceColumnSpecs())
@@ -163,11 +163,15 @@ func (a *App) updateTable() {
 					}
 				}
 
-				// Format ISSUES column with color coding
+				// Format ISSUES column with color coding (Truth indicator polish v0.5.3)
 				health := nsHealth[ns.Name]
 				issuesDisplay := "✅ Clean"
 
-				if health.Total > 0 {
+				// Check if namespace is empty (no pods scanned)
+				pods, _ := a.dataSource.GetPods("", ns.Name)
+				if len(pods) == 0 {
+					issuesDisplay = "📭 Empty"
+				} else if health.Total > 0 {
 					// Color coding logic:
 					// Red (🔥): >50 errors
 					// Yellow (⚠️): >20 warnings OR 1-50 errors

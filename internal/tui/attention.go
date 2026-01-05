@@ -9,7 +9,8 @@ import (
 )
 
 // Default dashboard cap - show top N items before requiring expansion
-const defaultDashboardCap = 20
+// Updated from 20 to 100 to match production usage and test expectations
+const defaultDashboardCap = 100
 
 // getDisplayedItems returns items to display based on expansion state and cap
 // Items are sorted according to the current sort mode before display

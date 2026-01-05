@@ -5,6 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-01-05 "Maximum Information Extraction"
+
+### Added ✨
+
+- **Dashboard Truth Indicators** - All critical pod states now show data availability
+  - CrashLoopBackOff pods show "⚠️ No Logs" indicator
+  - Error/OOMKilled/ImagePullBackOff/Evicted pods marked with warning emoji
+  - Restart count enrichment: "⚠️ No Logs • 47 restarts" shows crash severity
+  - Empty namespaces show "📭 Empty" instead of misleading "Clean"
+  - Consistent "Truth Only™" - dashboard shows what data exists
+
+- **Rich Pod Diagnostic Panel** - Maximum info even when logs unavailable
+  - Automatic diagnostic display for pods with no logs
+  - Shows: State, Restart count, Ready status, Node, Age
+  - Investigation suggestions based on pod state
+  - Fetches data from dataSource (works from any navigation path)
+  - Reuses "No Logs" screen infrastructure for reliability
+
+- **Describe from Attention Dashboard** - Fixed broken 'd' key functionality
+  - Press 'd' on any pod in dashboard → See pod description
+  - ViewAttention case added to handleDescribe()
+  - Matches pod from attention items by title
+  - Consistent with classic pod view behavior
+
+### Fixed 🐛
+
+- **CRITICAL: Pod diagnostics work from Dashboard navigation**
+  - Fixed bug where diagnostic panel showed fallback when navigating Dashboard → Pod
+  - Root cause: `a.pods` empty when skipping classic Pods view
+  - Solution: Fetch from `dataSource.GetAllPods()` directly instead of cached state
+  - Works regardless of navigation path (Dashboard or Classic)
+
+- **Build & Test Stability**
+  - Fixed NumSortModes sentinel (prevents sort mode overflow)
+  - Updated dashboard cap to 100, fixed related tests
+  - All tests passing: `ok github.com/Rancheroo/r8s/internal/tui 0.012s`
+
+### Technical - v0.5.3
+
+- 8 commits total on release/v0.5.3 branch
+- Enhanced AttentionItem struct with log status flags
+- Added pod diagnostic extraction in renderEmptyLogsHelp()
+- Direct dataSource integration for reliable pod data access
+- Truth indicators applied across dashboard rendering
+- Version: v0.5.2-25-gcf2592f
+
+### Impact Summary - v0.5.3
+
+- ✅ **Truth indicators** - Dashboard shows what data exists at a glance
+- ✅ **Rich diagnostics** - Full pod info even when logs missing
+- ✅ **Fixed describe** - Works from dashboard (was broken)
+- ✅ **Navigation agnostic** - Diagnostics work from any path
+- ✅ **Consistent UX** - Same diagnostic panel style everywhere
+- ✅ **All tests passing** - Zero regressions
+
+### Commits - v0.5.3
+
+1. `1c9f41d` - Add NumSortModes sentinel, fix sorting edge cases
+2. `25cdad0` - Update dashboard cap to 100, fix tests
+3. `3eacb5c` - Initial truth indicators (No Logs + Empty namespace)
+4. `6d45f6d` - Extend to all critical states (Crash/Error/OOM/ImagePull/Evicted)
+5. `25223c7` - Enrich with restart counts
+6. `46b7b13` - Rich diagnostic panel for pods with no logs
+7. `9829d65` - Fix diagnostics from Dashboard navigation path
+8. `cf2592f` - Enable describe from Attention Dashboard
+
+### Future Work - Documented
+
+- **v0.5.4**: Auto-display diagnostics on failed pods (remove 'd' button requirement)
+  - Show diagnostic panel automatically for crashed pods
+  - Reuse "No Logs" panel code for consistency
+  - Philosophy: "Reliable code > feature-rich bespoke code"
+
+---
+
 ## [0.5.2] - 2026-01-03 "Truth & Accuracy"
 
 ### Fixed 🐛 CRITICAL
