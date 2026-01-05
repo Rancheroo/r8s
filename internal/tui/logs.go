@@ -508,11 +508,18 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
 	}
 	age := pod.KubectlAge
 
-	// Build title
+	// Build title - context-aware based on log availability
+	var titleText string
+	if len(a.logs) > 0 {
+		titleText = fmt.Sprintf("📊 Pod Diagnostics - %s", pod.Name)
+	} else {
+		titleText = fmt.Sprintf("📭 No Logs Available - Pod: %s", pod.Name)
+	}
+
 	helpTitle := lipgloss.NewStyle().
 		Foreground(colorYellow).
 		Bold(true).
-		Render(fmt.Sprintf("📭 No Logs Available - Pod: %s", pod.Name))
+		Render(titleText)
 
 	// Build diagnostic sections
 	var sections []string
