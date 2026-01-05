@@ -272,13 +272,38 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Impact**: Users see comprehensive pod diagnostics automatically - r8s interprets data instead of showing raw output
 - **Features**:
   - Intelligent diagnosis based on pod state (CrashLoop, OOMKilled, ImagePull, Error, Pending, Evicted)
-  - Recent events display (last 5) with emoji indicators
+  - Recent events display (last 5) with emoji indicators (always shown, even when empty)
   - State-specific investigation suggestions
   - External tools guidance (lnav, kubectl logs)
   - Works from both Dashboard and Classic navigation paths
+  - Removed '[d]=describe pod' key to reduce confusion
 - **Philosophy**: "r8s interprets, user acts" - Show intelligence, not just information
+- **Deferred to v0.5.5**: Parse kubectl/events file for comprehensive event data
 
-### Remove Log Filter Modes (v0.5.4+)
+### Parse kubectl/events File for Rich Event Data (v0.5.5) ⭐
+- **Priority**: HIGH
+- **Complexity**: Medium
+- **Impact**: High (data completeness)
+- **Description**: Parse global kubectl/events file to show ALL pod events, not just attached ones
+- **Current State**:
+  - Diagnostic panel uses `pod.KubectlEvents` (events attached to pod object)
+  - Many events are missing: scheduling failures, volume mount issues, network problems
+  - Bundle contains `rke2/kubectl/events` file with ALL cluster events
+- **Proposed Enhancement**:
+  - Parse `kubectl/events` file on bundle load
+  - Filter events by pod name to get complete event history
+  - Show FailedScheduling, FailedMount, NetworkNotReady, etc.
+  - Display event counts: "(x47)" for repeated events
+  - Smart defaults: Show last 5, warnings first, sorted by time
+- **Benefits**:
+  - Complete event history for better diagnostics
+  - See why pods failed to schedule
+  - Detect volume and network issues
+  - More accurate troubleshooting guidance
+- **Reference**: See `docs/archive/2025-12-01/LOG_BUNDLE_ANALYSIS.md` for bundle structure details
+- **Philosophy**: "Maximum information extraction" - Use all available bundle data
+
+### Remove Log Filter Modes (v0.5.5+)
 - **Priority**: Medium
 - **Complexity**: Medium (removal + smart defaults)
 - **Impact**: High (simplification)
