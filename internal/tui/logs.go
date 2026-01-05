@@ -282,7 +282,13 @@ func (a *App) colorizeLogLine(line string, lineIndex int) string {
 
 // isErrorLog detects ERROR level logs with explicit indicator priority
 // Priority: [ERROR] or E#### > keyword patterns
-// This prevents "W1204 [WARN] failed..." or "I1127 [INFO] Failed..." from being detected as ERROR
+// isErrorLog reports whether the given log line should be classified as an ERROR-level entry.
+// 
+// It performs case-insensitive checks in priority order: first it excludes lines that explicitly
+// indicate non-error levels (WARN, INFO, DEBUG and Kubernetes-style W/I/D prefixes at line start),
+// then it accepts explicit error indicators ([ERROR], Kubernetes E#### at line start, or "LEVEL=ERROR"),
+// and finally it matches configured keyword patterns from the package-level errorPatterns slice.
+// Returns true if any error indicator is found, false otherwise.
 func isErrorLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
@@ -350,7 +356,8 @@ func isErrorLog(line string) bool {
 	return false
 }
 
-// isWarnLog detects WARN level logs with explicit indicator priority
+// isWarnLog reports whether the given log line indicates a warning level.
+// It recognizes explicit warning markers (e.g., "[WARN]", "[WARNING]", "WARN:"/"WARNING:", "LEVEL=WARN") and Kubernetes-style "W####" prefixes, and also matches configured warning keyword patterns; lines containing explicit error indicators are treated as errors and do not qualify as warnings.
 func isWarnLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 
@@ -395,7 +402,7 @@ func isWarnLog(line string) bool {
 	return false
 }
 
-// isInfoLog detects INFO level logs in both bracketed and K8s formats
+// 3. Key-value form: contains "LEVEL=INFO".
 func isInfoLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 	// Bracketed format: [INFO]
@@ -414,7 +421,8 @@ func isInfoLog(line string) bool {
 	return false
 }
 
-// isDebugLog detects DEBUG level logs in both bracketed and K8s formats
+// isDebugLog reports whether the log line indicates DEBUG level.
+// It recognizes bracketed "[DEBUG]", Kubernetes-style "D####" at the start (checks the first five characters), and a case-insensitive "LEVEL=DEBUG" anywhere in the line.
 func isDebugLog(line string) bool {
 	lineUpper := strings.ToUpper(line)
 	// Bracketed format: [DEBUG]
@@ -433,7 +441,7 @@ func isDebugLog(line string) bool {
 	return false
 }
 
-// isDigit checks if a byte is an ASCII digit
+// isDigit reports whether b is an ASCII digit ('0' through '9').
 func isDigit(b byte) bool {
 	return b >= '0' && b <= '9'
 }

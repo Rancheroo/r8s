@@ -63,13 +63,12 @@ func formatCount(count int) string {
 // getBreadcrumb provides navigation context for each view
 func (a *App) getBreadcrumb() string {
 	// FIX BUG #8: Add visual mode indicator to breadcrumb
-	modeIndicator := ""
+	modeIndicator := "[LIVE] "
 	if a.bundleMode {
 		modeIndicator = "[BUNDLE] "
 	} else if a.offlineMode {
 		modeIndicator = "[DEMO] "
 	}
-	// No default indicator - live mode was removed in v0.3.5
 
 	switch a.currentView.viewType {
 	case ViewClusters:
@@ -106,7 +105,7 @@ func (a *App) getStatusText() string {
 	offlinePrefix := ""
 
 	if a.offlineMode {
-		offlinePrefix = "[DEMO] "
+		offlinePrefix = "[OFFLINE MODE - Mock Data] "
 	}
 
 	switch a.currentView.viewType {
@@ -191,9 +190,9 @@ func (a *App) getCRDDescriptionCaption() string {
 
 	// Find the corresponding CRD object
 	var selectedCRD *rancher.CRD
-	for i := range a.crds {
-		if a.crds[i].Metadata.Name == selectedData["name"] {
-			selectedCRD = &a.crds[i]
+	for _, crd := range a.crds {
+		if crd.Metadata.Name == selectedData["name"] {
+			selectedCRD = &crd
 			break
 		}
 	}
@@ -255,7 +254,9 @@ func (a *App) getPodNodeName(pod rancher.Pod) string {
 }
 
 // selectBestCRDVersion selects the best version from a CRD's version list
-// Priority: storage+served > storage > first served > error
+// selectBestCRDVersion selects the best CRD version name from the provided slice.
+// It prefers a version that is both `storage` and `served`, then a `storage` version,
+// then the first `served` version; returns an error if no served or storage version can be chosen.
 func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
 	var storageVersion string
 	var firstServedVersion string
@@ -292,7 +293,9 @@ func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
 	return "", fmt.Errorf("no served versions available")
 }
 
-// renderHelp renders the help screen with contextual tips ("Show, Don't Ask")
+// renderHelp shows comprehensive keybinding reference
+// renderHelp renders the help screen for the given view type, listing keybindings and appending view-specific contextual tips when available.
+// The resulting string is formatted for display.
 func renderHelp(viewType ViewType) string {
 	// Base help content
 	help := `r8s HELP - KEYBINDINGS
@@ -352,7 +355,8 @@ GENERAL
 }
 
 // getContextualTips returns view-specific pro tips auto-displayed in help
-// Implements "Show, Don't Ask" - shows relevant tips automatically
+// getContextualTips returns contextual help tips for the specified ViewType.
+// Each element is a concise, user-facing tip to show on the help screen; it returns nil when no tips are defined for the view.
 func getContextualTips(viewType ViewType) []string {
 	switch viewType {
 	case ViewAttention:
@@ -420,15 +424,9 @@ func (a *App) renderDescribeView() string {
 	lines := strings.Split(content, "\n")
 	maxLines := a.height - 8 // Reserve space for title and borders
 
-	// Guard against very small terminals
-	if maxLines <= 0 {
-		content = "... (terminal too small)"
-	} else if maxLines > 1 && len(lines) > maxLines {
+	if len(lines) > maxLines {
 		// Truncate if too long (simple implementation)
 		content = strings.Join(lines[:maxLines-1], "\n") + "\n... (truncated)"
-	} else if maxLines == 1 && len(lines) > 1 {
-		// Only show truncation message if we have more than 1 line
-		content = "... (truncated)"
 	}
 
 	contentBox := lipgloss.NewStyle().

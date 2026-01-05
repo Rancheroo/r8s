@@ -26,7 +26,6 @@ const (
 	SortByCount    SortMode = iota // Default: highest ERR+WARN total descending
 	SortBySeverity                 // Current behavior (Critical→Warning→Info)
 	SortByName                     // Alphabetical by title
-	NumSortModes                   // Sentinel value for cycling (must be last)
 )
 
 // String returns human-readable sort mode name for status bar
@@ -396,7 +395,8 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 	return items
 }
 
-// getTopPods returns the top N pods by event count
+// getTopPods returns the top N pod names from a map of pod names to event counts, ordered by descending count.
+// If the map contains fewer than N entries, the function returns all pod names.
 func getTopPods(pods map[string]int, n int) []string {
 	type podCount struct {
 		name  string
@@ -561,21 +561,22 @@ func isHealthyReadyStatus(ready string) bool {
 	return parts[0] == parts[1]
 }
 
-// sortAttentionItems sorts items by severity (Critical first)
+// sortAttentionItems sorts the slice of AttentionItem in place by Severity so that items with more severe attention (lower Severity value) appear first.
 func sortAttentionItems(items []AttentionItem) {
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].Severity < items[j].Severity
 	})
 }
 
-// sortItemsByCount sorts items by total error+warning count (descending)
+// sortItemsByCount sorts items in-place by the Count field in descending order,
+// preserving the original order for items with equal counts.
 func sortItemsByCount(items []AttentionItem) {
 	sort.SliceStable(items, func(i, j int) bool {
 		return items[i].Count > items[j].Count
 	})
 }
 
-// sortItemsByName sorts items alphabetically by title
+// sortItemsByName sorts the given AttentionItem slice in place by Title in ascending lexicographic order.
 func sortItemsByName(items []AttentionItem) {
 	sort.SliceStable(items, func(i, j int) bool {
 		return items[i].Title < items[j].Title
@@ -794,7 +795,8 @@ func ComputeNamespaceHealth(ds datasource.DataSource, scanDepth int) map[string]
 	return health
 }
 
-// extractNamespace extracts namespace from NamespaceID (handles "cluster:namespace" format)
+// extractNamespace returns the namespace portion of a NamespaceID.
+// If the input uses the "cluster:namespace" form, it returns the substring after the first colon; otherwise it returns the original string.
 func extractNamespace(namespaceID string) string {
 	if strings.Contains(namespaceID, ":") {
 		parts := strings.Split(namespaceID, ":")
@@ -805,20 +807,26 @@ func extractNamespace(namespaceID string) string {
 	return namespaceID
 }
 
-// SortNamespacesByHealth sorts namespaces by total issue count descending and returns a new sorted slice
-func SortNamespacesByHealth(namespaces []rancher.Namespace, nsHealth map[string]NamespaceHealth) []rancher.Namespace {
-	// Make a copy to avoid modifying original
-	nsCopy := append([]rancher.Namespace(nil), namespaces...)
-	sort.Slice(nsCopy, func(i, j int) bool {
-		health1 := nsHealth[nsCopy[i].Name]
-		health2 := nsHealth[nsCopy[j].Name]
+// SortNamespacesByHealth sorts the given slice of namespaces in-place by their total
+// issue count from nsHealth in descending order (highest total first). Namespaces
+// with no entry in nsHealth are treated as having a total of zero.
+func SortNamespacesByHealth(namespaces []rancher.Namespace, nsHealth map[string]NamespaceHealth) {
+	sort.Slice(namespaces, func(i, j int) bool {
+		health1 := nsHealth[namespaces[i].Name]
+		health2 := nsHealth[namespaces[j].Name]
 		// Sort descending (highest count first)
 		return health1.Total > health2.Total
 	})
-	return nsCopy
 }
 
-// getPodStateSeverity assigns severity score to pod states (lower = more critical)
+// getPodStateSeverity assigns a numeric severity score for a pod state where lower
+// values indicate more critical conditions. It returns:
+//   - 0 for crash/error/failed/oom states,
+//   - 5 for image pull failure or evicted states,
+//   - 10 for pending or unknown states,
+//   - 20 for running,
+//   - 25 for completed or succeeded,
+//   - 30 for any other/unknown state.
 func getPodStateSeverity(state string) int {
 	stateLower := strings.ToLower(state)
 
