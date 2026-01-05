@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
 // LoadFromPath loads a bundle from an extracted directory.
@@ -189,9 +191,34 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	crds, _ := ParseCRDs(extractPath)
 	deployments, _ := ParseDeployments(extractPath)
 	services, _ := ParseServices(extractPath)
-	namespaces, _ := ParseNamespaces(extractPath)
+	namespaces, nsErr := ParseNamespaces(extractPath)
 	kubectlPods, _ := ParsePods(extractPath)
 	events, _ := ParseEvents(extractPath)
+
+	// RESILIENCE: If namespaces file missing (common in partial bundles), derive from pods
+	if nsErr != nil && len(namespaces) == 0 && len(kubectlPods) > 0 {
+		// Extract unique namespaces from pod list
+		nsMap := make(map[string]bool)
+		for _, pod := range kubectlPods {
+			if pod.NamespaceID != "" {
+				nsMap[pod.NamespaceID] = true
+			}
+		}
+
+		// Create namespace objects
+		for nsName := range nsMap {
+			namespaces = append(namespaces, rancher.Namespace{
+				Name:      nsName,
+				State:     "active",
+				ClusterID: "bundle",
+				ProjectID: "bundle-project",
+			})
+		}
+
+		if opts.Verbose && len(namespaces) > 0 {
+			fmt.Printf("⚠ namespaces file missing - derived %d namespaces from pods\n", len(namespaces))
+		}
+	}
 
 	// Convert to interfaces for storage
 	var crdsI, deploymentsI, servicesI, namespacesI, eventsI []interface{}
