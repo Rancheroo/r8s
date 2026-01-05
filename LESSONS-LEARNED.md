@@ -353,6 +353,24 @@ Root directory cluttered with 30+ markdown files. Hard to find relevant document
 
 ---
 
+## Key Principles (Summary)
+
+Based on all lessons learned, r8s follows these core principles:
+
+1. **Truth Only™** - r8s only displays truth. Better to show nothing than wrong data. Remove features that lie.
+2. **Best Feature = No Feature** - Smart defaults beat options. Delete complexity, don't improve it.
+3. **Show, Don't Ask** - Information should surface automatically without button presses.
+4. **Explicit > Implicit** - Clear modes, flags, and indicators reduce confusion.
+5. **Complete Removal** - Partial deletions create tech debt. Delete entirely or keep fully.
+6. **Test at 10× Scale** - Test features at max values. UI scaling breaks exponentially.
+7. **Use Your Interfaces** - Trust abstractions you designed. Bypassing creates bugs.
+8. **O(n log n) Always** - Algorithm complexity matters. Use standard library sorting.
+9. **30-Day Branch Rule** - Delete merged branches within 30 days. Clean repos accelerate development.
+10. **Minimal Keys** - Fewer hotkeys = better UX. Enter/Esc navigation should suffice for 90% of workflows.
+11. **Empty is Valid** - Don't conflate "no results" with "error". Empty is a legitimate state.
+
+---
+
 ## Closing Thoughts
 
 Building r8s taught us that:
@@ -362,6 +380,7 @@ Building r8s taught us that:
 3. **Tests save time** - Bugs caught early are cheap to fix
 4. **Cleanup is essential** - Technical debt accumulates fast
 5. **Explicit > Implicit** - Clear modes and flags reduce confusion
+6. **Minimal Keys Win** - Enter/Esc navigation reduces cognitive load more than multiple hotkeys
 
 The project evolved from a simple cluster browser to a comprehensive observability tool. Each phase built on learnings from the previous one, and iterative improvement proved more effective than big-bang rewrites.
 
