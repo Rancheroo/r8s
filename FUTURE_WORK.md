@@ -265,6 +265,7 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Fall back to "Unknown" (not "N/A") only when timestamp truly missing
 - **Philosophy**: Show what we know - bundles have timestamps, use them
 
+
 ### Auto-Display Pod Diagnostics on Failure (v0.5.4+) ⭐
 - **Priority**: HIGH
 - **Complexity**: Medium
