@@ -265,6 +265,27 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Fall back to "Unknown" (not "N/A") only when timestamp truly missing
 - **Philosophy**: Show what we know - bundles have timestamps, use them
 
+### Auto-Display Pod Diagnostics on Failure (v0.5.4+) ⭐
+- **Priority**: HIGH
+- **Complexity**: Medium
+- **Impact**: High (consistency + simplification)
+- **Description**: Automatically show pod diagnostic panel when selecting failed pods - remove manual 'd' button
+- **Current State**:
+  - User selects crashed pod from Dashboard
+  - User must press 'd' to see diagnostic details
+  - Describe shows raw JSON dump (not user-friendly)
+- **Proposed Change**:
+  - Crashed/failed pods automatically show diagnostic panel (like "No Logs" screen)
+  - Panel displays: State, Restarts, Exit Code, Events, Container Status
+  - 'd' key only available in log view for deeper inspection
+  - Reuse code from "No Logs" diagnostic panel for consistency
+- **Benefits**:
+  - Show, Don't Ask - information surfaces automatically
+  - Consistent UX - same panel style as "No Logs"
+  - Simpler interaction - one less button to remember
+  - Reliable code - reuse tested components
+- **Philosophy**: "Reliable code is better than feature-rich, bespoke, unstable code"
+
 ### Remove Log Filter Modes (v0.5.4+)
 - **Priority**: Medium
 - **Complexity**: Medium (removal + smart defaults)
