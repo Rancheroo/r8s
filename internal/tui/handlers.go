@@ -66,8 +66,6 @@ func (a *App) handleEnter() tea.Cmd {
 				containerName: matchedItem.ContainerName,
 			}
 
-			// Reset diagnostic panel flag for fresh navigation
-			a.showDiagnostics = false
 			// Set filter to show errors and warnings by default
 			a.filterLevel = "WARN"
 			a.loading = true
@@ -207,8 +205,6 @@ func (a *App) handleEnter() tea.Cmd {
 			containerName: "",
 		}
 
-		// Reset diagnostic panel flag for fresh navigation
-		a.showDiagnostics = false
 		// Auto-apply WARN filter to show errors and warnings
 		a.filterLevel = "WARN"
 		a.loading = true
@@ -366,8 +362,6 @@ func (a *App) handleViewLogs() tea.Cmd {
 		containerName: "", // TODO: Support multi-container pods later
 	}
 
-	// Reset diagnostic panel flag for fresh navigation
-	a.showDiagnostics = false
 	a.loading = true
 	return a.fetchLogs(a.currentView.clusterID, namespaceName, podName, a.currentContainer, a.showPrevious)
 }

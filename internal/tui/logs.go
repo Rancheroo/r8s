@@ -36,16 +36,24 @@ var warnKeywords = []string{
 }
 
 // renderLogsView renders the logs view for a pod with viewport scrolling
+// DIAGNOSTIC-FIRST APPROACH: Always show diagnostic panel first, then 'l' to view logs
 func (a *App) renderLogsView() string {
-	// Check if user toggled diagnostic panel (via 'd' key)
-	if a.showDiagnostics {
-		return a.renderEmptyLogsHelp() // Reuse the diagnostic panel
+	// If user pressed 'l' to view raw logs
+	if a.showRawLogs {
+		// If no logs available, show simple message
+		if len(a.logs) == 0 {
+			return a.renderNoLogsMessage()
+		}
+		// Show raw logs
+		return a.renderRawLogs()
 	}
 
-	// Auto-show helpful message when logs are empty (Show, Don't Ask philosophy)
-	if len(a.logs) == 0 {
-		return a.renderEmptyLogsHelp()
-	}
+	// Default: Show diagnostic panel (intelligence first!)
+	return a.renderEmptyLogsHelp()
+}
+
+// renderRawLogs renders the raw log viewer
+func (a *App) renderRawLogs() string {
 
 	// Build breadcrumb
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
@@ -713,6 +721,36 @@ func (a *App) buildExternalToolsSection() string {
     Previous: kubectl logs <pod> -n <namespace> --previous
 
   • Integrated in r8s - Press [Ctrl+P] for previous container logs`
+}
+
+// renderNoLogsMessage renders a simple "no logs" message when user pressed 'l' but pod has no logs
+func (a *App) renderNoLogsMessage() string {
+	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
+
+	helpTitle := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render("📭 No Logs Available")
+
+	helpText := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorYellow).
+		Padding(2, 4).
+		Width(a.width - 8).
+		Render("No container logs available for this pod")
+
+	status := statusStyle.Render(" [Esc]=back to diagnostics  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		helpTitle,
+		"",
+		helpText,
+		"",
+		status,
+	)
 }
 
 // renderEmptyLogsFallback renders a simple fallback when pod not found

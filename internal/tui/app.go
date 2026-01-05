@@ -101,7 +101,7 @@ type App struct {
 	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
 	showPrevious     bool     // Show previous logs (for crashed containers)
 	wordWrap         bool     // Enable word wrapping for long log lines
-	showDiagnostics  bool     // Show diagnostic panel instead of logs (toggle with 'd')
+	showRawLogs      bool     // Show raw logs instead of diagnostic panel (toggle with 'l')
 
 	// App state
 	offlineMode bool   // Flag to indicate running without live Rancher connection
@@ -496,11 +496,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return a, nil
 		case "d":
-			// Toggle diagnostic panel in logs view
-			if a.currentView.viewType == ViewLogs {
-				a.showDiagnostics = !a.showDiagnostics
-				return a, nil
-			}
 			// For other views, keep describe functionality
 			if a.showingDescribe {
 				// Exit describe view
@@ -588,7 +583,16 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, nil
 			}
 		case "l":
-			// Open logs view for selected pod
+			// In logs view: toggle between diagnostic panel and raw logs
+			if a.currentView.viewType == ViewLogs {
+				a.showRawLogs = !a.showRawLogs
+				// If switching to raw logs and logs exist, re-render viewport
+				if a.showRawLogs && len(a.logs) > 0 {
+					a.logViewport.SetContent(a.renderLogsWithColors())
+				}
+				return a, nil
+			}
+			// In pods view: Open logs view
 			if a.currentView.viewType == ViewPods {
 				return a, a.handleViewLogs()
 			}
