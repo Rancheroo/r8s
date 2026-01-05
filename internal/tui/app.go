@@ -808,6 +808,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case logsMsg:
 		a.loading = false
+
+		// FIX (v0.5.4): Validate pod name to prevent race condition
+		// Only apply logs if they match the current pod we're viewing
+		if a.currentView.viewType == ViewLogs &&
+			(msg.podName != a.currentView.podName || msg.namespace != a.currentView.namespaceName) {
+			// Stale logs from previous pod - ignore them
+			return a, nil
+		}
+
 		a.logs = msg.logs
 		a.error = ""
 
@@ -996,7 +1005,9 @@ type describeMsg struct {
 
 // logsMsg represents a message containing log data
 type logsMsg struct {
-	logs []string
+	logs      []string
+	podName   string // FIX (v0.5.4): Track which pod these logs belong to
+	namespace string // FIX (v0.5.4): Track namespace for validation
 }
 
 // attentionMsg represents attention dashboard analysis results

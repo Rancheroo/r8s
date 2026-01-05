@@ -187,17 +187,26 @@ func (a *App) handleEnter() tea.Cmd {
 		return a.fetchPods(a.currentView.projectID, namespaceName)
 
 	case ViewPods:
-		// Navigate to logs for selected pod (UX consistency: Enter = logs)
+		// Navigate to logs for selected pod (diagnostic-first approach)
 		podName := safeRowString(selected, "name")
 		namespaceName := safeRowString(selected, "namespace")
 		if podName == "" || namespaceName == "" {
 			return nil // Skip if required fields are missing
 		}
 
+		// FIX (v0.5.4): Clear stale log state before navigation
+		a.logs = nil
+		a.searchMode = false
+		a.searchQuery = ""
+		a.searchMatches = nil
+		a.currentMatch = -1
+		a.showRawLogs = false // Diagnostic panel first
+		a.filterLevel = ""    // Show all logs (user can filter)
+
 		// Push current view to stack
 		a.viewStack = append(a.viewStack, a.currentView)
 
-		// Navigate to logs view with WARN filter (shows errors + warnings by default)
+		// Navigate to logs view with diagnostic panel
 		a.currentView = ViewContext{
 			viewType:      ViewLogs,
 			clusterID:     a.currentView.clusterID,
@@ -210,8 +219,6 @@ func (a *App) handleEnter() tea.Cmd {
 			containerName: "",
 		}
 
-		// Auto-apply WARN filter to show errors and warnings
-		a.filterLevel = "WARN"
 		a.loading = true
 		return a.fetchLogs(a.currentView.clusterID, namespaceName, podName, a.currentContainer, a.showPrevious)
 

@@ -250,7 +250,12 @@ func (a *App) fetchLogs(clusterID, namespace, podName, container string, showPre
 		logs, err := ds.GetLogs(clusterID, namespace, podName, container, showPrevious)
 		if err == nil {
 			// Return even if empty - empty logs is valid
-			return logsMsg{logs: logs}
+			// FIX (v0.5.4): Include pod name and namespace to prevent race conditions
+			return logsMsg{
+				logs:      logs,
+				podName:   podName,
+				namespace: namespace,
+			}
 		}
 
 		// FIX BUG #13: NO SILENT FALLBACK - return error with context
