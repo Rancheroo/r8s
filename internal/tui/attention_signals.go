@@ -154,14 +154,20 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: OOMKilled (distinct emoji for visibility)
+		// Critical: OOMKilled (distinct emoji for visibility + log check)
 		if strings.Contains(stateLower, "oomkilled") ||
 			strings.Contains(kubectlStatusLower, "oomkilled") {
+			description := "OOMKilled"
+			logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+			if err != nil || len(logs) == 0 {
+				description = "OOMKilled ⚠️ No Logs"
+			}
+
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "🧨", // Distinct from CrashLoop
 				Title:        pod.Name,
-				Description:  "OOMKilled",
+				Description:  description,
 				Namespace:    namespace,
 				ResourceType: "pod",
 				PodName:      pod.Name,
@@ -170,14 +176,20 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: Error/Failed state (case-insensitive)
+		// Critical: Error/Failed state (case-insensitive + log check)
 		if strings.Contains(stateLower, "error") || strings.Contains(stateLower, "failed") ||
 			strings.Contains(kubectlStatusLower, "error") || strings.Contains(kubectlStatusLower, "failed") {
+			description := "Error state"
+			logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+			if err != nil || len(logs) == 0 {
+				description = "Error state ⚠️ No Logs"
+			}
+
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "💀",
 				Title:        pod.Name,
-				Description:  "Error state",
+				Description:  description,
 				Namespace:    namespace,
 				ResourceType: "pod",
 				PodName:      pod.Name,
@@ -186,14 +198,20 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: ImagePullBackOff / ErrImagePull (case-insensitive)
+		// Critical: ImagePullBackOff / ErrImagePull (case-insensitive + log check)
 		if strings.Contains(stateLower, "imagepullbackoff") || strings.Contains(stateLower, "errimagepull") ||
 			strings.Contains(kubectlStatusLower, "imagepullbackoff") || strings.Contains(kubectlStatusLower, "errimagepull") {
+			description := "ImagePullBackOff"
+			logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+			if err != nil || len(logs) == 0 {
+				description = "ImagePullBackOff ⚠️ No Logs"
+			}
+
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "🚫",
 				Title:        pod.Name,
-				Description:  "ImagePullBackOff",
+				Description:  description,
 				Namespace:    namespace,
 				ResourceType: "pod",
 				PodName:      pod.Name,
@@ -202,13 +220,19 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			continue
 		}
 
-		// Critical: Evicted (case-insensitive)
+		// Critical: Evicted (case-insensitive + log check)
 		if strings.Contains(stateLower, "evicted") || strings.Contains(kubectlStatusLower, "evicted") {
+			description := "Evicted"
+			logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+			if err != nil || len(logs) == 0 {
+				description = "Evicted ⚠️ No Logs"
+			}
+
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "🚫",
 				Title:        pod.Name,
-				Description:  "Evicted",
+				Description:  description,
 				Namespace:    namespace,
 				ResourceType: "pod",
 				PodName:      pod.Name,
