@@ -134,11 +134,18 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 
 		if strings.Contains(stateLower, "crashloopbackoff") ||
 			strings.Contains(kubectlStatusLower, "crashloopbackoff") {
+			// Check if logs are available (Truth indicator polish v0.5.3)
+			description := "CrashLoopBackOff"
+			logs, err := ds.GetLogs("", namespace, pod.Name, "", false)
+			if err != nil || len(logs) == 0 {
+				description = "CrashLoopBackOff ⚠️ No Logs"
+			}
+
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "💀",
 				Title:        pod.Name,
-				Description:  "CrashLoopBackOff",
+				Description:  description,
 				Namespace:    namespace,
 				ResourceType: "pod",
 				PodName:      pod.Name,
