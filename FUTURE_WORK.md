@@ -209,27 +209,31 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Complexity**: Low
 - **Impact**: High (UX consistency)
 - **Description**: Pods showing as CrashLoopBackOff in dashboard but "✅ Clean" in namespace view is misleading
-- **Problem**: 
+- **Problem**:
   - Dashboard correctly shows pod in CrashLoopBackOff
   - Namespace/Classic view shows "✅ Clean" because no log files found
   - User sees conflicting information: "Is this pod healthy or broken?"
+- **Scope Expansion (v0.5.3+)**:
+  - Applies to ALL pods with zero log lines, not just CrashLoopBackOff
+  - Any pod state (Running, Pending, Error, CrashLoopBackOff, etc.) with 0 logs gets indicator
+  - Consistent application of Truth Only™ principle: "no logs ≠ clean"
 - **Proposed Fix**:
-  - When pod state is CrashLoopBackOff/Error/OOMKilled but has no logs:
-  - Show "⚠️ No Logs" instead of "✅ Clean"
-  - Use warning emoji (not green tick) for any non-Running state
-  - Add tooltip: "Pod unhealthy but logs not collected in bundle"
+  - When pod has 0 log lines (regardless of pod state):
+    - Show "⚠️ No Logs" instead of "✅ Clean"
+    - Use warning emoji (not green tick) for any pod without log data
+    - Add tooltip: "No logs captured - check describe/events for details"
 - **Logic**:
 
   ```python
-  if pod.State in [CrashLoopBackOff, Error, OOMKilled, ImagePullBackOff]:
-    if logCount == 0:
-      display "⚠️ No Logs"  # Not "✅ Clean"
-    else:
-      display actual E/W counts
+  if logCount == 0:
+    display "⚠️ No Logs"  # Not "✅ Clean"
+  else:
+    display actual E/W counts or "✅ Clean"
   ```
 
 - **Philosophy**: Truth in context - "Clean" means healthy AND no issues, not just "no logs found"
 - **Triggered by**: User-reported UX confusion
+- **Applies to**: All pod states, not just CrashLoopBackOff (consistency)
 
 ### Empty Namespace Intelligence (v0.5.3+) ⭐
 - **Priority**: Medium
@@ -263,15 +267,20 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ### Remove Log Filter Modes (v0.5.4+)
 - **Priority**: Medium
-- **Complexity**: Medium (removal + smart logic)
+- **Complexity**: Medium (removal + smart defaults)
 - **Impact**: High (simplification)
-- **Description**: Eliminate ALL/ERROR/WARN filter toggles - use intelligent auto-filtering
+- **Description**: Eliminate ALL/ERROR/WARN filter toggles - use intelligent defaults with prominent highlighting
 - **Current State**:
   - 3 filter modes: ALL, ERROR, WARN
   - Ctrl+A / Ctrl+E / Ctrl+W hotkeys
   - Status bar shows current filter
   - User must manually toggle to see issues
-- **Proposed Change**:
+- **Proposed Change (Option A - Pure Simplification)**:
+  - Remove filter modes entirely
+  - Always show ALL logs by default
+  - Errors highlighted RED, warnings YELLOW (already implemented in log view)
+  - No filter needed - issues visually surface themselves
+- **Proposed Change (Option B - Smart Auto-Detect)**:
   - Auto-detect log content on open:
     - If < 100 lines: show ALL (no filtering needed)
     - If 100-1000 lines and >10 errors: show ERROR
@@ -279,12 +288,18 @@ This document tracks feature ideas and enhancements that have been identified bu
     - Otherwise: show ALL
   - Add single "Show All" toggle (Ctrl+A) to override smart filter
   - Remove ERROR/WARN individual modes
+- **Recommendation (Option A - More Aligned with Principles)**:
+  - Option A better aligns with "Show, Don't Ask" - show everything, highlight issues
+  - Reduces 3 choices to 1 (toggle available if needed)
+  - User sees full context immediately
+  - Color highlighting already works - leverage it
 - **Rationale**:
-  - Software should guess what user wants to see
-  - 90% of time: user wants to see errors only
-  - Reduce 3 choices to 1 toggle
+  - Software should show data, not hide it behind filters
+  - 90% of time: user wants context + errors visible together
+  - Color highlighting already surfaces issues
+  - Reduce 3 choices to 0 (no filtering needed)
 - **Code Reduction**: ~100 lines removed
-- **Philosophy**: "Smart defaults beat multiple options"
+- **Philosophy**: "Show everything, highlight issues - don't hide context behind filters"
 
 ### Remove View Switching Hotkeys (v0.6.0+)
 - **Priority**: Low
