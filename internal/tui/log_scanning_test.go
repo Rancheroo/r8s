@@ -16,7 +16,7 @@ func TestDashboardLogAccuracy_MatchesLogView(t *testing.T) {
 		pods: []rancher.Pod{
 			{Name: "pod-with-5-errors", NamespaceID: "default", State: "Running"},
 			{Name: "pod-with-0-errors", NamespaceID: "default", State: "Running"},
-			{Name: "pod-with-10-warnings", NamespaceID: "default", State: "Running"},
+			{Name: "pod-with-21-warnings", NamespaceID: "default", State: "Running"},
 		},
 		logs: map[string][]string{
 			"default/pod-with-5-errors": {
@@ -34,7 +34,7 @@ func TestDashboardLogAccuracy_MatchesLogView(t *testing.T) {
 				"I1127 00:00:02 [INFO] All good",
 				"I1127 00:00:03 [INFO] Still good",
 			},
-			"default/pod-with-10-warnings": {
+			"default/pod-with-21-warnings": {
 				"W1127 00:00:01 [WARN] Warning 1",
 				"W1127 00:00:02 [WARN] Warning 2",
 				"W1127 00:00:03 [WARN] Warning 3",
@@ -46,6 +46,17 @@ func TestDashboardLogAccuracy_MatchesLogView(t *testing.T) {
 				"W1127 00:00:09 [WARN] Warning 8",
 				"W1127 00:00:10 [WARN] Warning 9",
 				"W1127 00:00:11 [WARN] Warning 10",
+				"W1127 00:00:12 [WARN] Warning 11",
+				"W1127 00:00:13 [WARN] Warning 12",
+				"W1127 00:00:14 [WARN] Warning 13",
+				"W1127 00:00:15 [WARN] Warning 14",
+				"W1127 00:00:16 [WARN] Warning 15",
+				"W1127 00:00:17 [WARN] Warning 16",
+				"W1127 00:00:18 [WARN] Warning 17",
+				"W1127 00:00:19 [WARN] Warning 18",
+				"W1127 00:00:20 [WARN] Warning 19",
+				"W1127 00:00:21 [WARN] Warning 20",
+				"W1127 00:00:22 [WARN] Warning 21",
 			},
 		},
 	}
@@ -62,7 +73,7 @@ func TestDashboardLogAccuracy_MatchesLogView(t *testing.T) {
 	}{
 		{"pod-with-5-errors", 5, 0},
 		{"pod-with-0-errors", 0, 0},
-		{"pod-with-10-warnings", 0, 10},
+		{"pod-with-21-warnings", 0, 21},
 	}
 
 	for _, tc := range testCases {

@@ -147,8 +147,9 @@ func TestAttentionToggleExpansion(t *testing.T) {
 	}
 
 	displayed = app.getDisplayedItems()
-	if len(displayed) != defaultDashboardCap {
-		t.Errorf("Expected %d items when collapsed, got %d", defaultDashboardCap, len(displayed))
+	// With 50 items total and cap of 100, all 50 should be shown even when collapsed
+	if len(displayed) != 50 {
+		t.Errorf("Expected 50 items when collapsed (under cap), got %d", len(displayed))
 	}
 }
 
