@@ -520,11 +520,9 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
   Age:         %s`, state, restarts, ready, node, age)
 	sections = append(sections, statusSection)
 
-	// Section 3: Recent Events (if available)
-	if len(pod.KubectlEvents) > 0 {
-		eventsSection := a.buildEventsSection(pod.KubectlEvents)
-		sections = append(sections, eventsSection)
-	}
+	// Section 3: Recent Events (always show, even if empty)
+	eventsSection := a.buildEventsSection(pod.KubectlEvents)
+	sections = append(sections, eventsSection)
 
 	// Section 4: Investigation Guidance
 	investigateSection := a.buildInvestigationSection(state, restarts)
@@ -544,7 +542,7 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
 		Width(a.width - 6).
 		Render(helpText)
 
-	status := statusStyle.Render(" [d]=describe pod  [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
+	status := statusStyle.Render(" [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
