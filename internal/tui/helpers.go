@@ -106,7 +106,7 @@ func (a *App) getStatusText() string {
 	offlinePrefix := ""
 
 	if a.offlineMode {
-		offlinePrefix = "[OFFLINE MODE - Mock Data] "
+		offlinePrefix = "[DEMO] "
 	}
 
 	switch a.currentView.viewType {

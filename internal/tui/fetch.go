@@ -371,6 +371,13 @@ func (a *App) updateNamespaceCounts(namespaces []rancher.Namespace) {
 }
 
 // getCRDInstanceCount returns the count of instances for a given CRD using datasource
+// TODO(FUTURE_WORK): This function blocks UI rendering during table updates.
+// Should be refactored to:
+// 1. Return cached counts during render (non-blocking)
+// 2. Fetch counts asynchronously in background goroutines
+// 3. Store results in App.crdInstanceCounts map[string]int (key: clusterID+group+resource)
+// 4. Signal UI refresh after cache update
+// See FUTURE_WORK.md for detailed async implementation plan
 func (a *App) getCRDInstanceCount(group, resource string) int {
 	if a.dataSource == nil {
 		return 0

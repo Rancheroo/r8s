@@ -240,6 +240,7 @@ States Removed: 11 → 2
 ### Branch Workflow (Every Branch)
 
 **Pre-Merge Checklist**:
+
 ```bash
 # 1. Tests pass locally
 make test
@@ -296,6 +297,7 @@ merge/    — Integration branches (e.g., merge/ship-v052)
 ### CodeRabbit Integration
 
 **Setup** (if not configured):
+
 ```bash
 # Option 1: GitHub PR auto-review (recommended)
 # Add to .github/workflows/coderabbit.yml

@@ -57,14 +57,6 @@ func TestGetLogs_EmptyLogFile(t *testing.T) {
 	if len(logs) != 0 {
 		t.Errorf("Expected empty slice for empty log file, got %d entries: %v", len(logs), logs)
 	}
-
-	// CRITICAL: Ensure no synthetic/demo data was generated
-	// Real bundles must return accurate data only, never fake entries
-	for i, log := range logs {
-		if log != "" {
-			t.Errorf("Entry %d should be empty for empty log file, got: %q", i, log)
-		}
-	}
 }
 
 // TestGetLogs_NonEmptyLogFile demonstrates basic functionality

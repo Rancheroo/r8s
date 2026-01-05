@@ -19,7 +19,7 @@ r8s version
 <!-- Check ONE of the following -->
 - [ ] Live cluster (`r8s tui`)
 - [ ] Bundle mode (`r8s tui --bundle=...`)
-- [ ] Mock mode (`r8s tui --mockdata`)
+- [ ] Demo mode (embedded example bundle)
 
 ## Bundle Information (if applicable)
 <!-- If using bundle mode, provide bundle details -->

@@ -123,6 +123,13 @@ func (a *App) handleEnter() tea.Cmd {
 			}
 		}
 
+		// Validate projectID was found before proceeding
+		if projectID == "" {
+			a.error = fmt.Sprintf("project '%s' not found", projectName)
+			a.loading = false
+			return nil
+		}
+
 		// Push current view to stack
 		a.viewStack = append(a.viewStack, a.currentView)
 
@@ -149,6 +156,13 @@ func (a *App) handleEnter() tea.Cmd {
 				namespaceID = n.ID
 				break
 			}
+		}
+
+		// Validate namespaceID was found before proceeding
+		if namespaceID == "" {
+			a.error = fmt.Sprintf("namespace '%s' not found", namespaceName)
+			a.loading = false
+			return nil
 		}
 
 		// Push current view to stack
