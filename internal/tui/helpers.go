@@ -63,12 +63,13 @@ func formatCount(count int) string {
 // getBreadcrumb provides navigation context for each view
 func (a *App) getBreadcrumb() string {
 	// FIX BUG #8: Add visual mode indicator to breadcrumb
-	modeIndicator := "[LIVE] "
+	modeIndicator := ""
 	if a.bundleMode {
 		modeIndicator = "[BUNDLE] "
 	} else if a.offlineMode {
 		modeIndicator = "[DEMO] "
 	}
+	// No default indicator - live mode was removed in v0.3.5
 
 	switch a.currentView.viewType {
 	case ViewClusters:

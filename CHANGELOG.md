@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.2] - 2026-01-03 "Truth & Accuracy"
 
 ### Fixed 🐛 CRITICAL
+
 - **CRITICAL: Identical error/warning counts bug**
   - **Problem**: ALL pods showed identical "19 ERR, 17 WARN" in dashboard and classic view
   - **Root cause**: `generateDemoLogs()` returned same hardcoded 57-line log for every pod when log files empty/missing
@@ -15,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Fix**: Removed fake demo log generation for real bundles - return empty []string{} instead
   - **Result**: Pods now show accurate, different E/W counts based on actual log content
   - **Namespace view was correct** (used different aggregation logic)
-  - **Principle restored**: Truth Only™ - real bundles show only accurate data
+  - **Principle restored**: Truth Only™ — real bundles show accurate data
 
 - **Documentation consistency across repository**
   - Updated all version references from v0.5.1 to v0.5.2 (README.md, POST_MERGE_CLEANUP.md)
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintained stable ordering using sort.SliceStable where needed for tie-breaker logic
 
 ### Added ✨
+
 - **Future work documented in FUTURE_WORK.md**
   - UX improvements: CrashLoopBackOff with no logs indicator, empty namespace intelligence, age display consistency
   - Simplification proposals: Remove sort mode complexity, remove log filter modes, remove view switching hotkeys
@@ -44,14 +46,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documented pre-commit hook approach to prevent � character regressions
 
 ### Technical - v0.5.2
+
 - 8 files modified: bundle.go, CONTRIBUTING.md, FUTURE_WORK.md, LESSONS-LEARNED.md, POST_MERGE_CLEANUP.md, README.md, GIT_BRANCH_CLEANUP_PLAN.md, attention_signals.go
 - All sorting functions now use Go stdlib (sort.Slice/sort.SliceStable)
 - Version consistency verified across entire repository
 - Git tag: v0.5.2
 - Branch: ship-v052
-- Commits: 152dd76 (docs), 49b45be (critical fix)
+  - Commits: 152dd76 (docs), 49b45be (critical fix)
 
 ### Impact Summary - v0.5.2
+
 - ✅ **CRITICAL FIX** - Accurate per-pod error/warning counts (no more fake "19/17")
 - ✅ **Version consistency** - All user-facing docs show v0.5.2
 - ✅ **Better performance** - Sort functions use O(n log n) algorithms
@@ -60,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Truth Only™** - Real bundles show only accurate data, no fake demo logs
 
 ### Known Issues & Deferred (documented in FUTURE_WORK.md)
+
 - CrashLoopBackOff pods with no logs show "✅ Clean" (misleading) - FIX in v0.5.3
 - Empty namespaces show "✅ Clean" instead of "📭 Empty" - FIX in v0.5.3
 - Sort mode complexity (3 modes, rarely used) - REMOVE in v0.5.3

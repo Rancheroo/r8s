@@ -69,7 +69,9 @@ func (a *App) handleEnter() tea.Cmd {
 			// Set filter to show errors and warnings by default
 			a.filterLevel = "WARN"
 			a.loading = true
-			return a.fetchLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, a.currentContainer, a.showPrevious)
+			// Set internal state to match view context before fetching
+			a.currentContainer = matchedItem.ContainerName
+			return a.fetchLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, matchedItem.ContainerName, a.showPrevious)
 		}
 
 		return nil
@@ -86,6 +88,13 @@ func (a *App) handleEnter() tea.Cmd {
 				clusterID = c.ID
 				break
 			}
+		}
+
+		// Validate clusterID was found before proceeding
+		if clusterID == "" {
+			a.error = fmt.Sprintf("cluster '%s' not found", clusterName)
+			a.loading = false
+			return nil
 		}
 
 		// Push current view to stack
@@ -205,9 +214,6 @@ func (a *App) handleEnter() tea.Cmd {
 			return nil
 		}
 
-		// Push current view to stack
-		a.viewStack = append(a.viewStack, a.currentView)
-
 		// FIX BUG-001: Use helper function to select best CRD version
 		// This correctly handles served versions and avoids 404 errors
 		storageVersion, err := selectBestCRDVersion(selectedCRD.Spec.Versions)
@@ -215,6 +221,9 @@ func (a *App) handleEnter() tea.Cmd {
 			a.error = fmt.Sprintf("CRD %s: %v", selectedCRD.Metadata.Name, err)
 			return nil
 		}
+
+		// Push current view to stack only AFTER successful validation
+		a.viewStack = append(a.viewStack, a.currentView)
 
 		// Navigate to CRD instances
 		a.currentView = ViewContext{
@@ -364,8 +373,8 @@ func (a *App) cycleSortMode() tea.Cmd {
 		currentMode = a.sortMode // Use global default
 	}
 
-	// Cycle to next mode (total modes = last enum value + 1)
-	nextMode := SortMode((int(currentMode) + 1) % (int(SortByName) + 1))
+	// Cycle to next mode (use NumSortModes sentinel for safe wrapping)
+	nextMode := SortMode((int(currentMode) + 1) % int(NumSortModes))
 
 	// Store per-view preference
 	a.sortModes[a.currentView.viewType] = nextMode
