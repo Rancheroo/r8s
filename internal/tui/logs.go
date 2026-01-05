@@ -555,7 +555,7 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
 		Width(a.width - 6).
 		Render(helpText)
 
-	status := statusStyle.Render(" [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
+	status := statusStyle.Render(" [l]=view logs  [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
