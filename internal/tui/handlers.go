@@ -50,6 +50,15 @@ func (a *App) handleEnter() tea.Cmd {
 
 		// Only navigate for pod-related issues
 		if matchedItem.ResourceType == "pod" && matchedItem.PodName != "" {
+			// FIX (v0.5.4): Clear stale log state before navigation
+			// Prevents showing previous pod's logs when navigating from dashboard
+			a.logs = nil
+			a.searchMode = false
+			a.searchQuery = ""
+			a.searchMatches = nil
+			a.currentMatch = -1
+			a.showRawLogs = false // Start with diagnostic panel
+
 			// Push current view to stack
 			a.viewStack = append(a.viewStack, a.currentView)
 

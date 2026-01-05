@@ -331,6 +331,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if len(item.AffectedPods) > 0 && a.subCursor < len(item.AffectedPods) {
 						podName := item.AffectedPods[a.subCursor]
 
+						// FIX (v0.5.4): Clear stale log state before navigation
+						a.logs = nil
+						a.searchMode = false
+						a.searchQuery = ""
+						a.searchMatches = nil
+						a.currentMatch = -1
+						a.showRawLogs = false
+
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
@@ -357,6 +365,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if a.attentionCursor < len(a.attentionItems) {
 					item := a.attentionItems[a.attentionCursor]
 					if item.ResourceType == "pod" && item.PodName != "" {
+						// FIX (v0.5.4): Clear stale log state before navigation
+						a.logs = nil
+						a.searchMode = false
+						a.searchQuery = ""
+						a.searchMatches = nil
+						a.currentMatch = -1
+						a.showRawLogs = false
+
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
