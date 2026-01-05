@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed 🐛
+
+- **Pod navigation race condition** - Rapid pod switching now shows correct data
+  - **Problem**: Dashboard → Pod A → Back → Pod B → repeat could show Pod A's logs in Pod B's view
+  - **Root Cause**: Async race condition - Pod A's `fetchLogs()` response arrived after navigating to Pod B
+  - **Solution**: Added pod name validation to `logsMsg` handler - stale messages now ignored
+  - **Impact**: Navigation reliability restored, both dashboard and classic views work correctly
+
+### Technical - Unreleased
+
+- Modified `logsMsg` type to include `podName` and `namespace` fields for validation
+- Updated `fetchLogs()` to pass pod identity with every log message
+- Added validation in `logsMsg` handler: ignore messages that don't match current view context
+- Applied diagnostic-first approach to classic pod view (Enter from Pods table)
+- All navigation paths now clear state before switching pods
+
+### Known Issues - Unreleased
+
+- **Navigation state complexity** - Multiple navigation paths with inconsistent state management
+  - State clearing code duplicated across 3 locations (dashboard enter, app.go enter handlers)
+  - Classic and dashboard paths have subtle behavior differences
+  - Deferred to v0.6.0 simplification: standardize navigation, reduce state complexity
+  - See FUTURE_WORK.md "Navigation Simplification (v0.6.0)" for planned improvements
+
+---
+
 ## [0.5.4] - 2026-01-05 "Enhanced Diagnostics"
 
 ### Added ✨

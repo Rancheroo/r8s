@@ -382,6 +382,55 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Code Reduction**: ~50 lines removed
 - **Philosophy**: "Fewer ways to do same thing = easier to learn"
 
+### Navigation Simplification (v0.6.0) ⭐
+- **Priority**: HIGH
+- **Complexity**: Medium
+- **Impact**: High (code quality + reliability)
+- **Description**: Standardize navigation state management across all view transitions
+- **Current Pain Points**:
+  - State clearing code duplicated in 3 locations (handlers.go ViewPods, app.go ViewAttention x2)
+  - Classic pod view and dashboard use different approaches
+  - Race condition fix required adding validation layer due to inconsistent state management
+  - Each navigation path has subtle behavioral differences
+- **Root Cause**: Organic growth - features added incrementally without unified architecture
+- **Proposed Solution**:
+  ```go
+  // Single source of truth for navigation state clearing
+  func (a *App) navigateToLogs(namespace, podName string) tea.Cmd {
+      // Clear ALL pod-related state in one place
+      a.clearPodState()
+      
+      // Set new context
+      a.currentView = ViewContext{
+          viewType: ViewLogs,
+          namespaceName: namespace,
+          podName: podName,
+      }
+      
+      // Fetch logs
+      return a.fetchLogs(...)
+  }
+  
+  func (a *App) clearPodState() {
+      a.logs = nil
+      a.searchMode = false
+      a.searchQuery = ""
+      a.searchMatches = nil
+      a.currentMatch = -1
+      a.showRawLogs = false  // Diagnostic-first
+      a.filterLevel = ""
+  }
+  ```
+- **Benefits**:
+  - Zero duplication - state clearing happens once
+  - Consistent behavior across all navigation paths
+  - Easier to maintain and extend
+  - Race condition validation becomes simpler
+  - Faster development of new navigation features
+- **Code Reduction**: ~40 lines removed (3 duplicate implementations → 1)
+- **Testing**: Navigation reliability test suite to prevent regressions
+- **Philosophy Alignment**: "One way to do it" - eliminate subtle path differences
+
 ## 🚀 Long-Term Ideas (v0.6.0+)
 
 ### Real-Time Monitoring
