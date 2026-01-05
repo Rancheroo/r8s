@@ -266,28 +266,67 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Philosophy**: Show what we know - bundles have timestamps, use them
 
 
-### Auto-Display Pod Diagnostics on Failure (v0.5.4+) ⭐
+### Auto-Display Pod Diagnostics on Failure (v0.5.4) ✅
+- **Status**: ✅ Shipped in v0.5.4
+- **Description**: Enhanced "No Logs" diagnostic panel with maximum intel
+- **Impact**: Users see comprehensive pod diagnostics automatically - r8s interprets data instead of showing raw output
+- **Features**:
+  - Intelligent diagnosis based on pod state (CrashLoop, OOMKilled, ImagePull, Error, Pending, Evicted)
+  - Recent events display (last 5) with emoji indicators (always shown, even when empty)
+  - State-specific investigation suggestions
+  - External tools guidance (lnav, kubectl logs)
+  - Works from both Dashboard and Classic navigation paths
+  - Removed '[d]=describe pod' key to reduce confusion
+- **Philosophy**: "r8s interprets, user acts" - Show intelligence, not just information
+- **Deferred to v0.5.5**: Parse kubectl/events file for comprehensive event data
+
+### Parse kubectl/events File for Rich Event Data (v0.5.5) ⭐
 - **Priority**: HIGH
 - **Complexity**: Medium
-- **Impact**: High (consistency + simplification)
-- **Description**: Automatically show pod diagnostic panel when selecting failed pods - remove manual 'd' button
+- **Impact**: High (data completeness)
+- **Description**: Parse global kubectl/events file to show ALL pod events, not just attached ones
 - **Current State**:
-  - User selects crashed pod from Dashboard
-  - User must press 'd' to see diagnostic details
-  - Describe shows raw JSON dump (not user-friendly)
-- **Proposed Change**:
-  - Crashed/failed pods automatically show diagnostic panel (like "No Logs" screen)
-  - Panel displays: State, Restarts, Exit Code, Events, Container Status
-  - 'd' key only available in log view for deeper inspection
-  - Reuse code from "No Logs" diagnostic panel for consistency
+  - Diagnostic panel uses `pod.KubectlEvents` (events attached to pod object)
+  - Many events are missing: scheduling failures, volume mount issues, network problems
+  - Bundle contains `rke2/kubectl/events` file with ALL cluster events
+- **Proposed Enhancement**:
+  - Parse `kubectl/events` file on bundle load
+  - Filter events by pod name to get complete event history
+  - Show FailedScheduling, FailedMount, NetworkNotReady, etc.
+  - Display event counts: "(x47)" for repeated events
+  - Smart defaults: Show last 5, warnings first, sorted by time
 - **Benefits**:
-  - Show, Don't Ask - information surfaces automatically
-  - Consistent UX - same panel style as "No Logs"
-  - Simpler interaction - one less button to remember
-  - Reliable code - reuse tested components
-- **Philosophy**: "Reliable code is better than feature-rich, bespoke, unstable code"
+  - Complete event history for better diagnostics
+  - See why pods failed to schedule
+  - Detect volume and network issues
+  - More accurate troubleshooting guidance
+- **Reference**: See `docs/archive/2025-12-01/LOG_BUNDLE_ANALYSIS.md` for bundle structure details
+- **Philosophy**: "Maximum information extraction" - Use all available bundle data
 
-### Remove Log Filter Modes (v0.5.4+)
+### Bundle Health Indicator & Resilience (v0.5.5) ⭐
+- **Priority**: HIGH  
+- **Complexity**: Low-Medium
+- **Impact**: High (transparency + resilience)
+- **Description**: Show bundle completeness and add smart fallbacks for all optional files
+- **Current State (v0.5.4)**:
+  - ✅ Namespaces: Falls back to deriving from pods
+  - ❌ Other files: Silent failures, no fallbacks
+  - ❌ No visibility into what's missing
+- **Layer 1: More Smart Fallbacks**:
+  - Apply namespace fallback pattern to other resources
+  - Derive what we can, fail gracefully for rest
+  - Verbose warnings show what was derived vs missing
+- **Layer 2: Bundle Health Indicator**:
+  - Status bar shows bundle completeness: `[BUNDLE 73%]`
+  - Tooltip/help shows which files present/missing
+  - Color coding: Green (>90%), Yellow (70-90%), Red (<70%)
+- **Layer 3: Verbose Loading**:
+  - Show exactly what was found/missing during load
+  - Example: "✓ pods: 93, ⚠️ namespaces: derived from pods, ⚠️ events: missing"
+- **Philosophy**: "Show, Don't Ask" - Transparency about data quality without blocking
+- **Triggered by**: User reported partial bundle with missing namespaces file (v0.5.4)
+
+### Remove Log Filter Modes (v0.5.5+)
 - **Priority**: Medium
 - **Complexity**: Medium (removal + smart defaults)
 - **Impact**: High (simplification)
@@ -342,6 +381,55 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Simplifies mental model: "Just press Enter"
 - **Code Reduction**: ~50 lines removed
 - **Philosophy**: "Fewer ways to do same thing = easier to learn"
+
+### Navigation Simplification (v0.6.0) ⭐
+- **Priority**: HIGH
+- **Complexity**: Medium
+- **Impact**: High (code quality + reliability)
+- **Description**: Standardize navigation state management across all view transitions
+- **Current Pain Points**:
+  - State clearing code duplicated in 3 locations (handlers.go ViewPods, app.go ViewAttention x2)
+  - Classic pod view and dashboard use different approaches
+  - Race condition fix required adding validation layer due to inconsistent state management
+  - Each navigation path has subtle behavioral differences
+- **Root Cause**: Organic growth - features added incrementally without unified architecture
+- **Proposed Solution**:
+  ```go
+  // Single source of truth for navigation state clearing
+  func (a *App) navigateToLogs(namespace, podName string) tea.Cmd {
+      // Clear ALL pod-related state in one place
+      a.clearPodState()
+      
+      // Set new context
+      a.currentView = ViewContext{
+          viewType: ViewLogs,
+          namespaceName: namespace,
+          podName: podName,
+      }
+      
+      // Fetch logs
+      return a.fetchLogs(...)
+  }
+  
+  func (a *App) clearPodState() {
+      a.logs = nil
+      a.searchMode = false
+      a.searchQuery = ""
+      a.searchMatches = nil
+      a.currentMatch = -1
+      a.showRawLogs = false  // Diagnostic-first
+      a.filterLevel = ""
+  }
+  ```
+- **Benefits**:
+  - Zero duplication - state clearing happens once
+  - Consistent behavior across all navigation paths
+  - Easier to maintain and extend
+  - Race condition validation becomes simpler
+  - Faster development of new navigation features
+- **Code Reduction**: ~40 lines removed (3 duplicate implementations → 1)
+- **Testing**: Navigation reliability test suite to prevent regressions
+- **Philosophy Alignment**: "One way to do it" - eliminate subtle path differences
 
 ## 🚀 Long-Term Ideas (v0.6.0+)
 

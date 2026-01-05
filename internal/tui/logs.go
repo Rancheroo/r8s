@@ -36,11 +36,24 @@ var warnKeywords = []string{
 }
 
 // renderLogsView renders the logs view for a pod with viewport scrolling
+// DIAGNOSTIC-FIRST APPROACH: Always show diagnostic panel first, then 'l' to view logs
 func (a *App) renderLogsView() string {
-	// Auto-show helpful message when logs are empty (Show, Don't Ask philosophy)
-	if len(a.logs) == 0 {
-		return a.renderEmptyLogsHelp()
+	// If user pressed 'l' to view raw logs
+	if a.showRawLogs {
+		// If no logs available, show simple message
+		if len(a.logs) == 0 {
+			return a.renderNoLogsMessage()
+		}
+		// Show raw logs
+		return a.renderRawLogs()
 	}
+
+	// Default: Show diagnostic panel (intelligence first!)
+	return a.renderEmptyLogsHelp()
+}
+
+// renderRawLogs renders the raw log viewer
+func (a *App) renderRawLogs() string {
 
 	// Build breadcrumb
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
@@ -72,7 +85,7 @@ func (a *App) renderLogsView() string {
 		statusText = fmt.Sprintf(" %d lines | Match %d/%d | 'n'=next 'N'=prev '/'=new Esc=clear | q=quit ",
 			len(visibleLogs), a.currentMatch+1, len(a.searchMatches))
 	} else {
-		statusText = " [/] search  [Ctrl+E] errors only  [Ctrl+W] warnings  [Esc] back  [q] quit "
+		statusText = " [/] search  [l] diagnostics  [Ctrl+E] errors  [Ctrl+W] warnings  [Esc] back  [q] quit "
 	}
 	status := statusStyle.Render(statusText)
 
@@ -452,15 +465,8 @@ func isDigit(b byte) bool {
 func (a *App) renderEmptyLogsHelp() string {
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
 
-	// Build helpful message
-	helpTitle := lipgloss.NewStyle().
-		Foreground(colorYellow).
-		Bold(true).
-		Render("📭 No Logs Available")
-
 	// Get pod information to enrich the diagnostic panel
 	// Fetch from dataSource directly (not a.pods which may be empty if coming from Dashboard)
-	var podInfo string
 	var foundPod *rancher.Pod
 
 	if a.dataSource != nil {
@@ -475,42 +481,293 @@ func (a *App) renderEmptyLogsHelp() string {
 		}
 	}
 
-	if foundPod != nil {
-		// Extract diagnostics from pod data
-		state := foundPod.KubectlStatus
-		if state == "" {
-			state = foundPod.State
-		}
-		restarts := foundPod.KubectlRestarts
-		if restarts == 0 {
-			restarts = foundPod.RestartCount
-		}
-		ready := foundPod.KubectlReady
-		node := foundPod.NodeName
-		if node == "" {
-			node = foundPod.NodeID
-		}
-		age := foundPod.KubectlAge
+	if foundPod == nil {
+		// Fallback if pod not found
+		return a.renderEmptyLogsFallback(breadcrumb)
+	}
 
-		podInfo = fmt.Sprintf(`POD DIAGNOSTICS:
+	// Build enhanced diagnostic panel with maximum intel
+	return a.renderMaximumIntelPanel(breadcrumb, foundPod)
+}
+
+// renderMaximumIntelPanel renders the enhanced "Maximum Intel" diagnostic panel
+func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) string {
+	// Extract pod diagnostics
+	state := pod.KubectlStatus
+	if state == "" {
+		state = pod.State
+	}
+	restarts := pod.KubectlRestarts
+	if restarts == 0 {
+		restarts = pod.RestartCount
+	}
+	ready := pod.KubectlReady
+	node := pod.NodeName
+	if node == "" {
+		node = pod.NodeID
+	}
+	age := pod.KubectlAge
+
+	// Build title - context-aware based on log availability
+	var titleText string
+	if len(a.logs) > 0 {
+		titleText = fmt.Sprintf("📊 Pod Diagnostics - %s", pod.Name)
+	} else {
+		titleText = fmt.Sprintf("📭 No Logs Available - Pod: %s", pod.Name)
+	}
+
+	helpTitle := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render(titleText)
+
+	// Build diagnostic sections
+	var sections []string
+
+	// Section 1: Diagnosis
+	diagnosisSection := a.buildDiagnosisSection(state, restarts, age)
+	sections = append(sections, diagnosisSection)
+
+	// Section 2: Pod Status
+	statusSection := fmt.Sprintf(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💊 POD STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   State:       %s
   Restarts:    %d
   Ready:       %s
   Node:        %s
-  Age:         %s
+  Age:         %s`, state, restarts, ready, node, age)
+	sections = append(sections, statusSection)
 
-⚠️  No container logs available
+	// Section 3: Recent Events (always show, even if empty)
+	eventsSection := a.buildEventsSection(pod.KubectlEvents)
+	sections = append(sections, eventsSection)
 
-Investigation suggestions:
-  • Press 'd' to describe pod (check events/status)
-  • High restart count = crash loop issue
-  • Check node health if pod can't schedule
-  • Review pod events for specific failure reasons`,
-			state, restarts, ready, node, age)
+	// Section 4: Investigation Guidance
+	investigateSection := a.buildInvestigationSection(state, restarts)
+	sections = append(sections, investigateSection)
+
+	// Section 5: External Tools
+	toolsSection := a.buildExternalToolsSection()
+	sections = append(sections, toolsSection)
+
+	// Combine all sections
+	helpText := strings.Join(sections, "\n\n")
+
+	helpBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorYellow).
+		Padding(1, 2).
+		Width(a.width - 6).
+		Render(helpText)
+
+	status := statusStyle.Render(" [l]=view logs  [Ctrl+P]=previous logs  [Esc]=back  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		helpTitle,
+		"",
+		helpBox,
+		"",
+		status,
+	)
+}
+
+// buildDiagnosisSection builds intelligent diagnosis based on pod state
+func (a *App) buildDiagnosisSection(state string, restarts int, age string) string {
+	stateUpper := strings.ToUpper(state)
+
+	var diagnosis string
+	var emoji string
+
+	// Diagnose based on state and restart count
+	if strings.Contains(stateUpper, "CRASHLOOPBACKOFF") || strings.Contains(stateUpper, "CRASHLOOP") {
+		emoji = "🔴"
+		if restarts > 0 && age != "" {
+			diagnosis = fmt.Sprintf("CRASH LOOP DETECTED\n     %d restarts - Container repeatedly failing to start\n     Container never stayed Running long enough to generate logs", restarts)
+		} else {
+			diagnosis = "CRASH LOOP DETECTED\n     Container repeatedly failing to start\n     Check exit codes and termination reasons in pod description"
+		}
+	} else if strings.Contains(stateUpper, "OOMKILLED") {
+		emoji = "🔴"
+		diagnosis = "OUT OF MEMORY ERROR\n     Container exceeded memory limits and was killed\n     No logs because container terminated before flushing to disk"
+	} else if strings.Contains(stateUpper, "IMAGEPULLBACKOFF") || strings.Contains(stateUpper, "ERRIMAGEBACKOFF") {
+		emoji = "🟡"
+		diagnosis = "IMAGE PULL FAILURE\n     Cannot pull container image from registry\n     Check image name, registry auth, and network connectivity"
+	} else if strings.Contains(stateUpper, "ERROR") {
+		emoji = "🔴"
+		diagnosis = "POD IN ERROR STATE\n     Container failed to start or run\n     Check container configuration and dependencies"
+	} else if strings.Contains(stateUpper, "PENDING") {
+		emoji = "🟡"
+		diagnosis = "POD PENDING\n     Pod not yet scheduled or containers not started\n     Check node resources and scheduling constraints"
+	} else if strings.Contains(stateUpper, "EVICTED") {
+		emoji = "🟣"
+		diagnosis = "POD EVICTED\n     Removed due to resource pressure on node\n     Check node memory/disk pressure events"
+	} else if restarts >= 10 {
+		emoji = "🟠"
+		diagnosis = fmt.Sprintf("HIGH RESTART COUNT\n     %d restarts detected - Instability pattern\n     Container may be crashing intermittently", restarts)
+	} else if restarts >= 3 {
+		emoji = "🟡"
+		diagnosis = fmt.Sprintf("MODERATE RESTARTS\n     %d restarts detected\n     Container experiencing some instability", restarts)
 	} else {
-		// Fallback if pod not found in list
-		podInfo = `No container logs available
+		emoji = "ℹ️"
+		diagnosis = "NO LOGS GENERATED\n     Container either:\n     • Never started successfully\n     • Started but didn't write any logs\n     • Logs not captured in bundle"
+	}
+
+	return fmt.Sprintf(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 DIAGNOSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  %s %s`, emoji, diagnosis)
+}
+
+// buildEventsSection formats recent pod events
+func (a *App) buildEventsSection(events []string) string {
+	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 RECENT EVENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+
+	// Show last 5 events max
+	maxEvents := 5
+	startIdx := 0
+	if len(events) > maxEvents {
+		startIdx = len(events) - maxEvents
+	}
+
+	var eventLines []string
+	for _, event := range events[startIdx:] {
+		// Format event with appropriate emoji
+		eventUpper := strings.ToUpper(event)
+		var emoji string
+		if strings.Contains(eventUpper, "[WARNING]") || strings.Contains(eventUpper, "BACKOFF") || strings.Contains(eventUpper, "KILLING") {
+			emoji = "⚠️"
+		} else if strings.Contains(eventUpper, "[NORMAL]") {
+			emoji = "ℹ️"
+		} else {
+			emoji = "•"
+		}
+
+		eventLines = append(eventLines, fmt.Sprintf("  %s  %s", emoji, event))
+	}
+
+	if len(eventLines) == 0 {
+		return header + "\n\n  No events recorded for this pod"
+	}
+
+	return header + "\n\n" + strings.Join(eventLines, "\n")
+}
+
+// buildInvestigationSection provides actionable next steps
+func (a *App) buildInvestigationSection(state string, restarts int) string {
+	stateUpper := strings.ToUpper(state)
+
+	var suggestions []string
+
+	// State-specific suggestions
+	if strings.Contains(stateUpper, "OOMKILLED") {
+		suggestions = []string{
+			"Check memory limits - OOMKilled signals resource exhaustion",
+			"Review resource requests/limits in pod spec",
+			"Check if recent config change increased memory usage",
+		}
+	} else if strings.Contains(stateUpper, "CRASHLOOP") || restarts >= 10 {
+		suggestions = []string{
+			"Check container exit codes in pod description",
+			"Review application startup configuration",
+			"Check dependency services (DB, API endpoints, etc.)",
+		}
+	} else if strings.Contains(stateUpper, "IMAGEPULL") {
+		suggestions = []string{
+			"Verify image name and tag are correct",
+			"Check registry authentication (imagePullSecrets)",
+			"Verify network connectivity to registry",
+		}
+	} else if strings.Contains(stateUpper, "PENDING") {
+		suggestions = []string{
+			"Check node resources (CPU, memory, disk)",
+			"Review pod scheduling constraints (nodeSelector, taints)",
+			"Verify required volumes are available",
+		}
+	} else {
+		suggestions = []string{
+			"Check recent pod events above for failure patterns",
+			"Try [Ctrl+P] to view previous container logs if available",
+			"Review pod logs (if available) for application errors",
+		}
+	}
+
+	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 INVESTIGATE NEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+
+	var steps []string
+	for i, suggestion := range suggestions {
+		steps = append(steps, fmt.Sprintf("  %d. %s", i+1, suggestion))
+	}
+
+	return header + "\n\n" + strings.Join(steps, "\n")
+}
+
+// buildExternalToolsSection provides guidance on external analysis tools
+func (a *App) buildExternalToolsSection() string {
+	return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛠️  EXTERNAL TOOLS FOR LOG ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  When logs ARE available elsewhere:
+
+  • lnav - Advanced terminal log viewer with filtering & search
+    Install: brew install lnav  OR  apt install lnav
+    Usage:   lnav /path/to/bundle/rke2/podlogs/namespace_*/
+
+  • kubectl logs - View logs from live cluster
+    Usage:   kubectl logs <pod> -n <namespace>
+    Previous: kubectl logs <pod> -n <namespace> --previous
+
+  • Integrated in r8s - Press [Ctrl+P] for previous container logs`
+}
+
+// renderNoLogsMessage renders a simple "no logs" message when user pressed 'l' but pod has no logs
+func (a *App) renderNoLogsMessage() string {
+	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
+
+	helpTitle := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render("📭 No Logs Available")
+
+	helpText := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorYellow).
+		Padding(2, 4).
+		Width(a.width - 8).
+		Render("No container logs available for this pod")
+
+	status := statusStyle.Render(" [Esc]=back to diagnostics  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		helpTitle,
+		"",
+		helpText,
+		"",
+		status,
+	)
+}
+
+// renderEmptyLogsFallback renders a simple fallback when pod not found
+func (a *App) renderEmptyLogsFallback(breadcrumb string) string {
+	helpTitle := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render("📭 No Logs Available")
+
+	helpText := `No container logs available
 
 Possible reasons:
   • Pod hasn't generated any logs yet
@@ -521,9 +778,6 @@ Next steps:
   • Press 'd' to describe pod (check status/events)
   • Press Esc to go back and check pod state
   • Look for errors in pod description`
-	}
-
-	helpText := podInfo
 
 	helpBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
@@ -533,14 +787,13 @@ Next steps:
 		Render(helpText)
 
 	// Calculate padding for vertical centering
-	contentHeight := 12 // Approximate lines of content
+	contentHeight := 12
 	availableHeight := a.height - 10
 	topPadding := (availableHeight - contentHeight) / 2
 	if topPadding < 0 {
 		topPadding = 0
 	}
 
-	// Use strings.Repeat for vertical padding
 	paddingStr := strings.Repeat("\n", topPadding)
 	centeredContent := paddingStr + strings.Join([]string{helpTitle, "", helpBox}, "\n")
 

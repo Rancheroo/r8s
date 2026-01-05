@@ -101,6 +101,7 @@ type App struct {
 	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
 	showPrevious     bool     // Show previous logs (for crashed containers)
 	wordWrap         bool     // Enable word wrapping for long log lines
+	showRawLogs      bool     // Show raw logs instead of diagnostic panel (toggle with 'l')
 
 	// App state
 	offlineMode bool   // Flag to indicate running without live Rancher connection
@@ -330,6 +331,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if len(item.AffectedPods) > 0 && a.subCursor < len(item.AffectedPods) {
 						podName := item.AffectedPods[a.subCursor]
 
+						// FIX (v0.5.4): Clear stale log state before navigation
+						a.logs = nil
+						a.searchMode = false
+						a.searchQuery = ""
+						a.searchMatches = nil
+						a.currentMatch = -1
+						a.showRawLogs = false
+
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
@@ -356,6 +365,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if a.attentionCursor < len(a.attentionItems) {
 					item := a.attentionItems[a.attentionCursor]
 					if item.ResourceType == "pod" && item.PodName != "" {
+						// FIX (v0.5.4): Clear stale log state before navigation
+						a.logs = nil
+						a.searchMode = false
+						a.searchQuery = ""
+						a.searchMatches = nil
+						a.currentMatch = -1
+						a.showRawLogs = false
+
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
@@ -495,6 +512,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return a, nil
 		case "d":
+			// For other views, keep describe functionality
 			if a.showingDescribe {
 				// Exit describe view
 				a.showingDescribe = false
@@ -581,7 +599,16 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, nil
 			}
 		case "l":
-			// Open logs view for selected pod
+			// In logs view: toggle between diagnostic panel and raw logs
+			if a.currentView.viewType == ViewLogs {
+				a.showRawLogs = !a.showRawLogs
+				// If switching to raw logs and logs exist, re-render viewport
+				if a.showRawLogs && len(a.logs) > 0 {
+					a.logViewport.SetContent(a.renderLogsWithColors())
+				}
+				return a, nil
+			}
+			// In pods view: Open logs view
 			if a.currentView.viewType == ViewPods {
 				return a, a.handleViewLogs()
 			}
@@ -781,6 +808,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case logsMsg:
 		a.loading = false
+
+		// FIX (v0.5.4): Validate pod name to prevent race condition
+		// Only apply logs if they match the current pod we're viewing
+		if a.currentView.viewType == ViewLogs &&
+			(msg.podName != a.currentView.podName || msg.namespace != a.currentView.namespaceName) {
+			// Stale logs from previous pod - ignore them
+			return a, nil
+		}
+
 		a.logs = msg.logs
 		a.error = ""
 
@@ -852,7 +888,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View renders the application - simplified for now
 func (a *App) View() string {
 	if a.error != "" {
-		return errorStyle.Render(fmt.Sprintf("Error: %s\n\nPress Esc to continue", a.error))
+		return errorStyle.Render(fmt.Sprintf("Error: %s\n\n[Esc/b]=back  [q]=quit", a.error))
 	}
 
 	if a.loading {
@@ -969,7 +1005,9 @@ type describeMsg struct {
 
 // logsMsg represents a message containing log data
 type logsMsg struct {
-	logs []string
+	logs      []string
+	podName   string // FIX (v0.5.4): Track which pod these logs belong to
+	namespace string // FIX (v0.5.4): Track namespace for validation
 }
 
 // attentionMsg represents attention dashboard analysis results
