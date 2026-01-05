@@ -85,7 +85,7 @@ func (a *App) renderRawLogs() string {
 		statusText = fmt.Sprintf(" %d lines | Match %d/%d | 'n'=next 'N'=prev '/'=new Esc=clear | q=quit ",
 			len(visibleLogs), a.currentMatch+1, len(a.searchMatches))
 	} else {
-		statusText = " [/] search  [d] diagnostics  [Ctrl+E] errors  [Ctrl+W] warnings  [Esc] back  [q] quit "
+		statusText = " [/] search  [l] diagnostics  [Ctrl+E] errors  [Ctrl+W] warnings  [Esc] back  [q] quit "
 	}
 	status := statusStyle.Render(statusText)
 
