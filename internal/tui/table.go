@@ -140,8 +140,8 @@ func (a *App) updateTable() {
 			sortedNS := make([]rancher.Namespace, len(a.namespaces))
 			copy(sortedNS, a.namespaces)
 
-			// Sort by total issues descending using sort.Slice
-			sortedNS = SortNamespacesByHealth(sortedNS, nsHealth)
+			// Sort by total issues descending using sort.Slice (sorts in-place)
+			SortNamespacesByHealth(sortedNS, nsHealth)
 
 			// Dynamic column widths - auto-adapt to terminal size
 			columns := a.calculateColumnWidths(getNamespaceColumnSpecs())

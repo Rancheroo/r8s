@@ -26,6 +26,7 @@ const (
 	SortByCount    SortMode = iota // Default: highest ERR+WARN total descending
 	SortBySeverity                 // Current behavior (Critical→Warning→Info)
 	SortByName                     // Alphabetical by title
+	NumSortModes                   // Sentinel for safe modulo wrapping in cycleSortMode
 )
 
 // String returns human-readable sort mode name for status bar
