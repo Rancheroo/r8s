@@ -150,32 +150,28 @@ func (a *App) handleEnter() tea.Cmd {
 		if namespaceName == "" {
 			return nil // Skip if name is missing
 		}
+
+		// FIX (v0.5.4): In bundle mode with derived namespaces, ID may be empty
+		// Use namespace name directly for navigation - name is what matters for pod fetching
 		var namespaceID string
 		for _, n := range a.namespaces {
 			if n.Name == namespaceName {
-				namespaceID = n.ID
+				namespaceID = n.ID // May be empty for derived namespaces
 				break
 			}
-		}
-
-		// Validate namespaceID was found before proceeding
-		if namespaceID == "" {
-			a.error = fmt.Sprintf("namespace '%s' not found", namespaceName)
-			a.loading = false
-			return nil
 		}
 
 		// Push current view to stack
 		a.viewStack = append(a.viewStack, a.currentView)
 
-		// Navigate to Pods
+		// Navigate to Pods (use name, not ID - works for derived namespaces)
 		a.currentView = ViewContext{
 			viewType:      ViewPods,
 			clusterID:     a.currentView.clusterID,
 			clusterName:   a.currentView.clusterName,
 			projectID:     a.currentView.projectID,
 			projectName:   a.currentView.projectName,
-			namespaceID:   namespaceID,
+			namespaceID:   namespaceID, // May be empty - that's OK
 			namespaceName: namespaceName,
 		}
 		a.loading = true
