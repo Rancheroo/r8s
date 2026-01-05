@@ -266,26 +266,17 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Philosophy**: Show what we know - bundles have timestamps, use them
 
 
-### Auto-Display Pod Diagnostics on Failure (v0.5.4+) ⭐
-- **Priority**: HIGH
-- **Complexity**: Medium
-- **Impact**: High (consistency + simplification)
-- **Description**: Automatically show pod diagnostic panel when selecting failed pods - remove manual 'd' button
-- **Current State**:
-  - User selects crashed pod from Dashboard
-  - User must press 'd' to see diagnostic details
-  - Describe shows raw JSON dump (not user-friendly)
-- **Proposed Change**:
-  - Crashed/failed pods automatically show diagnostic panel (like "No Logs" screen)
-  - Panel displays: State, Restarts, Exit Code, Events, Container Status
-  - 'd' key only available in log view for deeper inspection
-  - Reuse code from "No Logs" diagnostic panel for consistency
-- **Benefits**:
-  - Show, Don't Ask - information surfaces automatically
-  - Consistent UX - same panel style as "No Logs"
-  - Simpler interaction - one less button to remember
-  - Reliable code - reuse tested components
-- **Philosophy**: "Reliable code is better than feature-rich, bespoke, unstable code"
+### Auto-Display Pod Diagnostics on Failure (v0.5.4) ✅
+- **Status**: ✅ Shipped in v0.5.4
+- **Description**: Enhanced "No Logs" diagnostic panel with maximum intel
+- **Impact**: Users see comprehensive pod diagnostics automatically - r8s interprets data instead of showing raw output
+- **Features**:
+  - Intelligent diagnosis based on pod state (CrashLoop, OOMKilled, ImagePull, Error, Pending, Evicted)
+  - Recent events display (last 5) with emoji indicators
+  - State-specific investigation suggestions
+  - External tools guidance (lnav, kubectl logs)
+  - Works from both Dashboard and Classic navigation paths
+- **Philosophy**: "r8s interprets, user acts" - Show intelligence, not just information
 
 ### Remove Log Filter Modes (v0.5.4+)
 - **Priority**: Medium

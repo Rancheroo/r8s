@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-01-05 "Enhanced Diagnostics"
+
+### Added ✨
+
+- **Maximum Intel Diagnostic Panel** - "No Logs" screen now shows comprehensive pod diagnostics
+  - Intelligent diagnosis based on pod state (CrashLoopBackOff, OOMKilled, ImagePullBackOff, Error, Pending, Evicted)
+  - Actionable interpretation: r8s tells users what to investigate, not just raw data
+  - Recent events display (last 5) with warning/normal emoji indicators
+  - State-specific investigation suggestions tailored to failure mode
+  - External tools guidance (lnav, kubectl logs) for deep log analysis
+  
+- **Diagnostic Sections** - Structured, scannable panel layout:
+  - 💡 DIAGNOSIS: Emoji + intelligent interpretation of failure pattern
+  - 💊 POD STATUS: State, restarts, ready status, node, age
+  - 📋 RECENT EVENTS: Last 5 pod events with context
+  - 🔍 INVESTIGATE NEXT: Actionable next steps (1-3 suggestions)
+  - 🛠️ EXTERNAL TOOLS: Guidance on lnav and kubectl for deeper analysis
+
+- **Intelligent Pattern Recognition** - Contextual diagnoses:
+  - CrashLoopBackOff → "Container repeatedly failing to start"
+  - OOMKilled → "Container exceeded memory limits"
+  - ImagePullBackOff → "Cannot pull container image from registry"
+  - High restart count → "Instability pattern detected"
+  - Pending → "Pod not yet scheduled"
+  - Evicted → "Removed due to resource pressure"
+
+### Technical - v0.5.4
+
+- Refactored `renderEmptyLogsHelp()` into modular diagnostic components
+- Added helper functions: `buildDiagnosisSection()`, `buildEventsSection()`, `buildInvestigationSection()`, `buildExternalToolsSection()`
+- Leverages existing `pod.KubectlEvents` data (already attached in v0.5.3)
+- Works from both Dashboard and Classic navigation paths (dataSource-based)
+- 244 lines added, 39 lines removed in logs.go
+
+### Impact Summary - v0.5.4
+
+- ✅ **Maximum diagnostics** - Users see comprehensive pod health at a glance
+- ✅ **r8s interprets data** - "OOMKilled = memory issue" not just "Exit Code: 137"
+- ✅ **Actionable guidance** - Context-specific next steps for every failure mode
+- ✅ **External tool awareness** - Users know when/how to use lnav or kubectl
+- ✅ **Navigation agnostic** - Same rich panel from Dashboard or Classic view
+
+### Philosophy - v0.5.4
+
+**"r8s interprets, user acts"** - Show intelligence, not just information. Users should know WHAT to investigate and WHY, not parse raw Kubernetes output themselves.
+
+---
+
 ## [0.5.3] - 2026-01-05 "Maximum Information Extraction"
 
 ### Added ✨
