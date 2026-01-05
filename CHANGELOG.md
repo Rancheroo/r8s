@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Diagnostic Sections** - Structured, scannable panel layout:
   - 💡 DIAGNOSIS: Emoji + intelligent interpretation of failure pattern
   - 💊 POD STATUS: State, restarts, ready status, node, age
-  - 📋 RECENT EVENTS: Last 5 pod events with context
+  - 📋 RECENT EVENTS: Last 5 pod events with context (always shown)
   - 🔍 INVESTIGATE NEXT: Actionable next steps (1-3 suggestions)
   - 🛠️ EXTERNAL TOOLS: Guidance on lnav and kubectl for deeper analysis
 
@@ -31,13 +31,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Pending → "Pod not yet scheduled"
   - Evicted → "Removed due to resource pressure"
 
+### Fixed 🐛
+
+- **Events section always visible** - Shows "No events recorded" when empty
+  - Users now know the section exists even if no events captured
+  - Consistent panel structure regardless of data availability
+  
+- **Removed '[d]=describe pod' from diagnostic panel** - Reduced UX confusion
+  - Diagnostic panel already shows the key information
+  - Raw YAML describe output was confusing and not actionable
+  - Users can still access describe when viewing actual logs
+
 ### Technical - v0.5.4
 
 - Refactored `renderEmptyLogsHelp()` into modular diagnostic components
 - Added helper functions: `buildDiagnosisSection()`, `buildEventsSection()`, `buildInvestigationSection()`, `buildExternalToolsSection()`
 - Leverages existing `pod.KubectlEvents` data (already attached in v0.5.3)
 - Works from both Dashboard and Classic navigation paths (dataSource-based)
-- 244 lines added, 39 lines removed in logs.go
+- Events section now always renders with fallback message when empty
+- 244 lines added, 39 lines removed in logs.go (3 commits total)
 
 ### Impact Summary - v0.5.4
 
@@ -46,10 +58,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Actionable guidance** - Context-specific next steps for every failure mode
 - ✅ **External tool awareness** - Users know when/how to use lnav or kubectl
 - ✅ **Navigation agnostic** - Same rich panel from Dashboard or Classic view
+- ✅ **Cleaner UX** - Removed confusing 'd' key, events always visible
 
 ### Philosophy - v0.5.4
 
 **"r8s interprets, user acts"** - Show intelligence, not just information. Users should know WHAT to investigate and WHY, not parse raw Kubernetes output themselves.
+
+### Deferred to v0.5.5
+
+- **Parse kubectl/events file for comprehensive pod events** - Currently uses pod.KubectlEvents (attached events only)
+  - Bundle contains `kubectl/events` file with ALL cluster events
+  - Should parse this file and filter by pod name for richer event data
+  - Would show scheduling, volume, network events not currently visible
+  - See `docs/archive/2025-12-01/LOG_BUNDLE_ANALYSIS.md` for details
 
 ---
 
