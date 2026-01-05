@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed 🐛
 
+- **CRITICAL: Classic view works with partial bundles** - No more "No namespaces available"
+  - Root cause: Partial bundles often missing `rke2/kubectl/namespaces` file (perms, policy, sanitization)
+  - Solution: Automatically derive namespaces from pod list when file missing
+  - Impact: Classic view now resilient to incomplete bundle data
+  - Verbose mode shows: "⚠ namespaces file missing - derived X namespaces from pools"
+  - Dashboard already worked this way - now Classic view matches
+
 - **Events section always visible** - Shows "No events recorded" when empty
   - Users now know the section exists even if no events captured
   - Consistent panel structure regardless of data availability

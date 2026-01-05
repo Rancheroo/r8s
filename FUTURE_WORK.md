@@ -303,6 +303,29 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Reference**: See `docs/archive/2025-12-01/LOG_BUNDLE_ANALYSIS.md` for bundle structure details
 - **Philosophy**: "Maximum information extraction" - Use all available bundle data
 
+### Bundle Health Indicator & Resilience (v0.5.5) ⭐
+- **Priority**: HIGH  
+- **Complexity**: Low-Medium
+- **Impact**: High (transparency + resilience)
+- **Description**: Show bundle completeness and add smart fallbacks for all optional files
+- **Current State (v0.5.4)**:
+  - ✅ Namespaces: Falls back to deriving from pods
+  - ❌ Other files: Silent failures, no fallbacks
+  - ❌ No visibility into what's missing
+- **Layer 1: More Smart Fallbacks**:
+  - Apply namespace fallback pattern to other resources
+  - Derive what we can, fail gracefully for rest
+  - Verbose warnings show what was derived vs missing
+- **Layer 2: Bundle Health Indicator**:
+  - Status bar shows bundle completeness: `[BUNDLE 73%]`
+  - Tooltip/help shows which files present/missing
+  - Color coding: Green (>90%), Yellow (70-90%), Red (<70%)
+- **Layer 3: Verbose Loading**:
+  - Show exactly what was found/missing during load
+  - Example: "✓ pods: 93, ⚠️ namespaces: derived from pods, ⚠️ events: missing"
+- **Philosophy**: "Show, Don't Ask" - Transparency about data quality without blocking
+- **Triggered by**: User reported partial bundle with missing namespaces file (v0.5.4)
+
 ### Remove Log Filter Modes (v0.5.5+)
 - **Priority**: Medium
 - **Complexity**: Medium (removal + smart defaults)
