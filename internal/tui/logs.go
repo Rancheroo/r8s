@@ -37,6 +37,11 @@ var warnKeywords = []string{
 
 // renderLogsView renders the logs view for a pod with viewport scrolling
 func (a *App) renderLogsView() string {
+	// Check if user toggled diagnostic panel (via 'd' key)
+	if a.showDiagnostics {
+		return a.renderEmptyLogsHelp() // Reuse the diagnostic panel
+	}
+
 	// Auto-show helpful message when logs are empty (Show, Don't Ask philosophy)
 	if len(a.logs) == 0 {
 		return a.renderEmptyLogsHelp()
@@ -72,7 +77,7 @@ func (a *App) renderLogsView() string {
 		statusText = fmt.Sprintf(" %d lines | Match %d/%d | 'n'=next 'N'=prev '/'=new Esc=clear | q=quit ",
 			len(visibleLogs), a.currentMatch+1, len(a.searchMatches))
 	} else {
-		statusText = " [/] search  [Ctrl+E] errors only  [Ctrl+W] warnings  [Esc] back  [q] quit "
+		statusText = " [/] search  [d] diagnostics  [Ctrl+E] errors  [Ctrl+W] warnings  [Esc] back  [q] quit "
 	}
 	status := statusStyle.Render(statusText)
 
