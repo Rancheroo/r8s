@@ -294,6 +294,14 @@ func (a *App) handleDescribe() tea.Cmd {
 
 		return a.describePod(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName)
 
+	case ViewLogs:
+		// Describe pod from log view (including "No Logs" screen)
+		if a.currentView.podName == "" || a.currentView.namespaceName == "" {
+			a.error = "No pod information available"
+			return nil
+		}
+		return a.describePod(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName)
+
 	case ViewPods:
 		podName := safeRowString(selected, "name")
 		namespaceName := safeRowString(selected, "namespace")
