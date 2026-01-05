@@ -26,6 +26,7 @@ const (
 	SortByCount    SortMode = iota // Default: highest ERR+WARN total descending
 	SortBySeverity                 // Current behavior (Critical→Warning→Info)
 	SortByName                     // Alphabetical by title
+	NumSortModes                   // Sentinel value for cycling (must be last)
 )
 
 // String returns human-readable sort mode name for status bar
@@ -804,14 +805,17 @@ func extractNamespace(namespaceID string) string {
 	return namespaceID
 }
 
-// SortNamespacesByHealth sorts namespaces by total issue count descending
-func SortNamespacesByHealth(namespaces []rancher.Namespace, nsHealth map[string]NamespaceHealth) {
-	sort.Slice(namespaces, func(i, j int) bool {
-		health1 := nsHealth[namespaces[i].Name]
-		health2 := nsHealth[namespaces[j].Name]
+// SortNamespacesByHealth sorts namespaces by total issue count descending and returns a new sorted slice
+func SortNamespacesByHealth(namespaces []rancher.Namespace, nsHealth map[string]NamespaceHealth) []rancher.Namespace {
+	// Make a copy to avoid modifying original
+	nsCopy := append([]rancher.Namespace(nil), namespaces...)
+	sort.Slice(nsCopy, func(i, j int) bool {
+		health1 := nsHealth[nsCopy[i].Name]
+		health2 := nsHealth[nsCopy[j].Name]
 		// Sort descending (highest count first)
 		return health1.Total > health2.Total
 	})
+	return nsCopy
 }
 
 // getPodStateSeverity assigns severity score to pod states (lower = more critical)

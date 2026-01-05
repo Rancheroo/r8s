@@ -27,8 +27,9 @@ func (a *App) calculateColumnWidths(specs []ColumnSpec) []table.Column {
 	}
 
 	columns := make([]table.Column, len(specs))
+	widths := make([]int, len(specs))
 
-	// First pass: calculate proportional widths
+	// First pass: calculate proportional widths and enforce minimum
 	for i, spec := range specs {
 		width := int(float64(availableWidth) * spec.Ratio)
 
@@ -37,7 +38,49 @@ func (a *App) calculateColumnWidths(specs []ColumnSpec) []table.Column {
 			width = spec.MinWidth
 		}
 
-		columns[i] = table.NewColumn(spec.Key, spec.Title, width)
+		widths[i] = width
+	}
+
+	// Second pass: adjust if total exceeds available width
+	totalWidth := 0
+	for _, w := range widths {
+		totalWidth += w
+	}
+
+	if totalWidth > availableWidth {
+		excess := totalWidth - availableWidth
+
+		// Find adjustable columns (those with width > MinWidth)
+		adjustable := make([]int, 0, len(specs))
+		totalAdjustable := 0
+		for i, spec := range specs {
+			if widths[i] > spec.MinWidth {
+				adjustable = append(adjustable, i)
+				totalAdjustable += (widths[i] - spec.MinWidth)
+			}
+		}
+
+		if len(adjustable) > 0 && totalAdjustable >= excess {
+			// Reduce adjustable columns proportionally
+			for _, i := range adjustable {
+				reduction := int(float64(excess) * float64(widths[i]-specs[i].MinWidth) / float64(totalAdjustable))
+				widths[i] -= reduction
+			}
+		} else {
+			// Scale all columns down proportionally to fit
+			scaleFactor := float64(availableWidth) / float64(totalWidth)
+			for i := range widths {
+				widths[i] = int(float64(widths[i]) * scaleFactor)
+				if widths[i] < 1 {
+					widths[i] = 1
+				}
+			}
+		}
+	}
+
+	// Build columns with adjusted widths
+	for i, spec := range specs {
+		columns[i] = table.NewColumn(spec.Key, spec.Title, widths[i])
 	}
 
 	return columns
@@ -46,12 +89,16 @@ func (a *App) calculateColumnWidths(specs []ColumnSpec) []table.Column {
 // truncateWithEllipsis truncates text consistently across all tables
 // If text exceeds maxWidth, truncate and add "..."
 // Implements consistent truncation behavior (audit issue #9)
+// Uses rune-safe truncation for proper UTF-8 multi-byte character handling
 func truncateWithEllipsis(text string, maxWidth int) string {
 	if maxWidth <= 0 {
 		return ""
 	}
 
-	if len(text) <= maxWidth {
+	// Convert to runes for proper UTF-8 character handling
+	rs := []rune(text)
+
+	if len(rs) <= maxWidth {
 		return text
 	}
 
@@ -59,7 +106,7 @@ func truncateWithEllipsis(text string, maxWidth int) string {
 		return strings.Repeat(".", maxWidth)
 	}
 
-	return text[:maxWidth-3] + "..."
+	return string(rs[:maxWidth-3]) + "..."
 }
 
 // Common column specifications for different view types

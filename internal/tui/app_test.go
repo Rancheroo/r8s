@@ -426,7 +426,7 @@ func TestMessageTypes(t *testing.T) {
 		{
 			name: "errMsg",
 			message: errMsg{
-				error: nil,
+				err: nil,
 			},
 		},
 	}

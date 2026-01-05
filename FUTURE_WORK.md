@@ -25,6 +25,7 @@ This document tracks feature ideas and enhancements that have been identified bu
 - **Usage**: `r8s --scan 500 ./bundle/` (default: 200 lines)
 
 ### App.go Modular Decomposition (v0.5.1)
+
 - **Status**: ✅ Shipped in v0.5.1
 - **Description**: Complete decomposition of 3031-line app.go into 6 focused modules
 - **Impact**: 87% reduction in main file size, 70% cognitive load reduction
@@ -218,13 +219,15 @@ This document tracks feature ideas and enhancements that have been identified bu
   - Use warning emoji (not green tick) for any non-Running state
   - Add tooltip: "Pod unhealthy but logs not collected in bundle"
 - **Logic**:
-  ```
+
+  ```python
   if pod.State in [CrashLoopBackOff, Error, OOMKilled, ImagePullBackOff]:
     if logCount == 0:
       display "⚠️ No Logs"  # Not "✅ Clean"
     else:
       display actual E/W counts
   ```
+
 - **Philosophy**: Truth in context - "Clean" means healthy AND no issues, not just "no logs found"
 - **Triggered by**: User-reported UX confusion
 
@@ -359,10 +362,82 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ## 🔧 Technical Debt
 
+### Code Quality & Refactoring (Deferred from Jan 2026 Audit)
+
+#### Log View Edge Case Documentation
+- **Priority**: Low
+- **Complexity**: Low
+- **Impact**: Low (maintainability)
+- **Description**: Add inline comments explaining whitespace-search edge cases in log wrapping
+- **Location**: `internal/tui/logs.go` lines 186-244
+- **Requirements**:
+  - Document fallback behavior when no whitespace found within wrapWidth
+  - Explain lastSpace == 0 and lastSpace == -1 edge cases
+  - Note that subsequent wrapped segments trim leading spaces via TrimLeft
+  - Clarify intentional split at wrapWidth for very long words (URLs/base64)
+- **Rationale**: Future maintainers need to understand the wrapping logic for bug fixes
+
+#### Dynamic Help Text Height Calculation
+- **Priority**: Low
+- **Complexity**: Low
+- **Impact**: Low (polish)
+- **Description**: Compute contentHeight dynamically instead of hardcoded value
+- **Location**: `internal/tui/logs.go` lines 471-477
+- **Current State**: `contentHeight := 12` is hardcoded
+- **Requirements**:
+  - Use `strings.Count(helpText, "\n") + X` to compute actual height
+  - Adjust constant offset X to account for title, borders, margins
+  - Import strings package if needed
+- **Rationale**: Prevents misalignment when helpText changes
+
+#### Extract Namespace Parsing Helper
+- **Priority**: Medium
+- **Complexity**: Low
+- **Impact**: Medium (code quality)
+- **Description**: Extract duplicated namespace extraction logic into helper function
+- **Location**: `internal/tui/table.go` lines 244-255 (and other locations)
+- **Current State**: Logic for splitting "cluster:namespace" duplicated across ViewPods, ViewDeployments, ViewServices
+- **Proposed Fix**:
+  ```go
+  // In helpers.go
+  func extractNamespaceName(namespaceID string) string {
+      if namespaceID == "" {
+          return "default"
+      }
+      if strings.Contains(namespaceID, ":") {
+          parts := strings.Split(namespaceID, ":")
+          if len(parts) > 1 {
+              return parts[1]
+          }
+      }
+      return namespaceID
+  }
+  ```
+- **Replace**: All instances of namespace extraction with single function call
+- **Rationale**: DRY principle, centralize parsing logic
+
+#### Cache Namespace Health Computation
+- **Priority**: Medium
+- **Complexity**: High
+- **Impact**: High (performance)
+- **Description**: Cache expensive namespace health computation instead of recalculating on every render
+- **Location**: `internal/tui/table.go` lines 130-145
+- **Current State**: `ComputeNamespaceHealth` and `SortNamespacesByHealth` run on every table update
+- **Requirements**:
+  - Add cache fields to table struct: `cachedNsHealth`, `cachedSortedNS`, `cachedScanDepth`
+  - Add invalidation flag or last-namespaces-version tracker
+  - On render: check if cache valid (same scanDepth, namespaces unchanged)
+  - Reuse cached values if valid, otherwise recompute and update cache
+  - Invalidate cache on namespace modification or refresh key ('r')
+  - Use mutex if table updates can happen concurrently
+- **Expected Impact**: Significant performance improvement for large clusters (25+ namespaces)
+- **Rationale**: Scanning logs for all pods in all namespaces on every render is expensive
+
 ### Test Coverage
 - Increase unit test coverage to 80%+
 - Add integration tests for bundle loading
 - Performance benchmarks for large bundles
+- Update breadcrumb tests to expect empty mode indicator (not "[LIVE]")
 
 ### Code Quality
 - Refactor attention.go (too large)

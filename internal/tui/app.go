@@ -954,7 +954,11 @@ type crdInstancesMsg struct {
 }
 
 type errMsg struct {
-	error
+	err error
+}
+
+func (e errMsg) Error() string {
+	return e.err.Error()
 }
 
 // describeMsg represents a message containing description data

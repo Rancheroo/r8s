@@ -189,6 +189,7 @@ func (a *App) renderLogsWithColors() string {
 		} else {
 			// Wrap raw text into segments FIRST, preferring to break at whitespace
 			remainingLine := line
+			segmentIndex := 0
 			for len(remainingLine) > 0 {
 				// Determine segment length, preferring whitespace breaks
 				segmentEnd := wrapWidth
@@ -215,8 +216,8 @@ func (a *App) renderLogsWithColors() string {
 
 				segment := remainingLine[:segmentEnd]
 
-				// Trim leading spaces on wrapped segments (not first segment)
-				if len(wrappedLines) > 0 {
+				// Trim leading spaces on wrapped segments (not first segment of current line)
+				if segmentIndex > 0 {
 					segment = strings.TrimLeft(segment, " \t")
 				}
 
@@ -237,6 +238,7 @@ func (a *App) renderLogsWithColors() string {
 				}
 
 				remainingLine = remainingLine[segmentEnd:]
+				segmentIndex++
 			}
 		}
 	}

@@ -63,12 +63,13 @@ func formatCount(count int) string {
 // getBreadcrumb provides navigation context for each view
 func (a *App) getBreadcrumb() string {
 	// FIX BUG #8: Add visual mode indicator to breadcrumb
-	modeIndicator := "[LIVE] "
+	modeIndicator := ""
 	if a.bundleMode {
 		modeIndicator = "[BUNDLE] "
 	} else if a.offlineMode {
 		modeIndicator = "[DEMO] "
 	}
+	// No default indicator - live mode was removed in v0.3.5
 
 	switch a.currentView.viewType {
 	case ViewClusters:
@@ -105,7 +106,7 @@ func (a *App) getStatusText() string {
 	offlinePrefix := ""
 
 	if a.offlineMode {
-		offlinePrefix = "[OFFLINE MODE - Mock Data] "
+		offlinePrefix = "[DEMO] "
 	}
 
 	switch a.currentView.viewType {
@@ -190,9 +191,9 @@ func (a *App) getCRDDescriptionCaption() string {
 
 	// Find the corresponding CRD object
 	var selectedCRD *rancher.CRD
-	for _, crd := range a.crds {
-		if crd.Metadata.Name == selectedData["name"] {
-			selectedCRD = &crd
+	for i := range a.crds {
+		if a.crds[i].Metadata.Name == selectedData["name"] {
+			selectedCRD = &a.crds[i]
 			break
 		}
 	}
@@ -291,7 +292,6 @@ func selectBestCRDVersion(versions []rancher.CRDVersion) (string, error) {
 	return "", fmt.Errorf("no served versions available")
 }
 
-// renderHelp shows comprehensive keybinding reference
 // renderHelp renders the help screen with contextual tips ("Show, Don't Ask")
 func renderHelp(viewType ViewType) string {
 	// Base help content
@@ -420,9 +420,15 @@ func (a *App) renderDescribeView() string {
 	lines := strings.Split(content, "\n")
 	maxLines := a.height - 8 // Reserve space for title and borders
 
-	if len(lines) > maxLines {
+	// Guard against very small terminals
+	if maxLines <= 0 {
+		content = "... (terminal too small)"
+	} else if maxLines > 1 && len(lines) > maxLines {
 		// Truncate if too long (simple implementation)
 		content = strings.Join(lines[:maxLines-1], "\n") + "\n... (truncated)"
+	} else if maxLines == 1 && len(lines) > 1 {
+		// Only show truncation message if we have more than 1 line
+		content = "... (truncated)"
 	}
 
 	contentBox := lipgloss.NewStyle().
