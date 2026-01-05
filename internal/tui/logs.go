@@ -459,12 +459,19 @@ func (a *App) renderEmptyLogsHelp() string {
 		Render("📭 No Logs Available")
 
 	// Get pod information to enrich the diagnostic panel
+	// Fetch from dataSource directly (not a.pods which may be empty if coming from Dashboard)
 	var podInfo string
 	var foundPod *rancher.Pod
-	for _, pod := range a.pods {
-		if pod.Name == a.currentView.podName {
-			foundPod = &pod
-			break
+
+	if a.dataSource != nil {
+		pods, err := a.dataSource.GetAllPods()
+		if err == nil {
+			for _, pod := range pods {
+				if pod.Name == a.currentView.podName {
+					foundPod = &pod
+					break
+				}
+			}
 		}
 	}
 
