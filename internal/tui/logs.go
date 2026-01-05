@@ -678,9 +678,9 @@ func (a *App) buildInvestigationSection(state string, restarts int) string {
 		}
 	} else {
 		suggestions = []string{
-			"Press [d] for full pod description with container statuses",
 			"Check recent pod events above for failure patterns",
 			"Try [Ctrl+P] to view previous container logs if available",
+			"Review pod logs (if available) for application errors",
 		}
 	}
 
