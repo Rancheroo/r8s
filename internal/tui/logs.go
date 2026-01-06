@@ -540,20 +540,24 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
   Age:         %s`, state, restarts, ready, node, age)
 	sections = append(sections, statusSection)
 
-	// Section 3: Recent Events (fetch from global events file for complete history)
+	// Section 3: Container Status (NEW in v0.5.6)
 	var podEvents []rancher.Event
 	if a.dataSource != nil {
 		podEvents, _ = a.dataSource.GetEventsByPod(a.currentView.namespaceName, pod.Name)
 	}
+	containerSection := a.buildContainerStatusSection(pod, podEvents)
+	sections = append(sections, containerSection)
+
+	// Section 4: Recent Events (fetch from global events file for complete history)
 	// Fallback to pod.KubectlEvents if no global events (convert strings to display)
 	eventsSection := a.buildEventsSection(podEvents)
 	sections = append(sections, eventsSection)
 
-	// Section 4: Investigation Guidance
+	// Section 5: Investigation Guidance
 	investigateSection := a.buildInvestigationSection(state, restarts)
 	sections = append(sections, investigateSection)
 
-	// Section 5: External Tools
+	// Section 6: External Tools
 	toolsSection := a.buildExternalToolsSection()
 	sections = append(sections, toolsSection)
 
@@ -627,6 +631,91 @@ func (a *App) buildDiagnosisSection(state string, restarts int, age string) stri
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   %s %s`, emoji, diagnosis)
+}
+
+// buildContainerStatusSection shows container-level status details (v0.5.6)
+func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Event) string {
+	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CONTAINER STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+
+	// Parse Ready field (e.g., "1/2" -> 1 ready, 2 total)
+	ready := pod.KubectlReady
+	if ready == "" {
+		return header + "\n\n  Container status not available in bundle"
+	}
+
+	// Extract ready/total counts
+	var readyCount, totalCount int
+	fmt.Sscanf(ready, "%d/%d", &readyCount, &totalCount)
+
+	// Build status summary
+	statusLine := fmt.Sprintf("  Containers: %d/%d ready", readyCount, totalCount)
+
+	// Extract container info from events
+	containerMap := make(map[string]string) // container name -> status emoji
+	for _, event := range events {
+		// Events often have container info in format like "spec.containers{container-name}"
+		// We'll look for Started/Created events to identify successful containers
+		// and use Reason for container info
+
+		if event.Reason == "Started" || event.Reason == "Created" {
+			// Try to extract container name from message or object
+			// For now, we'll mark containers mentioned in Started events as successful
+			if strings.Contains(event.Message, "container") {
+				// Simple heuristic: look for common patterns
+				words := strings.Fields(event.Message)
+				for i, word := range words {
+					if word == "container" || word == "container:" {
+						if i+1 < len(words) {
+							containerName := strings.TrimRight(words[i+1], ",.")
+							if containerMap[containerName] == "" {
+								containerMap[containerName] = "✅"
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Check for failures
+		if event.Type == "Warning" && (event.Reason == "Failed" || event.Reason == "BackOff") {
+			if strings.Contains(event.Message, "container") {
+				words := strings.Fields(event.Message)
+				for i, word := range words {
+					if word == "container" || word == "container:" {
+						if i+1 < len(words) {
+							containerName := strings.TrimRight(words[i+1], ",.")
+							containerMap[containerName] = "❌"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// If we identified containers from events, show them
+	var containerLines []string
+	if len(containerMap) > 0 {
+		containerLines = append(containerLines, "")
+		for containerName, status := range containerMap {
+			containerLines = append(containerLines, fmt.Sprintf("  %s %s", status, containerName))
+		}
+	}
+
+	// Add note about exit codes not being available
+	dataGapNote := `
+
+  ⚠️  Exit codes not captured in bundle
+  → For detailed container status, run:
+    kubectl describe pod ` + pod.Name + ` -n ` + pod.NamespaceID
+
+	// Combine all parts
+	if len(containerLines) > 0 {
+		return header + "\n\n" + statusLine + strings.Join(containerLines, "\n") + dataGapNote
+	}
+
+	return header + "\n\n" + statusLine + dataGapNote
 }
 
 // buildEventsSection formats recent pod events
