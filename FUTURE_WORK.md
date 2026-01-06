@@ -4,6 +4,19 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ## ✅ Recently Completed
 
+### Container Status Diagnostics (v0.5.6)
+- **Status**: ✅ Shipped in v0.5.6 - 2026-01-06
+- **Description**: Enhanced error diagnostics with container-level health visibility
+- **Impact**: Users see which specific containers failed in multi-container pods
+- **Features**:
+  - Container health indicators (✅ running, ❌ failed, ⚠️ unknown)
+  - BackOff frequency analysis from events
+  - Failure message extraction from Warning events
+  - Pod Ready state correlation for intelligent inference
+  - Clean, value-only output (removed "exit codes not captured" noise)
+- **Philosophy**: "Maximum Information Extraction" - show all available data transparently
+- **Test Case**: Pod `test-notready` (1/2 ready) now shows ok-container vs failing-container
+
 ### Dashboard Scrolling & Item Capping (v0.4.0)
 - **Status**: ✅ Shipped in v0.4.0
 - **Description**: Smart capping with expansion for high --scan values

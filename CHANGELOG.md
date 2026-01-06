@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned for v0.5.7 "Navigation Polish"
+- Help discovery hint in footer (first 3 launches)
+- Expansion state clarity improvements
+- Dashboard submenu Enter key consistency
+
+### Planned for v0.6.0 "Silky Navigation"
+- Navigation state consolidation (single `navigateToLogs()` function)
+- State management cleanup (~40 lines reduction)
+- Navigation reliability test suite
+
+---
+
 ## [0.5.6] - 2026-01-06 "Enhanced Error Diagnostics"
 
 ### Added ✨
