@@ -353,16 +353,18 @@ type Service struct {
 
 // Event represents a Kubernetes event
 type Event struct {
-	Namespace  string `json:"namespace"`
-	Type       string `json:"type"`       // Normal, Warning
-	Reason     string `json:"reason"`     // e.g., "DNSConfigForming", "Started"
-	Object     string `json:"object"`     // e.g., "pod/calico-typha-b74b9cb47-l5kcf"
-	Message    string `json:"message"`    // Event message
-	Source     string `json:"source"`     // e.g., "kubelet, node-name"
-	FirstSeen  string `json:"firstSeen"`  // First occurrence time
-	LastSeen   string `json:"lastSeen"`   // Last occurrence time
-	Count      int    `json:"count"`      // Number of occurrences
-	Name       string `json:"name"`       // Event name/ID
-	PodName    string `json:"podName"`    // Extracted pod name from Object field
-	ObjectKind string `json:"objectKind"` // Extracted from Object (e.g., "pod", "node")
+	Namespace     string `json:"namespace"`
+	Type          string `json:"type"`          // Normal, Warning
+	Reason        string `json:"reason"`        // e.g., "DNSConfigForming", "Started"
+	Object        string `json:"object"`        // e.g., "pod/calico-typha-b74b9cb47-l5kcf"
+	SubObject     string `json:"subObject"`     // e.g., "spec.containers{container-name}" (v0.5.6)
+	Message       string `json:"message"`       // Event message
+	Source        string `json:"source"`        // e.g., "kubelet, node-name"
+	FirstSeen     string `json:"firstSeen"`     // First occurrence time
+	LastSeen      string `json:"lastSeen"`      // Last occurrence time
+	Count         int    `json:"count"`         // Number of occurrences
+	Name          string `json:"name"`          // Event name/ID
+	PodName       string `json:"podName"`       // Extracted pod name from Object field
+	ObjectKind    string `json:"objectKind"`    // Extracted from Object (e.g., "pod", "node")
+	ContainerName string `json:"containerName"` // Extracted from SubObject (v0.5.6)
 }

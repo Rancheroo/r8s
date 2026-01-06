@@ -652,44 +652,30 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 	// Build status summary
 	statusLine := fmt.Sprintf("  Containers: %d/%d ready", readyCount, totalCount)
 
-	// Extract container info from events
+	// Extract container info from events using ContainerName field (v0.5.6)
 	containerMap := make(map[string]string) // container name -> status emoji
-	for _, event := range events {
-		// Events often have container info in format like "spec.containers{container-name}"
-		// We'll look for Started/Created events to identify successful containers
-		// and use Reason for container info
 
-		if event.Reason == "Started" || event.Reason == "Created" {
-			// Try to extract container name from message or object
-			// For now, we'll mark containers mentioned in Started events as successful
-			if strings.Contains(event.Message, "container") {
-				// Simple heuristic: look for common patterns
-				words := strings.Fields(event.Message)
-				for i, word := range words {
-					if word == "container" || word == "container:" {
-						if i+1 < len(words) {
-							containerName := strings.TrimRight(words[i+1], ",.")
-							if containerMap[containerName] == "" {
-								containerMap[containerName] = "✅"
-							}
-						}
-					}
-				}
-			}
+	// First pass: Look for BackOff/Failed events (mark containers as failed)
+	for _, event := range events {
+		if event.ContainerName == "" {
+			continue // Skip events without container info
 		}
 
-		// Check for failures
-		if event.Type == "Warning" && (event.Reason == "Failed" || event.Reason == "BackOff") {
-			if strings.Contains(event.Message, "container") {
-				words := strings.Fields(event.Message)
-				for i, word := range words {
-					if word == "container" || word == "container:" {
-						if i+1 < len(words) {
-							containerName := strings.TrimRight(words[i+1], ",.")
-							containerMap[containerName] = "❌"
-						}
-					}
-				}
+		if event.Reason == "BackOff" || (event.Type == "Warning" && event.Reason == "Failed") {
+			containerMap[event.ContainerName] = "❌"
+		}
+	}
+
+	// Second pass: Look for Started/Created events (mark as successful if not already failed)
+	for _, event := range events {
+		if event.ContainerName == "" {
+			continue
+		}
+
+		if event.Reason == "Started" || event.Reason == "Created" {
+			// Only mark as success if not already marked as failed
+			if containerMap[event.ContainerName] == "" {
+				containerMap[event.ContainerName] = "✅"
 			}
 		}
 	}

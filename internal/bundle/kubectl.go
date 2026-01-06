@@ -387,7 +387,7 @@ func ParseEvents(extractPath string) ([]rancher.Event, error) {
 		eventType := fields[2]
 		reason := fields[3]
 		object := fields[4]
-		// subobject := fields[5] (often empty)
+		subObject := fields[5] // e.g., "spec.containers{container-name}" (v0.5.6)
 		source := fields[6]
 
 		// Message spans multiple fields, find FIRST_SEEN marker
@@ -417,19 +417,32 @@ func ParseEvents(extractPath string) ([]rancher.Event, error) {
 			}
 		}
 
+		// Extract container name from subObject field (v0.5.6)
+		// Format: "spec.containers{container-name}"
+		containerName := ""
+		if strings.Contains(subObject, "{") && strings.Contains(subObject, "}") {
+			start := strings.Index(subObject, "{")
+			end := strings.Index(subObject, "}")
+			if start >= 0 && end > start {
+				containerName = subObject[start+1 : end]
+			}
+		}
+
 		events = append(events, rancher.Event{
-			Namespace:  namespace,
-			Type:       eventType,
-			Reason:     reason,
-			Object:     object,
-			Message:    message,
-			Source:     source,
-			FirstSeen:  firstSeen,
-			LastSeen:   lastSeen,
-			Count:      count,
-			Name:       name,
-			PodName:    podName,
-			ObjectKind: objectKind,
+			Namespace:     namespace,
+			Type:          eventType,
+			Reason:        reason,
+			Object:        object,
+			SubObject:     subObject,
+			Message:       message,
+			Source:        source,
+			FirstSeen:     firstSeen,
+			LastSeen:      lastSeen,
+			Count:         count,
+			Name:          name,
+			PodName:       podName,
+			ObjectKind:    objectKind,
+			ContainerName: containerName,
 		})
 	}
 
