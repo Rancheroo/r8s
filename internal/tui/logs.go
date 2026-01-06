@@ -666,16 +666,34 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 		}
 	}
 
-	// Second pass: Look for Started/Created events (mark as successful if not already failed)
+	// Second pass: Look for Started/Created events (collect container names)
 	for _, event := range events {
 		if event.ContainerName == "" {
 			continue
 		}
 
 		if event.Reason == "Started" || event.Reason == "Created" {
-			// Only mark as success if not already marked as failed
+			// Only set if not already marked as failed
 			if containerMap[event.ContainerName] == "" {
-				containerMap[event.ContainerName] = "✅"
+				// Initially mark as started (will determine actual status below)
+				containerMap[event.ContainerName] = "started"
+			}
+		}
+	}
+
+	// Third pass: Apply pod-level status to determine final container status
+	// If pod is not fully ready, containers without BackOff events are likely failing
+	for containerName, status := range containerMap {
+		if status == "started" {
+			if readyCount == totalCount {
+				// All containers ready - mark as success
+				containerMap[containerName] = "✅"
+			} else if readyCount == 0 {
+				// No containers ready - mark as failing (even without BackOff)
+				containerMap[containerName] = "❌"
+			} else {
+				// Some containers ready - unknown which ones are failing
+				containerMap[containerName] = "⚠️"
 			}
 		}
 	}
