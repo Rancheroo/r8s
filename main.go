@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	version = "0.5.2"
-	commit  = "none"
-	date    = "unknown"
+	version = "0.5.6" // Version number
+	commit  = "dev"   // Git commit (set via ldflags)
+	date    = "now"   // Build date (set via ldflags)
 )
 
 func main() {
