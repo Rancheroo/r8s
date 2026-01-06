@@ -370,6 +370,14 @@ func (ds *BundleDataSource) Mode() string {
 	return "BUNDLE"
 }
 
+// GetBundleHealth returns the bundle health information (bundle mode only)
+func (ds *BundleDataSource) GetBundleHealth() *bundle.BundleHealth {
+	if ds.bundle != nil {
+		return ds.bundle.Health
+	}
+	return nil
+}
+
 // GetAllPods returns all pods across all namespaces
 func (ds *BundleDataSource) GetAllPods() ([]rancher.Pod, error) {
 	// Use kubectl parser which has all pods

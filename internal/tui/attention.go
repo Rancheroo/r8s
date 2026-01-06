@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Rancheroo/r8s/internal/datasource"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -234,8 +235,21 @@ func (a *App) renderAttentionDashboard() string {
 		Width(a.width - 4).
 		Render(viewportContent)
 
-	// Build status with critical count visibility, position indicator, and sort mode
+	// Build status with bundle health, critical count visibility, position indicator, and sort mode
 	var statusParts []string
+
+	// BUNDLE HEALTH FIRST (if in bundle mode) - access through datasource getter
+	if a.bundleMode && a.dataSource != nil {
+		// Try to get bundle health from datasource
+		if bundleDS, ok := a.dataSource.(*datasource.BundleDataSource); ok {
+			health := bundleDS.GetBundleHealth()
+			if health != nil {
+				pct := health.Percentage()
+				healthIndicator := fmt.Sprintf("📦 BUNDLE %d%%", pct)
+				statusParts = append(statusParts, healthIndicator)
+			}
+		}
+	}
 
 	// Count total criticals in full list (not just displayed)
 	totalCriticals := 0
@@ -251,7 +265,7 @@ func (a *App) renderAttentionDashboard() string {
 		}
 	}
 
-	// CRITICAL COUNT FIRST (highest visibility)
+	// CRITICAL COUNT (high visibility)
 	if totalCriticals > 0 {
 		if displayedCriticals < totalCriticals {
 			statusParts = append(statusParts, fmt.Sprintf("🔥 Criticals: %d/%d shown", displayedCriticals, totalCriticals))
