@@ -540,8 +540,13 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
   Age:         %s`, state, restarts, ready, node, age)
 	sections = append(sections, statusSection)
 
-	// Section 3: Recent Events (always show, even if empty)
-	eventsSection := a.buildEventsSection(pod.KubectlEvents)
+	// Section 3: Recent Events (fetch from global events file for complete history)
+	var podEvents []rancher.Event
+	if a.dataSource != nil {
+		podEvents, _ = a.dataSource.GetEventsByPod(a.currentView.namespaceName, pod.Name)
+	}
+	// Fallback to pod.KubectlEvents if no global events (convert strings to display)
+	eventsSection := a.buildEventsSection(podEvents)
 	sections = append(sections, eventsSection)
 
 	// Section 4: Investigation Guidance
@@ -625,36 +630,39 @@ func (a *App) buildDiagnosisSection(state string, restarts int, age string) stri
 }
 
 // buildEventsSection formats recent pod events
-func (a *App) buildEventsSection(events []string) string {
+func (a *App) buildEventsSection(events []rancher.Event) string {
 	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 RECENT EVENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
 
+	if len(events) == 0 {
+		return header + "\n\n  No events recorded for this pod"
+	}
+
 	// Show last 5 events max
 	maxEvents := 5
-	startIdx := 0
+	displayEvents := events
 	if len(events) > maxEvents {
-		startIdx = len(events) - maxEvents
+		displayEvents = events[:maxEvents]
 	}
 
 	var eventLines []string
-	for _, event := range events[startIdx:] {
-		// Format event with appropriate emoji
-		eventUpper := strings.ToUpper(event)
-		var emoji string
-		if strings.Contains(eventUpper, "[WARNING]") || strings.Contains(eventUpper, "BACKOFF") || strings.Contains(eventUpper, "KILLING") {
+	for _, event := range displayEvents {
+		// Choose emoji based on event type
+		emoji := "ℹ️"
+		if event.Type == "Warning" {
 			emoji = "⚠️"
-		} else if strings.Contains(eventUpper, "[NORMAL]") {
-			emoji = "ℹ️"
-		} else {
-			emoji = "•"
 		}
 
-		eventLines = append(eventLines, fmt.Sprintf("  %s  %s", emoji, event))
-	}
+		// Add count indicator if event occurred multiple times
+		countStr := ""
+		if event.Count > 1 {
+			countStr = fmt.Sprintf(" (x%d)", event.Count)
+		}
 
-	if len(eventLines) == 0 {
-		return header + "\n\n  No events recorded for this pod"
+		// Format: emoji + reason + message + count
+		eventLines = append(eventLines, fmt.Sprintf("  %s  %s: %s%s",
+			emoji, event.Reason, event.Message, countStr))
 	}
 
 	return header + "\n\n" + strings.Join(eventLines, "\n")

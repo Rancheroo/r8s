@@ -370,6 +370,14 @@ func (ds *BundleDataSource) Mode() string {
 	return "BUNDLE"
 }
 
+// GetBundleHealth returns the bundle health information (bundle mode only)
+func (ds *BundleDataSource) GetBundleHealth() *bundle.BundleHealth {
+	if ds.bundle != nil {
+		return ds.bundle.Health
+	}
+	return nil
+}
+
 // GetAllPods returns all pods across all namespaces
 func (ds *BundleDataSource) GetAllPods() ([]rancher.Pod, error) {
 	// Use kubectl parser which has all pods
@@ -408,6 +416,49 @@ func (ds *BundleDataSource) GetAllEvents() ([]rancher.Event, error) {
 		}
 	}
 	return events, nil
+}
+
+// GetEventsByPod returns events filtered by pod name (for diagnostic panel)
+func (ds *BundleDataSource) GetEventsByPod(namespace, podName string) ([]rancher.Event, error) {
+	var podEvents []rancher.Event
+
+	// Filter events by pod name
+	for _, item := range ds.bundle.Events {
+		event, ok := item.(rancher.Event)
+		if !ok {
+			continue
+		}
+
+		// Match by pod name (ObjectKind == "pod" and PodName matches)
+		if event.ObjectKind == "pod" && event.PodName == podName {
+			// Optionally filter by namespace if provided
+			if namespace != "" && event.Namespace != namespace {
+				continue
+			}
+			podEvents = append(podEvents, event)
+		}
+	}
+
+	// Sort by priority: Warnings first, then by LastSeen descending (most recent first)
+	// This ensures most important/recent events appear first
+	if len(podEvents) > 1 {
+		// Simple bubble sort - good enough for small event lists
+		for i := 0; i < len(podEvents)-1; i++ {
+			for j := 0; j < len(podEvents)-i-1; j++ {
+				// Warnings before Normal
+				if podEvents[j].Type == "Normal" && podEvents[j+1].Type == "Warning" {
+					podEvents[j], podEvents[j+1] = podEvents[j+1], podEvents[j]
+					continue
+				}
+				// If same type, sort by time (most recent first)
+				if podEvents[j].Type == podEvents[j+1].Type && podEvents[j].LastSeen < podEvents[j+1].LastSeen {
+					podEvents[j], podEvents[j+1] = podEvents[j+1], podEvents[j]
+				}
+			}
+		}
+	}
+
+	return podEvents, nil
 }
 
 // GetDaemonSets returns all DaemonSets

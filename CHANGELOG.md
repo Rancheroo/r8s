@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-01-06 "Maximum Data Extraction"
+
+### Added ✨
+
+- **Rich Event Data in Diagnostic Panel** - Parse global kubectl/events for complete pod event history
+  - Shows ALL pod events (FailedScheduling, FailedMount, NetworkNotReady, volume issues)
+  - Event counts displayed: "BackOff: Container is in waiting state (x47)"
+  - Events sorted: Warnings first, then by time (most recent)
+  - Maximum 5 events shown in diagnostic panel
+  - Falls back to pod.KubectlEvents if global events unavailable
+
+- **Bundle Health Tracking** - Transparency about bundle completeness
+  - BundleHealth struct tracks found/derived/missing files
+  - Enhanced verbose loading output with ✓/⚠️ indicators
+  - Shows which files are derived (e.g., "namespaces: derived 12 from pods")
+  - Health percentage calculated: (found + derived) / total files
+  - Provides visibility into data quality without blocking
+
+### Technical - v0.5.5
+
+- Added `GetEventsByPod()` to DataSource interface
+- Implemented event filtering and sorting in BundleDataSource  
+- Updated `buildEventsSection()` to use Event struct with count indicators
+- Added BundleHealth struct with Percentage() and Color() methods
+- Bundle loader tracks file availability during parse
+- Verbose mode shows detailed file status
+
+### Impact Summary - v0.5.5
+
+- ✅ **Complete event history** - No more missing FailedScheduling/FailedMount events
+- ✅ **Event count indicators** - See repeated events at a glance "(x47)"
+- ✅ **Bundle transparency** - Know what data is available vs derived vs missing
+- ✅ **Verbose loading** - Clear feedback during bundle import
+- ✅ **Smart fallbacks** - Derives namespaces from pods when file missing
+
+### Philosophy - v0.5.5
+
+**"Maximum Information Extraction"** - Use ALL available bundle data. Show transparency about data quality without blocking user workflow.
+
+---
+
+## [Unreleased - Post v0.5.5]
+
 ### Fixed 🐛
 
 - **Pod navigation race condition** - Rapid pod switching now shows correct data

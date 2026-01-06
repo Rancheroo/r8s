@@ -155,6 +155,15 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 		fmt.Println("Parsing bundle data...")
 	}
 
+	// Initialize health tracking
+	health := &BundleHealth{
+		TotalFiles:   7, // pods, deployments, services, namespaces, events, crds, logs
+		FoundFiles:   0,
+		DerivedFiles: 0,
+		MissingFiles: make([]string, 0),
+		Warnings:     make([]string, 0),
+	}
+
 	// Parse manifest
 	manifest, err := ParseManifest(extractPath)
 	if err != nil {
@@ -172,9 +181,15 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	if err != nil {
 		// Pods are optional - log warning
 		if opts.Verbose {
-			fmt.Printf("⚠ Warning: No pods found (%v)\n", err)
+			fmt.Printf("⚠️  pods: missing\n")
 		}
+		health.MissingFiles = append(health.MissingFiles, "pods")
 		pods = []PodInfo{} // Empty slice
+	} else {
+		if opts.Verbose {
+			fmt.Printf("✓ pods: %d\n", len(pods))
+		}
+		health.FoundFiles++
 	}
 
 	// Inventory log files
@@ -182,18 +197,59 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	if err != nil {
 		// Logs are optional - log warning
 		if opts.Verbose {
-			fmt.Printf("⚠ Warning: No log files found (%v)\n", err)
+			fmt.Printf("⚠️  logs: missing\n")
 		}
+		health.MissingFiles = append(health.MissingFiles, "logs")
 		logFiles = []LogFileInfo{} // Empty slice
+	} else {
+		if opts.Verbose {
+			fmt.Printf("✓ logs: %d\n", len(logFiles))
+		}
+		health.FoundFiles++
 	}
 
 	// Parse kubectl resources (all optional)
-	crds, _ := ParseCRDs(extractPath)
-	deployments, _ := ParseDeployments(extractPath)
-	services, _ := ParseServices(extractPath)
+	crds, crdErr := ParseCRDs(extractPath)
+	if crdErr != nil {
+		health.MissingFiles = append(health.MissingFiles, "crds")
+		if opts.Verbose {
+			fmt.Printf("⚠️  crds: missing\n")
+		}
+	} else {
+		health.FoundFiles++
+		if opts.Verbose {
+			fmt.Printf("✓ crds: %d\n", len(crds))
+		}
+	}
+
+	deployments, depErr := ParseDeployments(extractPath)
+	if depErr != nil {
+		health.MissingFiles = append(health.MissingFiles, "deployments")
+		if opts.Verbose {
+			fmt.Printf("⚠️  deployments: missing\n")
+		}
+	} else {
+		health.FoundFiles++
+		if opts.Verbose {
+			fmt.Printf("✓ deployments: %d\n", len(deployments))
+		}
+	}
+
+	services, svcErr := ParseServices(extractPath)
+	if svcErr != nil {
+		health.MissingFiles = append(health.MissingFiles, "services")
+		if opts.Verbose {
+			fmt.Printf("⚠️  services: missing\n")
+		}
+	} else {
+		health.FoundFiles++
+		if opts.Verbose {
+			fmt.Printf("✓ services: %d\n", len(services))
+		}
+	}
+
 	namespaces, nsErr := ParseNamespaces(extractPath)
 	kubectlPods, _ := ParsePods(extractPath)
-	events, _ := ParseEvents(extractPath)
 
 	// RESILIENCE: If namespaces file missing (common in partial bundles), derive from pods
 	if nsErr != nil && len(namespaces) == 0 && len(kubectlPods) > 0 {
@@ -215,8 +271,37 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 			})
 		}
 
-		if opts.Verbose && len(namespaces) > 0 {
-			fmt.Printf("⚠ namespaces file missing - derived %d namespaces from pods\n", len(namespaces))
+		if len(namespaces) > 0 {
+			health.DerivedFiles++
+			health.Warnings = append(health.Warnings, fmt.Sprintf("namespaces: derived %d from pods", len(namespaces)))
+			if opts.Verbose {
+				fmt.Printf("⚠️  namespaces: derived %d from pods\n", len(namespaces))
+			}
+		} else {
+			health.MissingFiles = append(health.MissingFiles, "namespaces")
+		}
+	} else if nsErr != nil {
+		health.MissingFiles = append(health.MissingFiles, "namespaces")
+		if opts.Verbose {
+			fmt.Printf("⚠️  namespaces: missing\n")
+		}
+	} else {
+		health.FoundFiles++
+		if opts.Verbose {
+			fmt.Printf("✓ namespaces: %d\n", len(namespaces))
+		}
+	}
+
+	events, evtErr := ParseEvents(extractPath)
+	if evtErr != nil {
+		health.MissingFiles = append(health.MissingFiles, "events")
+		if opts.Verbose {
+			fmt.Printf("⚠️  events: missing\n")
+		}
+	} else {
+		health.FoundFiles++
+		if opts.Verbose {
+			fmt.Printf("✓ events: %d\n", len(events))
 		}
 	}
 
@@ -258,6 +343,7 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 		Loaded:      true,
 		Size:        size,
 		IsTemporary: false, // Bundles are already extracted, never temporary
+		Health:      health,
 	}
 
 	return bundle, nil
