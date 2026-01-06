@@ -707,7 +707,46 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 		}
 	}
 
-	// Add note about exit codes not being available
+	// Add diagnostic insights from events (v0.5.6 enhanced)
+	var diagnosticLines []string
+
+	// Analyze BackOff patterns for timing intelligence
+	var backoffContainers []string
+	backoffCount := 0
+	for _, event := range events {
+		if event.Reason == "BackOff" && event.ContainerName != "" {
+			backoffCount += event.Count
+			// Track which containers are in backoff
+			found := false
+			for _, c := range backoffContainers {
+				if c == event.ContainerName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				backoffContainers = append(backoffContainers, event.ContainerName)
+			}
+		}
+	}
+
+	if backoffCount > 0 {
+		diagnosticLines = append(diagnosticLines, "")
+		diagnosticLines = append(diagnosticLines, fmt.Sprintf("  🔄 Restart pattern: %d backoff events detected", backoffCount))
+		if len(backoffContainers) > 0 {
+			diagnosticLines = append(diagnosticLines, fmt.Sprintf("     Affected containers: %v", backoffContainers))
+		}
+	}
+
+	// Analyze Failed events for error details
+	for _, event := range events {
+		if event.Type == "Warning" && event.Reason == "Failed" && event.ContainerName != "" {
+			diagnosticLines = append(diagnosticLines, "")
+			diagnosticLines = append(diagnosticLines, fmt.Sprintf("  ❌ %s: %s", event.ContainerName, event.Message))
+		}
+	}
+
+	// Add note about data limitations
 	dataGapNote := `
 
   ⚠️  Exit codes not captured in bundle
