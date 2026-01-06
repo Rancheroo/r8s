@@ -746,19 +746,18 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 		}
 	}
 
-	// Add note about data limitations
-	dataGapNote := `
+	// Combine all parts with diagnostic insights
+	result := header + "\n\n" + statusLine
 
-  ⚠️  Exit codes not captured in bundle
-  → For detailed container status, run:
-    kubectl describe pod ` + pod.Name + ` -n ` + pod.NamespaceID
-
-	// Combine all parts
 	if len(containerLines) > 0 {
-		return header + "\n\n" + statusLine + strings.Join(containerLines, "\n") + dataGapNote
+		result += strings.Join(containerLines, "\n")
 	}
 
-	return header + "\n\n" + statusLine + dataGapNote
+	if len(diagnosticLines) > 0 {
+		result += strings.Join(diagnosticLines, "\n")
+	}
+
+	return result
 }
 
 // buildEventsSection formats recent pod events
