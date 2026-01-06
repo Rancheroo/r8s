@@ -39,6 +39,9 @@ type Bundle struct {
 	// IsTemporary indicates if this bundle was extracted from an archive
 	// and should be cleaned up when Close() is called
 	IsTemporary bool
+
+	// Health tracks bundle completeness and data quality
+	Health *BundleHealth
 }
 
 // BundleManifest contains metadata extracted from a support bundle.
@@ -166,3 +169,42 @@ type ImportOptions struct {
 // Increased from 10MB based on real-world bundle sizes (often 20-40MB uncompressed).
 // Users can override with --limit flag for larger bundles.
 const DefaultMaxBundleSize int64 = 50 * 1024 * 1024 // 50MB
+
+// BundleHealth tracks completeness and quality of bundle data
+type BundleHealth struct {
+	// TotalFiles is the number of expected optional files
+	TotalFiles int
+
+	// FoundFiles is the number of files successfully loaded
+	FoundFiles int
+
+	// DerivedFiles is the number of files derived/fallback
+	DerivedFiles int
+
+	// MissingFiles lists which files are missing
+	MissingFiles []string
+
+	// Warnings lists load-time warnings
+	Warnings []string
+}
+
+// Percentage returns the bundle health as a percentage (0-100)
+func (h *BundleHealth) Percentage() int {
+	if h.TotalFiles == 0 {
+		return 100
+	}
+	return (h.FoundFiles + h.DerivedFiles) * 100 / h.TotalFiles
+}
+
+// Color returns the appropriate color for the health percentage
+func (h *BundleHealth) Color() string {
+	pct := h.Percentage()
+	switch {
+	case pct >= 90:
+		return "green" // Excellent
+	case pct >= 70:
+		return "yellow" // Good
+	default:
+		return "red" // Poor
+	}
+}
