@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-01-06 "Enhanced Error Diagnostics"
+
+### Added ✨
+
+- **Container Status Section in Diagnostic Panel** - Show container-level health
+  - New "📋 CONTAINER STATUS" section displayed between POD STATUS and RECENT EVENTS
+  - Parses Ready field (e.g., "1/2") to show container health summary
+  - Extracts container names from events (Started/Created/BackOff reasons)
+  - Shows which containers succeeded (✅) vs failed (❌)
+  - Displays explicit message about exit codes not being in bundle
+  - Provides kubectl describe command for detailed container status
+
+### Impact Summary - v0.5.6
+
+- ✅ **Container-level visibility** - Shows which specific containers failed in multi-container pods
+- ✅ **Transparent data gaps** - Explicitly states when exit codes aren't available in bundle
+- ✅ **Actionable guidance** - Provides kubectl command to get detailed container status
+- ✅ **Enhanced diagnostics** - Pod "Error" state with no warning events now explained
+- ✅ **Test case addressed** - `test-notready` pod (1/2 ready) now shows ok-container vs failing-container
+
+### Technical - v0.5.6
+
+- Added `buildContainerStatusSection()` function in logs.go
+- Container name extraction from event messages using heuristic parsing
+- Ready field parsing with fmt.Sscanf to extract container counts
+- Section integrated into renderMaximumIntelPanel() workflow
+- Works from both Dashboard and Classic navigation paths
+
+### Use Case - v0.5.6
+
+**Before v0.5.6:**
+- Pod shows "Error" state with "1/2 ready"
+- Events show only Normal events (Scheduled, Pulled, Created, Started)
+- No explanation of WHY pod is in Error state
+
+**After v0.5.6:**
+- Container status section shows "Containers: 1/2 ready"
+- Lists: ✅ ok-container, ❌ failing-container  
+- Notes: "Exit codes not captured in bundle"
+- Provides: kubectl describe command for details
+
+### Philosophy - v0.5.6
+
+**"Maximum Information Extraction"** - Extract and display all available bundle data, even when incomplete. Be transparent about data gaps and provide guidance for obtaining missing information.
+
+---
+
 ## [0.5.5] - 2026-01-06 "Maximum Data Extraction"
 
 ### Added ✨
