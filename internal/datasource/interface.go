@@ -58,6 +58,9 @@ type DataSource interface {
 	// GetAllEvents returns all cluster events (for attention dashboard)
 	GetAllEvents() ([]rancher.Event, error)
 
+	// GetEventsByPod returns events filtered by pod name (for diagnostic panel)
+	GetEventsByPod(namespace, podName string) ([]rancher.Event, error)
+
 	// GetDaemonSets returns all DaemonSets (for attention dashboard)
 	GetDaemonSets() ([]DaemonSet, error)
 

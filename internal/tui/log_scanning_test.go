@@ -315,6 +315,10 @@ func (m *mockDataSource) GetAllEvents() ([]rancher.Event, error) {
 	return nil, nil
 }
 
+func (m *mockDataSource) GetEventsByPod(namespace, podName string) ([]rancher.Event, error) {
+	return nil, nil
+}
+
 func (m *mockDataSource) GetDaemonSets() ([]datasource.DaemonSet, error) {
 	return nil, nil
 }
