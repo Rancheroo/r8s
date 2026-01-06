@@ -7,15 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v0.5.7 "Navigation Polish"
-- Help discovery hint in footer (first 3 launches)
-- Expansion state clarity improvements
-- Dashboard submenu Enter key consistency
-
 ### Planned for v0.6.0 "Silky Navigation"
 - Navigation state consolidation (single `navigateToLogs()` function)
 - State management cleanup (~40 lines reduction)
 - Navigation reliability test suite
+
+---
+
+## [0.5.7] - 2026-01-07 "Navigation Polish"
+
+### Added ✨
+
+- **Help discovery hint** - Show "💡 Press ? for help" in footer for first 3 TUI launches
+  - Tracks launch count in config.yaml
+  - Disappears after 3 launches (Show, Don't Ask principle)
+  - Surfaces help system automatically for new users
+
+- **Expansion state clarity** - Clear indicators for capped vs expanded dashboard view
+  - Changed: `Showing 9/100` → `Showing 9/100 (capped)`
+  - Changed: `[m]=expand` → `[m]=show all 100` (shows exact count)
+  - When expanded: `[m]=cap` to toggle back
+  - Users immediately understand expansion state
+
+### Changed 🔄
+
+- Dashboard Enter behavior already implements diagnostic-first design (v0.5.4)
+  - From expanded submenu: Enter → Diagnostic panel (not logs)
+  - Consistent with classic pod list behavior
+  - Verified in v0.5.7 testing
+
+### Technical - v0.5.7
+
+- Added `LaunchCount` field to Config struct (persisted in config.yaml)
+- Launch counter incremented and saved in cmd/tui.go
+- Passed to App struct for footer rendering
+- Status bar rendering updated in attention.go
+- ~35 lines added total
+
+### Impact Summary - v0.5.7
+
+- ✅ **Help discovery improved** - New users see help hint automatically
+- ✅ **Expansion state clear** - No ambiguity about capped vs full view
+- ✅ **Diagnostic-first verified** - Enter from submenu shows diagnostics (existing behavior confirmed)
+- ✅ **Zero regressions** - All existing features preserved
+- ✅ **Philosophy aligned** - "Show, Don't Ask" principle applied
 
 ---
 

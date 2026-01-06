@@ -274,9 +274,9 @@ func (a *App) renderAttentionDashboard() string {
 		}
 	}
 
-	// Item count indicator
+	// Item count indicator with expansion state clarity (v0.5.7)
 	if displayedCount < totalIssues {
-		statusParts = append(statusParts, fmt.Sprintf("Showing %d/%d", displayedCount, totalIssues))
+		statusParts = append(statusParts, fmt.Sprintf("Showing %d/%d (capped)", displayedCount, totalIssues))
 	} else {
 		statusParts = append(statusParts, fmt.Sprintf("%d items", displayedCount))
 	}
@@ -289,10 +289,20 @@ func (a *App) renderAttentionDashboard() string {
 	statusParts = append(statusParts, fmt.Sprintf("Sort: %s", sortMode.String()))
 
 	statusParts = append(statusParts, "[s]=sort")
-	statusParts = append(statusParts, "[m]=expand")
+	// v0.5.7: Show clear expansion state with exact item count
+	if displayedCount < totalIssues {
+		statusParts = append(statusParts, fmt.Sprintf("[m]=show all %d", totalIssues))
+	} else {
+		statusParts = append(statusParts, "[m]=cap")
+	}
 	statusParts = append(statusParts, "[g/G]=top/bottom")
 	statusParts = append(statusParts, "[Enter]=logs")
 	statusParts = append(statusParts, "[c]=classic")
+
+	// v0.5.7: Show help hint for first 3 launches
+	if a.launchCount < 3 {
+		statusParts = append(statusParts, "💡 Press ? for help")
+	}
 
 	statusText := " " + strings.Join(statusParts, " · ") + " "
 	status := statusStyle.Render(statusText)

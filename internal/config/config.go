@@ -18,6 +18,7 @@ type Config struct {
 	Profiles        []Profile `yaml:"profiles"`
 	RefreshInterval string    `yaml:"refreshInterval"`
 	LogLevel        string    `yaml:"logLevel"`
+	LaunchCount     int       `yaml:"launchCount"` // Track number of TUI launches for help hint
 
 	// Runtime overrides (not from file)
 	Insecure  bool
@@ -146,6 +147,7 @@ func createDefaultConfig(cfgFile string) (*Config, error) {
 		},
 		RefreshInterval: "5s",
 		LogLevel:        "info",
+		LaunchCount:     0, // Initialize launch counter for help hint
 	}
 
 	// Create config directory

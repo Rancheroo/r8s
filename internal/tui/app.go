@@ -107,6 +107,7 @@ type App struct {
 	offlineMode bool   // Flag to indicate running without live Rancher connection
 	bundleMode  bool   // Flag to indicate bundle mode
 	bundlePath  string // Path to loaded bundle
+	launchCount int    // Number of TUI launches for help hint (v0.5.7)
 
 	// Attention Dashboard
 	attentionItems    []AttentionItem // Detected issues for attention dashboard
@@ -192,6 +193,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		offlineMode:     offlineMode,
 		bundleMode:      bundleMode,
 		bundlePath:      bundlePath,
+		launchCount:     cfg.LaunchCount, // v0.5.7: Track for help hint
 		loading:         true,
 		currentView:     initialView,
 		sortMode:        SortByCount,                 // Default to count-based sorting
