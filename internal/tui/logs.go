@@ -540,20 +540,24 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
   Age:         %s`, state, restarts, ready, node, age)
 	sections = append(sections, statusSection)
 
-	// Section 3: Recent Events (fetch from global events file for complete history)
+	// Section 3: Container Status (NEW in v0.5.6)
 	var podEvents []rancher.Event
 	if a.dataSource != nil {
 		podEvents, _ = a.dataSource.GetEventsByPod(a.currentView.namespaceName, pod.Name)
 	}
+	containerSection := a.buildContainerStatusSection(pod, podEvents)
+	sections = append(sections, containerSection)
+
+	// Section 4: Recent Events (fetch from global events file for complete history)
 	// Fallback to pod.KubectlEvents if no global events (convert strings to display)
 	eventsSection := a.buildEventsSection(podEvents)
 	sections = append(sections, eventsSection)
 
-	// Section 4: Investigation Guidance
+	// Section 5: Investigation Guidance
 	investigateSection := a.buildInvestigationSection(state, restarts)
 	sections = append(sections, investigateSection)
 
-	// Section 5: External Tools
+	// Section 6: External Tools
 	toolsSection := a.buildExternalToolsSection()
 	sections = append(sections, toolsSection)
 
@@ -627,6 +631,133 @@ func (a *App) buildDiagnosisSection(state string, restarts int, age string) stri
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   %s %s`, emoji, diagnosis)
+}
+
+// buildContainerStatusSection shows container-level status details (v0.5.6)
+func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Event) string {
+	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CONTAINER STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+
+	// Parse Ready field (e.g., "1/2" -> 1 ready, 2 total)
+	ready := pod.KubectlReady
+	if ready == "" {
+		return header + "\n\n  Container status not available in bundle"
+	}
+
+	// Extract ready/total counts
+	var readyCount, totalCount int
+	fmt.Sscanf(ready, "%d/%d", &readyCount, &totalCount)
+
+	// Build status summary
+	statusLine := fmt.Sprintf("  Containers: %d/%d ready", readyCount, totalCount)
+
+	// Extract container info from events using ContainerName field (v0.5.6)
+	containerMap := make(map[string]string) // container name -> status emoji
+
+	// First pass: Look for BackOff/Failed events (mark containers as failed)
+	for _, event := range events {
+		if event.ContainerName == "" {
+			continue // Skip events without container info
+		}
+
+		if event.Reason == "BackOff" || (event.Type == "Warning" && event.Reason == "Failed") {
+			containerMap[event.ContainerName] = "❌"
+		}
+	}
+
+	// Second pass: Look for Started/Created events (collect container names)
+	for _, event := range events {
+		if event.ContainerName == "" {
+			continue
+		}
+
+		if event.Reason == "Started" || event.Reason == "Created" {
+			// Only set if not already marked as failed
+			if containerMap[event.ContainerName] == "" {
+				// Initially mark as started (will determine actual status below)
+				containerMap[event.ContainerName] = "started"
+			}
+		}
+	}
+
+	// Third pass: Apply pod-level status to determine final container status
+	// If pod is not fully ready, containers without BackOff events are likely failing
+	for containerName, status := range containerMap {
+		if status == "started" {
+			if readyCount == totalCount {
+				// All containers ready - mark as success
+				containerMap[containerName] = "✅"
+			} else if readyCount == 0 {
+				// No containers ready - mark as failing (even without BackOff)
+				containerMap[containerName] = "❌"
+			} else {
+				// Some containers ready - unknown which ones are failing
+				containerMap[containerName] = "⚠️"
+			}
+		}
+	}
+
+	// If we identified containers from events, show them
+	var containerLines []string
+	if len(containerMap) > 0 {
+		containerLines = append(containerLines, "")
+		for containerName, status := range containerMap {
+			containerLines = append(containerLines, fmt.Sprintf("  %s %s", status, containerName))
+		}
+	}
+
+	// Add diagnostic insights from events (v0.5.6 enhanced)
+	var diagnosticLines []string
+
+	// Analyze BackOff patterns for timing intelligence
+	var backoffContainers []string
+	backoffCount := 0
+	for _, event := range events {
+		if event.Reason == "BackOff" && event.ContainerName != "" {
+			backoffCount += event.Count
+			// Track which containers are in backoff
+			found := false
+			for _, c := range backoffContainers {
+				if c == event.ContainerName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				backoffContainers = append(backoffContainers, event.ContainerName)
+			}
+		}
+	}
+
+	if backoffCount > 0 {
+		diagnosticLines = append(diagnosticLines, "")
+		diagnosticLines = append(diagnosticLines, fmt.Sprintf("  🔄 Restart pattern: %d backoff events detected", backoffCount))
+		if len(backoffContainers) > 0 {
+			diagnosticLines = append(diagnosticLines, fmt.Sprintf("     Affected containers: %v", backoffContainers))
+		}
+	}
+
+	// Analyze Failed events for error details
+	for _, event := range events {
+		if event.Type == "Warning" && event.Reason == "Failed" && event.ContainerName != "" {
+			diagnosticLines = append(diagnosticLines, "")
+			diagnosticLines = append(diagnosticLines, fmt.Sprintf("  ❌ %s: %s", event.ContainerName, event.Message))
+		}
+	}
+
+	// Combine all parts with diagnostic insights
+	result := header + "\n\n" + statusLine
+
+	if len(containerLines) > 0 {
+		result += strings.Join(containerLines, "\n")
+	}
+
+	if len(diagnosticLines) > 0 {
+		result += strings.Join(diagnosticLines, "\n")
+	}
+
+	return result
 }
 
 // buildEventsSection formats recent pod events

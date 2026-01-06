@@ -371,6 +371,66 @@ Based on all lessons learned, r8s follows these core principles:
 
 ---
 
+## v0.5.6 Development: Container Diagnostics & UX Issues
+
+### January 6, 2026 - Enhanced Error Diagnostics Release
+
+**Goal:** Show container-level health in diagnostic panel with intelligent status inference.
+
+**Lesson:** **Extract maximum value from available data, even when incomplete**
+
+**What We Built:**
+- Container status section parsing Ready field (e.g., "1/2")
+- Container name extraction from event SubObject field
+- Pod Ready state correlation for status inference
+- BackOff frequency analysis from events
+- Failure message extraction
+
+**UX Issue Identified: Confusing Submenu Navigation**
+
+**Problem:** Attention Dashboard submenu expansion creates navigation confusion
+- Expanded pod groups look like submenus but contain pod items
+- Visual hierarchy unclear (tree structure vs flat list)
+- Navigation pattern inconsistent with classic pod view
+- User expects "Enter" to show diagnostics, gets logs
+
+**Example:**
+```
+WARNING:
+6. ▼ 🔺 467/339× DNSConfigForming    Warning events    cluster
+    ├─ etcd-w-guard-wg-cp-svtk6-lqtxw (32617 events)
+    ├─ kube-proxy-w-guard-wg-cp-svtk6-lqtxw (32676 events)
+    └─ and 5 more pods (press Enter for logs)
+```
+
+**Principles Violated:**
+1. **"Show, Don't Ask"** - Not showing diagnostic value upfront
+2. **Inconsistent navigation** - Different behavior vs pod list  
+3. **Missing context** - User doesn't know what Enter will show
+
+**Proposed Solutions for v0.5.7:**
+
+**Option A: Direct to Diagnostics (Recommended)**
+- `[Enter]=diagnostics` from Dashboard expanded view
+- Consistent with pod list behavior
+- Shows maximum intelligence first
+
+**Option B: Clearer Labeling**
+- Update hint: `[Enter]=view pod diagnostics`
+- Make navigation expectation explicit
+
+**Option C: Simplify Grouping**
+- Don't expand groups, jump directly to filtered pod list
+- Single navigation pattern throughout
+
+**Decision:** Document for v0.5.7, ship v0.5.6 as-is (core feature complete)
+
+**Current Workaround:** Users can use 'c' for classic pod view with clear navigation
+
+**Lesson:** **Ship features that work, document known UX friction for next iteration. Perfection is the enemy of shipping.**
+
+---
+
 ## Closing Thoughts
 
 Building r8s taught us that:
