@@ -491,5 +491,5 @@ func (a *App) navigateToLogs(clusterID, namespace, podName, containerName string
 
 	// Trigger loading state and fetch logs
 	a.loading = true
-	return a.fetchLogs(clusterID, namespace, podName, a.currentContainer, a.showPrevious)
+	return a.fetchLogs(clusterID, namespace, podName, containerName, a.showPrevious)
 }

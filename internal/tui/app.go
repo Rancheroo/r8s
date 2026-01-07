@@ -769,7 +769,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		a.logs = msg.logs
+		a.containers = msg.containers // FIX (v0.5.9): Populate containers list
 		a.error = ""
+
+		// Set current container if not already set and containers available
+		if a.currentContainer == "" && len(msg.containers) > 0 {
+			a.currentContainer = msg.containers[0]
+		}
 
 		// Initialize viewport for logs view with colored content
 		a.logViewport = viewport.New(a.width-4, a.height-6)
@@ -956,9 +962,10 @@ type describeMsg struct {
 
 // logsMsg represents a message containing log data
 type logsMsg struct {
-	logs      []string
-	podName   string // FIX (v0.5.4): Track which pod these logs belong to
-	namespace string // FIX (v0.5.4): Track namespace for validation
+	logs       []string
+	containers []string // FIX (v0.5.9): Include available containers
+	podName    string   // FIX (v0.5.4): Include pod name to prevent race conditions
+	namespace  string   // FIX (v0.5.4): Include namespace to prevent race conditions
 }
 
 // attentionMsg represents attention dashboard analysis results
