@@ -87,6 +87,37 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ## 📋 Medium Priority (v0.4.0)
 
+### Diagnostic Panel Event Message Truncation (v0.5.8+) ⭐
+- **Priority**: Medium
+- **Complexity**: Low
+- **Impact**: Medium (readability)
+- **Description**: Long event messages (e.g., registry pull errors) overwhelm the diagnostic panel display
+- **Problem Observed (v0.5.7)**:
+  - Event messages like "Failed to pull image registry.rancher.com/..." span multiple lines
+  - Multiple similar events create wall of text
+  - Hard to scan for key information
+  - Diagnostic panel loses scannable structure
+- **Proposed Fix**:
+  ```
+  Current:  Failed: lgsp1skbtd12001.gso.aexp.com failed to pull image "registry.rancher...
+            agent:v2.8.5": rpc error: code = DeadlineExceeded desc = failed to resolve 
+            reference "registry.rancher.com/rancher/rancher-agent:v2.8.5": failed to do
+            request: Head "https://registry.rancher.com/v2/rancher/rancher-agent/manifests...
+            
+  Proposed: Failed: Image pull timeout - registry.rancher.com/rancher/rancher-agent:v2.8.5
+            └─ rpc error: DeadlineExceeded (truncated)
+  ```
+- **Requirements**:
+  - Truncate event messages to max 80-100 characters
+  - Preserve most important details (event type, resource, error code)
+  - Add "(truncated)" indicator when message is cut
+  - Consider smart truncation (keep beginning + end, ellipsis in middle)
+  - Group identical events with count: "Image pull failed (x6)"
+- **Location**: `internal/tui/logs.go` - `buildEventsSection()` function
+- **Alternative**: Add `[d]=details` key to show full event text in modal
+- **Philosophy**: "Scannable summaries > verbose walls of text"
+- **Triggered by**: User feedback on v0.5.7 testing (registry pull errors)
+
 ### Namespace Health Ranking & Smart Filtering
 - **Priority**: Medium-High
 - **Complexity**: Medium
