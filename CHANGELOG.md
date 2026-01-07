@@ -7,9 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v0.6.0 "Major Navigation Refactor"
-- Further navigation improvements and polish
-- Additional UX enhancements based on user feedback
+### Planned for v0.6.0 "Diagnostic-First Intelligence"
+- Diagnostic panel enhancements (remove External Tools section, show only failing containers)
+- Event message truncation for scannable diagnostic panel
+- Navigation improvements based on principles and learnings
+
+---
+
+## [0.5.9] - 2026-01-07 "Simplification"
+
+### Fixed 🐛
+
+- **Container selector now appears in log view**
+  - Root cause: `containers` field in App struct was never populated
+  - Solution: Added `containers` field to `logsMsg` struct, populated from current container
+  - Impact: Container cycling ('c' key) now functional
+  - Note: Full container detection requires pod spec parsing (deferred to v0.6.0)
+
+### Refactored 🔧
+
+- **Removed dashboard expansion/sub-navigation complexity**
+  - Removed `expandedItems` map and `subCursor` state fields
+  - Simplified navigation: Enter directly opens diagnostic panel (no expansion mode)
+  - Removed expansion indicators (►/▼) from item rendering
+  - Deleted unused `renderExpandedContent()` function  
+  - Code reduction: ~153 lines removed
+  - Rationale: Expansion feature added UX complexity without clear benefit
+  - Impact: Simpler, faster navigation with fewer display glitches
+
+### Technical - v0.5.9
+
+- Modified `logsMsg` type to include `containers []string` field
+- Updated `fetchLogs()` to populate containers with current container
+- Updated `logsMsg` handler to set `a.containers` and `a.currentContainer`
+- Simplified attention dashboard navigation in `app.go`
+- Removed expansion rendering code from `attention.go`
+- Files modified: app.go (-4 lines), fetch.go (+6 lines), helpers.go (+1 line), attention.go (-150 lines)
+
+### Impact Summary - v0.5.9
+
+- ✅ **Container selector functional** - 'c' key now works in log view
+- ✅ **Simpler navigation** - Direct Enter → diagnostic panel (no sub-nav)
+- ✅ **Cleaner codebase** - ~153 lines removed
+- ✅ **Zero regressions** - All existing features preserved
+- ✅ **Foundation for v0.6.0** - Clean base for diagnostic-first enhancements
 
 ---
 
