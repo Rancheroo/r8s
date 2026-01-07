@@ -107,6 +107,7 @@ type App struct {
 	offlineMode bool   // Flag to indicate running without live Rancher connection
 	bundleMode  bool   // Flag to indicate bundle mode
 	bundlePath  string // Path to loaded bundle
+	launchCount int    // Number of TUI launches for help hint (v0.5.7)
 
 	// Attention Dashboard
 	attentionItems    []AttentionItem // Detected issues for attention dashboard
@@ -192,6 +193,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		offlineMode:     offlineMode,
 		bundleMode:      bundleMode,
 		bundlePath:      bundlePath,
+		launchCount:     cfg.LaunchCount, // v0.5.7: Track for help hint
 		loading:         true,
 		currentView:     initialView,
 		sortMode:        SortByCount,                 // Default to count-based sorting
@@ -342,22 +344,23 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
-						// Navigate to logs for selected pod
+						// FIX (v0.5.7): Pass full context like main dashboard navigation
+						// This ensures diagnostic panel has all pod metadata
 						a.currentView = ViewContext{
 							viewType:      ViewLogs,
-							clusterID:     "", // TODO: get from bundle
+							clusterID:     item.ClusterID, // v0.5.7: Pass cluster context
 							clusterName:   "",
 							projectID:     "",
 							projectName:   "",
 							namespaceID:   "",
 							namespaceName: item.Namespace,
 							podName:       podName,
-							containerName: "",
+							containerName: item.ContainerName, // v0.5.7: Pass container context
 						}
 
 						a.filterLevel = "" // Show all logs by default
 						a.loading = true
-						return a, a.fetchLogs("", item.Namespace, podName, a.currentContainer, a.showPrevious)
+						return a, a.fetchLogs(item.ClusterID, item.Namespace, podName, a.currentContainer, a.showPrevious)
 					}
 				}
 

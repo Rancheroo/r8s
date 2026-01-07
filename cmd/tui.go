@@ -68,6 +68,16 @@ func runTUI(cmd *cobra.Command, args []string) error {
 	}
 	cfg.ScanDepth = scanDepth
 
+	// Increment launch count for help hint feature (v0.5.7)
+	cfg.LaunchCount++
+	// Save updated config (increment launch count)
+	if err := cfg.Save(""); err != nil {
+		// Non-fatal: Help hint will still work, just won't persist count
+		if cfg.Verbose {
+			fmt.Printf("Warning: Failed to save launch count: %v\n", err)
+		}
+	}
+
 	// Create and start TUI with bundle path
 	app := tui.NewApp(cfg, tuiBundlePath)
 
