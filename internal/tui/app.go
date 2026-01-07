@@ -344,22 +344,23 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						// Push current view to stack
 						a.viewStack = append(a.viewStack, a.currentView)
 
-						// Navigate to logs for selected pod
+						// FIX (v0.5.7): Pass full context like main dashboard navigation
+						// This ensures diagnostic panel has all pod metadata
 						a.currentView = ViewContext{
 							viewType:      ViewLogs,
-							clusterID:     "", // TODO: get from bundle
+							clusterID:     item.ClusterID, // v0.5.7: Pass cluster context
 							clusterName:   "",
 							projectID:     "",
 							projectName:   "",
 							namespaceID:   "",
 							namespaceName: item.Namespace,
 							podName:       podName,
-							containerName: "",
+							containerName: item.ContainerName, // v0.5.7: Pass container context
 						}
 
 						a.filterLevel = "" // Show all logs by default
 						a.loading = true
-						return a, a.fetchLogs("", item.Namespace, podName, a.currentContainer, a.showPrevious)
+						return a, a.fetchLogs(item.ClusterID, item.Namespace, podName, a.currentContainer, a.showPrevious)
 					}
 				}
 

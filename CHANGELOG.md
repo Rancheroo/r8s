@@ -29,11 +29,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - When expanded: `[m]=cap` to toggle back
   - Users immediately understand expansion state
 
+### Fixed 🐛
+
+- **Dashboard submenu navigation context bug**
+  - Fixed incomplete diagnostic panel when navigating from expanded pod list
+  - Root cause: Submenu passed empty clusterID and containerName to log view
+  - Solution: Pass full item context (clusterID + containerName) like main dashboard
+  - Impact: Diagnostic panel now shows complete pod data from both navigation paths
+
 ### Changed 🔄
 
 - Dashboard Enter behavior already implements diagnostic-first design (v0.5.4)
-  - From expanded submenu: Enter → Diagnostic panel (not logs)
-  - Consistent with classic pod list behavior
+  - From main dashboard: Enter → Diagnostic panel ✅
+  - From expanded submenu: Enter → Diagnostic panel ✅ (fixed context passing)
+  - Consistent behavior across all navigation paths
   - Verified in v0.5.7 testing
 
 ### Technical - v0.5.7
