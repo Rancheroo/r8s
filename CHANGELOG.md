@@ -7,10 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v0.6.0 "Silky Navigation"
-- Navigation state consolidation (single `navigateToLogs()` function)
-- State management cleanup (~40 lines reduction)
-- Navigation reliability test suite
+### Planned for v0.6.0 "Major Navigation Refactor"
+- Further navigation improvements and polish
+- Additional UX enhancements based on user feedback
+
+---
+
+## [0.5.8] - 2026-01-07 "Silky Navigation"
+
+### Refactored 🔧
+
+- **Navigation state consolidation** - Unified log navigation across all paths
+  - Created single `navigateToLogs()` function replacing 4 duplicate implementations
+  - Extracted `clearPodState()` helper for consistent state clearing
+  - Eliminates race conditions from inconsistent state management
+  - All navigation paths now use identical logic
+
+### Technical - v0.5.8
+
+- Added `clearPodState()` in helpers.go - single source of truth for state clearing
+- Added `navigateToLogs()` in helpers.go - unified navigation function
+- Replaced 4 duplicate implementations:
+  - app.go: Dashboard submenu navigation (lines 337-359)
+  - app.go: Main dashboard navigation (lines 372-394)
+  - handlers.go: ViewAttention case (lines 53-88)
+  - handlers.go: ViewPods case (lines 197-223)
+- Code reduction: ~40 lines removed (4 duplicates → 1 unified function)
+
+### Impact Summary - v0.5.8
+
+- ✅ **Zero duplication** - State clearing happens in one place only
+- ✅ **Consistent behavior** - All navigation paths work identically
+- ✅ **Race condition prevention** - Unified validation eliminates timing bugs
+- ✅ **Easier maintenance** - Changes to navigation logic happen once
+- ✅ **Faster development** - New navigation features have single implementation point
+
+### Files Modified - v0.5.8
+
+- `internal/tui/helpers.go`: +45 lines (2 new functions)
+- `internal/tui/app.go`: -50 lines (2 duplicates removed)
+- `internal/tui/handlers.go`: -35 lines (2 duplicates removed)
+- **Net change**: -40 lines total
+
+### Philosophy - v0.5.8
+
+**"One Way To Do It"** - Eliminate subtle behavioral differences between navigation paths. When the same operation can be reached multiple ways, ensure identical behavior through shared implementation.
 
 ---
 

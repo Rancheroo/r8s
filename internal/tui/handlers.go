@@ -50,37 +50,13 @@ func (a *App) handleEnter() tea.Cmd {
 
 		// Only navigate for pod-related issues
 		if matchedItem.ResourceType == "pod" && matchedItem.PodName != "" {
-			// FIX (v0.5.4): Clear stale log state before navigation
-			// Prevents showing previous pod's logs when navigating from dashboard
-			a.logs = nil
-			a.searchMode = false
-			a.searchQuery = ""
-			a.searchMatches = nil
-			a.currentMatch = -1
-			a.showRawLogs = false // Start with diagnostic panel
+			// v0.5.8: Use unified navigation with WARN filter for dashboard
+			cmd := a.navigateToLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, matchedItem.ContainerName)
 
-			// Push current view to stack
-			a.viewStack = append(a.viewStack, a.currentView)
-
-			// Navigate to logs view with error/warning filter
-			a.currentView = ViewContext{
-				viewType:      ViewLogs,
-				clusterID:     matchedItem.ClusterID,
-				clusterName:   matchedItem.ClusterName,
-				projectID:     "",
-				projectName:   "",
-				namespaceID:   "",
-				namespaceName: matchedItem.Namespace,
-				podName:       matchedItem.PodName,
-				containerName: matchedItem.ContainerName,
-			}
-
-			// Set filter to show errors and warnings by default
+			// Dashboard-specific: Set filter to show errors and warnings by default
 			a.filterLevel = "WARN"
-			a.loading = true
-			// Set internal state to match view context before fetching
 			a.currentContainer = matchedItem.ContainerName
-			return a.fetchLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, matchedItem.ContainerName, a.showPrevious)
+			return cmd
 		}
 
 		return nil
@@ -194,33 +170,8 @@ func (a *App) handleEnter() tea.Cmd {
 			return nil // Skip if required fields are missing
 		}
 
-		// FIX (v0.5.4): Clear stale log state before navigation
-		a.logs = nil
-		a.searchMode = false
-		a.searchQuery = ""
-		a.searchMatches = nil
-		a.currentMatch = -1
-		a.showRawLogs = false // Diagnostic panel first
-		a.filterLevel = ""    // Show all logs (user can filter)
-
-		// Push current view to stack
-		a.viewStack = append(a.viewStack, a.currentView)
-
-		// Navigate to logs view with diagnostic panel
-		a.currentView = ViewContext{
-			viewType:      ViewLogs,
-			clusterID:     a.currentView.clusterID,
-			clusterName:   a.currentView.clusterName,
-			projectID:     a.currentView.projectID,
-			projectName:   a.currentView.projectName,
-			namespaceID:   a.currentView.namespaceID,
-			namespaceName: namespaceName,
-			podName:       podName,
-			containerName: "",
-		}
-
-		a.loading = true
-		return a.fetchLogs(a.currentView.clusterID, namespaceName, podName, a.currentContainer, a.showPrevious)
+		// v0.5.8: Use unified navigation function (eliminates duplicate state clearing)
+		return a.navigateToLogs(a.currentView.clusterID, namespaceName, podName, "")
 
 	case ViewCRDs:
 		// Navigate to CRD instances for selected CRD
