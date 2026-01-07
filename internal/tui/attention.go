@@ -149,6 +149,7 @@ func (a *App) renderAttentionDashboard() string {
 	var lines []string
 	itemIdx := 0 // Track actual item index (for cursor)
 
+	// FIX (v0.5.9): Simplified rendering - removed expansion complexity
 	if len(critical) > 0 {
 		lines = append(lines, "")
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorRed).Bold(true).Render("CRITICAL:"))
@@ -156,13 +157,6 @@ func (a *App) renderAttentionDashboard() string {
 			isSelected := (itemIdx == a.attentionCursor)
 			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
-
-			// Show expanded content if this item is expanded
-			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
-				// Pass current position to know if we should highlight pods
-				inSubNav := (itemIdx == a.attentionCursor && a.subCursor >= 0)
-				lines = append(lines, a.renderExpandedContent(item, inSubNav)...)
-			}
 			itemIdx++
 		}
 	}
@@ -174,12 +168,6 @@ func (a *App) renderAttentionDashboard() string {
 			isSelected := (itemIdx == a.attentionCursor)
 			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
-
-			// Show expanded content if this item is expanded
-			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
-				inSubNav := (itemIdx == a.attentionCursor && a.subCursor >= 0)
-				lines = append(lines, a.renderExpandedContent(item, inSubNav)...)
-			}
 			itemIdx++
 		}
 	}
@@ -191,12 +179,6 @@ func (a *App) renderAttentionDashboard() string {
 			isSelected := (itemIdx == a.attentionCursor)
 			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
 			lines = append(lines, line)
-
-			// Show expanded content if this item is expanded
-			if a.expandedItems != nil && a.expandedItems[itemIdx] && len(item.AffectedPods) > 0 {
-				inSubNav := (itemIdx == a.attentionCursor && a.subCursor >= 0)
-				lines = append(lines, a.renderExpandedContent(item, inSubNav)...)
-			}
 			itemIdx++
 		}
 	}
@@ -319,21 +301,10 @@ func (a *App) renderAttentionDashboard() string {
 }
 
 // renderAttentionItem renders a single attention item with number prefix and selection highlight
+// FIX (v0.5.9): Simplified rendering - removed expansion indicators
 func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) string {
-	// Format: "1. ► 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
+	// Format: "1. 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
 	numStr := fmt.Sprintf("%d. ", num)
-
-	// Add ►/▼ indicator for collapsible event items
-	expandIndicator := ""
-	if item.ResourceType == "event" || item.ResourceType == "cluster" {
-		// Check if this item is expanded
-		itemIdx := num - 1 // Convert to 0-based index
-		if a.expandedItems != nil && a.expandedItems[itemIdx] {
-			expandIndicator = "▼ "
-		} else {
-			expandIndicator = "► "
-		}
-	}
 
 	titleWidth := 30
 	descWidth := 25
@@ -354,9 +325,8 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 		ns = ns[:nsWidth-3] + "..."
 	}
 
-	line := fmt.Sprintf("%s%s%s %-*s  %-*s  %s",
+	line := fmt.Sprintf("%s%s %-*s  %-*s  %s",
 		numStr,
-		expandIndicator,
 		item.Emoji,
 		titleWidth, title,
 		descWidth, desc,
@@ -384,54 +354,6 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 	}
 
 	return style.Render(line)
-}
-
-// renderExpandedContent renders the expanded pod list for event items
-func (a *App) renderExpandedContent(item AttentionItem, inSubNav bool) []string {
-	var lines []string
-
-	// Show top pods with event counts
-	for i, podName := range item.AffectedPods {
-		if i >= 5 { // Show max 5 pods to avoid clutter
-			remaining := len(item.AffectedPods) - 5
-			if remaining > 0 {
-				hint := lipgloss.NewStyle().Foreground(colorGray).Render(
-					fmt.Sprintf("       ... and %d more pods (press Enter for logs)", remaining))
-				lines = append(lines, hint)
-			}
-			break
-		}
-
-		// Get event count for this pod
-		eventCount := 0
-		if item.AffectedPodCounts != nil {
-			eventCount = item.AffectedPodCounts[podName]
-		}
-
-		// Format: "       ├─ pod-name-abc123 (123 events)"
-		prefix := "       ├─ "
-		if i == len(item.AffectedPods)-1 || i == 4 {
-			prefix = "       └─ "
-		}
-
-		podText := fmt.Sprintf("%s%s (%d events)", prefix, podName, eventCount)
-
-		// Highlight if this pod is selected in sub-navigation
-		isSelectedPod := inSubNav && i == a.subCursor
-		if isSelectedPod {
-			podLine := lipgloss.NewStyle().
-				Background(colorCyan).
-				Foreground(colorDarkGray).
-				Bold(true).
-				Render(podText)
-			lines = append(lines, podLine)
-		} else {
-			podLine := lipgloss.NewStyle().Foreground(colorGray).Render(podText)
-			lines = append(lines, podLine)
-		}
-	}
-
-	return lines
 }
 
 // renderAllGood renders the "all systems operational" screen

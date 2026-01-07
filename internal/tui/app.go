@@ -114,8 +114,6 @@ type App struct {
 	attentionCursor   int             // Selected item index in dashboard
 	attentionViewport viewport.Model  // Scrollable viewport for dashboard
 	attentionExpanded bool            // Show all items vs top-20 cap
-	expandedItems     map[int]bool    // Which collapsed event items are expanded
-	subCursor         int             // Selected pod index within expanded event (-1 = not in sub-nav)
 
 	// Sorting state
 	sortMode        SortMode              // Current sort mode (global default)
@@ -272,49 +270,18 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// ATTENTION DASHBOARD NAVIGATION - Handle before general navigation
+		// FIX (v0.5.9): Simplified navigation - removed expansion/sub-navigation complexity
 		if a.currentView.viewType == ViewAttention && len(a.attentionItems) > 0 {
-			// Initialize subCursor if not set
-			if a.subCursor == 0 && a.expandedItems == nil {
-				a.subCursor = -1 // -1 means not in sub-navigation
-			}
-
 			switch msg.String() {
 			case "j", "down":
-				// Check if we're in sub-navigation mode
-				if a.subCursor >= 0 {
-					// Navigate within pod list
-					item := a.attentionItems[a.attentionCursor]
-					if a.subCursor < len(item.AffectedPods)-1 {
-						a.subCursor++
-					}
-					return a, nil
-				}
-
-				// Check if current item is expanded and has pods - enter sub-nav
-				currentItem := a.attentionItems[a.attentionCursor]
-				if a.expandedItems != nil && a.expandedItems[a.attentionCursor] && len(currentItem.AffectedPods) > 0 {
-					// Enter pod list
-					a.subCursor = 0
-					return a, nil
-				}
-
-				// Normal navigation
+				// Simple navigation
 				if a.attentionCursor < len(a.attentionItems)-1 {
 					a.attentionCursor++
 				}
 				return a, nil
 
 			case "k", "up":
-				// Check if we're in sub-navigation mode
-				if a.subCursor >= 0 {
-					// Navigate within pod list
-					if a.subCursor > 0 {
-						a.subCursor--
-					}
-					return a, nil
-				}
-
-				// Normal navigation
+				// Simple navigation
 				if a.attentionCursor > 0 {
 					a.attentionCursor--
 				}
@@ -327,44 +294,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return a, nil
 			case "enter":
-				// Check if we're in sub-navigation - navigate to selected pod's logs
-				if a.subCursor >= 0 && a.attentionCursor < len(a.attentionItems) {
-					item := a.attentionItems[a.attentionCursor]
-					if len(item.AffectedPods) > 0 && a.subCursor < len(item.AffectedPods) {
-						podName := item.AffectedPods[a.subCursor]
-
-						// v0.5.8: Use unified navigation function (eliminates duplicate state clearing)
-						return a, a.navigateToLogs(item.ClusterID, item.Namespace, podName, item.ContainerName)
-					}
-				}
-
-				// Navigate to logs for the selected item (pod issues only)
+				// Navigate to diagnostic panel for the selected item (pod issues only)
 				if a.attentionCursor < len(a.attentionItems) {
 					item := a.attentionItems[a.attentionCursor]
 					if item.ResourceType == "pod" && item.PodName != "" {
-						// v0.5.8: Use unified navigation function (eliminates duplicate state clearing)
+						// v0.5.8: Use unified navigation function
 						return a, a.navigateToLogs(item.ClusterID, item.Namespace, item.PodName, item.ContainerName)
 					}
-				}
-				return a, nil
-			case "left", "h":
-				// Exit sub-navigation if in it, otherwise collapse
-				if a.subCursor >= 0 {
-					a.subCursor = -1
-					return a, nil
-				}
-				// Collapse current item
-				if a.attentionCursor < len(a.attentionItems) && a.expandedItems != nil {
-					a.expandedItems[a.attentionCursor] = false
-				}
-				return a, nil
-			case "right", "l":
-				// Toggle expansion for event items (future feature)
-				if a.attentionCursor < len(a.attentionItems) {
-					if a.expandedItems == nil {
-						a.expandedItems = make(map[int]bool)
-					}
-					a.expandedItems[a.attentionCursor] = !a.expandedItems[a.attentionCursor]
 				}
 				return a, nil
 			case "m":
@@ -383,7 +319,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "g":
 				// Jump to first item (vim muscle memory)
 				a.attentionCursor = 0
-				a.subCursor = -1
 				a.ensureCursorVisible() // FIX: Scroll to top (v0.5.2)
 				return a, nil
 			case "G":
@@ -392,7 +327,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if len(displayedItems) > 0 {
 					a.attentionCursor = len(displayedItems) - 1
 				}
-				a.subCursor = -1
 				a.ensureCursorVisible() // FIX: Scroll to bottom (v0.5.2)
 				return a, nil
 			}
