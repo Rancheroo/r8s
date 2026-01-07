@@ -333,34 +333,8 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if len(item.AffectedPods) > 0 && a.subCursor < len(item.AffectedPods) {
 						podName := item.AffectedPods[a.subCursor]
 
-						// FIX (v0.5.4): Clear stale log state before navigation
-						a.logs = nil
-						a.searchMode = false
-						a.searchQuery = ""
-						a.searchMatches = nil
-						a.currentMatch = -1
-						a.showRawLogs = false
-
-						// Push current view to stack
-						a.viewStack = append(a.viewStack, a.currentView)
-
-						// FIX (v0.5.7): Pass full context like main dashboard navigation
-						// This ensures diagnostic panel has all pod metadata
-						a.currentView = ViewContext{
-							viewType:      ViewLogs,
-							clusterID:     item.ClusterID, // v0.5.7: Pass cluster context
-							clusterName:   "",
-							projectID:     "",
-							projectName:   "",
-							namespaceID:   "",
-							namespaceName: item.Namespace,
-							podName:       podName,
-							containerName: item.ContainerName, // v0.5.7: Pass container context
-						}
-
-						a.filterLevel = "" // Show all logs by default
-						a.loading = true
-						return a, a.fetchLogs(item.ClusterID, item.Namespace, podName, a.currentContainer, a.showPrevious)
+						// v0.5.8: Use unified navigation function (eliminates duplicate state clearing)
+						return a, a.navigateToLogs(item.ClusterID, item.Namespace, podName, item.ContainerName)
 					}
 				}
 
@@ -368,34 +342,8 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if a.attentionCursor < len(a.attentionItems) {
 					item := a.attentionItems[a.attentionCursor]
 					if item.ResourceType == "pod" && item.PodName != "" {
-						// FIX (v0.5.4): Clear stale log state before navigation
-						a.logs = nil
-						a.searchMode = false
-						a.searchQuery = ""
-						a.searchMatches = nil
-						a.currentMatch = -1
-						a.showRawLogs = false
-
-						// Push current view to stack
-						a.viewStack = append(a.viewStack, a.currentView)
-
-						// Navigate to logs view - show all logs by default
-						a.currentView = ViewContext{
-							viewType:      ViewLogs,
-							clusterID:     item.ClusterID,
-							clusterName:   "",
-							projectID:     "",
-							projectName:   "",
-							namespaceID:   "",
-							namespaceName: item.Namespace,
-							podName:       item.PodName,
-							containerName: item.ContainerName,
-						}
-
-						// Show all logs by default (user can filter with Ctrl+E/W)
-						a.filterLevel = ""
-						a.loading = true
-						return a, a.fetchLogs(item.ClusterID, item.Namespace, item.PodName, a.currentContainer, a.showPrevious)
+						// v0.5.8: Use unified navigation function (eliminates duplicate state clearing)
+						return a, a.navigateToLogs(item.ClusterID, item.Namespace, item.PodName, item.ContainerName)
 					}
 				}
 				return a, nil

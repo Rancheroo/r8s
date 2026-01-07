@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/evertras/bubble-table/table"
 
@@ -450,4 +451,45 @@ func (a *App) renderDescribeView() string {
 		"",
 		statusText,
 	)
+}
+
+// clearPodState clears all pod-related view state before navigation (v0.5.8)
+// This is the single source of truth for state clearing across all navigation paths.
+// Prevents race conditions and ensures consistent behavior.
+func (a *App) clearPodState() {
+	a.logs = nil
+	a.searchMode = false
+	a.searchQuery = ""
+	a.searchMatches = nil
+	a.currentMatch = -1
+	a.showRawLogs = false // Diagnostic-first default (v0.5.4)
+	a.filterLevel = ""
+}
+
+// navigateToLogs performs unified navigation to log view (v0.5.8)
+// Replaces 4 duplicate implementations across app.go and handlers.go.
+// Ensures consistent state management and eliminates race conditions.
+func (a *App) navigateToLogs(clusterID, namespace, podName, containerName string) tea.Cmd {
+	// Clear all pod-related state
+	a.clearPodState()
+
+	// Push current view to navigation stack
+	a.viewStack = append(a.viewStack, a.currentView)
+
+	// Set new view context
+	a.currentView = ViewContext{
+		viewType:      ViewLogs,
+		clusterID:     clusterID,
+		clusterName:   "",
+		projectID:     "",
+		projectName:   "",
+		namespaceID:   "",
+		namespaceName: namespace,
+		podName:       podName,
+		containerName: containerName,
+	}
+
+	// Trigger loading state and fetch logs
+	a.loading = true
+	return a.fetchLogs(clusterID, namespace, podName, a.currentContainer, a.showPrevious)
 }
