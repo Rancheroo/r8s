@@ -665,6 +665,28 @@ func (ds *BundleDataSource) GetPodResources(podName string) ([]ResourceSpec, err
 	return result, nil
 }
 
+// GetDiagnosticContext returns diagnostic context for a pod (bundle only)
+func (ds *BundleDataSource) GetDiagnosticContext(namespace, podName string) (*DiagnosticContext, error) {
+	// Simple implementation - check for common issues and generate context
+	events, _ := ds.GetEventsByPod(namespace, podName)
+
+	ctx := &DiagnosticContext{
+		Severity:       "high",
+		FixPriority:    "investigate",
+		RootCause:      "Pod failure detected",
+		Recommendation: "Review recent events and check pod describe for details",
+		RelatedData:    []string{fmt.Sprintf("Events: %d recent", len(events))},
+	}
+
+	// Enhance based on available data
+	if len(events) > 5 {
+		ctx.Severity = "critical"
+		ctx.RootCause = "High event volume indicating ongoing issues"
+	}
+
+	return ctx, nil
+}
+
 // Close cleans up bundle resources
 func (ds *BundleDataSource) Close() error {
 	if ds.bundle != nil {

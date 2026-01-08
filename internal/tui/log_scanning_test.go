@@ -351,6 +351,10 @@ func (m *mockDataSource) GetPodResources(podName string) ([]datasource.ResourceS
 	return nil, nil
 }
 
+func (m *mockDataSource) GetDiagnosticContext(namespace, podName string) (*datasource.DiagnosticContext, error) {
+	return nil, nil
+}
+
 func (m *mockDataSource) Mode() string {
 	return "TEST"
 }

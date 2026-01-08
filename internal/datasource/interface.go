@@ -85,6 +85,9 @@ type DataSource interface {
 	// GetPodResources returns resource specs for a pod (bundle mode only, returns nil for live)
 	GetPodResources(podName string) ([]ResourceSpec, error)
 
+	// GetDiagnosticContext returns diagnostic context for a pod (bundle mode only, returns nil for live)
+	GetDiagnosticContext(namespace, podName string) (*DiagnosticContext, error)
+
 	// Mode returns a display string for the current mode (LIVE, BUNDLE, DEMO)
 	Mode() string
 
@@ -205,4 +208,13 @@ type ResourceSpec struct {
 	CPURequest    string // "100m"
 	CPULimit      string // "500m"
 	QoSClass      string // "Guaranteed", "Burstable", "BestEffort"
+}
+
+// DiagnosticContext provides inline diagnostic information for issues
+type DiagnosticContext struct {
+	RootCause      string   // "Container exceeded memory limit of 1Gi"
+	Recommendation string   // "Increase MemoryLimit to 2Gi or optimize application memory usage"
+	Severity       string   // "critical", "high", "medium", "low"
+	RelatedData    []string // ["Pod: my-app-abc", "Node: node-1 (95% memory)", "Events: OOMKilled x3"]
+	FixPriority    string   // "immediate", "investigate", "monitor"
 }
