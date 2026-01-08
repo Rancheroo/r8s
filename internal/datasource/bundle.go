@@ -496,6 +496,89 @@ func (ds *BundleDataSource) GetEtcdHealth() (*EtcdHealth, error) {
 	}, nil
 }
 
+// GetEtcdDetails returns comprehensive etcd information (bundle only)
+func (ds *BundleDataSource) GetEtcdDetails() (*EtcdDetails, error) {
+	details, err := bundle.ParseEtcdDetails(ds.bundle.ExtractPath)
+	if err != nil {
+		// etcd dir might not exist
+		return nil, nil
+	}
+
+	// Convert bundle.EtcdMember to datasource.EtcdMember
+	var members []EtcdMember
+	for _, m := range details.Members {
+		members = append(members, EtcdMember{
+			ID:         m.ID,
+			State:      m.State,
+			Name:       m.Name,
+			PeerURLs:   m.PeerURLs,
+			ClientURLs: m.ClientURLs,
+			IsLearner:  m.IsLearner,
+		})
+	}
+
+	return &EtcdDetails{
+		Healthy:          details.Healthy,
+		HasAlarms:        details.HasAlarms,
+		AlarmType:        details.AlarmType,
+		AlarmCount:       details.AlarmCount,
+		MemberCount:      details.MemberCount,
+		Members:          members,
+		LeaderID:         details.LeaderID,
+		DBSize:           details.DBSize,
+		DBSizeBytes:      details.DBSizeBytes,
+		Version:          details.Version,
+		RaftTerm:         details.RaftTerm,
+		RaftIndex:        details.RaftIndex,
+		NeedsCompaction:  details.NeedsCompaction,
+		CompactionReason: details.CompactionReason,
+	}, nil
+}
+
+// GetNodeConditions returns all node conditions (bundle only)
+func (ds *BundleDataSource) GetNodeConditions() ([]NodeConditions, error) {
+	nodes, err := bundle.ParseNodeDescribe(ds.bundle.ExtractPath)
+	if err != nil {
+		// nodesdescribe might not exist
+		return nil, nil
+	}
+
+	// Convert bundle.NodeConditions to datasource.NodeConditions
+	var conditions []NodeConditions
+	for _, n := range nodes {
+		conditions = append(conditions, NodeConditions{
+			Name:               n.Name,
+			Roles:              n.Roles,
+			Ready:              n.Ready,
+			MemoryPressure:     n.MemoryPressure,
+			DiskPressure:       n.DiskPressure,
+			PIDPressure:        n.PIDPressure,
+			NetworkUnavailable: n.NetworkUnavailable,
+			EtcdIsVoter:        n.EtcdIsVoter,
+			CPUCapacity:        n.CPUCapacity,
+			MemoryCapacity:     n.MemoryCapacity,
+			CPUAllocatable:     n.CPUAllocatable,
+			MemoryAllocatable:  n.MemoryAllocatable,
+			StorageCapacity:    n.StorageCapacity,
+			PodsCapacity:       n.PodsCapacity,
+			Taints:             n.Taints,
+			Unschedulable:      n.Unschedulable,
+			KernelVersion:      n.KernelVersion,
+			OSImage:            n.OSImage,
+			ContainerRuntime:   n.ContainerRuntime,
+			KubeletVersion:     n.KubeletVersion,
+			InternalIP:         n.InternalIP,
+			PodCIDR:            n.PodCIDR,
+			HasPressure:        n.HasPressure,
+			IsControlPlane:     n.IsControlPlane,
+			IsEtcd:             n.IsEtcd,
+			IsWorker:           n.IsWorker,
+		})
+	}
+
+	return conditions, nil
+}
+
 // GetSystemHealth returns system health info (bundle only)
 func (ds *BundleDataSource) GetSystemHealth() (*SystemHealth, error) {
 	healthInfo, err := bundle.ParseSystemHealth(ds.bundle.ExtractPath)
@@ -508,6 +591,78 @@ func (ds *BundleDataSource) GetSystemHealth() (*SystemHealth, error) {
 		MemoryUsedPercent: healthInfo.MemoryUsedPercent,
 		DiskUsedPercent:   healthInfo.DiskUsedPercent,
 	}, nil
+}
+
+// GetKubeletIssues returns kubelet log issues (bundle only)
+func (ds *BundleDataSource) GetKubeletIssues() ([]KubeletIssue, error) {
+	issues, err := bundle.ParseKubeletLogs(ds.bundle.ExtractPath)
+	if err != nil {
+		// journald dir might not exist
+		return nil, nil
+	}
+
+	// Convert bundle.KubeletIssue to datasource.KubeletIssue
+	var result []KubeletIssue
+	for _, issue := range issues {
+		result = append(result, KubeletIssue{
+			Pattern:  issue.Pattern,
+			Message:  issue.Message,
+			Count:    issue.Count,
+			LastSeen: issue.LastSeen,
+			Severity: issue.Severity,
+		})
+	}
+
+	return result, nil
+}
+
+// GetOOMAnalysis returns OOM event analysis (bundle only)
+func (ds *BundleDataSource) GetOOMAnalysis() ([]OOMAnalysis, error) {
+	analysis, err := bundle.AnalyzeOOMEvents(ds.bundle.ExtractPath)
+	if err != nil {
+		// events might not exist
+		return nil, nil
+	}
+
+	// Convert bundle.OOMAnalysis to datasource.OOMAnalysis
+	var result []OOMAnalysis
+	for _, a := range analysis {
+		result = append(result, OOMAnalysis{
+			PodName:       a.PodName,
+			ContainerName: a.ContainerName,
+			MemoryLimit:   a.MemoryLimit,
+			MemoryRequest: a.MemoryRequest,
+			OOMKillTime:   a.OOMKillTime,
+			IsNodeOOM:     a.IsNodeOOM,
+		})
+	}
+
+	return result, nil
+}
+
+// GetPodResources returns resource specs for a pod (bundle only)
+func (ds *BundleDataSource) GetPodResources(podName string) ([]ResourceSpec, error) {
+	resources, err := bundle.ParsePodResources(ds.bundle.ExtractPath, podName)
+	if err != nil {
+		// pod specs might not exist
+		return nil, nil
+	}
+
+	// Convert bundle.ResourceSpec to datasource.ResourceSpec
+	var result []ResourceSpec
+	for _, r := range resources {
+		result = append(result, ResourceSpec{
+			PodName:       r.PodName,
+			ContainerName: r.ContainerName,
+			MemoryRequest: r.MemoryRequest,
+			MemoryLimit:   r.MemoryLimit,
+			CPURequest:    r.CPURequest,
+			CPULimit:      r.CPULimit,
+			QoSClass:      r.QoSClass,
+		})
+	}
+
+	return result, nil
 }
 
 // Close cleans up bundle resources

@@ -67,8 +67,23 @@ type DataSource interface {
 	// GetEtcdHealth returns etcd cluster health (bundle mode only, returns nil for live)
 	GetEtcdHealth() (*EtcdHealth, error)
 
+	// GetEtcdDetails returns comprehensive etcd information (bundle mode only, returns nil for live)
+	GetEtcdDetails() (*EtcdDetails, error)
+
+	// GetNodeConditions returns all node conditions (bundle mode only, returns nil/empty for live)
+	GetNodeConditions() ([]NodeConditions, error)
+
 	// GetSystemHealth returns system health metrics (bundle mode only, returns nil for live)
 	GetSystemHealth() (*SystemHealth, error)
+
+	// GetKubeletIssues returns kubelet log issues (bundle mode only, returns nil for live)
+	GetKubeletIssues() ([]KubeletIssue, error)
+
+	// GetOOMAnalysis returns OOM event analysis (bundle mode only, returns nil for live)
+	GetOOMAnalysis() ([]OOMAnalysis, error)
+
+	// GetPodResources returns resource specs for a pod (bundle mode only, returns nil for live)
+	GetPodResources(podName string) ([]ResourceSpec, error)
 
 	// Mode returns a display string for the current mode (LIVE, BUNDLE, DEMO)
 	Mode() string
@@ -90,7 +105,7 @@ type DaemonSet struct {
 	Ready     string // Format: "X/Y"
 }
 
-// EtcdHealth represents etcd cluster health status
+// EtcdHealth represents etcd cluster health status (legacy)
 type EtcdHealth struct {
 	Healthy    bool
 	HasAlarms  bool
@@ -98,8 +113,96 @@ type EtcdHealth struct {
 	AlarmCount int
 }
 
+// EtcdMember represents a single etcd cluster member
+type EtcdMember struct {
+	ID         string
+	State      string
+	Name       string
+	PeerURLs   string
+	ClientURLs string
+	IsLearner  bool
+}
+
+// EtcdDetails contains comprehensive etcd cluster information
+type EtcdDetails struct {
+	Healthy          bool
+	HasAlarms        bool
+	AlarmType        string
+	AlarmCount       int
+	MemberCount      int
+	Members          []EtcdMember
+	LeaderID         string
+	DBSize           string
+	DBSizeBytes      int64
+	Version          string
+	RaftTerm         int
+	RaftIndex        int64
+	NeedsCompaction  bool
+	CompactionReason string
+}
+
+// NodeConditions contains full node health from kubectl describe
+type NodeConditions struct {
+	Name               string
+	Roles              string
+	Ready              bool
+	MemoryPressure     bool
+	DiskPressure       bool
+	PIDPressure        bool
+	NetworkUnavailable bool
+	EtcdIsVoter        bool
+	CPUCapacity        string
+	MemoryCapacity     string
+	CPUAllocatable     string
+	MemoryAllocatable  string
+	StorageCapacity    string
+	PodsCapacity       int
+	Taints             []string
+	Unschedulable      bool
+	KernelVersion      string
+	OSImage            string
+	ContainerRuntime   string
+	KubeletVersion     string
+	InternalIP         string
+	PodCIDR            string
+	HasPressure        bool
+	IsControlPlane     bool
+	IsEtcd             bool
+	IsWorker           bool
+}
+
 // SystemHealth represents system resource usage
 type SystemHealth struct {
 	MemoryUsedPercent float64
 	DiskUsedPercent   float64
+}
+
+// KubeletIssue represents a node-level issue detected from kubelet logs
+type KubeletIssue struct {
+	Pattern  string // "HTTP 502", "connection timeout", etc.
+	Message  string // Full error message
+	Count    int    // Occurrences
+	LastSeen string // Timestamp
+	Severity string // "error", "warning"
+}
+
+// OOMAnalysis represents an out-of-memory event analysis
+type OOMAnalysis struct {
+	PodName       string
+	ContainerName string
+	MemoryLimit   string // "1Gi"
+	MemoryRequest string // "512Mi"
+	OOMKillTime   string
+	IsNodeOOM     bool // vs container OOM
+}
+
+// ResourceSpec represents pod resource specifications
+type ResourceSpec struct {
+	PodName       string
+	ContainerName string
+	MemoryRequest string // "512Mi"
+	MemoryLimit   string // "1Gi"
+	CPURequest    string // "100m"
+	CPULimit      string // "500m"
+	QoSClass      string // "Guaranteed", "Burstable", "BestEffort"
 }

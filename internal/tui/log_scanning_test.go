@@ -327,7 +327,27 @@ func (m *mockDataSource) GetEtcdHealth() (*datasource.EtcdHealth, error) {
 	return nil, nil
 }
 
+func (m *mockDataSource) GetEtcdDetails() (*datasource.EtcdDetails, error) {
+	return nil, nil
+}
+
+func (m *mockDataSource) GetNodeConditions() ([]datasource.NodeConditions, error) {
+	return nil, nil
+}
+
 func (m *mockDataSource) GetSystemHealth() (*datasource.SystemHealth, error) {
+	return nil, nil
+}
+
+func (m *mockDataSource) GetKubeletIssues() ([]datasource.KubeletIssue, error) {
+	return nil, nil
+}
+
+func (m *mockDataSource) GetOOMAnalysis() ([]datasource.OOMAnalysis, error) {
+	return nil, nil
+}
+
+func (m *mockDataSource) GetPodResources(podName string) ([]datasource.ResourceSpec, error) {
 	return nil, nil
 }
 
