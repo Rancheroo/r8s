@@ -1,0 +1,5 @@
+-rw------- 1 root root 50425888 Jan  7 20:00 /var/lib/rancher/rke2/server/db/snapshots/etcd-snapshot-w-guard-wg-cp-svtk6-lqtxw-1767816001
+-rw------- 1 root root 50425888 Jan  7 05:00 /var/lib/rancher/rke2/server/db/snapshots/etcd-snapshot-w-guard-wg-cp-svtk6-lqtxw-1767762001
+-rw------- 1 root root 50425888 Jan  7 15:00 /var/lib/rancher/rke2/server/db/snapshots/etcd-snapshot-w-guard-wg-cp-svtk6-lqtxw-1767798000
+-rw------- 1 root root 50425888 Jan  7 10:00 /var/lib/rancher/rke2/server/db/snapshots/etcd-snapshot-w-guard-wg-cp-svtk6-lqtxw-1767780003
+-rw------- 1 root root 50425888 Jan  7 00:00 /var/lib/rancher/rke2/server/db/snapshots/etcd-snapshot-w-guard-wg-cp-svtk6-lqtxw-1767744005

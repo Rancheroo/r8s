@@ -8,9 +8,326 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned for v0.6.0 "Diagnostic-First Intelligence"
-- Diagnostic panel enhancements (remove External Tools section, show only failing containers)
+- **Phase 1**: Diagnostic panel tightening (remove noise, show only failures)
+- **Phase 2**: Cluster events drill-down (v0.5.9 gap fix)
+- **Phase 3**: Full container detection from pod specs
+- **Phase 4**: Enhanced ETCD display with inline diagnostics
+- **Phase 5**: Node conditions display with resource correlation
+- **Phase 6**: Kubelet issues display from journald
+- **Phase 7**: OOM root cause display with recommendations
+- **Phase 8**: Inline diagnostics in dashboard (2-line format)
 - Event message truncation for scannable diagnostic panel
-- Navigation improvements based on principles and learnings
+- "Show, Don't Ask" principle applied throughout
+
+---
+
+## [0.5.12] - 2026-01-08 "Diagnostic Context Types"
+
+### Added ✨
+
+- **DiagnosticContext Data Structure** - Foundation for inline diagnostics
+  - RootCause: "Container exceeded memory limit of 1Gi"
+  - Recommendation: "Increase MemoryLimit to 2Gi or optimize memory usage"
+  - Severity: "critical", "high", "medium", "low"
+  - RelatedData: ["Pod: my-app-abc", "Node: 95% memory", "Events: OOMKilled x3"]
+  - FixPriority: "immediate", "investigate", "monitor"
+
+- **Context Generators** - Intelligent diagnostic interpretation
+  - CrashLoopBackOff: "Container repeatedly failing to start"
+  - OOM Killed: "Container exceeded memory limits"
+  - Image Pull BackOff: "Cannot pull container image from registry"
+  - Node Pressure: "Node resource pressure detected"
+  - ETCD Issues: "ETCD cluster unhealthy"
+  - Kubelet Errors: "Kubelet reporting node-level errors"
+
+- **Recommendation Engine** - Actionable guidance mapping
+  - Severity-based emoji indicators (🚨 critical, ⚠️ high, 🔍 medium)
+  - Priority classification (immediate/investigate/monitor)
+  - Context-specific next steps for each issue type
+
+- **DataSource Extension** - GetDiagnosticContext() method
+  - Graceful fallback when context unavailable
+  - Ready for v0.6.0 inline display consumption
+
+### Technical - v0.5.12
+
+- **New files**:
+  - `internal/tui/diagnostics.go` - Context generators (~144 lines)
+  - `internal/tui/recommendations.go` - Pattern matching engine (~24 lines)
+
+- **Modified files**:
+  - `internal/datasource/interface.go` - DiagnosticContext type + GetDiagnosticContext method
+  - `internal/datasource/bundle.go` - Implementation with event correlation
+  - `internal/tui/log_scanning_test.go` - Mock method implementation
+
+- **Context generation**: Consumes existing parsers (events, OOM analysis, resource specs)
+- **Graceful degradation**: Returns basic context when advanced data unavailable
+
+### Impact Summary - v0.5.12
+
+- ✅ **Foundation ready** - v0.6.0 can now display inline diagnostics
+- ✅ **Zero UI changes** - Backend-only data structures
+- ✅ **All tests passing** - Race detection verified
+- ✅ **Extensible design** - Easy to add new context generators
+
+### Philosophy - v0.5.12
+
+**"Show, Don't Ask" Infrastructure** - Backend foundation enabling automatic diagnostic display without user action. When users see an issue, they'll immediately understand WHY it happened and WHAT to do next.
+
+---
+
+## [0.5.11] - 2026-01-08 "Kubelet & OOM Analysis"
+
+### Added ✨
+
+- **Kubelet Log Parser** - Node-level error detection from journald
+  - Parses `journald/rke2-server` for kubelet errors (HTTP 502, timeouts, remotedialer)
+  - Detects 10+ common error patterns: connection timeouts, DNS limits, TLS handshakes
+  - Handles journald format: `Dec DD HH:MM:SS hostname rke2[PID]: time="..." level=error msg="..."`
+  - Graceful handling of missing journal files
+
+- **OOM Root Cause Analyzer** - Distinguishes container vs node OOM
+  - Parses `rke2/kubectl/events` for OOM kill messages
+  - Correlates with pod resource specs from `rke2/kubectl/pods`
+  - Identifies whether OOM was container-level or node-level
+  - Extracts memory limits/requests for context
+
+- **Container Resource Parser** - Pod spec limit extraction
+  - Parses pod manifests (`rke2/pod-manifests/*.yaml`)
+  - Extracts CPU/memory requests and limits per container
+  - Determines QoS class (Guaranteed/Burstable/BestEffort)
+  - Handles multiple pod spec sources (manifests, kubectl describe, kubectl get)
+
+- **Detection Helpers** - Pattern matching and correlation functions
+  - Regex-based error pattern detection
+  - Event correlation with resource data
+  - Timestamp parsing and severity assessment
+  - Missing file graceful degradation
+
+### Technical - v0.5.11
+
+- **New files**:
+  - `internal/bundle/kubelet.go` - Journald kubelet parser (~89 lines)
+  - `internal/bundle/oom.go` - OOM event analyzer (~72 lines)
+  - `internal/bundle/resources.go` - Pod resource extractor (~221 lines)
+
+- **Modified files**:
+  - `internal/datasource/interface.go` - New types: KubeletIssue, OOMAnalysis, ResourceSpec
+  - `internal/datasource/bundle.go` - GetKubeletIssues(), GetOOMAnalysis(), GetPodResources()
+  - `internal/tui/log_scanning_test.go` - Mock implementations
+
+- **Parsers handle**: Journald logs, kubectl events, YAML manifests, kubectl describe output
+- **Error patterns**: 10+ kubelet issues (HTTP 502, DNS limits, remotedialer timeouts)
+- **OOM detection**: Event parsing + resource correlation
+- **QoS classification**: Guaranteed/Burstable/BestEffort based on requests/limits
+
+### Impact Summary - v0.5.11
+
+- ✅ **Root cause detection** - Distinguish OOM types, identify kubelet issues
+- ✅ **Resource correlation** - Memory limits linked to OOM events
+- ✅ **Zero UI changes** - Backend foundation only
+- ✅ **All tests passing** - Race detection verified
+- ✅ **Graceful degradation** - Missing files don't break functionality
+
+### Philosophy - v0.5.11
+
+**"Maximum Information Extraction"** - Parse all available bundle data to enable future diagnostic intelligence. This release extracts root cause information that v0.6.0 will display inline.
+
+---
+
+## [0.5.12] - 2026-01-08 "Diagnostic Context Types"
+
+### Added ✨
+
+- **DiagnosticContext Data Structure** - Foundation for inline diagnostics
+  - RootCause: "Container exceeded memory limit of 1Gi"
+  - Recommendation: "Increase MemoryLimit to 2Gi or optimize memory usage"
+  - Severity: "critical", "high", "medium", "low"
+  - RelatedData: ["Pod: my-app-abc", "Node: 95% memory", "Events: OOMKilled x3"]
+  - FixPriority: "immediate", "investigate", "monitor"
+
+- **Context Generators** - Intelligent diagnostic interpretation
+  - CrashLoopBackOff: "Container repeatedly failing to start"
+  - OOM Killed: "Container exceeded memory limits"
+  - Image Pull BackOff: "Cannot pull container image from registry"
+  - Node Pressure: "Node resource pressure detected"
+  - ETCD Issues: "ETCD cluster unhealthy"
+  - Kubelet Errors: "Kubelet reporting node-level errors"
+
+- **Recommendation Engine** - Actionable guidance mapping
+  - Severity-based emoji indicators (🚨 critical, ⚠️ high, 🔍 medium)
+  - Priority classification (immediate/investigate/monitor)
+  - Context-specific next steps for each issue type
+
+- **DataSource Extension** - GetDiagnosticContext() method
+  - Graceful fallback when context unavailable
+  - Ready for v0.6.0 inline display consumption
+
+### Technical - v0.5.12
+
+- **New files**:
+  - `internal/tui/diagnostics.go` - Context generators (~144 lines)
+  - `internal/tui/recommendations.go` - Pattern matching engine (~24 lines)
+
+- **Modified files**:
+  - `internal/datasource/interface.go` - DiagnosticContext type + GetDiagnosticContext method
+  - `internal/datasource/bundle.go` - Implementation with event correlation
+  - `internal/tui/log_scanning_test.go` - Mock method implementation
+
+- **Context generation**: Consumes existing parsers (events, OOM analysis, resource specs)
+- **Graceful degradation**: Returns basic context when advanced data unavailable
+
+### Impact Summary - v0.5.12
+
+- ✅ **Foundation ready** - v0.6.0 can now display inline diagnostics
+- ✅ **Zero UI changes** - Backend-only data structures
+- ✅ **All tests passing** - Race detection verified
+- ✅ **Extensible design** - Easy to add new context generators
+
+### Philosophy - v0.5.12
+
+**"Show, Don't Ask" Infrastructure** - Backend foundation enabling automatic diagnostic display without user action. When users see an issue, they'll immediately understand WHY it happened and WHAT to do next.
+
+---
+
+## [0.5.11] - 2026-01-08 "Kubelet & OOM Analysis"
+
+### Added ✨
+
+- **Kubelet Log Parser** - Node-level error detection from journald
+  - Parses `journald/rke2-server` for kubelet errors (HTTP 502, timeouts, remotedialer)
+  - Detects 10+ common error patterns: connection timeouts, DNS limits, TLS handshakes
+  - Handles journald format: `Dec DD HH:MM:SS hostname rke2[PID]: time="..." level=error msg="..."`
+  - Graceful handling of missing journal files
+
+- **OOM Root Cause Analyzer** - Distinguishes container vs node OOM
+  - Parses `rke2/kubectl/events` for OOM kill messages
+  - Correlates with pod resource specs from `rke2/kubectl/pods`
+  - Identifies whether OOM was container-level or node-level
+  - Extracts memory limits/requests for context
+
+- **Container Resource Parser** - Pod spec limit extraction
+  - Parses pod manifests (`rke2/pod-manifests/*.yaml`)
+  - Extracts CPU/memory requests and limits per container
+  - Determines QoS class (Guaranteed/Burstable/BestEffort)
+  - Handles multiple pod spec sources (manifests, kubectl describe, kubectl get)
+
+- **Detection Helpers** - Pattern matching and correlation functions
+  - Regex-based error pattern detection
+  - Event correlation with resource data
+  - Timestamp parsing and severity assessment
+  - Missing file graceful degradation
+
+### Technical - v0.5.11
+
+- **New files**:
+  - `internal/bundle/kubelet.go` - Journald kubelet parser (~89 lines)
+  - `internal/bundle/oom.go` - OOM event analyzer (~72 lines)
+  - `internal/bundle/resources.go` - Pod resource extractor (~221 lines)
+
+- **Modified files**:
+  - `internal/datasource/interface.go` - New types: KubeletIssue, OOMAnalysis, ResourceSpec
+  - `internal/datasource/bundle.go` - GetKubeletIssues(), GetOOMAnalysis(), GetPodResources()
+  - `internal/tui/log_scanning_test.go` - Mock implementations
+
+- **Parsers handle**: Journald logs, kubectl events, YAML manifests, kubectl describe output
+- **Error patterns**: 10+ kubelet issues (HTTP 502, DNS limits, remotedialer timeouts)
+- **OOM detection**: Event parsing + resource correlation
+- **QoS classification**: Guaranteed/Burstable/BestEffort based on requests/limits
+
+### Impact Summary - v0.5.11
+
+- ✅ **Root cause detection** - Distinguish OOM types, identify kubelet issues
+- ✅ **Resource correlation** - Memory limits linked to OOM events
+- ✅ **Zero UI changes** - Backend foundation only
+- ✅ **All tests passing** - Race detection verified
+- ✅ **Graceful degradation** - Missing files don't break functionality
+
+### Philosophy - v0.5.11
+
+**"Maximum Information Extraction"** - Parse all available bundle data to enable future diagnostic intelligence. This release extracts root cause information that v0.6.0 will display inline.
+
+---
+
+## [0.5.10] - 2026-01-08 "Data Source Enrichment"
+
+### Added ✨
+
+- **Enhanced ETCD Parser** - Comprehensive etcd cluster information extraction
+  - Parses `memberlist` → member count, member IDs, states, URLs
+  - Parses `endpointstatus` → leader ID, DB size (50 MB), version (3.5.21), raft metrics
+  - Compaction recommendations when DB exceeds 100MB threshold
+  - New `ParseEtcdDetails()` function returns complete cluster state
+  - Backward compatible with existing `ParseEtcdHealth()`
+
+- **Node Conditions Parser** - Full node health and capacity from kubectl describe
+  - Parses all node conditions: MemoryPressure, DiskPressure, PIDPressure, NetworkUnavailable, Ready, EtcdIsVoter
+  - Extracts capacity/allocatable resources (CPU, memory, storage, pods)
+  - Node taints and schedulability status
+  - System info (kernel, OS image, container runtime, kubelet version)
+  - Network details (internal IP, Pod CIDR)
+  - Computed flags: HasPressure, IsControlPlane, IsEtcd, IsWorker
+  - New `ParseNodeDescribe()` function handles multi-node output
+
+- **DataSource Interface Extensions**
+  - Added `GetEtcdDetails()` → returns comprehensive etcd information
+  - Added `GetNodeConditions()` → returns all node health data
+  - New types: `EtcdDetails`, `EtcdMember`, `NodeConditions`
+  - Gracefully handles missing files (returns nil/empty, not errors)
+
+### Technical - v0.5.10
+
+- **New files**:
+  - `internal/bundle/nodes.go` - Node describe parser (~300 lines)
+  - Extended `internal/bundle/etcd.go` - ETCD parsers (+180 lines)
+  
+- **Modified files**:
+  - `internal/datasource/interface.go` - New types and interface methods
+  - `internal/datasource/bundle.go` - Implemented new methods with type conversion
+  - `internal/tui/log_scanning_test.go` - Updated mock with new methods
+
+- **Parsers handle**: CSV format (memberlist), ASCII tables (endpointstatus), multi-section text (nodesdescribe)
+- **DB size parsing**: Converts "50 MB" → 52428800 bytes for threshold comparisons
+- **Section detection**: State-machine parser for nodesdescribe sections
+- **Compaction logic**: 100MB threshold based on etcd best practices
+
+### Impact Summary - v0.5.10
+
+- ✅ **Backend foundation ready** - v0.6.0 can display rich ETCD and node diagnostics
+- ✅ **Zero UI changes** - exclusively backend parsers (foundation release)
+- ✅ **All tests passing** - includes race detection
+- ✅ **Graceful degradation** - missing bundle files don't break functionality
+- ✅ **Type-safe** - Proper type conversion between bundle and datasource layers
+
+### Philosophy - v0.5.10
+
+**"Maximum Information Extraction"** - Parse all available bundle data for future diagnostic use. This release lays the groundwork for v0.6.0's inline diagnostic displays.
+
+### Planned for v0.5.11 "Kubelet & OOM Analysis" (Foundation)
+- Kubelet log parser for journald error detection
+- OOM root cause analyzer (distinguish container vs node OOM)
+- Container resource limit parser from pod specs
+- Advanced detection capabilities for diagnostic context
+- Backend-only changes (no UI modifications)
+
+### Planned for v0.5.12 "Diagnostic Context Types" (Foundation)
+- DiagnosticContext data structure for inline diagnostics
+- Context generator functions (CrashLoop, OOM, ImagePull, Node, ETCD)
+- Recommendation engine mapping issues to actionable suggestions
+- AttentionItem extension with diagnostic context field
+- Backend-only changes (no UI modifications)
+
+### Planned for v0.6.0 "Diagnostic-First Intelligence"
+- **Phase 1**: Diagnostic panel tightening (remove noise, show only failures)
+- **Phase 2**: Cluster events drill-down (v0.5.9 gap fix)
+- **Phase 3**: Full container detection from pod specs
+- **Phase 4**: Enhanced ETCD display with inline diagnostics
+- **Phase 5**: Node conditions display with resource correlation
+- **Phase 6**: Kubelet issues display from journald
+- **Phase 7**: OOM root cause display with recommendations
+- **Phase 8**: Inline diagnostics in dashboard (2-line format)
+- Event message truncation for scannable diagnostic panel
+- "Show, Don't Ask" principle applied throughout
 
 ---
 

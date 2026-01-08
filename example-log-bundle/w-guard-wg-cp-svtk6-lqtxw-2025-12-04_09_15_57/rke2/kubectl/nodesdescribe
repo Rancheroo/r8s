@@ -1,1 +1,0 @@
-Error from server (Forbidden): nodes is forbidden: User "system:node:w-guard-wg-cp-svtk6-lqtxw" cannot list resource "nodes" in API group "" at the cluster scope: node 'w-guard-wg-cp-svtk6-lqtxw' cannot read all nodes, only its own Node object
