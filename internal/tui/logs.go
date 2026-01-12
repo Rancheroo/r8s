@@ -621,6 +621,9 @@ func (a *App) buildDiagnosisSection(state string, restarts int, age string) stri
 	} else if restarts >= 3 {
 		emoji = "🟡"
 		diagnosis = fmt.Sprintf("MODERATE RESTARTS\n     %d restarts detected\n     Container experiencing some instability", restarts)
+	} else if strings.Contains(stateUpper, "RUNNING") || strings.Contains(stateUpper, "COMPLETED") {
+		emoji = "✅"
+		diagnosis = "POD HEALTHY\n     Container is running normally\n     Press [l] to view container logs"
 	} else {
 		emoji = "ℹ️"
 		diagnosis = "NO LOGS GENERATED\n     Container either:\n     • Never started successfully\n     • Started but didn't write any logs\n     • Logs not captured in bundle"
@@ -979,7 +982,7 @@ func (a *App) renderClusterEventPanel() string {
 	var eventItem *AttentionItem
 	for i := range a.attentionItems {
 		item := &a.attentionItems[i]
-		if item.ResourceType == "event" && item.Title == a.currentView.eventReason {
+		if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
 			eventItem = item
 			break
 		}
