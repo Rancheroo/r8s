@@ -962,3 +962,186 @@ Next steps:
 		status,
 	)
 }
+
+// renderClusterEventPanel renders the cluster event drill-down panel (v0.6.1)
+// Shows affected pods list when user presses Enter on cluster event
+func (a *App) renderClusterEventPanel() string {
+	breadcrumb := breadcrumbStyle.Render(fmt.Sprintf("Attention Dashboard > Cluster Event: %s", a.currentView.eventReason))
+
+	// Find the cluster event item in attention items
+	var eventItem *AttentionItem
+	for i := range a.attentionItems {
+		item := &a.attentionItems[i]
+		if item.ResourceType == "event" && strings.Contains(item.Title, a.currentView.eventReason) {
+			eventItem = item
+			break
+		}
+	}
+
+	if eventItem == nil || len(eventItem.AffectedPods) == 0 {
+		// Fallback if event not found
+		return a.renderClusterEventFallback(breadcrumb)
+	}
+
+	// Build header with event summary
+	headerText := fmt.Sprintf("━━━ CLUSTER EVENT: %s ━━━", a.currentView.eventReason)
+	header := lipgloss.NewStyle().
+		Foreground(colorRed).
+		Bold(true).
+		Render(headerText)
+
+	summaryText := fmt.Sprintf("⚠️  %d occurrences across %d pods", eventItem.Count, len(eventItem.AffectedPods))
+	summary := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Render(summaryText)
+
+	// Build affected pods section
+	podsHeader := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Bold(true).
+		Render("━━━ AFFECTED PODS ━━━")
+
+	var podLines []string
+
+	// Show up to 9 pods (numbered 1-9 for keyboard selection)
+	maxPods := 9
+	displayPods := eventItem.AffectedPods
+	if len(displayPods) > maxPods {
+		displayPods = displayPods[:maxPods]
+	}
+
+	// Get pod details from datasource to enrich listing
+	var allPods []rancher.Pod
+	if a.dataSource != nil {
+		allPods, _ = a.dataSource.GetAllPods()
+	}
+
+	for i, podName := range displayPods {
+		// Find pod details
+		var pod *rancher.Pod
+		for j := range allPods {
+			if allPods[j].Name == podName {
+				pod = &allPods[j]
+				break
+			}
+		}
+
+		// Get event count for this pod
+		eventCount := eventItem.AffectedPodCounts[podName]
+
+		// Build pod line with status indicators
+		emoji := "💀"
+		status := "Unknown"
+		namespace := "unknown"
+
+		if pod != nil {
+			status = pod.KubectlStatus
+			if status == "" {
+				status = pod.State
+			}
+
+			// Extract namespace
+			namespace = pod.NamespaceID
+			if strings.Contains(namespace, ":") {
+				parts := strings.Split(namespace, ":")
+				if len(parts) > 1 {
+					namespace = parts[1]
+				}
+			}
+
+			// Choose emoji based on state
+			stateUpper := strings.ToUpper(status)
+			if strings.Contains(stateUpper, "CRASHLOOP") {
+				emoji = "💀"
+			} else if strings.Contains(stateUpper, "ERROR") || strings.Contains(stateUpper, "FAILED") {
+				emoji = "🔴"
+			} else if strings.Contains(stateUpper, "IMAGEPULL") {
+				emoji = "🚫"
+			} else if strings.Contains(stateUpper, "PENDING") {
+				emoji = "⏳"
+			}
+		}
+
+		podLine := fmt.Sprintf("%d. %s %-30s  %3d events    %-20s  %s",
+			i+1, emoji, truncateString(podName, 30), eventCount, truncateString(namespace, 20), status)
+		podLines = append(podLines, podLine)
+	}
+
+	podsContent := strings.Join(podLines, "\n")
+
+	// Build actions section
+	actionsHeader := lipgloss.NewStyle().
+		Foreground(colorCyan).
+		Bold(true).
+		Render("━━━ ACTIONS ━━━")
+
+	actions := `1. Press number (1-9) to view pod diagnostic panel
+2. Review event message patterns for common root cause
+3. Check if pods share namespace or image`
+
+	// Combine all sections
+	content := strings.Join([]string{
+		header,
+		summary,
+		"",
+		podsHeader,
+		podsContent,
+		"",
+		actionsHeader,
+		actions,
+	}, "\n")
+
+	box := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorRed).
+		Padding(1, 2).
+		Width(a.width - 4).
+		Render(content)
+
+	status := statusStyle.Render(" [1-9]=select pod  [Esc]=back to dashboard  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		box,
+		"",
+		status,
+	)
+}
+
+// renderClusterEventFallback renders fallback when event not found
+func (a *App) renderClusterEventFallback(breadcrumb string) string {
+	message := lipgloss.NewStyle().
+		Foreground(colorYellow).
+		Render("Event details not available")
+
+	box := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(colorYellow).
+		Padding(2, 4).
+		Width(a.width - 8).
+		Render(message)
+
+	status := statusStyle.Render(" [Esc]=back  [q]=quit ")
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		breadcrumb,
+		"",
+		box,
+		"",
+		status,
+	)
+}
+
+// truncateString truncates a string to maxLen and adds... if needed
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen < 3 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-3] + "..."
+}
