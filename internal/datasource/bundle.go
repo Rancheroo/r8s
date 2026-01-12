@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
 	"github.com/Rancheroo/r8s/internal/rancher"
@@ -11,7 +12,9 @@ import (
 
 // BundleDataSource uses bundle files for offline data
 type BundleDataSource struct {
-	bundle *bundle.Bundle
+	bundle           *bundle.Bundle
+	kubectlPodsCache []rancher.Pod
+	kubectlPodsOnce  sync.Once
 }
 
 // NewBundleDataSource creates a new bundle data source
@@ -28,6 +31,15 @@ func NewBundleDataSource(bundlePath string, verbose bool) (*BundleDataSource, er
 	}
 
 	return &BundleDataSource{bundle: b}, nil
+}
+
+// getKubectlPods returns cached kubectl pods, parsing once and caching the result
+func (ds *BundleDataSource) getKubectlPods() ([]rancher.Pod, error) {
+	var parseErr error
+	ds.kubectlPodsOnce.Do(func() {
+		ds.kubectlPodsCache, parseErr = bundle.ParsePods(ds.bundle.ExtractPath)
+	})
+	return ds.kubectlPodsCache, parseErr
 }
 
 // GetClusters returns a single cluster from bundle metadata
@@ -130,7 +142,7 @@ func (ds *BundleDataSource) GetPods(projectID, namespace string) ([]rancher.Pod,
 	}
 
 	// Parse kubectl pods directly for enriched data
-	kubectlPods, err := bundle.ParsePods(ds.bundle.ExtractPath)
+	kubectlPods, err := ds.getKubectlPods()
 	kubectlPodsFound := false
 	if err == nil && len(kubectlPods) > 0 {
 		kubectlPodsFound = true
@@ -287,7 +299,7 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 // v0.6.2: Enhanced to parse kubectl pods READY column for full container count
 func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, error) {
 	// First try kubectl pods output which has READY column showing container count
-	kubectlPods, err := bundle.ParsePods(ds.bundle.ExtractPath)
+	kubectlPods, err := ds.getKubectlPods()
 	if err == nil {
 		for _, p := range kubectlPods {
 			if p.NamespaceID == namespace && p.Name == pod {

@@ -70,6 +70,10 @@ type AttentionItem struct {
 	// Expandable content for aggregate items (events)
 	AffectedPods      []string       // Top 10 pod names involved in this event
 	AffectedPodCounts map[string]int // Event count per pod
+
+	// Event-specific fields
+	EventReason string // Parsed event reason (e.g., "BackOff", "Failed")
+	EventType   string // Event type (e.g., "Warning", "Normal")
 }
 
 // ComputeAttentionItems runs all signal detectors and returns prioritized list of issues

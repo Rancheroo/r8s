@@ -6,7 +6,6 @@ package tui
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -285,7 +284,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var eventItem *AttentionItem
 				for i := range a.attentionItems {
 					item := &a.attentionItems[i]
-					if item.ResourceType == "event" && strings.Contains(item.Title, a.currentView.eventReason) {
+					if item.ResourceType == "event" && item.Title == a.currentView.eventReason {
 						eventItem = item
 						break
 					}
@@ -301,13 +300,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						if err == nil {
 							for _, pod := range allPods {
 								if pod.Name == podName {
-									podNamespace = pod.NamespaceID
-									if strings.Contains(podNamespace, ":") {
-										parts := strings.Split(podNamespace, ":")
-										if len(parts) > 1 {
-											podNamespace = parts[1]
-										}
-									}
+									podNamespace = extractNamespace(pod.NamespaceID)
 									break
 								}
 							}

@@ -1654,4 +1654,3 @@ back/forward
 - Development Team
 
 For detailed commit history, see: `git log --oneline`
-- Comprehensive unit test suite with race detection (53 tests)

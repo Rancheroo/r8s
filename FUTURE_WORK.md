@@ -13,18 +13,21 @@ This document tracks feature ideas and enhancements that have been identified bu
 All backend parsers and data structures ready for v0.6.x consumption:
 
 #### v0.5.10 "Data Source Enrichment" ✅ SHIPPED
+
 - Enhanced ETCD parser (member count, leader ID, DB size, compaction recs)
 - Node conditions parser (MemoryPressure, DiskPressure, resource capacity)
 - DataSource interface extensions (GetEtcdDetails, GetNodeConditions)
 - ~480 lines of backend capabilities, zero UI changes
 
 #### v0.5.11 "Kubelet & OOM Analysis" ✅ SHIPPED
+
 - Kubelet log parser (10+ error patterns from journald)
 - OOM root cause analyzer (container vs node OOM)
 - Container resource parser (CPU/memory limits, QoS classes)
 - ~382 lines of detection capabilities, zero UI changes
 
 #### v0.5.12 "Diagnostic Context Types" ✅ SHIPPED
+
 - DiagnosticContext struct (RootCause, Recommendation, Severity, FixPriority)
 - Context generators (CrashLoop, OOM, ImagePull, Node, ETCD, Kubelet)
 - Recommendation engine (severity/priority mapping)
@@ -856,4 +859,3 @@ All backend parsers and data structures ready for v0.6.x consumption:
 - Mark items as ✅ when moved to active development
 
 Last updated: 2025-12-10 (v0.3.9 - Tunable scan depth shipped)
-- **Description**: Cache expensive namespace health computation instead of recalculating on every render

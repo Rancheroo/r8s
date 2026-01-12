@@ -501,15 +501,27 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 		return nil
 	}
 
-	// Extract event reason from Title (e.g., "190× BackOff" -> "BackOff")
-	titleParts := strings.Split(item.Title, "×")
-	eventReason := strings.TrimSpace(item.Title)
-	if len(titleParts) > 1 {
-		eventReason = strings.TrimSpace(titleParts[1])
+	// Prefer EventReason field if available, otherwise parse from Title
+	var eventReason string
+	if item.EventReason != "" {
+		eventReason = item.EventReason
+	} else {
+		// Fallback: Extract event reason from Title (e.g., "190× BackOff" -> "BackOff")
+		titleParts := strings.Split(item.Title, "×")
+		eventReason = strings.TrimSpace(item.Title)
+		if len(titleParts) > 1 {
+			eventReason = strings.TrimSpace(titleParts[1])
+		}
 	}
 
 	// Push current view to stack
 	a.viewStack = append(a.viewStack, a.currentView)
+
+	// Use actual event type, fallback to Warning if not set
+	eventType := item.EventType
+	if eventType == "" {
+		eventType = "Warning"
+	}
 
 	// Navigate to cluster event view
 	a.currentView = ViewContext{
@@ -517,7 +529,7 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 		clusterID:   item.ClusterID,
 		clusterName: item.ClusterName,
 		eventReason: eventReason,
-		eventType:   "Warning", // Most cluster events are warnings
+		eventType:   eventType,
 	}
 
 	// No loading needed - we already have the data
