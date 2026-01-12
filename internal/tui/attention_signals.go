@@ -432,6 +432,8 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 				ResourceType:      "event",
 				AffectedPods:      affectedPods,
 				AffectedPodCounts: stats.pods, // Store full count map for display
+				EventReason:       reason,     // v0.6.2: Populate EventReason for matching
+				EventType:         "Warning",  // v0.6.2: Populate EventType
 				Timestamp:         time.Now(),
 			})
 		}
