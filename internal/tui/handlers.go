@@ -24,16 +24,40 @@ func (a *App) handleEnter() tea.Cmd {
 	switch a.currentView.viewType {
 	case ViewAttention:
 		// Jump to pod logs from attention dashboard (for pod issues)
+		// CRITICAL FIX: ViewAttention groups by severity (critical→warning→info)
+		// Must replicate this grouping to match visual order with cursor position
 		if len(a.attentionItems) == 0 {
 			return nil
 		}
 
-		// Get the currently selected item by cursor position
-		if a.attentionCursor >= len(a.attentionItems) {
+		// Get displayed items (respects sorting and capping)
+		displayedItems := a.getDisplayedItems()
+
+		// Group items by severity (same as renderAttentionDashboard)
+		var critical, warning, info []AttentionItem
+		for _, item := range displayedItems {
+			switch item.Severity {
+			case SeverityCritical:
+				critical = append(critical, item)
+			case SeverityWarning:
+				warning = append(warning, item)
+			case SeverityInfo:
+				info = append(info, item)
+			}
+		}
+
+		// Build visual order: critical → warning → info
+		visualOrder := make([]AttentionItem, 0, len(displayedItems))
+		visualOrder = append(visualOrder, critical...)
+		visualOrder = append(visualOrder, warning...)
+		visualOrder = append(visualOrder, info...)
+
+		// Validate cursor is in bounds
+		if a.attentionCursor < 0 || a.attentionCursor >= len(visualOrder) {
 			return nil
 		}
 
-		matchedItem := &a.attentionItems[a.attentionCursor]
+		matchedItem := &visualOrder[a.attentionCursor]
 
 		// v0.6.1: Handle cluster event drill-down
 		if matchedItem.ResourceType == "event" && len(matchedItem.AffectedPods) > 0 {
