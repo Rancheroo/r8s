@@ -9,6 +9,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.4] - 2026-01-12 "Node Conditions Display"
+
+### Added ✨
+
+- **Node Pressure Indicators in Attention Dashboard** - Comprehensive node health monitoring
+  - Consumes v0.5.10 Node Conditions parser (`GetNodeConditions()`) for full node diagnostics
+  - **Memory Pressure Detection**: Shows nodes with MemoryPressure=true with utilization percentage
+    - Calculates memory usage: (Capacity - Allocatable) / Capacity × 100
+    - Example: "🔴 Node worker-1 Memory Pressure - Memory: 95% used"
+    - Critical severity for immediate visibility
+  - **Disk Pressure Detection**: Flags nodes with DiskPressure=true
+    - Example: "💿 Node worker-2 Disk Pressure - Disk space low"
+    - Critical severity to prevent storage exhaustion
+  - **PID Pressure Detection**: Identifies nodes with PIDPressure=true
+    - Example: "⚡ Node worker-3 PID Pressure - Process IDs exhausted"
+    - Warning severity for early intervention
+  - **Taint/Cordon Correlation**: Shows node scheduling status with pressure indicators
+    - Displays taint counts and cordon status in item descriptions
+    - Example: "Memory: 95% used • Cordoned, 2 taint(s)"
+    - Helps correlate resource pressure with node availability
+
+### Technical - v0.6.4
+
+- Added `detectNodeIssues()` function in `internal/tui/attention_signals.go`
+  - Integrated as Tier 2.5 (between cluster health and events)
+  - Iterates through all nodes from `GetNodeConditions()`
+  - Checks MemoryPressure, DiskPressure, PIDPressure boolean flags
+- Added helper functions for resource calculation:
+  - `calculateMemoryUsage()` - Computes memory utilization percentage
+  - `parseMemoryToBytes()` - Converts K8s memory strings (Ki/Mi/Gi/Ti) to bytes
+  - `getTaintInfo()` - Summarizes node taints and cordon status
+- Memory parsing handles: "16Gi" → 17179869184 bytes, "1024Mi" → 1073741824 bytes
+- Graceful handling when GetNodeConditions() returns nil (bundle missing nodesdescribe)
+
+### Detection Logic - v0.6.4
+
+```go
+nodes := dataSource.GetNodeConditions()
+for _, node := range nodes {
+    if node.MemoryPressure {
+        memUsedPct := (capBytes - allocBytes) / capBytes * 100
+        items = append(items, AttentionItem{
+            Title: fmt.Sprintf("Node %s Memory Pressure", node.Name),
+            Description: fmt.Sprintf("Memory: %.0f%% used", memUsedPct),
+            Severity: SeverityCritical,
+            Emoji: "🔴",
+        })
+    }
+    if node.DiskPressure {
+        items = append(items, AttentionItem{
+            Title: fmt.Sprintf("Node %s Disk Pressure", node.Name),
+            Description: "Disk space low",
+            Severity: SeverityCritical,
+        })
+    }
+}
+```
+
+### Success Criteria - v0.6.4
+
+| Test Case | Expected Dashboard Display | Severity |
+|-----------|---------------------------|----------|
+| Node with MemoryPressure=true at 95% | "Node worker-1 Memory Pressure - Memory: 95% used" | 🔴 Critical |
+| Node with DiskPressure=true | "Node worker-2 Disk Pressure - Disk space low" | 💿 Critical |
+| Node with PIDPressure=true | "Node worker-3 PID Pressure - Process IDs exhausted" | ⚡ Warning |
+| Node with pressure + cordoned | "Memory: 95% used • Cordoned, 2 taint(s)" | 🔴 Critical |
+
+### Impact Summary - v0.6.4
+
+- ✅ **Proactive node monitoring** - Surface resource pressure before cluster failure
+- ✅ **Resource correlation** - Memory pressure linked to actual utilization percentages
+- ✅ **Scheduling awareness** - Taint/cordon status shown alongside pressure indicators
+- ✅ **Zero configuration** - Works automatically with bundle node data
+- ✅ **Parser reuse** - Leverages v0.5.10 foundation (no new parsers needed)
+
+### Philosophy - v0.6.4
+
+**"Surface Pressure Before Failure"** - Node resource pressure often precedes catastrophic failures (OOM kills, disk full, PID exhaustion). Display warnings early so users can take preventive action before workloads start failing.
+
+---
+
 ## [0.6.3] - 2026-01-12 "ETCD Health Diagnostics"
 
 ### Added ✨

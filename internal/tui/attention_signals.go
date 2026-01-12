@@ -91,6 +91,9 @@ func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionI
 	// Tier 2: Cluster Health (Critical)
 	items = append(items, detectClusterHealth(ds)...)
 
+	// Tier 2.5: Node Conditions (Critical for pressure - v0.6.4)
+	items = append(items, detectNodeIssues(ds)...)
+
 	// Tier 3: Events (Warning)
 	items = append(items, detectEventIssues(ds)...)
 
@@ -635,6 +638,157 @@ func detectSystemHealth(ds datasource.DataSource) []AttentionItem {
 	}
 
 	return items
+}
+
+// detectNodeIssues detects node pressure conditions (v0.6.4)
+func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
+	var items []AttentionItem
+
+	nodes, err := ds.GetNodeConditions()
+	if err != nil || nodes == nil {
+		return items
+	}
+
+	for _, node := range nodes {
+		// Memory Pressure Detection
+		if node.MemoryPressure {
+			memUsedPct := calculateMemoryUsage(node.MemoryCapacity, node.MemoryAllocatable)
+			desc := fmt.Sprintf("Memory: %.0f%% used", memUsedPct)
+
+			// Add taint/cordon info if present
+			taintInfo := getTaintInfo(node)
+			if taintInfo != "" {
+				desc += " • " + taintInfo
+			}
+
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s Memory Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityCritical,
+				Emoji:        "🔴",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				Timestamp:    time.Now(),
+			})
+		}
+
+		// Disk Pressure Detection
+		if node.DiskPressure {
+			desc := "Disk space low"
+
+			// Add taint/cordon info if present
+			taintInfo := getTaintInfo(node)
+			if taintInfo != "" {
+				desc += " • " + taintInfo
+			}
+
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s Disk Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityCritical,
+				Emoji:        "💿",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				Timestamp:    time.Now(),
+			})
+		}
+
+		// PID Pressure Detection
+		if node.PIDPressure {
+			desc := "Process IDs exhausted"
+
+			// Add taint/cordon info if present
+			taintInfo := getTaintInfo(node)
+			if taintInfo != "" {
+				desc += " • " + taintInfo
+			}
+
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s PID Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityWarning,
+				Emoji:        "⚡",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				Timestamp:    time.Now(),
+			})
+		}
+	}
+
+	return items
+}
+
+// calculateMemoryUsage calculates percentage of memory used
+// Based on: (Capacity - Allocatable) / Capacity * 100
+func calculateMemoryUsage(capacity, allocatable string) float64 {
+	capBytes := parseMemoryToBytes(capacity)
+	allocBytes := parseMemoryToBytes(allocatable)
+	if capBytes == 0 {
+		return 0
+	}
+	return float64(capBytes-allocBytes) / float64(capBytes) * 100
+}
+
+// parseMemoryToBytes converts Kubernetes memory strings to bytes
+// e.g., "16Gi" -> 17179869184, "1024Mi" -> 1073741824, "1024Ki" -> 1048576
+func parseMemoryToBytes(s string) int64 {
+	if s == "" {
+		return 0
+	}
+
+	// Parse the numeric part and unit
+	var value int64
+	var unit string
+
+	// Try to parse with common Kubernetes units
+	if strings.HasSuffix(s, "Ki") {
+		fmt.Sscanf(s, "%d", &value)
+		unit = "Ki"
+	} else if strings.HasSuffix(s, "Mi") {
+		fmt.Sscanf(s, "%d", &value)
+		unit = "Mi"
+	} else if strings.HasSuffix(s, "Gi") {
+		fmt.Sscanf(s, "%d", &value)
+		unit = "Gi"
+	} else if strings.HasSuffix(s, "Ti") {
+		fmt.Sscanf(s, "%d", &value)
+		unit = "Ti"
+	} else {
+		// Try raw bytes
+		fmt.Sscanf(s, "%d", &value)
+		return value
+	}
+
+	// Convert to bytes based on unit
+	switch unit {
+	case "Ki":
+		return value * 1024
+	case "Mi":
+		return value * 1024 * 1024
+	case "Gi":
+		return value * 1024 * 1024 * 1024
+	case "Ti":
+		return value * 1024 * 1024 * 1024 * 1024
+	}
+
+	return 0
+}
+
+// getTaintInfo returns a summary of node taints/cordons
+func getTaintInfo(node datasource.NodeConditions) string {
+	var parts []string
+
+	if node.Unschedulable {
+		parts = append(parts, "Cordoned")
+	}
+
+	if len(node.Taints) > 0 {
+		// Show first taint as example (avoid long strings)
+		taintSummary := fmt.Sprintf("%d taint(s)", len(node.Taints))
+		parts = append(parts, taintSummary)
+	}
+
+	return strings.Join(parts, ", ")
 }
 
 // isHealthyReadyStatus checks if a pod's ready status indicates all containers are ready
