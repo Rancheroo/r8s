@@ -121,17 +121,18 @@ Annotations:        alpha.kubernetes.io/provided-node-ip: 134.199.144.255
                     rke2.io/node-env: {"RKE2_DATA_DIR":"/var/lib/rancher/rke2"}
                     volumes.kubernetes.io/controller-managed-attach-detach: true
 CreationTimestamp:  Thu, 20 Nov 2025 00:48:44 +0000
-Taints:             <none>
-Unschedulable:      false
+Taints:             node.kubernetes.io/memory-pressure:NoSchedule
+                    node.kubernetes.io/unschedulable:NoSchedule
+Unschedulable:      true
 Lease:              Failed to get lease: leases.coordination.k8s.io "w-guard-wg-wk-pfvjr-4xgxg" is forbidden: User "system:kube-proxy" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "kube-node-lease"
 Conditions:
-  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
-  ----                 ------  -----------------                 ------------------                ------                       -------
-  NetworkUnavailable   False   Thu, 20 Nov 2025 00:49:39 +0000   Thu, 20 Nov 2025 00:49:39 +0000   CalicoIsUp                   Calico is running on this node
-  MemoryPressure       False   Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
-  DiskPressure         False   Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
-  PIDPressure          False   Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
-  Ready                True    Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:49:24 +0000   KubeletReady                 kubelet is posting ready status
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                         Message
+  ----                 ------  -----------------                 ------------------                ------                         -------
+  NetworkUnavailable   False   Thu, 20 Nov 2025 00:49:39 +0000   Thu, 20 Nov 2025 00:49:39 +0000   CalicoIsUp                     Calico is running on this node
+  MemoryPressure       True    Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasInsufficientMemory   kubelet has memory pressure
+  DiskPressure         False   Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasNoDiskPressure       kubelet has no disk pressure
+  PIDPressure          False   Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasSufficientPID        kubelet has sufficient PID available
+  Ready                False   Wed, 07 Jan 2026 23:31:40 +0000   Thu, 20 Nov 2025 00:49:24 +0000   KubeletNotReady                Node experiencing memory pressure
 Addresses:
   InternalIP:  134.199.144.255
   Hostname:    w-guard-wg-wk-pfvjr-4xgxg
@@ -145,7 +146,7 @@ Allocatable:
   cpu:                2
   ephemeral-storage:  78900761129
   hugepages-2Mi:      0
-  memory:             4005820Ki
+  memory:             400582Ki
   pods:               110
 System Info:
   Machine ID:                 f8d1afb36580fadbc723f753691e6469
@@ -209,9 +210,9 @@ Conditions:
   ----                 ------  -----------------                 ------------------                ------                       -------
   NetworkUnavailable   False   Thu, 20 Nov 2025 00:49:23 +0000   Thu, 20 Nov 2025 00:49:23 +0000   CalicoIsUp                   Calico is running on this node
   MemoryPressure       False   Wed, 07 Jan 2026 23:30:22 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
-  DiskPressure         False   Wed, 07 Jan 2026 23:30:22 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  DiskPressure         True    Wed, 07 Jan 2026 23:30:22 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasDiskPressure       kubelet has disk pressure
   PIDPressure          False   Wed, 07 Jan 2026 23:30:22 +0000   Thu, 20 Nov 2025 00:48:44 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
-  Ready                True    Wed, 07 Jan 2026 23:30:22 +0000   Thu, 20 Nov 2025 00:49:11 +0000   KubeletReady                 kubelet is posting ready status
+  Ready                False   Wed, 07 Jan 2026 23:30:22 +0000   Thu, 20 Nov 2025 00:49:11 +0000   KubeletNotReady              Node experiencing disk pressure
 Addresses:
   InternalIP:  170.64.187.24
   Hostname:    w-guard-wg-wk-pfvjr-ch7xq
@@ -281,7 +282,7 @@ Annotations:        alpha.kubernetes.io/provided-node-ip: 209.38.91.232
                     rke2.io/node-env: {"RKE2_DATA_DIR":"/var/lib/rancher/rke2"}
                     volumes.kubernetes.io/controller-managed-attach-detach: true
 CreationTimestamp:  Thu, 20 Nov 2025 00:48:43 +0000
-Taints:             <none>
+Taints:             node.kubernetes.io/pid-pressure:NoExecute
 Unschedulable:      false
 Lease:              Failed to get lease: leases.coordination.k8s.io "w-guard-wg-wk-pfvjr-g4m8r" is forbidden: User "system:kube-proxy" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "kube-node-lease"
 Conditions:
@@ -290,8 +291,8 @@ Conditions:
   NetworkUnavailable   False   Sat, 13 Dec 2025 14:56:26 +0000   Sat, 13 Dec 2025 14:56:26 +0000   CalicoIsUp                   Calico is running on this node
   MemoryPressure       False   Wed, 07 Jan 2026 23:31:39 +0000   Sat, 13 Dec 2025 14:56:21 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
   DiskPressure         False   Wed, 07 Jan 2026 23:31:39 +0000   Sat, 13 Dec 2025 14:56:21 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
-  PIDPressure          False   Wed, 07 Jan 2026 23:31:39 +0000   Sat, 13 Dec 2025 14:56:21 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
-  Ready                True    Wed, 07 Jan 2026 23:31:39 +0000   Sat, 13 Dec 2025 14:57:02 +0000   KubeletReady                 kubelet is posting ready status
+  PIDPressure          True    Wed, 07 Jan 2026 23:31:39 +0000   Sat, 13 Dec 2025 14:56:21 +0000   KubeletHasInsufficientPID    kubelet has insufficient PID available
+  Ready                False   Wed, 07 Jan 2026 23:31:39 +0000   Sat, 13 Dec 2025 14:57:02 +0000   KubeletNotReady              Node experiencing PID pressure
 Addresses:
   InternalIP:  209.38.91.232
   Hostname:    w-guard-wg-wk-pfvjr-g4m8r

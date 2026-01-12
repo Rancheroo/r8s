@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,6 +91,9 @@ func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionI
 
 	// Tier 2: Cluster Health (Critical)
 	items = append(items, detectClusterHealth(ds)...)
+
+	// Tier 2.5: Node Conditions (Critical for pressure - v0.6.4)
+	items = append(items, detectNodeIssues(ds)...)
 
 	// Tier 3: Events (Warning)
 	items = append(items, detectEventIssues(ds)...)
@@ -635,6 +639,194 @@ func detectSystemHealth(ds datasource.DataSource) []AttentionItem {
 	}
 
 	return items
+}
+
+// detectNodeIssues detects node pressure conditions (v0.6.4)
+func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
+	var items []AttentionItem
+
+	nodes, err := ds.GetNodeConditions()
+	if err != nil || nodes == nil {
+		return items
+	}
+
+	for _, node := range nodes {
+		// Cache taint info to avoid redundant calls
+		taintInfo := getTaintInfo(node)
+
+		// Memory Pressure Detection
+		if node.MemoryPressure {
+			systemReservedPct := calculateSystemReservedPercent(node.MemoryCapacity, node.MemoryAllocatable)
+			desc := fmt.Sprintf("System Reserved: %.0f%%", systemReservedPct)
+
+			// Add taint/cordon info if present
+			if taintInfo != "" {
+				desc += " • " + taintInfo
+			}
+
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s Memory Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityCritical,
+				Emoji:        "🔴",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				Timestamp:    time.Now(),
+			})
+		}
+
+		// Disk Pressure Detection
+		if node.DiskPressure {
+			desc := "Disk space low"
+
+			// Add taint/cordon info if present
+			if taintInfo != "" {
+				desc += " • " + taintInfo
+			}
+
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s Disk Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityCritical,
+				Emoji:        "💿",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				Timestamp:    time.Now(),
+			})
+		}
+
+		// PID Pressure Detection
+		if node.PIDPressure {
+			desc := "Process IDs exhausted"
+
+			// Add taint/cordon info if present
+			if taintInfo != "" {
+				desc += " • " + taintInfo
+			}
+
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s PID Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityWarning,
+				Emoji:        "⚡",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				Timestamp:    time.Now(),
+			})
+		}
+	}
+
+	return items
+}
+
+// calculateSystemReservedPercent calculates percentage of system reserved memory
+// Based on: (Capacity - Allocatable) / Capacity * 100
+func calculateSystemReservedPercent(capacity, allocatable string) float64 {
+	capBytes := parseMemoryToBytes(capacity)
+	allocBytes := parseMemoryToBytes(allocatable)
+	if capBytes == 0 {
+		return 0
+	}
+	return float64(capBytes-allocBytes) / float64(capBytes) * 100
+}
+
+// parseMemoryToBytes converts Kubernetes memory strings to bytes
+// e.g., "16Gi" -> 17179869184, "1024Mi" -> 1073741824, "1024Ki" -> 1048576
+// Supports decimal values (e.g., "1.5Gi") and various units (Ki, Mi, Gi, Ti, Pi, Ei)
+func parseMemoryToBytes(s string) int64 {
+	if s == "" {
+		return 0
+	}
+
+	// Parse the numeric part and unit
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0
+	}
+
+	// Check for negative values
+	if strings.HasPrefix(s, "-") {
+		return 0
+	}
+
+	// Extract numeric part and unit
+	var numStr string
+	var unit string
+
+	// Find where the numeric part ends
+	for i, r := range s {
+		if (r < '0' || r > '9') && r != '.' {
+			numStr = s[:i]
+			unit = s[i:]
+			break
+		}
+	}
+
+	// If no unit found, treat entire string as numeric (bytes)
+	if numStr == "" {
+		numStr = s
+		unit = ""
+	}
+
+	// Parse the numeric value
+	value, err := strconv.ParseFloat(numStr, 64)
+	if err != nil || value < 0 {
+		return 0
+	}
+
+	// Convert to bytes based on unit
+	multiplier := int64(1)
+	switch strings.ToLower(unit) {
+	case "":
+		// Raw bytes
+		multiplier = 1
+	case "k":
+		multiplier = 1000
+	case "ki":
+		multiplier = 1024
+	case "m":
+		multiplier = 1000 * 1000
+	case "mi":
+		multiplier = 1024 * 1024
+	case "g":
+		multiplier = 1000 * 1000 * 1000
+	case "gi":
+		multiplier = 1024 * 1024 * 1024
+	case "t":
+		multiplier = 1000 * 1000 * 1000 * 1000
+	case "ti":
+		multiplier = 1024 * 1024 * 1024 * 1024
+	case "p":
+		multiplier = 1000 * 1000 * 1000 * 1000 * 1000
+	case "pi":
+		multiplier = 1024 * 1024 * 1024 * 1024 * 1024
+	case "e":
+		multiplier = 1000 * 1000 * 1000 * 1000 * 1000 * 1000
+	case "ei":
+		multiplier = 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+	default:
+		// Unknown unit, return 0
+		return 0
+	}
+
+	return int64(value * float64(multiplier))
+}
+
+// getTaintInfo returns a summary of node taints/cordons
+func getTaintInfo(node datasource.NodeConditions) string {
+	var parts []string
+
+	if node.Unschedulable {
+		parts = append(parts, "Cordoned")
+	}
+
+	if len(node.Taints) > 0 {
+		// Show first taint as example (avoid long strings)
+		taintSummary := fmt.Sprintf("%d taint(s)", len(node.Taints))
+		parts = append(parts, taintSummary)
+	}
+
+	return strings.Join(parts, ", ")
 }
 
 // isHealthyReadyStatus checks if a pod's ready status indicates all containers are ready
