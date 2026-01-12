@@ -70,6 +70,10 @@ type AttentionItem struct {
 	// Expandable content for aggregate items (events)
 	AffectedPods      []string       // Top 10 pod names involved in this event
 	AffectedPodCounts map[string]int // Event count per pod
+
+	// Event-specific fields
+	EventReason string // Parsed event reason (e.g., "BackOff", "Failed")
+	EventType   string // Event type (e.g., "Warning", "Normal")
 }
 
 // ComputeAttentionItems runs all signal detectors and returns prioritized list of issues
@@ -428,6 +432,8 @@ func detectEventIssues(ds datasource.DataSource) []AttentionItem {
 				ResourceType:      "event",
 				AffectedPods:      affectedPods,
 				AffectedPodCounts: stats.pods, // Store full count map for display
+				EventReason:       reason,     // v0.6.2: Populate EventReason for matching
+				EventType:         "Warning",  // v0.6.2: Populate EventType
 				Timestamp:         time.Now(),
 			})
 		}

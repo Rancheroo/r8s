@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
 	"github.com/Rancheroo/r8s/internal/rancher"
@@ -11,7 +12,9 @@ import (
 
 // BundleDataSource uses bundle files for offline data
 type BundleDataSource struct {
-	bundle *bundle.Bundle
+	bundle           *bundle.Bundle
+	kubectlPodsCache []rancher.Pod
+	kubectlPodsOnce  sync.Once
 }
 
 // NewBundleDataSource creates a new bundle data source
@@ -28,6 +31,15 @@ func NewBundleDataSource(bundlePath string, verbose bool) (*BundleDataSource, er
 	}
 
 	return &BundleDataSource{bundle: b}, nil
+}
+
+// getKubectlPods returns cached kubectl pods, parsing once and caching the result
+func (ds *BundleDataSource) getKubectlPods() ([]rancher.Pod, error) {
+	var parseErr error
+	ds.kubectlPodsOnce.Do(func() {
+		ds.kubectlPodsCache, parseErr = bundle.ParsePods(ds.bundle.ExtractPath)
+	})
+	return ds.kubectlPodsCache, parseErr
 }
 
 // GetClusters returns a single cluster from bundle metadata
@@ -130,7 +142,7 @@ func (ds *BundleDataSource) GetPods(projectID, namespace string) ([]rancher.Pod,
 	}
 
 	// Parse kubectl pods directly for enriched data
-	kubectlPods, err := bundle.ParsePods(ds.bundle.ExtractPath)
+	kubectlPods, err := ds.getKubectlPods()
 	kubectlPodsFound := false
 	if err == nil && len(kubectlPods) > 0 {
 		kubectlPodsFound = true
@@ -284,7 +296,35 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 }
 
 // GetContainers returns containers from bundle pod info
+// v0.6.2: Enhanced to parse kubectl pods READY column for full container count
 func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, error) {
+	// First try kubectl pods output which has READY column showing container count
+	kubectlPods, err := ds.getKubectlPods()
+	if err == nil {
+		for _, p := range kubectlPods {
+			if p.NamespaceID == namespace && p.Name == pod {
+				// Parse READY column (e.g., "2/2" means 2 total containers)
+				if p.KubectlReady != "" {
+					parts := strings.Split(p.KubectlReady, "/")
+					if len(parts) == 2 {
+						var totalContainers int
+						fmt.Sscanf(parts[1], "%d", &totalContainers)
+
+						if totalContainers > 0 {
+							// Generate container names (container-1, container-2, etc.)
+							containers := make([]string, totalContainers)
+							for i := 0; i < totalContainers; i++ {
+								containers[i] = fmt.Sprintf("container-%d", i+1)
+							}
+							return containers, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Fallback to bundle.Pods if kubectl parsing fails
 	for _, podInfo := range ds.bundle.Pods {
 		if podInfo.Namespace == namespace && podInfo.Name == pod {
 			if len(podInfo.Containers) > 0 {

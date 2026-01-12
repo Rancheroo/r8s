@@ -24,16 +24,40 @@ func (a *App) handleEnter() tea.Cmd {
 	switch a.currentView.viewType {
 	case ViewAttention:
 		// Jump to pod logs from attention dashboard (for pod issues)
+		// CRITICAL FIX: ViewAttention groups by severity (critical→warning→info)
+		// Must replicate this grouping to match visual order with cursor position
 		if len(a.attentionItems) == 0 {
 			return nil
 		}
 
-		// Get the currently selected item by cursor position
-		if a.attentionCursor >= len(a.attentionItems) {
+		// Get displayed items (respects sorting and capping)
+		displayedItems := a.getDisplayedItems()
+
+		// Group items by severity (same as renderAttentionDashboard)
+		var critical, warning, info []AttentionItem
+		for _, item := range displayedItems {
+			switch item.Severity {
+			case SeverityCritical:
+				critical = append(critical, item)
+			case SeverityWarning:
+				warning = append(warning, item)
+			case SeverityInfo:
+				info = append(info, item)
+			}
+		}
+
+		// Build visual order: critical → warning → info
+		visualOrder := make([]AttentionItem, 0, len(displayedItems))
+		visualOrder = append(visualOrder, critical...)
+		visualOrder = append(visualOrder, warning...)
+		visualOrder = append(visualOrder, info...)
+
+		// Validate cursor is in bounds
+		if a.attentionCursor < 0 || a.attentionCursor >= len(visualOrder) {
 			return nil
 		}
 
-		matchedItem := &a.attentionItems[a.attentionCursor]
+		matchedItem := &visualOrder[a.attentionCursor]
 
 		// v0.6.1: Handle cluster event drill-down
 		if matchedItem.ResourceType == "event" && len(matchedItem.AffectedPods) > 0 {
@@ -501,15 +525,28 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 		return nil
 	}
 
-	// Extract event reason from Title (e.g., "190× BackOff" -> "BackOff")
-	titleParts := strings.Split(item.Title, "×")
-	eventReason := strings.TrimSpace(item.Title)
-	if len(titleParts) > 1 {
-		eventReason = strings.TrimSpace(titleParts[1])
+	// Prefer EventReason field if available, otherwise parse from Title
+	var eventReason string
+	if item.EventReason != "" {
+		eventReason = item.EventReason
+	} else {
+		// Fallback: Extract event reason from Title (e.g., "190× BackOff" -> "BackOff")
+		titleParts := strings.Split(item.Title, "×")
+		if len(titleParts) > 1 {
+			eventReason = strings.TrimSpace(titleParts[1])
+		} else {
+			eventReason = strings.TrimSpace(item.Title)
+		}
 	}
 
 	// Push current view to stack
 	a.viewStack = append(a.viewStack, a.currentView)
+
+	// Use actual event type, fallback to Warning if not set
+	eventType := item.EventType
+	if eventType == "" {
+		eventType = "Warning"
+	}
 
 	// Navigate to cluster event view
 	a.currentView = ViewContext{
@@ -517,7 +554,7 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 		clusterID:   item.ClusterID,
 		clusterName: item.ClusterName,
 		eventReason: eventReason,
-		eventType:   "Warning", // Most cluster events are warnings
+		eventType:   eventType,
 	}
 
 	// No loading needed - we already have the data

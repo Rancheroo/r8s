@@ -9,6 +9,7 @@ import (
 
 	"github.com/Rancheroo/r8s/internal/rancher"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 )
 
 // Package-level pattern slices allocated once for performance
@@ -620,6 +621,9 @@ func (a *App) buildDiagnosisSection(state string, restarts int, age string) stri
 	} else if restarts >= 3 {
 		emoji = "🟡"
 		diagnosis = fmt.Sprintf("MODERATE RESTARTS\n     %d restarts detected\n     Container experiencing some instability", restarts)
+	} else if strings.Contains(stateUpper, "RUNNING") || strings.Contains(stateUpper, "COMPLETED") {
+		emoji = "✅"
+		diagnosis = "POD HEALTHY\n     Container is running normally\n     Press [l] to view container logs"
 	} else {
 		emoji = "ℹ️"
 		diagnosis = "NO LOGS GENERATED\n     Container either:\n     • Never started successfully\n     • Started but didn't write any logs\n     • Logs not captured in bundle"
@@ -701,11 +705,17 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 	var containerLines []string
 	if len(containerMap) > 0 {
 		containerLines = append(containerLines, "")
+		hasFailing := false
 		for containerName, status := range containerMap {
 			// Only show failing containers (❌) - hide healthy ones (✅)
 			if status == "❌" || status == "⚠️" {
 				containerLines = append(containerLines, fmt.Sprintf("  %s %s", status, containerName))
+				hasFailing = true
 			}
+		}
+		// If no failing containers, show all healthy message
+		if !hasFailing {
+			containerLines = append(containerLines, "  ✅ All containers healthy")
 		}
 	}
 
@@ -972,7 +982,7 @@ func (a *App) renderClusterEventPanel() string {
 	var eventItem *AttentionItem
 	for i := range a.attentionItems {
 		item := &a.attentionItems[i]
-		if item.ResourceType == "event" && strings.Contains(item.Title, a.currentView.eventReason) {
+		if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
 			eventItem = item
 			break
 		}
@@ -1062,8 +1072,15 @@ func (a *App) renderClusterEventPanel() string {
 			}
 		}
 
-		podLine := fmt.Sprintf("%d. %s %-30s  %3d events    %-20s  %s",
-			i+1, emoji, truncateString(podName, 30), eventCount, truncateString(namespace, 20), status)
+		// Compute display widths accounting for emoji width
+		emojiWidth := runewidth.StringWidth(emoji)
+		podNameWidth := 30 - emojiWidth + 1 // Adjust for emoji display width
+		if podNameWidth < 10 {
+			podNameWidth = 10
+		}
+
+		podLine := fmt.Sprintf("%d. %s %-*s  %3d events    %-20s  %s",
+			i+1, emoji, podNameWidth, truncateString(podName, podNameWidth), eventCount, truncateString(namespace, 20), status)
 		podLines = append(podLines, podLine)
 	}
 
@@ -1136,12 +1153,14 @@ func (a *App) renderClusterEventFallback(breadcrumb string) string {
 }
 
 // truncateString truncates a string to maxLen and adds... if needed
+// Uses rune count to handle multi-byte UTF-8 characters correctly
 func truncateString(s string, maxLen int) string {
-	if len(s) <= maxLen {
+	runes := []rune(s)
+	if len(runes) <= maxLen {
 		return s
 	}
 	if maxLen < 3 {
-		return s[:maxLen]
+		return string(runes[:maxLen])
 	}
-	return s[:maxLen-3] + "..."
+	return string(runes[:maxLen-3]) + "..."
 }
