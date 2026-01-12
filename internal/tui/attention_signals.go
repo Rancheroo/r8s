@@ -95,6 +95,9 @@ func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionI
 	// Tier 2.5: Node Conditions (Critical for pressure - v0.6.4)
 	items = append(items, detectNodeIssues(ds)...)
 
+	// Tier 2.6: Kubelet Issues (Critical/Warning - v0.6.5)
+	items = append(items, detectKubeletIssues(ds)...)
+
 	// Tier 3: Events (Warning)
 	items = append(items, detectEventIssues(ds)...)
 
@@ -639,6 +642,69 @@ func detectSystemHealth(ds datasource.DataSource) []AttentionItem {
 	}
 
 	return items
+}
+
+// detectKubeletIssues detects kubelet-level issues from journald logs (bundle mode only)
+func detectKubeletIssues(ds datasource.DataSource) []AttentionItem {
+	var items []AttentionItem
+
+	issues, err := ds.GetKubeletIssues()
+	if err != nil || issues == nil {
+		return items
+	}
+
+	for _, issue := range issues {
+		// Threshold: only show significant issues (5+ occurrences)
+		if issue.Count < 5 {
+			continue
+		}
+
+		severity := determineKubeletSeverity(issue.Pattern)
+		emoji := kubeletEmoji(issue.Pattern)
+
+		items = append(items, AttentionItem{
+			Title:        fmt.Sprintf("Kubelet: %s", issue.Pattern),
+			Description:  fmt.Sprintf("%d occurrences", issue.Count),
+			Severity:     severity,
+			Emoji:        emoji,
+			Namespace:    "kubelet",
+			ResourceType: "kubelet",
+			Count:        issue.Count,
+			Timestamp:    time.Now(),
+		})
+	}
+
+	return items
+}
+
+// determineKubeletSeverity assigns severity based on error pattern
+func determineKubeletSeverity(pattern string) AttentionSeverity {
+	switch pattern {
+	case "HTTP 502", "no route to host", "network unreachable":
+		return SeverityCritical
+	case "DNS nameserver limits", "TLS handshake error", "connection timeout":
+		return SeverityWarning
+	default:
+		return SeverityInfo
+	}
+}
+
+// kubeletEmoji returns an appropriate emoji for kubelet error patterns
+func kubeletEmoji(pattern string) string {
+	switch pattern {
+	case "HTTP 502":
+		return "🌐"
+	case "DNS nameserver limits":
+		return "🔍"
+	case "TLS handshake error", "EOF during TLS":
+		return "🔒"
+	case "connection timeout", "remotedialer timeout":
+		return "⏱️"
+	case "no route to host", "network unreachable":
+		return "🚫"
+	default:
+		return "⚙️"
+	}
 }
 
 // detectNodeIssues detects node pressure conditions (v0.6.4)

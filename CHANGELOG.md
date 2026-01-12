@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-01-13
+
+### Added
+- **Kubelet Issues Display**: Attention dashboard now shows kubelet-level issues from journald logs
+  - Detects HTTP 502 errors, DNS limits, TLS handshake errors, connection timeouts
+  - Groups issues by error pattern with occurrence counts
+  - Assigns appropriate severity (HTTP 502 = critical, DNS/TLS = warning)
+  - Threshold of 5+ occurrences to reduce noise
+  - Consumes v0.5.11 kubelet parser for accurate detection
+
 ---
 
 ## [0.6.4] - 2026-01-12 "Node Conditions Display"
