@@ -326,6 +326,11 @@ func (a *App) refreshCurrentView() tea.Cmd {
 	switch a.currentView.viewType {
 	case ViewAttention:
 		return a.fetchAttention()
+	case ViewClusterEvent:
+		// v0.6.1: Cluster event view doesn't need refresh - data already in attentionItems
+		// Just clear loading state immediately
+		a.loading = false
+		return nil
 	case ViewClusters:
 		return a.fetchClusters()
 	case ViewProjects:
