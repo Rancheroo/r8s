@@ -6,6 +6,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,6 +32,7 @@ const (
 	ViewCRDs
 	ViewCRDInstances
 	ViewLogs
+	ViewClusterEvent // v0.6.1: Cluster event drill-down
 )
 
 // ViewContext holds context for the current view
@@ -51,6 +53,9 @@ type ViewContext struct {
 	// Context for logs
 	podName       string
 	containerName string
+	// Context for cluster events (v0.6.1)
+	eventReason string // e.g., "BackOff", "Failed"
+	eventType   string // e.g., "Warning"
 }
 
 // App represents the main TUI application
@@ -264,6 +269,55 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Add character to search query
 				if len(msg.String()) == 1 {
 					a.searchQuery += msg.String()
+				}
+				return a, nil
+			}
+		}
+
+		// CLUSTER EVENT VIEW NAVIGATION (v0.6.1) - Handle before dashboard navigation
+		if a.currentView.viewType == ViewClusterEvent {
+			switch msg.String() {
+			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+				// Jump to pod by number
+				idx := int(msg.String()[0] - '1')
+
+				// Find the event item
+				var eventItem *AttentionItem
+				for i := range a.attentionItems {
+					item := &a.attentionItems[i]
+					if item.ResourceType == "event" && strings.Contains(item.Title, a.currentView.eventReason) {
+						eventItem = item
+						break
+					}
+				}
+
+				if eventItem != nil && idx < len(eventItem.AffectedPods) {
+					podName := eventItem.AffectedPods[idx]
+
+					// Get pod details to find namespace
+					var podNamespace string
+					if a.dataSource != nil {
+						allPods, err := a.dataSource.GetAllPods()
+						if err == nil {
+							for _, pod := range allPods {
+								if pod.Name == podName {
+									podNamespace = pod.NamespaceID
+									if strings.Contains(podNamespace, ":") {
+										parts := strings.Split(podNamespace, ":")
+										if len(parts) > 1 {
+											podNamespace = parts[1]
+										}
+									}
+									break
+								}
+							}
+						}
+					}
+
+					// Navigate to pod diagnostic panel
+					if podNamespace != "" {
+						return a, a.navigateToLogs(a.currentView.clusterID, podNamespace, podName, "")
+					}
 				}
 				return a, nil
 			}
@@ -809,6 +863,11 @@ func (a *App) View() string {
 	// Special rendering for logs view
 	if a.currentView.viewType == ViewLogs {
 		return a.renderLogsView()
+	}
+
+	// Special rendering for cluster event view (v0.6.1)
+	if a.currentView.viewType == ViewClusterEvent {
+		return a.renderClusterEventPanel()
 	}
 
 	// Build view components

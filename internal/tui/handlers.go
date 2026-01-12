@@ -28,24 +28,16 @@ func (a *App) handleEnter() tea.Cmd {
 			return nil
 		}
 
-		// Find matching attention item by pod name from selected row
-		// The table rows are built in the same order as attentionItems
-		podName := safeRowString(selected, "title")
-		if podName == "" {
+		// Get the currently selected item by cursor position
+		if a.attentionCursor >= len(a.attentionItems) {
 			return nil
 		}
 
-		// Find the attention item with matching title (pod name)
-		var matchedItem *AttentionItem
-		for i := range a.attentionItems {
-			if a.attentionItems[i].Title == podName {
-				matchedItem = &a.attentionItems[i]
-				break
-			}
-		}
+		matchedItem := &a.attentionItems[a.attentionCursor]
 
-		if matchedItem == nil {
-			return nil
+		// v0.6.1: Handle cluster event drill-down
+		if matchedItem.ResourceType == "event" && len(matchedItem.AffectedPods) > 0 {
+			return a.handleClusterEventDrillDown(matchedItem)
 		}
 
 		// Only navigate for pod-related issues
@@ -495,4 +487,36 @@ func (a *App) isNamespaceResourceView() bool {
 	return a.currentView.viewType == ViewPods ||
 		a.currentView.viewType == ViewDeployments ||
 		a.currentView.viewType == ViewServices
+}
+
+// handleClusterEventDrillDown navigates to cluster event drill-down view (v0.6.1)
+// Shows affected pods list for cluster-wide events like "190× BackOff"
+func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
+	if item == nil || len(item.AffectedPods) == 0 {
+		return nil
+	}
+
+	// Extract event reason from Title (e.g., "190× BackOff" -> "BackOff")
+	titleParts := strings.Split(item.Title, "×")
+	eventReason := strings.TrimSpace(item.Title)
+	if len(titleParts) > 1 {
+		eventReason = strings.TrimSpace(titleParts[1])
+	}
+
+	// Push current view to stack
+	a.viewStack = append(a.viewStack, a.currentView)
+
+	// Navigate to cluster event view
+	a.currentView = ViewContext{
+		viewType:    ViewClusterEvent,
+		clusterID:   item.ClusterID,
+		clusterName: item.ClusterName,
+		eventReason: eventReason,
+		eventType:   "Warning", // Most cluster events are warnings
+	}
+
+	// No loading needed - we already have the data
+	a.loading = false
+
+	return nil
 }
