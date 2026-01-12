@@ -4,116 +4,71 @@ This document tracks feature ideas and enhancements that have been identified bu
 
 ---
 
-## 🎯 v0.5.x → v0.6.0 Roadmap (January 2026)
+## 🎯 v0.5.x → v0.6.x Roadmap (January 2026)
 
-**Focus**: Full diagnostic-first intelligence overhaul with inline context
+**Foundation Status**: ✅ **COMPLETE** (v0.5.10, v0.5.11, v0.5.12 shipped 2026-01-08)
 
-### Phase 0: v0.5.10 "Data Source Enrichment" (Foundation) ✅ COMPLETED
-**Goal**: Backend parsers for enhanced diagnostics (no UI changes)
+### Foundation Releases (✅ COMPLETE)
 
-- [x] Enhanced ETCD parser (memberlist, status → MemberCount, LeaderID, DBSize, compaction recommendations)
-- [x] Node conditions parser (MemoryPressure, DiskPressure, PIDPressure from kubectl)
-- [x] DataSource interface expansion (GetNodeConditions, GetEtcdDetails)
-- [x] Unit tests for all new parsers
+All backend parsers and data structures ready for v0.6.x consumption:
 
-**Deliverables**: New backend capabilities, zero UI impact - **SHIPPED 2026-01-08**
+#### v0.5.10 "Data Source Enrichment" ✅ SHIPPED
+- Enhanced ETCD parser (member count, leader ID, DB size, compaction recs)
+- Node conditions parser (MemoryPressure, DiskPressure, resource capacity)
+- DataSource interface extensions (GetEtcdDetails, GetNodeConditions)
+- ~480 lines of backend capabilities, zero UI changes
 
----
+#### v0.5.11 "Kubelet & OOM Analysis" ✅ SHIPPED
+- Kubelet log parser (10+ error patterns from journald)
+- OOM root cause analyzer (container vs node OOM)
+- Container resource parser (CPU/memory limits, QoS classes)
+- ~382 lines of detection capabilities, zero UI changes
 
-### Phase 1: v0.5.11 "Kubelet & OOM Analysis" (Foundation) ✅ COMPLETED
-**Goal**: Advanced detection for root cause analysis (no UI changes)
+#### v0.5.12 "Diagnostic Context Types" ✅ SHIPPED
+- DiagnosticContext struct (RootCause, Recommendation, Severity, FixPriority)
+- Context generators (CrashLoop, OOM, ImagePull, Node, ETCD, Kubelet)
+- Recommendation engine (severity/priority mapping)
+- ~168 lines of data structures, zero UI changes
 
-- [x] Kubelet log parser (journald/kubelet.log → common error patterns)
-- [x] OOM root cause analyzer (distinguish container OOM vs node OOM)
-- [x] Container resource parser (memory/CPU limits from pod specs)
-- [x] Detection helper functions
-
-**Deliverables**: Root cause analysis capabilities, zero UI impact - **SHIPPED 2026-01-08**
-
----
-
-### Phase 2: v0.5.12 "Diagnostic Context Types" (Foundation) ✅ COMPLETED
-**Goal**: Data structures for inline diagnostics (no UI changes)
-
-- [x] DiagnosticContext struct (RootCause, Recommendation, Severity, RelatedData, FixPriority)
-- [x] DataSource interface extension (GetDiagnosticContext)
-- [x] Context generators (CrashLoop, OOM, ImagePull, Node, ETCD, Kubelet)
-- [x] Recommendation engine (severity/priority mapping)
-
-**Deliverables**: Ready for v0.6.0 inline display, zero UI impact - **SHIPPED 2026-01-08**
+**Total Foundation**: ~1,030 lines of backend code ready for consumption
 
 ---
 
-### Phase 3: v0.6.0 "Diagnostic-First Intelligence" (Main Release)
-**Goal**: Full UI overhaul with inline context
+### v0.6.x Implementation (7 Releases Planned)
 
-**8 Sub-Phases**:
-1. **Panel Tightening** - Remove External Tools section, show only failing containers/Warning events
-2. **Cluster Events Drill-Down** - Fix v0.5.9 limitation (show affected pods for cluster events)
-3. **Container Detection** - Parse pod specs for full container list ('c' key multi-container support)
-4. **Enhanced ETCD Display** - Show member/leader/DB size inline with compaction recommendations
-5. **Node Conditions Display** - Show MemoryPressure/DiskPressure with resource correlation
-6. **Kubelet Issues Display** - Show kubelet health from journald logs
-7. **OOM Root Cause Display** - Show memory limits vs actual usage with recommendations
-8. **Inline Diagnostics** - 2-line dashboard format (issue summary + root cause + recommendation)
+**See**: `docs/V0.6.X_ROADMAP.md` for detailed prompts and implementation guide
+
+**Quick Summary**:
+1. **v0.6.0** - Diagnostic Panel Tightening (UI cleanup, show only failures)
+2. **v0.6.1** - Cluster Events Drill-Down (fix v0.5.9 limitation)
+3. **v0.6.2** - Full Container Detection (multi-container support)
+4. **v0.6.3** - Enhanced ETCD Display (consume v0.5.10)
+5. **v0.6.4** - Node Conditions Display (consume v0.5.10)
+6. **v0.6.5** - Kubelet Issues Display (consume v0.5.11)
+7. **v0.6.6** - OOM Root Cause Display (consume v0.5.11)
+8. **v0.6.7** - Inline Diagnostics (consume v0.5.12, 2-line format)
+
+**Timeline**: 9-12 days total for complete diagnostic-first overhaul
 
 **Success Criteria**:
-- ✅ "5-Second Rule" - operator makes decision in 5 seconds
-- ✅ Diagnostic panel: 6 sections → 4 sections
-- ✅ Event messages ≤80 chars (truncated with indicator)
-- ✅ Show ONLY failing containers (not healthy ones)
-- ✅ Show ONLY Warning events (not Normal)
-- ✅ Zero fluff - every line actionable
+- "5-Second Rule" - operator decides action in ≤5 seconds
+- Diagnostic panel: 6 sections → 4 sections
+- Event messages ≤80 chars (truncated)
+- Show ONLY failing containers/Warning events
+- Dashboard: 2-line format with inline root cause + recommendation
 
-**Philosophy**: "Show, Don't Ask" - display diagnostic context automatically without user action
-
----
-
-### Implementation Priority
-
-**High Impact, Low Effort (Start Here)**:
-1. Enhanced ETCD parser (v0.5.10) - Just parse more files
-2. Node Conditions parser (v0.5.10) - Just parse kubectl output
-3. Cluster events drill-down (v0.6.0 Phase 2) - Fix v0.5.9 gap
-
-**High Impact, Medium Effort**:
-4. OOM root cause analyzer (v0.5.11) - Parse pod spec + events
-5. Inline diagnostics (v0.6.0 Phase 8) - Dashboard redesign
-
-**Medium Impact, Higher Effort**:
-6. Kubelet log parser (v0.5.11) - Need to identify journald patterns
-7. Full container detection (v0.6.0 Phase 3) - Pod spec parsing
+**Philosophy**: "Show, Don't Ask" - automatic diagnostic display without user action
 
 ---
 
-### Release Timeline (Suggested)
+### Documentation & Next Steps
 
-```
-v0.5.9  ✅ Released (Simplification)
-          |
-v0.5.10 ── Data Source Enrichment (1-2 days)
-          |  Backend parsers only
-          |
-v0.5.11 ── Kubelet & OOM Analysis (1-2 days)
-          |  Detection capabilities only ✅ COMPLETED
-          |
-v0.5.12 ── Diagnostic Context Types (1 day)
-          |  Data structures only ✅ COMPLETED
-          |
-v0.6.0  ── Diagnostic-First Intelligence (3-5 days)
-            8 phases of UI enhancements
-            Consumes all v0.5.x backend work
-```
+- **docs/V0.6.X_ROADMAP.md** - ✅ Detailed prompts for each v0.6.x release
+- **docs/V0.6.0_PLAN.md** - Original technical specification
+- **docs/V0.5.9_KNOWN_LIMITATIONS.md** - Known issues to be resolved
+- **CHANGELOG.md** - Complete v0.5.x history
 
-**Total Estimated Time**: 6-11 days for complete overhaul
-
----
-
-### Documentation
-
-- **V0.6.0_PLAN.md** - Complete technical specification
-- **V0.5.9_KNOWN_LIMITATIONS.md** - Cluster events gap documented
-- **CHANGELOG.md** - Unreleased section shows roadmap
+**Ready to Start**: v0.6.0 implementation (all prerequisites complete)
 
 ---
 
@@ -901,3 +856,4 @@ v0.6.0  ── Diagnostic-First Intelligence (3-5 days)
 - Mark items as ✅ when moved to active development
 
 Last updated: 2025-12-10 (v0.3.9 - Tunable scan depth shipped)
+- **Description**: Cache expensive namespace health computation instead of recalculating on every render

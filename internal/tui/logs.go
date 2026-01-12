@@ -557,9 +557,8 @@ func (a *App) renderMaximumIntelPanel(breadcrumb string, pod *rancher.Pod) strin
 	investigateSection := a.buildInvestigationSection(state, restarts)
 	sections = append(sections, investigateSection)
 
-	// Section 6: External Tools
-	toolsSection := a.buildExternalToolsSection()
-	sections = append(sections, toolsSection)
+	// External Tools section REMOVED in v0.6.0 - moved to help modal (press '?')
+	// Tightening diagnostic panel to show only actionable information
 
 	// Combine all sections
 	helpText := strings.Join(sections, "\n\n")
@@ -698,12 +697,15 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 		}
 	}
 
-	// If we identified containers from events, show them
+	// If we identified containers from events, show only FAILING ones (v0.6.0)
 	var containerLines []string
 	if len(containerMap) > 0 {
 		containerLines = append(containerLines, "")
 		for containerName, status := range containerMap {
-			containerLines = append(containerLines, fmt.Sprintf("  %s %s", status, containerName))
+			// Only show failing containers (❌) - hide healthy ones (✅)
+			if status == "❌" || status == "⚠️" {
+				containerLines = append(containerLines, fmt.Sprintf("  %s %s", status, containerName))
+			}
 		}
 	}
 
@@ -760,7 +762,7 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 	return result
 }
 
-// buildEventsSection formats recent pod events
+// buildEventsSection formats recent pod events (v0.6.0: Warning events only, truncated)
 func (a *App) buildEventsSection(events []rancher.Event) string {
 	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 RECENT EVENTS
@@ -770,30 +772,43 @@ func (a *App) buildEventsSection(events []rancher.Event) string {
 		return header + "\n\n  No events recorded for this pod"
 	}
 
-	// Show last 5 events max
+	// Filter to Warning events only (v0.6.0)
+	var warningEvents []rancher.Event
+	for _, event := range events {
+		if event.Type == "Warning" {
+			warningEvents = append(warningEvents, event)
+		}
+	}
+
+	if len(warningEvents) == 0 {
+		return header + "\n\n  No warning events (all events are Normal/Info)"
+	}
+
+	// Show last 5 warning events max
 	maxEvents := 5
-	displayEvents := events
-	if len(events) > maxEvents {
-		displayEvents = events[:maxEvents]
+	displayEvents := warningEvents
+	if len(warningEvents) > maxEvents {
+		displayEvents = warningEvents[:maxEvents]
 	}
 
 	var eventLines []string
 	for _, event := range displayEvents {
-		// Choose emoji based on event type
-		emoji := "ℹ️"
-		if event.Type == "Warning" {
-			emoji = "⚠️"
-		}
-
 		// Add count indicator if event occurred multiple times
 		countStr := ""
 		if event.Count > 1 {
 			countStr = fmt.Sprintf(" (x%d)", event.Count)
 		}
 
+		// Truncate message at 80 chars (v0.6.0)
+		message := event.Message
+		maxLen := 80
+		if len(message) > maxLen {
+			message = message[:maxLen] + " (truncated)"
+		}
+
 		// Format: emoji + reason + message + count
-		eventLines = append(eventLines, fmt.Sprintf("  %s  %s: %s%s",
-			emoji, event.Reason, event.Message, countStr))
+		eventLines = append(eventLines, fmt.Sprintf("  ⚠️  %s: %s%s",
+			event.Reason, message, countStr))
 	}
 
 	return header + "\n\n" + strings.Join(eventLines, "\n")
