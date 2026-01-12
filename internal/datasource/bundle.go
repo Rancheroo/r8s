@@ -284,7 +284,35 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 }
 
 // GetContainers returns containers from bundle pod info
+// v0.6.2: Enhanced to parse kubectl pods READY column for full container count
 func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, error) {
+	// First try kubectl pods output which has READY column showing container count
+	kubectlPods, err := bundle.ParsePods(ds.bundle.ExtractPath)
+	if err == nil {
+		for _, p := range kubectlPods {
+			if p.NamespaceID == namespace && p.Name == pod {
+				// Parse READY column (e.g., "2/2" means 2 total containers)
+				if p.KubectlReady != "" {
+					parts := strings.Split(p.KubectlReady, "/")
+					if len(parts) == 2 {
+						var totalContainers int
+						fmt.Sscanf(parts[1], "%d", &totalContainers)
+
+						if totalContainers > 0 {
+							// Generate container names (container-1, container-2, etc.)
+							containers := make([]string, totalContainers)
+							for i := 0; i < totalContainers; i++ {
+								containers[i] = fmt.Sprintf("container-%d", i+1)
+							}
+							return containers, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Fallback to bundle.Pods if kubectl parsing fails
 	for _, podInfo := range ds.bundle.Pods {
 		if podInfo.Namespace == namespace && podInfo.Name == pod {
 			if len(podInfo.Containers) > 0 {

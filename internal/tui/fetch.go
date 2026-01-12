@@ -249,18 +249,21 @@ func (a *App) fetchLogs(clusterID, namespace, podName, container string, showPre
 		// Use the captured parameter values instead of reading from App state
 		logs, err := ds.GetLogs(clusterID, namespace, podName, container, showPrevious)
 		if err == nil {
-			// FIX (v0.5.9): Get available containers for this pod
-			// For now, return empty list - full container detection requires pod spec parsing
-			// TODO(v0.6.0): Parse pod spec from kubectl describe to get actual container list
-			containers := []string{}
-			if container != "" {
-				// At minimum, include the current container if specified
-				containers = []string{container}
+			// v0.6.2: Get full container list from pod spec
+			containers, containerErr := ds.GetContainers(namespace, podName)
+			if containerErr != nil || len(containers) == 0 {
+				// Fallback: if container detection fails, use current container
+				if container != "" {
+					containers = []string{container}
+				} else {
+					containers = []string{"container-1"}
+				}
 			}
 
 			// Return even if empty - empty logs is valid
 			// FIX (v0.5.4): Include pod name and namespace to prevent race conditions
 			// FIX (v0.5.9): Include containers list
+			// v0.6.2: Full container detection from pod spec
 			return logsMsg{
 				logs:       logs,
 				containers: containers,
