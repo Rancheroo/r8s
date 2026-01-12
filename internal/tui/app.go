@@ -280,11 +280,12 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Jump to pod by number
 				idx := int(msg.String()[0] - '1')
 
-				// Find the event item
+				// Find the event item - match by EventReason not Title
+				// (Title includes count prefix like "1578699× DNSConfigForming")
 				var eventItem *AttentionItem
 				for i := range a.attentionItems {
 					item := &a.attentionItems[i]
-					if item.ResourceType == "event" && item.Title == a.currentView.eventReason {
+					if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
 						eventItem = item
 						break
 					}
