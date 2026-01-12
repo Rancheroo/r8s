@@ -296,14 +296,27 @@ func (ds *BundleDataSource) GetLogs(clusterID, namespace, pod, container string,
 }
 
 // GetContainers returns containers from bundle pod info
-// v0.6.2: Enhanced to parse kubectl pods READY column for full container count
+// v0.6.3: Use real container names from pod manifest instead of fabricating them
 func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, error) {
-	// First try kubectl pods output which has READY column showing container count
+	// First try to get real container names from bundle.Pods inventory
+	// This uses actual container names extracted from pod logs and manifests
+	for _, podInfo := range ds.bundle.Pods {
+		if podInfo.Namespace == namespace && podInfo.Name == pod {
+			if len(podInfo.Containers) > 0 {
+				return podInfo.Containers, nil
+			}
+			// If pod exists but no containers found, return empty slice
+			return []string{}, nil
+		}
+	}
+
+	// Fallback: try kubectl pods output for container count only
+	// Generate fallback names only if we have count info but no real names
 	kubectlPods, err := ds.getKubectlPods()
 	if err == nil {
 		for _, p := range kubectlPods {
 			if p.NamespaceID == namespace && p.Name == pod {
-				// Parse READY column (e.g., "2/2" means 2 total containers)
+				// Parse READY column for count (e.g., "2/2" means 2 total containers)
 				if p.KubectlReady != "" {
 					parts := strings.Split(p.KubectlReady, "/")
 					if len(parts) == 2 {
@@ -311,10 +324,10 @@ func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, erro
 						fmt.Sscanf(parts[1], "%d", &totalContainers)
 
 						if totalContainers > 0 {
-							// Generate container names (container-1, container-2, etc.)
+							// Use generic fallback names - better than fabricated "container-1"
 							containers := make([]string, totalContainers)
 							for i := 0; i < totalContainers; i++ {
-								containers[i] = fmt.Sprintf("container-%d", i+1)
+								containers[i] = "default" // Use conventional fallback
 							}
 							return containers, nil
 						}
@@ -324,16 +337,8 @@ func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, erro
 		}
 	}
 
-	// Fallback to bundle.Pods if kubectl parsing fails
-	for _, podInfo := range ds.bundle.Pods {
-		if podInfo.Namespace == namespace && podInfo.Name == pod {
-			if len(podInfo.Containers) > 0 {
-				return podInfo.Containers, nil
-			}
-			return []string{"unknown"}, nil
-		}
-	}
-	return []string{"unknown"}, nil
+	// No pod information found - return empty slice
+	return []string{}, nil
 }
 
 // DescribePod returns detailed pod information from bundle

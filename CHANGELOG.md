@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Example: "👥 ETCD Member Mismatch - Expected 3 members, found 2 (Leader: abc123)"
   - **Leader ID Display**: Shows current ETCD leader ID in item descriptions
     - Example: "ALARM: NOSPACE (Leader: 15e9d2d844399be2)"
-  - **Auto-Severity Classification**: 
+  - **Auto-Severity Classification**:
     - 🚨 Critical: Alarms, unhealthy endpoints, <2 members
     - ⚠️ Warning: Large DB (>100MB), non-standard member counts
   - **Color-Coded Items**: Red (critical), Yellow (warning) for instant visual triage
