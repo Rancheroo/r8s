@@ -348,9 +348,16 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return a, nil
 			case "enter":
-				// Navigate to diagnostic panel for the selected item (pod issues only)
+				// Navigate to diagnostic panel for the selected item
 				if a.attentionCursor < len(a.attentionItems) {
 					item := a.attentionItems[a.attentionCursor]
+
+					// v0.6.1: Handle cluster event drill-down
+					if item.ResourceType == "event" && len(item.AffectedPods) > 0 {
+						return a, a.handleClusterEventDrillDown(&item)
+					}
+
+					// Handle pod issues
 					if item.ResourceType == "pod" && item.PodName != "" {
 						// v0.5.8: Use unified navigation function
 						return a, a.navigateToLogs(item.ClusterID, item.Namespace, item.PodName, item.ContainerName)
