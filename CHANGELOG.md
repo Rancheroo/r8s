@@ -7,6 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.6.3] - 2026-01-12 "ETCD Health Diagnostics"
+
+### Added ✨
+
+- **ETCD Health Dashboard Integration** - Rich ETCD diagnostics in Attention Dashboard
+  - Consumes v0.5.10 ETCD parser (`GetEtcdDetails()`) for comprehensive cluster health
+  - **DB Size Monitoring**: Shows warning when database exceeds 100MB with compaction recommendation
+    - Example: "📀 ETCD Database Large - 150 MB - compaction recommended"
+  - **Member Count Detection**: Detects cluster member mismatches (expects 3 for HA, 1 for single-node)
+    - Warning severity for non-standard counts (e.g., 2 or 5 members)
+    - Critical severity when below quorum (< 2 members)
+    - Example: "👥 ETCD Member Mismatch - Expected 3 members, found 2 (Leader: abc123)"
+  - **Leader ID Display**: Shows current ETCD leader ID in item descriptions
+    - Example: "ALARM: NOSPACE (Leader: 15e9d2d844399be2)"
+  - **Auto-Severity Classification**: 
+    - 🚨 Critical: Alarms, unhealthy endpoints, <2 members
+    - ⚠️ Warning: Large DB (>100MB), non-standard member counts
+  - **Color-Coded Items**: Red (critical), Yellow (warning) for instant visual triage
+
+### Technical - v0.6.3
+
+- Modified `detectClusterHealth()` in `internal/tui/attention_signals.go`
+- Replaced `GetEtcdHealth()` with `GetEtcdDetails()` for richer data access
+- Added 3 new detection patterns:
+  1. Database compaction check using `NeedsCompaction` field
+  2. Member count validation with expected values (1 or 3)
+  3. Leader ID enrichment in all ETCD item descriptions
+- Leverages existing `renderAttentionItem()` severity-based coloring
+- Zero UI changes - existing rendering handles new item types
+
+### Detection Logic - v0.6.3
+
+```go
+// DB Size > 100MB
+if etcdDetails.NeedsCompaction {
+    items = append(items, AttentionItem{
+        Severity: SeverityWarning,
+        Emoji: "📀",
+        Title: "ETCD Database Large",
+        Description: fmt.Sprintf("%s - compaction recommended", etcdDetails.DBSize),
+    })
+}
+
+// Member Count ≠ 1 or 3
+if etcdDetails.MemberCount != 3 && etcdDetails.MemberCount != 1 {
+    severity := SeverityWarning
+    if etcdDetails.MemberCount < 2 {
+        severity = SeverityCritical // Below quorum
+    }
+    items = append(items, AttentionItem{
+        Severity: severity,
+        Emoji: emoji,
+        Title: "ETCD Member Mismatch",
+        Description: fmt.Sprintf("Expected 3 members, found %d (Leader: %s)", 
+            etcdDetails.MemberCount, etcdDetails.LeaderID),
+    })
+}
+```
+
+### Impact Summary - v0.6.3
+
+- ✅ **Proactive monitoring** - ETCD issues surfaced automatically in dashboard
+- ✅ **Actionable diagnostics** - Compaction recommendations when needed
+- ✅ **Cluster health visibility** - Member count and leader status at a glance
+- ✅ **Zero configuration** - Works automatically with bundle ETCD data
+- ✅ **Parser reuse** - Leverages v0.5.10 foundation (no new parsers needed)
+
+### Test Cases - v0.6.3
+
+| Scenario | Dashboard Display | Severity |
+|----------|------------------|----------|
+| DB = 150MB | "ETCD Database Large - 150 MB - compaction recommended" | Warning ⚠️ |
+| 1 member (single-node) | No alert (expected configuration) | - |
+| 2 members | "ETCD Member Mismatch - Expected 3, found 2 (Leader: xyz)" | Warning ⚠️ |
+| 0 members | "ETCD Member Mismatch - Expected 3, found 0 (Leader: )" | Critical 🚨 |
+| NOSPACE alarm | "ALARM: NOSPACE (Leader: abc123)" | Critical 🚨 |
+
+---
+
 ### Planned for v0.6.0 "Diagnostic-First Intelligence"
 - **Phase 1**: Diagnostic panel tightening (remove noise, show only failures)
 - **Phase 2**: Cluster events drill-down (v0.5.9 gap fix)

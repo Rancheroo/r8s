@@ -318,28 +318,73 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 		}
 	}
 
-	// Check etcd health (bundle mode only)
-	etcdHealth, err := ds.GetEtcdHealth()
-	if err == nil && etcdHealth != nil {
-		if etcdHealth.HasAlarms {
+	// Check ETCD health (v0.5.10 parser - rich diagnostics)
+	etcdDetails, err := ds.GetEtcdDetails()
+	if err == nil && etcdDetails != nil {
+		// Critical: ETCD Alarms (NOSPACE, etc.)
+		if etcdDetails.HasAlarms {
+			leaderInfo := ""
+			if etcdDetails.LeaderID != "" {
+				leaderInfo = fmt.Sprintf(" (Leader: %s)", etcdDetails.LeaderID)
+			}
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "🚨",
 				Title:        "ETCD",
-				Description:  fmt.Sprintf("ALARM: %s", etcdHealth.AlarmType),
+				Description:  fmt.Sprintf("ALARM: %s%s", etcdDetails.AlarmType, leaderInfo),
 				Namespace:    "etcd",
-				Count:        etcdHealth.AlarmCount,
+				Count:        etcdDetails.AlarmCount,
 				ResourceType: "etcd",
 				Timestamp:    time.Now(),
 			})
 		}
 
-		if !etcdHealth.Healthy {
+		// Critical: Unhealthy endpoints
+		if !etcdDetails.Healthy {
 			items = append(items, AttentionItem{
 				Severity:     SeverityCritical,
 				Emoji:        "⚠️",
 				Title:        "ETCD",
 				Description:  "Unhealthy endpoints",
+				Namespace:    "etcd",
+				ResourceType: "etcd",
+				Timestamp:    time.Now(),
+			})
+		}
+
+		// Warning: Database size > 100MB (compaction recommended)
+		if etcdDetails.NeedsCompaction {
+			items = append(items, AttentionItem{
+				Severity:     SeverityWarning,
+				Emoji:        "📀",
+				Title:        "ETCD Database Large",
+				Description:  fmt.Sprintf("%s - compaction recommended", etcdDetails.DBSize),
+				Namespace:    "etcd",
+				ResourceType: "etcd",
+				Timestamp:    time.Now(),
+			})
+		}
+
+		// Warning/Critical: Member count mismatch (expect 3 for HA, 1 for single-node)
+		if etcdDetails.MemberCount != 3 && etcdDetails.MemberCount != 1 {
+			severity := SeverityWarning
+			emoji := "👥"
+			if etcdDetails.MemberCount < 2 {
+				// Critical: Less than quorum
+				severity = SeverityCritical
+				emoji = "🚨"
+			}
+
+			leaderInfo := ""
+			if etcdDetails.LeaderID != "" {
+				leaderInfo = fmt.Sprintf(" (Leader: %s)", etcdDetails.LeaderID)
+			}
+
+			items = append(items, AttentionItem{
+				Severity:     severity,
+				Emoji:        emoji,
+				Title:        "ETCD Member Mismatch",
+				Description:  fmt.Sprintf("Expected 3 members, found %d%s", etcdDetails.MemberCount, leaderInfo),
 				Namespace:    "etcd",
 				ResourceType: "etcd",
 				Timestamp:    time.Now(),
