@@ -532,9 +532,10 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 	} else {
 		// Fallback: Extract event reason from Title (e.g., "190× BackOff" -> "BackOff")
 		titleParts := strings.Split(item.Title, "×")
-		eventReason = strings.TrimSpace(item.Title)
 		if len(titleParts) > 1 {
 			eventReason = strings.TrimSpace(titleParts[1])
+		} else {
+			eventReason = strings.TrimSpace(item.Title)
 		}
 	}
 

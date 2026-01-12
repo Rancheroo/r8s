@@ -160,6 +160,56 @@ All backend parsers and data structures ready for v0.6.x consumption:
 
 ## 📋 Medium Priority (v0.4.0)
 
+### Dashboard Navigation Truth Only Violation (v0.6.2 → v0.6.7) 🔥
+- **Priority**: CRITICAL
+- **Complexity**: High (architectural)
+- **Impact**: CRITICAL (user trust)
+- **Status**: ❌ DEFERRED to v0.6.7
+- **GitHub Issue**: [#15](https://github.com/Rancheroo/r8s/issues/15)
+- **Description**: Dashboard navigation shows wrong pod diagnostics despite fix attempts in v0.6.2
+- **Problem Observed (v0.6.2)**:
+  - User clicks "longhorn-cst-plugin-qkpgr" (3 restarts) in dashboard
+  - Press Enter shows diagnostics for "calico-typha-b74b9cb47-rwdp2" (0 restarts) instead
+  - This is a CRITICAL Truth Only™ violation - users cannot trust navigation
+- **Attempted Fixes (v0.6.2)**:
+  - ❌ Commit 3765576: Applied severity grouping in handleEnter() - did not resolve
+  - ❌ Multiple iterations with cursor/visual order matching - still broken
+  - Root cause appears deeper than sort/group order mismatch
+- **Root Cause Hypotheses**:
+  1. **Cursor State Desync**: attentionCursor not updating correctly when sort mode changes
+  2. **Viewport vs State Mismatch**: Dashboard uses viewport but cursor tracks different state
+  3. **Event Handling Order**: Cursor updates may happen before/after sort operations
+  4. **Multiple Code Paths**: Enter key and number keys may use different selection logic
+- **Why Deferred to v0.6.7**:
+  - v0.6.7 "Inline Diagnostics" completely rewrites dashboard rendering
+  - New 2-line format eliminates cursor/viewport complexity
+  - Architectural changes will naturally unify state management
+  - Multiple fix attempts in v0.6.2 failed → needs bigger refactor
+- **Interim Workaround (v0.6.2)**:
+  - Document limitation in release notes
+  - Recommend using Classic mode (Pods view) for reliable navigation
+  - Number keys (1-9) in dashboard may be more reliable than cursor+Enter
+- **Requirements for v0.6.7 Fix**:
+  - Unified cursor/table/viewport state management
+  - Single source of truth for item selection
+  - Validation that selected item matches displayed item
+  - Test with all 3 sort modes (Count, Severity, Name)
+- **Location**: `internal/tui/handlers.go` handleEnter() ViewAttention case
+- **Philosophy Alignment**: "Truth Only™" - navigation must always show the correct pod
+- **Test Case for v0.6.7**:
+
+   ```text
+   1. Load bundle, press 'a' for dashboard
+   2. Press 's' to cycle through all 3 sort modes
+   3. For EACH sort mode:
+      - Navigate to known pod with distinctive restart count
+      - Press Enter
+      - Verify diagnostics shows THAT pod with THAT restart count
+      - Press Esc and repeat with different pod
+   4. All navigation must be 100% accurate
+   ```
+- **Triggered by**: User manual testing of v0.6.2
+
 ### Diagnostic Panel Event Message Truncation (v0.5.8+) ⭐
 - **Priority**: Medium
 - **Complexity**: Low
