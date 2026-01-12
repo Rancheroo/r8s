@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -650,13 +651,15 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 	}
 
 	for _, node := range nodes {
+		// Cache taint info to avoid redundant calls
+		taintInfo := getTaintInfo(node)
+
 		// Memory Pressure Detection
 		if node.MemoryPressure {
-			memUsedPct := calculateMemoryUsage(node.MemoryCapacity, node.MemoryAllocatable)
-			desc := fmt.Sprintf("Memory: %.0f%% used", memUsedPct)
+			systemReservedPct := calculateSystemReservedPercent(node.MemoryCapacity, node.MemoryAllocatable)
+			desc := fmt.Sprintf("System Reserved: %.0f%%", systemReservedPct)
 
 			// Add taint/cordon info if present
-			taintInfo := getTaintInfo(node)
 			if taintInfo != "" {
 				desc += " • " + taintInfo
 			}
@@ -677,7 +680,6 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 			desc := "Disk space low"
 
 			// Add taint/cordon info if present
-			taintInfo := getTaintInfo(node)
 			if taintInfo != "" {
 				desc += " • " + taintInfo
 			}
@@ -698,7 +700,6 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 			desc := "Process IDs exhausted"
 
 			// Add taint/cordon info if present
-			taintInfo := getTaintInfo(node)
 			if taintInfo != "" {
 				desc += " • " + taintInfo
 			}
@@ -718,9 +719,9 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 	return items
 }
 
-// calculateMemoryUsage calculates percentage of memory used
+// calculateSystemReservedPercent calculates percentage of system reserved memory
 // Based on: (Capacity - Allocatable) / Capacity * 100
-func calculateMemoryUsage(capacity, allocatable string) float64 {
+func calculateSystemReservedPercent(capacity, allocatable string) float64 {
 	capBytes := parseMemoryToBytes(capacity)
 	allocBytes := parseMemoryToBytes(allocatable)
 	if capBytes == 0 {
@@ -731,47 +732,84 @@ func calculateMemoryUsage(capacity, allocatable string) float64 {
 
 // parseMemoryToBytes converts Kubernetes memory strings to bytes
 // e.g., "16Gi" -> 17179869184, "1024Mi" -> 1073741824, "1024Ki" -> 1048576
+// Supports decimal values (e.g., "1.5Gi") and various units (Ki, Mi, Gi, Ti, Pi, Ei)
 func parseMemoryToBytes(s string) int64 {
 	if s == "" {
 		return 0
 	}
 
 	// Parse the numeric part and unit
-	var value int64
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0
+	}
+
+	// Check for negative values
+	if strings.HasPrefix(s, "-") {
+		return 0
+	}
+
+	// Extract numeric part and unit
+	var numStr string
 	var unit string
 
-	// Try to parse with common Kubernetes units
-	if strings.HasSuffix(s, "Ki") {
-		fmt.Sscanf(s, "%d", &value)
-		unit = "Ki"
-	} else if strings.HasSuffix(s, "Mi") {
-		fmt.Sscanf(s, "%d", &value)
-		unit = "Mi"
-	} else if strings.HasSuffix(s, "Gi") {
-		fmt.Sscanf(s, "%d", &value)
-		unit = "Gi"
-	} else if strings.HasSuffix(s, "Ti") {
-		fmt.Sscanf(s, "%d", &value)
-		unit = "Ti"
-	} else {
-		// Try raw bytes
-		fmt.Sscanf(s, "%d", &value)
-		return value
+	// Find where the numeric part ends
+	for i, r := range s {
+		if (r < '0' || r > '9') && r != '.' {
+			numStr = s[:i]
+			unit = s[i:]
+			break
+		}
+	}
+
+	// If no unit found, treat entire string as numeric (bytes)
+	if numStr == "" {
+		numStr = s
+		unit = ""
+	}
+
+	// Parse the numeric value
+	value, err := strconv.ParseFloat(numStr, 64)
+	if err != nil || value < 0 {
+		return 0
 	}
 
 	// Convert to bytes based on unit
-	switch unit {
-	case "Ki":
-		return value * 1024
-	case "Mi":
-		return value * 1024 * 1024
-	case "Gi":
-		return value * 1024 * 1024 * 1024
-	case "Ti":
-		return value * 1024 * 1024 * 1024 * 1024
+	multiplier := int64(1)
+	switch strings.ToLower(unit) {
+	case "":
+		// Raw bytes
+		multiplier = 1
+	case "k":
+		multiplier = 1000
+	case "ki":
+		multiplier = 1024
+	case "m":
+		multiplier = 1000 * 1000
+	case "mi":
+		multiplier = 1024 * 1024
+	case "g":
+		multiplier = 1000 * 1000 * 1000
+	case "gi":
+		multiplier = 1024 * 1024 * 1024
+	case "t":
+		multiplier = 1000 * 1000 * 1000 * 1000
+	case "ti":
+		multiplier = 1024 * 1024 * 1024 * 1024
+	case "p":
+		multiplier = 1000 * 1000 * 1000 * 1000 * 1000
+	case "pi":
+		multiplier = 1024 * 1024 * 1024 * 1024 * 1024
+	case "e":
+		multiplier = 1000 * 1000 * 1000 * 1000 * 1000 * 1000
+	case "ei":
+		multiplier = 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+	default:
+		// Unknown unit, return 0
+		return 0
 	}
 
-	return 0
+	return int64(value * float64(multiplier))
 }
 
 // getTaintInfo returns a summary of node taints/cordons

@@ -46,7 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Detection Logic - v0.6.4
 
 ```go
-nodes := dataSource.GetNodeConditions()
+nodes, err := dataSource.GetNodeConditions()
+if err != nil || nodes == nil {
+    return items
+}
 for _, node := range nodes {
     if node.MemoryPressure {
         memUsedPct := (capBytes - allocBytes) / capBytes * 100
