@@ -207,7 +207,8 @@ All backend parsers and data structures ready for v0.6.x consumption:
       - Verify diagnostics shows THAT pod with THAT restart count
       - Press Esc and repeat with different pod
    4. All navigation must be 100% accurate
-   ```
+    ```
+
 - **Triggered by**: User manual testing of v0.6.2
 
 ### Diagnostic Panel Event Message Truncation (v0.5.8+) ⭐

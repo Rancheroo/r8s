@@ -252,11 +252,11 @@ func (a *App) fetchLogs(clusterID, namespace, podName, container string, showPre
 			// v0.6.2: Get full container list from pod spec
 			containers, containerErr := ds.GetContainers(namespace, podName)
 			if containerErr != nil || len(containers) == 0 {
-				// Fallback: if container detection fails, use current container
+				// Fallback: if container detection fails, use current container or clear indicator
 				if container != "" {
 					containers = []string{container}
 				} else {
-					containers = []string{"container-1"}
+					containers = []string{} // Empty list indicates unknown containers
 				}
 			}
 
