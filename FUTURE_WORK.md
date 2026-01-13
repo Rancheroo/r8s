@@ -278,16 +278,18 @@ All backend parsers and data structures ready for v0.6.x consumption:
 - **Triggered by**: User manual testing of v0.6.7 navigation fix
 - **Decision**: Defer to v0.6.8 - Low priority polish item, not blocking release
 
-### Diagnostic Panel Event Message Truncation (v0.5.8+) ⭐
-- **Priority**: Medium
+### Diagnostic Panel Event Message Truncation (v0.6.8) ⭐⭐
+- **Priority**: MEDIUM-HIGH
 - **Complexity**: Low
-- **Impact**: Medium (readability)
+- **Impact**: High (readability/UX)
 - **Description**: Long event messages (e.g., registry pull errors) overwhelm the diagnostic panel display
-- **Problem Observed (v0.5.7)**:
-  - Event messages like "Failed to pull image registry.rancher.com/..." span multiple lines
-  - Multiple similar events create wall of text
+- **Problem Observed (v0.6.7 testing)**:
+  - Event messages like "Failed to pull image registry.rancher.com/..." span multiple lines (200+ chars)
+  - Multiple similar events create wall of text that fills entire screen
   - Hard to scan for key information
   - Diagnostic panel loses scannable structure
+  - **Real example**: cluster-register ImagePullBackOff shows 5+ identical 250-char registry error messages
+  - Container status section completely hidden by event overflow
 - **Proposed Fix**:
   ```
   Current:  Failed: lgsp1skbtd12001.gso.aexp.com failed to pull image "registry.rancher...
