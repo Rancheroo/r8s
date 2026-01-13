@@ -9,13 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.5] - 2026-01-13
 
-### Added
+### Added ✨
+
 - **Kubelet Issues Display**: Attention dashboard now shows kubelet-level issues from journald logs
   - Detects HTTP 502 errors, DNS limits, TLS handshake errors, connection timeouts
   - Groups issues by error pattern with occurrence counts
   - Assigns appropriate severity (HTTP 502 = critical, DNS/TLS = warning)
   - Threshold of 5+ occurrences to reduce noise
   - Consumes v0.5.11 kubelet parser for accurate detection
+
+### Known Issues 🐛
+
+- **Issue #17**: Dashboard navigation for kubelet items shows wrong diagnostic panel
+  - Pressing Enter on kubelet items navigates to nearest pod's diagnostics (misleading)
+  - Fix needed: Add ResourceType check in handleEnter() for kubelet items
+  - Workaround: Use classic cluster navigation for kubelet investigation
+  - Priority: High - scheduled for v0.6.6
+
+- **Issue #18**: Dashboard table alignment breaks with double-digit item numbers
+  - Column spacing misaligned when item numbers reach 10+
+  - Fix needed: Dynamic number width calculation in renderAttentionItem()
+  - Impact: Visual polish issue, doesn't affect functionality
+  - Priority: Medium - scheduled for v0.6.7
+
+- **Issue #19**: Bundle health percentage missing from dashboard status bar
+  - "📦 BUNDLE 100%" indicator no longer displays
+  - Fix needed: Debug GetBundleHealth() type assertion and rendering logic
+  - Impact: Informational feature, doesn't block core functionality
+  - Priority: Medium - scheduled for v0.6.7
 
 ---
 
