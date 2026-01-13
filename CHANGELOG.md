@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.6] - 2026-01-13
+
+### Added ✨
+
+- **OOM Root Cause Display**: Attention dashboard now shows OOM (Out of Memory) events with diagnostics
+  - Detects OOM kills from kubectl events with human-readable descriptions
+  - Distinguishes container OOM vs node OOM scenarios
+  - Shows memory limits when available from bundle data
+  - Enhanced diagnostic panel shows limit/request/container details
+  - Graceful handling of partial bundle data
+  - Consumes v0.5.11 OOM analyzer with robust parsing
+
+### Fixed 🐛
+
+- **Issue #17**: Dashboard navigation for non-pod resource types fixed (HIGH priority)
+  - Fixed kubelet, etcd, node, system, and daemonset items navigating to wrong diagnostics
+  - Changed from specific kubelet check to comprehensive ResourceType != "pod" validation
+  - Cluster-level issues no longer incorrectly attempt pod log navigation
+  - Applies to all non-pod resource types in attention dashboard
+
+### Enhanced 🔧
+
+- **OOM Parser Robustness**: Enhanced OOM analysis with graceful degradation
+  - Returns empty array instead of nil when events file missing
+  - Multi-source enrichment: kubectl pods, pod manifests, node conditions
+  - Stub functions for future QoS class and node memory correlation
+  - Human-readable memory limit display (1Gi format)
+  - Bundle sherpa philosophy: points users to relevant log bundle locations
+
+### Known Issues 🐛
+
+- **Issue #18**: Dashboard table alignment breaks with double-digit item numbers
+  - Column spacing misaligned when item numbers reach 10+
+  - Fix needed: Dynamic number width calculation in renderAttentionItem()
+  - Impact: Visual polish issue, doesn't affect functionality
+  - Priority: Medium - scheduled for v0.6.7
+
+- **Issue #19**: Bundle health percentage missing from dashboard status bar
+  - "📦 BUNDLE 100%" indicator no longer displays
+  - Fix needed: Debug GetBundleHealth() type assertion and rendering logic
+  - Impact: Informational feature, doesn't block core functionality
+  - Priority: Medium - scheduled for v0.6.7
+
+---
+
 ## [0.6.5] - 2026-01-13
 
 ### Added ✨
