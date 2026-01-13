@@ -682,7 +682,7 @@ func determineKubeletSeverity(pattern string) AttentionSeverity {
 	switch pattern {
 	case "HTTP 502", "no route to host", "network unreachable":
 		return SeverityCritical
-	case "DNS nameserver limits", "TLS handshake error", "connection timeout":
+	case "DNS nameserver limits", "TLS handshake error", "EOF during TLS", "connection timeout", "remotedialer timeout":
 		return SeverityWarning
 	default:
 		return SeverityInfo
