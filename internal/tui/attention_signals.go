@@ -98,6 +98,9 @@ func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionI
 	// Tier 2.6: Kubelet Issues (Critical/Warning - v0.6.5)
 	items = append(items, detectKubeletIssues(ds)...)
 
+	// Tier 2.7: OOM Issues (Critical - v0.6.6)
+	items = append(items, detectOOMIssues(ds)...)
+
 	// Tier 3: Events (Warning)
 	items = append(items, detectEventIssues(ds)...)
 
@@ -705,6 +708,59 @@ func kubeletEmoji(pattern string) string {
 	default:
 		return "⚙️"
 	}
+}
+
+// detectOOMIssues detects OOM (Out of Memory) kills with root cause analysis (v0.6.6)
+func detectOOMIssues(ds datasource.DataSource) []AttentionItem {
+	var items []AttentionItem
+
+	oomEvents, err := ds.GetOOMAnalysis()
+	if err != nil || oomEvents == nil || len(oomEvents) == 0 {
+		// No OOM events or analysis not available
+		return items
+	}
+
+	// Create attention items for each OOM event
+	for _, oom := range oomEvents {
+		// Build human-readable description
+		desc := "Container OOM"
+		if oom.IsNodeOOM {
+			desc = "Node OOM - system memory exhausted"
+		} else if oom.MemoryLimit != "" {
+			desc = fmt.Sprintf("Exceeded limit: %s", oom.MemoryLimit)
+		}
+
+		// Extract namespace and pod name
+		// PodName format from bundle can be "namespace/podname" or just "podname"
+		namespace := "default"
+		podName := oom.PodName
+		resourceType := "pod"
+		if oom.IsNodeOOM {
+			resourceType = "node"
+		}
+		if strings.Contains(oom.PodName, "/") {
+			parts := strings.Split(oom.PodName, "/")
+			if len(parts) == 2 {
+				namespace = parts[0]
+				podName = parts[1]
+			}
+		}
+
+		items = append(items, AttentionItem{
+			Severity:      SeverityCritical,
+			Emoji:         "💥", // Distinct OOM emoji
+			Title:         podName,
+			Description:   desc,
+			Namespace:     namespace,
+			ResourceType:  resourceType,
+			PodName:       podName,
+			ContainerName: oom.ContainerName,
+			Count:         1,
+			Timestamp:     time.Now(),
+		})
+	}
+
+	return items
 }
 
 // detectNodeIssues detects node pressure conditions (v0.6.4)

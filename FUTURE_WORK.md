@@ -160,6 +160,44 @@ All backend parsers and data structures ready for v0.6.x consumption:
 
 ## 📋 Medium Priority (v0.4.0)
 
+### Issue #17 - Cluster-Level Drill-Down (v0.6.8) ⭐
+- **Priority**: MEDIUM-HIGH
+- **Complexity**: Medium
+- **Impact**: High (usability)
+- **Status**: Partially fixed in v0.6.6, full UX deferred to v0.6.8
+- **Description**: Cluster-level items (kubelet, etcd, node) should allow drill-down to show impacted pods
+- **Current State (v0.6.6)**:
+  - ✅ FIXED: Kubelet/etcd/node items no longer navigate to wrong pod diagnostics
+  - ❌ MISSING: No drill-down UX to see which pods are impacted
+  - User feedback: "Items appear but when selected don't display impacted pods with 1-9 selection"
+- **Desired UX** (similar to v0.6.1 cluster events):
+  - User selects kubelet/node/etcd issue in dashboard
+  - Press Enter → Shows list of impacted pods
+  - Use 1-9 to jump to specific pod diagnostics
+  - Shows pod count in description (e.g., "14 occurrences → 8 pods affected")
+- **Technical Requirements**:
+  - Extend AffectedPods field to kubelet/node/etcd AttentionItems
+  - Reuse cluster event drill-down infrastructure from v0.6.1
+  - Map kubelet errors → pods on affected nodes
+  - Map node pressure → pods scheduled on that node
+  - Map etcd issues → control plane pods
+- **Example Display**:
+  ```
+  Item: Kubelet: HTTP 502 - 14 occurrences
+  Enter → Shows: "8 pods affected on node worker-1:
+    1. nginx-xyz (3 errors)
+    2. postgres-abc (2 errors)
+    3. redis-def (1 error)
+    ...
+  ```
+- **Why Deferred to v0.6.8**:
+  - v0.6.7 focuses on inline diagnostics (major UX overhaul)
+  - Cluster drill-down requires mapping logic between nodes/kubelet → pods
+  - Better to implement after v0.6.7's navigation refactor completes
+- **Location**: `internal/tui/handlers.go` handleClusterDrillDown() (extend from v0.6.1)
+- **Philosophy**: "Show relationships" - cluster-level issues should reveal impacted workloads
+- **Triggered by**: User manual testing of v0.6.6
+
 ### Dashboard Navigation Truth Only Violation (v0.6.2 → v0.6.7) 🔥
 - **Priority**: CRITICAL
 - **Complexity**: High (architectural)

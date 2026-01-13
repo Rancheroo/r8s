@@ -64,8 +64,15 @@ func (a *App) handleEnter() tea.Cmd {
 			return a.handleClusterEventDrillDown(matchedItem)
 		}
 
-		// Only navigate for pod-related issues
-		if matchedItem.ResourceType == "pod" && matchedItem.PodName != "" {
+		// v0.6.6: Fix Issue #17 - Non-pod resource types should not navigate to pod diagnostics
+		// Only pod items should drill down to log view
+		// Other resource types (kubelet, etcd, node, system, daemonset) represent cluster-level issues
+		if matchedItem.ResourceType != "pod" {
+			return nil
+		}
+
+		// Only navigate for pod-related issues with valid pod name
+		if matchedItem.PodName != "" {
 			// v0.5.8: Use unified navigation with WARN filter for dashboard
 			cmd := a.navigateToLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, matchedItem.ContainerName)
 

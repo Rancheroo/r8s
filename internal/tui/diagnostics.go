@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Rancheroo/r8s/internal/datasource"
 )
 
@@ -21,16 +23,78 @@ func generateCrashLoopContext(ds datasource.DataSource, namespace, podName strin
 }
 
 // generateOOMContext creates diagnostic context for OOM kills
+// Enhanced in v0.6.6 with actual OOM analysis data
 func generateOOMContext(ds datasource.DataSource, namespace, podName string) *datasource.DiagnosticContext {
-	oom, _ := ds.GetOOMAnalysis()
-	resources, _ := ds.GetPodResources(podName)
+	oomEvents, _ := ds.GetOOMAnalysis()
 
+	// Find OOM event for this pod
+	var matchedOOM *datasource.OOMAnalysis
+	for i := range oomEvents {
+		// Handle both "namespace/podname" and just "podname" formats
+		oomPodName := oomEvents[i].PodName
+		if strings.Contains(oomPodName, "/") {
+			parts := strings.Split(oomPodName, "/")
+			if len(parts) == 2 {
+				oomPodName = parts[1]
+			}
+		}
+
+		if oomPodName == podName {
+			matchedOOM = &oomEvents[i]
+			break
+		}
+	}
+
+	// Default context if no specific OOM data
+	if matchedOOM == nil {
+		return &datasource.DiagnosticContext{
+			Severity:       "critical",
+			FixPriority:    "immediate",
+			RootCause:      "Container OOMKilled",
+			Recommendation: "Review pod resource limits. Check rke2/kubectl/events for memory details.",
+			RelatedData:    []string{"OOM analysis data not available in bundle"},
+		}
+	}
+
+	// Build context from actual OOM data
 	ctx := &datasource.DiagnosticContext{
-		Severity:       "critical",
-		FixPriority:    "immediate",
-		RootCause:      "Container exceeded memory limit",
-		Recommendation: "Increase MemoryLimit or optimize application memory usage. Check for memory leaks.",
-		RelatedData:    []string{fmt.Sprintf("OOM Events: %d", len(oom)), fmt.Sprintf("Resources: %d specs", len(resources))},
+		Severity:    "critical",
+		FixPriority: "immediate",
+	}
+
+	// Determine root cause
+	if matchedOOM.IsNodeOOM {
+		ctx.RootCause = "Node memory exhausted - system OOM"
+		ctx.Recommendation = "Investigate node memory pressure. Check node describe for memory allocatable."
+		ctx.RelatedData = []string{
+			"Node-level OOM (not container limit)",
+			"Check: kubectl describe nodes",
+			"Review: rke2/kubectl/nodesdescribe in bundle",
+		}
+	} else if matchedOOM.MemoryLimit != "" {
+		ctx.RootCause = fmt.Sprintf("Container exceeded memory limit: %s", matchedOOM.MemoryLimit)
+
+		// Build recommendation based on limit
+		if matchedOOM.MemoryRequest != "" {
+			ctx.Recommendation = fmt.Sprintf("Consider increasing limit from %s (request: %s). Monitor actual usage first.",
+				matchedOOM.MemoryLimit, matchedOOM.MemoryRequest)
+		} else {
+			ctx.Recommendation = fmt.Sprintf("Increase memory limit above %s or optimize application", matchedOOM.MemoryLimit)
+		}
+
+		ctx.RelatedData = []string{
+			fmt.Sprintf("Limit: %s", matchedOOM.MemoryLimit),
+		}
+		if matchedOOM.MemoryRequest != "" {
+			ctx.RelatedData = append(ctx.RelatedData, fmt.Sprintf("Request: %s", matchedOOM.MemoryRequest))
+		}
+		if matchedOOM.ContainerName != "" {
+			ctx.RelatedData = append(ctx.RelatedData, fmt.Sprintf("Container: %s", matchedOOM.ContainerName))
+		}
+	} else {
+		ctx.RootCause = "Container OOMKilled (limit not found in bundle)"
+		ctx.Recommendation = "Check pod spec for memory limits. Review rke2/pod-manifests/ or kubectl describe pod."
+		ctx.RelatedData = []string{"Memory limit data not parsed from bundle"}
 	}
 
 	return ctx
