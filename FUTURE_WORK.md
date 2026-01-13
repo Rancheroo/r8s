@@ -249,6 +249,35 @@ All backend parsers and data structures ready for v0.6.x consumption:
 
 - **Triggered by**: User manual testing of v0.6.2
 
+### Dashboard Re-Sort on Navigation Return (v0.6.8+) ⭐
+- **Priority**: LOW-MEDIUM
+- **Complexity**: Low
+- **Impact**: Low (polish)
+- **Description**: Dashboard re-sorts when navigating back from pod diagnostics
+- **Problem Observed (v0.6.7)**:
+  - User navigates from dashboard → pod → diagnostics
+  - Presses Esc to return to dashboard
+  - Dashboard items reorder based on current sort mode
+  - Cursor position preserved but visual layout changes
+- **Current Behavior**:
+  - Sort mode is preserved correctly
+  - Cursor restoration works (finds item by Title)
+  - But full re-sort happens on return (not cached)
+- **Desired Behavior**:
+  - Dashboard should maintain visual order when returning from drill-down
+  - Only re-sort when user explicitly presses 's' or 'r' (refresh)
+  - Cache sorted order between navigations for stability
+- **Proposed Fix**:
+  - Cache displayedItems + visualOrder on navigation away
+  - Restore cached order on Esc return (if no sort mode change)
+  - Invalidate cache only on: sort toggle, refresh, or data update
+  - Preserve cursor position + visual stability
+- **Alternative**: Document as intended behavior (dashboard always reflects current sort)
+- **Location**: `internal/tui/app.go` - attentionMsg handler (line ~730)
+- **Philosophy**: Visual stability vs always-fresh sorting trade-off
+- **Triggered by**: User manual testing of v0.6.7 navigation fix
+- **Decision**: Defer to v0.6.8 - Low priority polish item, not blocking release
+
 ### Diagnostic Panel Event Message Truncation (v0.5.8+) ⭐
 - **Priority**: Medium
 - **Complexity**: Low
