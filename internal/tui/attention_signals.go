@@ -734,6 +734,10 @@ func detectOOMIssues(ds datasource.DataSource) []AttentionItem {
 		// PodName format from bundle can be "namespace/podname" or just "podname"
 		namespace := "default"
 		podName := oom.PodName
+		resourceType := "pod"
+		if oom.IsNodeOOM {
+			resourceType = "node"
+		}
 		if strings.Contains(oom.PodName, "/") {
 			parts := strings.Split(oom.PodName, "/")
 			if len(parts) == 2 {
@@ -748,9 +752,10 @@ func detectOOMIssues(ds datasource.DataSource) []AttentionItem {
 			Title:         podName,
 			Description:   desc,
 			Namespace:     namespace,
-			ResourceType:  "pod",
+			ResourceType:  resourceType,
 			PodName:       podName,
 			ContainerName: oom.ContainerName,
+			Count:         1,
 			Timestamp:     time.Now(),
 		})
 	}

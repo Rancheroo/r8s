@@ -179,36 +179,23 @@ func extractPodNameFromOOMMessage(message, eventName string) string {
 // enrichWithQoSClass attempts to add QoS class information from pod manifests
 // Falls back gracefully if manifests are not available
 func enrichWithQoSClass(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	// Try to get QoS class from pod manifests directory
+	// TODO: Parse manifestsPath to extract QoS class information from pod manifests
 	manifestsPath := filepath.Join(bundleRoot, "rke2/pod-manifests")
-
-	// Check if directory exists
 	if _, err := os.Stat(manifestsPath); os.IsNotExist(err) {
-		// Manifests not available - return events as-is
 		return oomEvents
 	}
 
-	// For now, return events as-is
-	// Full implementation would parse YAML manifests to extract QoS class
-	// This is deferred to future enhancement
 	return oomEvents
 }
 
 // enrichWithNodeMemory attempts to correlate OOM events with node memory pressure
 // Falls back gracefully if node data is not available
 func enrichWithNodeMemory(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	// Try to read node describe data
+	// TODO: Parse nodesDescribePath to analyze node memory pressure during OOM events
 	nodesDescribePath := filepath.Join(bundleRoot, "rke2/kubectl/nodesdescribe")
-
-	// Check if file exists
 	if _, err := os.Stat(nodesDescribePath); os.IsNotExist(err) {
-		// Node data not available - return events as-is
 		return oomEvents
 	}
 
-	// For now, return events as-is
-	// Full implementation would parse node conditions and memory allocatable
-	// to determine if node was under memory pressure during OOM
-	// This is deferred to future enhancement
 	return oomEvents
 }

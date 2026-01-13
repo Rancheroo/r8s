@@ -21,11 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed 🐛
 
-- **Issue #17**: Dashboard navigation for non-pod resource types fixed (HIGH priority)
-  - Fixed kubelet, etcd, node, system, and daemonset items navigating to wrong diagnostics
-  - Changed from specific kubelet check to comprehensive ResourceType != "pod" validation
-  - Cluster-level issues no longer incorrectly attempt pod log navigation
-  - Applies to all non-pod resource types in attention dashboard
+- **Issue #17** (PARTIAL FIX): Dashboard navigation for non-pod resource types
+  - **Fixed**: Kubelet, etcd, node, system, and daemonset items no longer navigate to wrong pod diagnostics
+  - **Fixed**: Changed from specific kubelet check to comprehensive ResourceType != "pod" validation
+  - **Remaining**: Cluster-level items (kubelet, node) should allow drill-down to show impacted pods
+  - **Deferred**: Full drill-down UX (1-9 selection, impacted pods list) scheduled for v0.6.8
+  - **Impact**: Prevents incorrect navigation, but doesn't provide cluster-level drill-down yet
 
 ### Enhanced 🔧
 
