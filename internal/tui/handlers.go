@@ -59,30 +59,32 @@ func (a *App) handleEnter() tea.Cmd {
 
 		matchedItem := &visualOrder[a.attentionCursor]
 
+		// DEBUG: Log item details for diagnosis (verbose mode only)
+		if a.config.Verbose {
+			fmt.Printf("DEBUG handleEnter: cursor=%d, ResourceType='%s', Title='%s', PodName='%s'\n",
+				a.attentionCursor, matchedItem.ResourceType, matchedItem.Title, matchedItem.PodName)
+		}
+
 		// v0.6.1: Handle cluster event drill-down
 		if matchedItem.ResourceType == "event" && len(matchedItem.AffectedPods) > 0 {
 			return a.handleClusterEventDrillDown(matchedItem)
 		}
 
-		// v0.6.6: Fix Issue #17 - Non-pod resource types should not navigate to pod diagnostics
-		// Only pod items should drill down to log view
-		// Other resource types (kubelet, etcd, node, system, daemonset) represent cluster-level issues
-		if matchedItem.ResourceType != "pod" {
+		// v0.6.7: Fix Issue #17 - Comprehensive non-pod resource type handling
+		// Only pod items with valid PodName can navigate to diagnostics
+		// All other resource types (kubelet, etcd, node, system, daemonset, event, log)
+		// should return nil (no-op) until proper drill-down views are implemented
+		if matchedItem.ResourceType != "pod" || matchedItem.PodName == "" {
 			return nil
 		}
 
-		// Only navigate for pod-related issues with valid pod name
-		if matchedItem.PodName != "" {
-			// v0.5.8: Use unified navigation with WARN filter for dashboard
-			cmd := a.navigateToLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, matchedItem.ContainerName)
+		// Navigate to pod logs view with diagnostic-first display
+		cmd := a.navigateToLogs(matchedItem.ClusterID, matchedItem.Namespace, matchedItem.PodName, matchedItem.ContainerName)
 
-			// Dashboard-specific: Set filter to show errors and warnings by default
-			a.filterLevel = "WARN"
-			a.currentContainer = matchedItem.ContainerName
-			return cmd
-		}
-
-		return nil
+		// Dashboard-specific: Set filter to show errors and warnings by default
+		a.filterLevel = "WARN"
+		a.currentContainer = matchedItem.ContainerName
+		return cmd
 
 	case ViewClusters:
 		// Navigate to Projects for selected cluster
