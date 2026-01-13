@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Rancheroo/r8s/internal/datasource"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -145,6 +144,9 @@ func (a *App) renderAttentionDashboard() string {
 		Padding(0, 1).
 		Render(summaryText)
 
+	// Calculate dynamic number width for alignment (Issue #18 fix)
+	numWidth := len(fmt.Sprintf("%d", displayedCount)) + 2 // +2 for ". "
+
 	// Build issue list with cursor tracking
 	var lines []string
 	itemIdx := 0 // Track actual item index (for cursor)
@@ -155,7 +157,7 @@ func (a *App) renderAttentionDashboard() string {
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorRed).Bold(true).Render("CRITICAL:"))
 		for _, item := range critical {
 			isSelected := (itemIdx == a.attentionCursor)
-			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
+			line := a.renderAttentionItem(itemIdx+1, item, isSelected, numWidth)
 			lines = append(lines, line)
 			itemIdx++
 		}
@@ -166,7 +168,7 @@ func (a *App) renderAttentionDashboard() string {
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorYellow).Bold(true).Render("WARNING:"))
 		for _, item := range warning {
 			isSelected := (itemIdx == a.attentionCursor)
-			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
+			line := a.renderAttentionItem(itemIdx+1, item, isSelected, numWidth)
 			lines = append(lines, line)
 			itemIdx++
 		}
@@ -177,7 +179,7 @@ func (a *App) renderAttentionDashboard() string {
 		lines = append(lines, lipgloss.NewStyle().Foreground(colorCyan).Bold(true).Render("INFO:"))
 		for _, item := range info {
 			isSelected := (itemIdx == a.attentionCursor)
-			line := a.renderAttentionItem(itemIdx+1, item, isSelected)
+			line := a.renderAttentionItem(itemIdx+1, item, isSelected, numWidth)
 			lines = append(lines, line)
 			itemIdx++
 		}
@@ -220,16 +222,13 @@ func (a *App) renderAttentionDashboard() string {
 	// Build status with bundle health, critical count visibility, position indicator, and sort mode
 	var statusParts []string
 
-	// BUNDLE HEALTH FIRST (if in bundle mode) - access through datasource getter
+	// BUNDLE HEALTH FIRST (if in bundle mode) - use interface method
 	if a.bundleMode && a.dataSource != nil {
-		// Try to get bundle health from datasource
-		if bundleDS, ok := a.dataSource.(*datasource.BundleDataSource); ok {
-			health := bundleDS.GetBundleHealth()
-			if health != nil {
-				pct := health.Percentage()
-				healthIndicator := fmt.Sprintf("📦 BUNDLE %d%%", pct)
-				statusParts = append(statusParts, healthIndicator)
-			}
+		health := a.dataSource.GetBundleHealth()
+		if health != nil {
+			pct := health.Percentage()
+			healthIndicator := fmt.Sprintf("📦 BUNDLE %d%%", pct)
+			statusParts = append(statusParts, healthIndicator)
 		}
 	}
 
@@ -302,9 +301,10 @@ func (a *App) renderAttentionDashboard() string {
 
 // renderAttentionItem renders a single attention item with number prefix and selection highlight
 // FIX (v0.5.9): Simplified rendering - removed expansion indicators
-func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) string {
-	// Format: "1. 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
-	numStr := fmt.Sprintf("%d. ", num)
+// FIX (v0.6.7): Added numWidth parameter for dynamic alignment (Issue #18)
+func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool, numWidth int) string {
+	// Format line 1: "1. 💀 nginx-deploy-xyz    CrashLoopBackOff    kube-system"
+	numStr := fmt.Sprintf("%*d. ", numWidth-2, num) // Right-align number with dynamic width
 
 	titleWidth := 30
 	descWidth := 25
@@ -325,7 +325,7 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 		ns = ns[:nsWidth-3] + "..."
 	}
 
-	line := fmt.Sprintf("%s%s %-*s  %-*s  %s",
+	line1 := fmt.Sprintf("%s%s %-*s  %-*s  %s",
 		numStr,
 		item.Emoji,
 		titleWidth, title,
@@ -333,27 +333,64 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool) 
 		ns,
 	)
 
+	// v0.6.7: Add line 2 with diagnostic context if available
+	var line2 string
+	if item.DiagnosticContext != nil {
+		// Format: "   → Root cause | Fix: Recommendation"
+		line2Prefix := strings.Repeat(" ", numWidth) // Align with content
+		rootCause := item.DiagnosticContext.RootCause
+		fix := item.DiagnosticContext.Recommendation
+
+		// Truncate if too long (leave room for formatting)
+		maxLen := 80
+		if len(rootCause) > maxLen {
+			rootCause = rootCause[:maxLen-3] + "..."
+		}
+		if len(fix) > maxLen {
+			fix = fix[:maxLen-3] + "..."
+		}
+
+		line2 = fmt.Sprintf("%s→ %s | Fix: %s", line2Prefix, rootCause, fix)
+	}
+
 	// Apply selection highlight (inverts colors for visibility)
 	if isSelected {
-		return lipgloss.NewStyle().
+		styledLine1 := lipgloss.NewStyle().
 			Background(colorCyan).
 			Foreground(colorDarkGray).
 			Bold(true).
-			Render(line)
+			Render(line1)
+
+		if line2 != "" {
+			styledLine2 := lipgloss.NewStyle().
+				Background(colorCyan).
+				Foreground(colorDarkGray).
+				Render(line2)
+			return styledLine1 + "\n" + styledLine2
+		}
+		return styledLine1
 	}
 
 	// Color the entire line based on severity when not selected
 	var style lipgloss.Style
+	var diagnosticStyle lipgloss.Style
 	switch item.Severity {
 	case SeverityCritical:
 		style = lipgloss.NewStyle().Foreground(colorRed)
+		diagnosticStyle = lipgloss.NewStyle().Foreground(colorGray).Italic(true)
 	case SeverityWarning:
 		style = lipgloss.NewStyle().Foreground(colorYellow)
+		diagnosticStyle = lipgloss.NewStyle().Foreground(colorGray).Italic(true)
 	case SeverityInfo:
 		style = lipgloss.NewStyle().Foreground(colorWhite)
+		diagnosticStyle = lipgloss.NewStyle().Foreground(colorGray).Italic(true)
 	}
 
-	return style.Render(line)
+	// Combine line1 and optional line2
+	if line2 != "" {
+		return style.Render(line1) + "\n" + diagnosticStyle.Render(line2)
+	}
+	return style.Render(line1)
 }
 
 // renderAllGood renders the "all systems operational" screen

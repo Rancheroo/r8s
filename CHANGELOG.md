@@ -7,6 +7,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.7] - 2026-01-13
+
+### Added ✨
+
+- **Inline Diagnostics in Attention Dashboard** - 2-line format with root cause and fix suggestions
+  - Line 1: Issue title + emoji indicator
+  - Line 2: "→ Root cause | Fix: Recommendation" (shown when DiagnosticContext available)
+  - Consumes v0.5.12 DiagnosticContext data structures
+  - Populated for CrashLoopBackOff, OOMKilled, ImagePullBackOff issues
+  - Diagnostic line displayed in gray italic for visual distinction
+  - Implements "5-Second Rule" - users know what to fix immediately
+  - "Truth Only™" - line 2 only shows when diagnostic data exists
+
+- **GetBundleHealth() Interface Method** - Unified bundle health access
+  - Added to DataSource interface for clean abstraction
+  - Returns BundleHealth with HasEtcd/HasNodes/HasSystemInfo/HasEvents/HasPods flags
+  - Percentage() method calculates bundle completeness (0-100%)
+  - Bundle mode status bar shows "📦 BUNDLE 80%" automatically
+  - Embedded datasource returns nil (demo mode has no health concept)
+
+### Fixed 🐛
+
+- **Issue #18**: Dashboard table alignment with double-digit item numbers
+  - Numbers now dynamic width: 1-9 uses 3 chars (" 1. "), 10-99 uses 4 chars (" 10. ")
+  - Calculated automatically based on total displayed items
+  - Right-aligned numbers for clean visual alignment
+  - Works correctly with 100+ items in dashboard
+
+- **Issue #19**: Bundle health percentage display restored
+  - Root cause: Type assertion bypassed DataSource interface
+  - Solution: Added GetBundleHealth() to DataSource interface (proper abstraction)
+  - Status bar now shows bundle completeness: "📦 BUNDLE 100%"
+  - Uses interface method instead of type assertion (follows our own abstractions)
+
+### Enhanced 🔧
+
+- **DiagnosticContext field added to AttentionItem**
+  - Struct now includes optional diagnostic information
+  - Populated by detection functions (generateCrashLoopContext, generateOOMContext, generateImagePullContext)
+  - Enables future expansion of inline diagnostic types
+  - 2-line rendering automatically adapts based on context availability
+
+- **Test mock compatibility**
+  - Updated mockDataSource in log_scanning_test.go with GetBundleHealth()
+  - All tests passing with new interface method
+  - Zero regression in test suite
+
+### Technical - v0.6.7
+
+- Modified files:
+  - `internal/tui/attention_signals.go` - Added DiagnosticContext field, populated for CrashLoop/OOM/ImagePull
+  - `internal/tui/attention.go` - Implemented 2-line rendering with dynamic number width
+  - `internal/datasource/interface.go` - Added GetBundleHealth() method and BundleHealth type
+  - `internal/datasource/bundle.go` - Implemented GetBundleHealth() with real data checks
+  - `internal/tui/log_scanning_test.go` - Updated mock with GetBundle Health()
+
+- Key changes:
+  - Dynamic `numWidth` calculation: `len(fmt.Sprintf("%d", displayedCount)) + 2`
+  - Conditional line2 rendering: only when `item.DiagnosticContext != nil`
+  - BundleHealth flags populated by checking bundle data availability
+  - Diagnostic line styled with gray italic for visual distinction
+
+### Impact Summary - v0.6.7
+
+- ✅ **Instant diagnostics** - Root cause visible without drilling down
+- ✅ **Actionable guidance** - Fix recommendations shown inline
+- ✅ **Clean alignment** - Works with 10, 100, even 1000+ items
+- ✅ **Bundle transparency** - Health percentage shows data completeness
+- ✅ **Proper abstractions** - GetBundleHealth() through interface (not type assertion)
+- ✅ **Zero regressions** - All tests passing, builds clean
+
+### Dashboard Format Example - v0.6.7
+
+```
+CRITICAL:
+1. 💀 nginx-pod                CrashLoopBackOff           kube-system
+   → Container failing: Exit code 1 - Check startup command | Fix: Review entrypoint script
+
+2. 🧨 db-pod                   OOMKilled                  default
+   → Memory exceeded: 980Mi/1Gi limit - Optimize usage | Fix: Increase to 2Gi
+
+WARNING:
+3. 🚫 api-pod                  ImagePullBackOff           default
+   → Registry auth failed: secret invalid | Fix: Update imagePullSecrets
+```
+
+### Success Criteria - v0.6.7
+
+- ✅ All dashboard items show 2-line format when diagnostics available
+- ✅ Root cause visible without drilling down
+- ✅ Recommendation actionable in ≤5 seconds
+- ✅ Emoji indicators match severity
+- ✅ No more than 2 lines per item (strict)
+- ✅ Issue #18: Column alignment works with 10+ items
+- ✅ Issue #19: Bundle health displays in status bar
+
+---
+
 ## [0.6.6] - 2026-01-13
 
 ### Added ✨

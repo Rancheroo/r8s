@@ -359,6 +359,10 @@ func (m *mockDataSource) Mode() string {
 	return "TEST"
 }
 
+func (m *mockDataSource) GetBundleHealth() *datasource.BundleHealth {
+	return nil
+}
+
 // Helper functions to generate test logs
 func makeLogsWithErrors(count int) []string {
 	logs := make([]string, count)

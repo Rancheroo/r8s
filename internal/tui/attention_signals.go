@@ -75,6 +75,9 @@ type AttentionItem struct {
 	// Event-specific fields
 	EventReason string // Parsed event reason (e.g., "BackOff", "Failed")
 	EventType   string // Event type (e.g., "Warning", "Normal")
+
+	// Diagnostic context (v0.6.7) - Inline root cause and recommendation
+	DiagnosticContext *datasource.DiagnosticContext
 }
 
 // ComputeAttentionItems runs all signal detectors and returns prioritized list of issues
@@ -165,14 +168,15 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			}
 
 			items = append(items, AttentionItem{
-				Severity:     SeverityCritical,
-				Emoji:        "💀",
-				Title:        pod.Name,
-				Description:  description,
-				Namespace:    namespace,
-				ResourceType: "pod",
-				PodName:      pod.Name,
-				Timestamp:    time.Now(),
+				Severity:          SeverityCritical,
+				Emoji:             "💀",
+				Title:             pod.Name,
+				Description:       description,
+				Namespace:         namespace,
+				ResourceType:      "pod",
+				PodName:           pod.Name,
+				Timestamp:         time.Now(),
+				DiagnosticContext: generateCrashLoopContext(ds, namespace, pod.Name),
 			})
 			continue
 		}
@@ -187,14 +191,15 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			}
 
 			items = append(items, AttentionItem{
-				Severity:     SeverityCritical,
-				Emoji:        "🧨", // Distinct from CrashLoop
-				Title:        pod.Name,
-				Description:  description,
-				Namespace:    namespace,
-				ResourceType: "pod",
-				PodName:      pod.Name,
-				Timestamp:    time.Now(),
+				Severity:          SeverityCritical,
+				Emoji:             "🧨", // Distinct from CrashLoop
+				Title:             pod.Name,
+				Description:       description,
+				Namespace:         namespace,
+				ResourceType:      "pod",
+				PodName:           pod.Name,
+				Timestamp:         time.Now(),
+				DiagnosticContext: generateOOMContext(ds, namespace, pod.Name),
 			})
 			continue
 		}
@@ -231,14 +236,15 @@ func detectPodHealth(ds datasource.DataSource) []AttentionItem {
 			}
 
 			items = append(items, AttentionItem{
-				Severity:     SeverityCritical,
-				Emoji:        "🚫",
-				Title:        pod.Name,
-				Description:  description,
-				Namespace:    namespace,
-				ResourceType: "pod",
-				PodName:      pod.Name,
-				Timestamp:    time.Now(),
+				Severity:          SeverityCritical,
+				Emoji:             "🚫",
+				Title:             pod.Name,
+				Description:       description,
+				Namespace:         namespace,
+				ResourceType:      "pod",
+				PodName:           pod.Name,
+				Timestamp:         time.Now(),
+				DiagnosticContext: generateImagePullContext(ds, namespace, pod.Name),
 			})
 			continue
 		}

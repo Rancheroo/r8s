@@ -88,6 +88,9 @@ type DataSource interface {
 	// GetDiagnosticContext returns diagnostic context for a pod (bundle mode only, returns nil for live)
 	GetDiagnosticContext(namespace, podName string) (*DiagnosticContext, error)
 
+	// GetBundleHealth returns bundle health information (bundle mode only, returns nil for embedded/demo)
+	GetBundleHealth() *BundleHealth
+
 	// Mode returns a display string for the current mode (LIVE, BUNDLE, DEMO)
 	Mode() string
 
@@ -217,4 +220,38 @@ type DiagnosticContext struct {
 	Severity       string   // "critical", "high", "medium", "low"
 	RelatedData    []string // ["Pod: my-app-abc", "Node: node-1 (95% memory)", "Events: OOMKilled x3"]
 	FixPriority    string   // "immediate", "investigate", "monitor"
+}
+
+// BundleHealth represents the health/completeness of a bundle
+type BundleHealth struct {
+	HasEtcd       bool
+	HasNodes      bool
+	HasSystemInfo bool
+	HasEvents     bool
+	HasPods       bool
+}
+
+// Percentage returns bundle health as a percentage (0-100)
+func (bh *BundleHealth) Percentage() int {
+	if bh == nil {
+		return 0
+	}
+	count := 0
+	total := 5
+	if bh.HasEtcd {
+		count++
+	}
+	if bh.HasNodes {
+		count++
+	}
+	if bh.HasSystemInfo {
+		count++
+	}
+	if bh.HasEvents {
+		count++
+	}
+	if bh.HasPods {
+		count++
+	}
+	return (count * 100) / total
 }
