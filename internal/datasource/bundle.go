@@ -416,11 +416,40 @@ func (ds *BundleDataSource) Mode() string {
 }
 
 // GetBundleHealth returns the bundle health information (bundle mode only)
-func (ds *BundleDataSource) GetBundleHealth() *bundle.BundleHealth {
-	if ds.bundle != nil {
-		return ds.bundle.Health
+func (ds *BundleDataSource) GetBundleHealth() *BundleHealth {
+	if ds.bundle == nil {
+		return nil
 	}
-	return nil
+
+	// Check what data actually exists in the bundle
+	health := &BundleHealth{}
+
+	// Check for etcd data
+	if etcd, _ := bundle.ParseEtcdHealth(ds.bundle.ExtractPath); etcd != nil {
+		health.HasEtcd = true
+	}
+
+	// Check for nodes data
+	if nodes, _ := bundle.ParseNodes(ds.bundle.ExtractPath); len(nodes) > 0 {
+		health.HasNodes = true
+	}
+
+	// Check for system info
+	if sysInfo, _ := bundle.ParseSystemHealth(ds.bundle.ExtractPath); sysInfo != nil {
+		health.HasSystemInfo = true
+	}
+
+	// Check for events
+	if len(ds.bundle.Events) > 0 {
+		health.HasEvents = true
+	}
+
+	// Check for pods
+	if len(ds.bundle.Pods) > 0 {
+		health.HasPods = true
+	}
+
+	return health
 }
 
 // GetAllPods returns all pods across all namespaces
