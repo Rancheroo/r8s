@@ -31,9 +31,11 @@ func (a *App) handleEnter() tea.Cmd {
 		}
 
 		// Get displayed items (respects sorting and capping)
+		// IMPORTANT: This returns items already sorted by the current sort mode
 		displayedItems := a.getDisplayedItems()
 
-		// Group items by severity (same as renderAttentionDashboard)
+		// Group items by severity while PRESERVING sort order within each group
+		// This MUST match the rendering logic in renderAttentionDashboard() exactly
 		var critical, warning, info []AttentionItem
 		for _, item := range displayedItems {
 			switch item.Severity {
@@ -46,7 +48,7 @@ func (a *App) handleEnter() tea.Cmd {
 			}
 		}
 
-		// Build visual order: critical → warning → info
+		// Build visual order: critical → warning → info (matching rendered order)
 		visualOrder := make([]AttentionItem, 0, len(displayedItems))
 		visualOrder = append(visualOrder, critical...)
 		visualOrder = append(visualOrder, warning...)
