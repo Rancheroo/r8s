@@ -336,15 +336,40 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, nil
 			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
 				// Jump to line by number (1-indexed display, 0-indexed storage)
+				// CRITICAL: Use displayedItems to match visual rendering order
+				displayedItems := a.getDisplayedItems()
 				idx := int(msg.String()[0] - '1')
-				if idx < len(a.attentionItems) {
+				if idx < len(displayedItems) {
 					a.attentionCursor = idx
 				}
 				return a, nil
 			case "enter":
 				// Navigate to diagnostic panel for the selected item
-				if a.attentionCursor < len(a.attentionItems) {
-					item := a.attentionItems[a.attentionCursor]
+				// CRITICAL FIX: Use visual order (displayedItems) not raw attentionItems
+				// Must match the rendering logic in renderAttentionDashboard()
+				displayedItems := a.getDisplayedItems()
+
+				// Group by severity to match visual order (same as handlers.go)
+				var critical, warning, info []AttentionItem
+				for _, item := range displayedItems {
+					switch item.Severity {
+					case SeverityCritical:
+						critical = append(critical, item)
+					case SeverityWarning:
+						warning = append(warning, item)
+					case SeverityInfo:
+						info = append(info, item)
+					}
+				}
+
+				// Build visual order: critical → warning → info
+				visualOrder := make([]AttentionItem, 0, len(displayedItems))
+				visualOrder = append(visualOrder, critical...)
+				visualOrder = append(visualOrder, warning...)
+				visualOrder = append(visualOrder, info...)
+
+				if a.attentionCursor < len(visualOrder) {
+					item := visualOrder[a.attentionCursor]
 
 					// v0.6.1: Handle cluster event drill-down
 					if item.ResourceType == "event" && len(item.AffectedPods) > 0 {
