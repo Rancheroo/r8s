@@ -2,43 +2,6 @@
 
 This document tracks known issues and planned enhancements for future releases.
 
-## Critical Issues (Blocking)
-
-### Pod Diagnostics Broken in Drill-Down View (v0.6.8.1 Regression)
-
-**Issue**: Number keys (1-9) in cluster event drill-down panel do not navigate to pod diagnostics. Issue #20
-
-**Root Cause**: 
-- `handleClusterEventPodSelection()` function has a bug in pod selection logic
-- Introduced in v0.6.8.1 hotfix
-- Suspected issues:
-  - Namespace extraction from pod data
-  - Event item matching logic
-  - Navigation command not being returned properly
-
-**Impact**: **CRITICAL** - Breaks primary use case for cluster event investigation
-
-**Symptoms**:
-1. Navigate to cluster event item (e.g., "FailedKillPod")
-2. Press Enter → Drill-down panel appears ✅
-3. Press "1" to view first pod → **Nothing happens** ❌
-4. User remains on drill-down panel with no feedback
-
-**Workaround**: Navigate to pods directly from attention dashboard (if pod item exists)
-
-**Fix Priority**: **URGENT** - Must be fixed in v0.6.8.2 immediately
-
-**Testing Gap Identified**:
-- No automated tests for drill-down navigation
-- No test coverage for number key handling in cluster event view
-- Pod selection flow not validated
-
-**Target**: v0.6.8.2 (immediate hotfix)
-
-**GitHub Issue**: https://github.com/Rancheroo/r8s/issues/20
-
----
-
 ## Known Issues
 
 ### Emoji Alignment in Attention Dashboard
