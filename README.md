@@ -1,15 +1,23 @@
 # r8s
 
-> **r8s v0.5.2 "Modular Core" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
+> **r8s v0.6.8 "Event Truncation + Cluster Drill-Down" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**What's new in 0.5.2:** Complete app.go decomposition into 6 modules · 70% cognitive load reduction · Improved testability
+**What's new in 0.6.8:** 
+- Smart event truncation (long error messages now readable in diagnostic panel)
+- Cluster-level drill-down (node pressure & ETCD issues → see affected pods)
+- Inline diagnostics with root cause + fix recommendations
+- Enhanced OOM, kubelet, and node pressure detection
 
-**Previous:** 0.4.4 - Bundle validation, CI tests, 200MB limit
+**Recent releases:** 
+- **0.6.7** - Inline diagnostics (2-line format with root cause)
+- **0.6.6** - OOM root cause display
+- **0.6.5** - Kubelet issue detection
+- **0.6.4** - Node pressure indicators
 
 ---
 
