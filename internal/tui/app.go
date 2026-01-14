@@ -275,48 +275,12 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// CLUSTER EVENT VIEW NAVIGATION (v0.6.1) - Handle before dashboard navigation
+		// v0.6.8.2: Use handler function instead of duplicate inline logic
 		if a.currentView.viewType == ViewClusterEvent {
 			switch msg.String() {
 			case "1", "2", "3", "4", "5", "6", "7", "8", "9":
-				// Jump to pod by number
-				idx := int(msg.String()[0] - '1')
-
-				// Find the event item - match by EventReason not Title
-				// (Title includes count prefix like "1578699× DNSConfigForming")
-				// v0.6.8.1: Support node and etcd types in addition to event
-				var eventItem *AttentionItem
-				for i := range a.attentionItems {
-					item := &a.attentionItems[i]
-					if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
-						item.EventReason == a.currentView.eventReason {
-						eventItem = item
-						break
-					}
-				}
-
-				if eventItem != nil && idx < len(eventItem.AffectedPods) {
-					podName := eventItem.AffectedPods[idx]
-
-					// Get pod details to find namespace
-					var podNamespace string
-					if a.dataSource != nil {
-						allPods, err := a.dataSource.GetAllPods()
-						if err == nil {
-							for _, pod := range allPods {
-								if pod.Name == podName {
-									podNamespace = extractNamespace(pod.NamespaceID)
-									break
-								}
-							}
-						}
-					}
-
-					// Navigate to pod diagnostic panel
-					if podNamespace != "" {
-						return a, a.navigateToLogs(a.currentView.clusterID, podNamespace, podName, "")
-					}
-				}
-				return a, nil
+				// Delegate to handler function (handles namespace extraction properly)
+				return a, a.handleClusterEventPodSelection(msg.String())
 			}
 		}
 
