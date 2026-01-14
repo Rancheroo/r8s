@@ -1011,13 +1011,22 @@ Next steps:
 // renderClusterEventPanel renders the cluster event drill-down panel (v0.6.1)
 // Shows affected pods list when user presses Enter on cluster event
 func (a *App) renderClusterEventPanel() string {
-	breadcrumb := breadcrumbStyle.Render(fmt.Sprintf("Attention Dashboard > Cluster Event: %s", a.currentView.eventReason))
+	// v0.6.8: Build breadcrumb with node name for node events
+	var breadcrumbText string
+	if a.currentView.nodeName != "" {
+		breadcrumbText = fmt.Sprintf("Attention Dashboard > Node Event: %s on %s", a.currentView.eventReason, a.currentView.nodeName)
+	} else {
+		breadcrumbText = fmt.Sprintf("Attention Dashboard > Cluster Event: %s", a.currentView.eventReason)
+	}
+	breadcrumb := breadcrumbStyle.Render(breadcrumbText)
 
 	// Find the cluster event item in attention items
 	var eventItem *AttentionItem
 	for i := range a.attentionItems {
 		item := &a.attentionItems[i]
-		if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
+		// v0.6.8.1: Support node and etcd types in addition to event
+		if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
+			item.EventReason == a.currentView.eventReason {
 			eventItem = item
 			break
 		}

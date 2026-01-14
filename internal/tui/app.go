@@ -52,9 +52,10 @@ type ViewContext struct {
 	// Context for logs
 	podName       string
 	containerName string
-	// Context for cluster events (v0.6.1)
-	eventReason string // e.g., "BackOff", "Failed"
+	// Context for cluster events (v0.6.1, v0.6.8 node drill-down)
+	eventReason string // e.g., "BackOff", "Failed", "MemoryPressure", "DiskPressure"
 	eventType   string // e.g., "Warning"
+	nodeName    string // v0.6.8: Node name for node-type events
 }
 
 // App represents the main TUI application
@@ -282,10 +283,12 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				// Find the event item - match by EventReason not Title
 				// (Title includes count prefix like "1578699× DNSConfigForming")
+				// v0.6.8.1: Support node and etcd types in addition to event
 				var eventItem *AttentionItem
 				for i := range a.attentionItems {
 					item := &a.attentionItems[i]
-					if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
+					if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
+						item.EventReason == a.currentView.eventReason {
 						eventItem = item
 						break
 					}
@@ -372,7 +375,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					item := visualOrder[a.attentionCursor]
 
 					// v0.6.1: Handle cluster event drill-down
-					if item.ResourceType == "event" && len(item.AffectedPods) > 0 {
+					// v0.6.8.1: Extended to support node and etcd drill-down
+					if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
+						len(item.AffectedPods) > 0 {
 						return a, a.handleClusterEventDrillDown(&item)
 					}
 
@@ -524,23 +529,23 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.loading = true
 				return a, a.fetchCRDs(clusterID)
 			}
-		case "1":
+		case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+			// Namespace view switching (1=Pods, 2=Deployments, 3=Services)
 			if a.isNamespaceResourceView() {
-				a.currentView.viewType = ViewPods
-				a.loading = true
-				return a, a.refreshCurrentView()
-			}
-		case "2":
-			if a.isNamespaceResourceView() {
-				a.currentView.viewType = ViewDeployments
-				a.loading = true
-				return a, a.refreshCurrentView()
-			}
-		case "3":
-			if a.isNamespaceResourceView() {
-				a.currentView.viewType = ViewServices
-				a.loading = true
-				return a, a.refreshCurrentView()
+				switch msg.String() {
+				case "1":
+					a.currentView.viewType = ViewPods
+					a.loading = true
+					return a, a.refreshCurrentView()
+				case "2":
+					a.currentView.viewType = ViewDeployments
+					a.loading = true
+					return a, a.refreshCurrentView()
+				case "3":
+					a.currentView.viewType = ViewServices
+					a.loading = true
+					return a, a.refreshCurrentView()
+				}
 			}
 		case "c":
 			// Navigate from Attention Dashboard to Clusters
@@ -822,6 +827,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			a.savedRowName = "" // Clear after restoration
 		}
+
+	case clusterEventMsg:
+		// v0.6.8.1: Cluster event drill-down view ready
+		// State was already updated in handleClusterEventDrillDown()
+		// This just triggers the re-render
+		a.loading = false
+		return a, nil
 
 	case errMsg:
 		a.loading = false

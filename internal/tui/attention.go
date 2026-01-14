@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 )
 
 // Default dashboard cap - show top N items before requiring expansion
@@ -307,7 +308,7 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool, 
 	numStr := fmt.Sprintf("%*d. ", numWidth-2, num) // Right-align number with dynamic width
 
 	titleWidth := 30
-	descWidth := 25
+	descWidth := 50 // v0.6.8.1: Increased from 25 to show full node pressure details (Truth Only™)
 	nsWidth := 20
 
 	title := item.Title
@@ -325,11 +326,27 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool, 
 		ns = ns[:nsWidth-3] + "..."
 	}
 
-	line1 := fmt.Sprintf("%s%s %-*s  %-*s  %s",
+	// v0.6.8.1: Account for emoji display width (emojis can be 1 or 2 cells wide)
+	// Problem: fmt.Sprintf counts runes, not display width
+	// Solution: Pad manually using actual display widths
+	emojiWidth := runewidth.StringWidth(item.Emoji)
+	titleDisplayWidth := runewidth.StringWidth(title)
+	descDisplayWidth := runewidth.StringWidth(desc)
+
+	// Calculate padding needed for each column
+	titlePad := titleWidth - titleDisplayWidth
+	descPad := descWidth - descDisplayWidth
+
+	// Add extra padding if emoji is wider than 1 cell
+	if emojiWidth > 1 {
+		titlePad += (emojiWidth - 1) // Compensate for wide emoji
+	}
+
+	line1 := fmt.Sprintf("%s%s %s%s  %s%s  %s",
 		numStr,
 		item.Emoji,
-		titleWidth, title,
-		descWidth, desc,
+		title, strings.Repeat(" ", titlePad),
+		desc, strings.Repeat(" ", descPad),
 		ns,
 	)
 
