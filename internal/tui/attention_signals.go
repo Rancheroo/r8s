@@ -818,17 +818,17 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 				desc += " • " + taintInfo
 			}
 
-		items = append(items, AttentionItem{
-			Title:        fmt.Sprintf("Node %s Memory Pressure", node.Name),
-			Description:  desc,
-			Severity:     SeverityCritical,
-			Emoji:        "🔴",
-			Namespace:    "cluster",
-			ResourceType: "node",
-			EventReason:  "Memory Pressure", // v0.6.8.1: Required for drill-down matching
-			AffectedPods: affectedPods,       // v0.6.8: Enable drill-down
-			Timestamp:    time.Now(),
-		})
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s Memory Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityCritical,
+				Emoji:        "🔴",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				EventReason:  "Memory Pressure", // v0.6.8.1: Required for drill-down matching
+				AffectedPods: affectedPods,      // v0.6.8: Enable drill-down
+				Timestamp:    time.Now(),
+			})
 		}
 
 		// Disk Pressure Detection
@@ -840,17 +840,17 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 				desc += " • " + taintInfo
 			}
 
-		items = append(items, AttentionItem{
-			Title:        fmt.Sprintf("Node %s Disk Pressure", node.Name),
-			Description:  desc,
-			Severity:     SeverityCritical,
-			Emoji:        "💿",
-			Namespace:    "cluster",
-			ResourceType: "node",
-			EventReason:  "Disk Pressure", // v0.6.8.1: Required for drill-down matching
-			AffectedPods: affectedPods,     // v0.6.8: Enable drill-down
-			Timestamp:    time.Now(),
-		})
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s Disk Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityCritical,
+				Emoji:        "💿",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				EventReason:  "Disk Pressure", // v0.6.8.1: Required for drill-down matching
+				AffectedPods: affectedPods,    // v0.6.8: Enable drill-down
+				Timestamp:    time.Now(),
+			})
 		}
 
 		// PID Pressure Detection
@@ -862,17 +862,17 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 				desc += " • " + taintInfo
 			}
 
-		items = append(items, AttentionItem{
-			Title:        fmt.Sprintf("Node %s PID Pressure", node.Name),
-			Description:  desc,
-			Severity:     SeverityWarning,
-			Emoji:        "⚡",
-			Namespace:    "cluster",
-			ResourceType: "node",
-			EventReason:  "PID Pressure", // v0.6.8.1: Required for drill-down matching
-			AffectedPods: affectedPods,    // v0.6.8: Enable drill-down
-			Timestamp:    time.Now(),
-		})
+			items = append(items, AttentionItem{
+				Title:        fmt.Sprintf("Node %s PID Pressure", node.Name),
+				Description:  desc,
+				Severity:     SeverityWarning,
+				Emoji:        "⚡",
+				Namespace:    "cluster",
+				ResourceType: "node",
+				EventReason:  "PID Pressure", // v0.6.8.1: Required for drill-down matching
+				AffectedPods: affectedPods,   // v0.6.8: Enable drill-down
+				Timestamp:    time.Now(),
+			})
 		}
 	}
 

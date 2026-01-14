@@ -565,6 +565,17 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 		eventType = "Warning"
 	}
 
+	// v0.6.8: Capture node name for node events
+	var nodeName string
+	if item.ResourceType == "node" {
+		// Extract node name from Title (format: "Node w-guard-wg-wk-pfvjr-4x...")
+		nodeName = strings.TrimPrefix(item.Title, "Node ")
+		// Truncate if it has description after " - "
+		if dashIndex := strings.Index(nodeName, " - "); dashIndex > 0 {
+			nodeName = nodeName[:dashIndex]
+		}
+	}
+
 	// Navigate to cluster event view
 	a.currentView = ViewContext{
 		viewType:    ViewClusterEvent,
@@ -572,6 +583,7 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 		clusterName: item.ClusterName,
 		eventReason: eventReason,
 		eventType:   eventType,
+		nodeName:    nodeName, // v0.6.8: Include node name
 	}
 
 	// No loading needed - we already have the data

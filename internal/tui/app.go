@@ -52,9 +52,10 @@ type ViewContext struct {
 	// Context for logs
 	podName       string
 	containerName string
-	// Context for cluster events (v0.6.1)
-	eventReason string // e.g., "BackOff", "Failed"
+	// Context for cluster events (v0.6.1, v0.6.8 node drill-down)
+	eventReason string // e.g., "BackOff", "Failed", "MemoryPressure", "DiskPressure"
 	eventType   string // e.g., "Warning"
+	nodeName    string // v0.6.8: Node name for node-type events
 }
 
 // App represents the main TUI application
@@ -529,10 +530,6 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return a, a.fetchCRDs(clusterID)
 			}
 		case "1", "2", "3", "4", "5", "6", "7", "8", "9":
-			// v0.6.8.1: Handle pod selection from cluster event drill-down
-			if a.currentView.viewType == ViewClusterEvent {
-				return a, a.handleClusterEventPodSelection(msg.String())
-			}
 			// Namespace view switching (1=Pods, 2=Deployments, 3=Services)
 			if a.isNamespaceResourceView() {
 				switch msg.String() {
