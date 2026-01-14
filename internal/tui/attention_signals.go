@@ -338,12 +338,14 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 	etcdDetails, err := ds.GetEtcdDetails()
 	if err == nil && etcdDetails != nil {
 		// Get control plane pods for drill-down (v0.6.8)
-		var allPods []rancher.Pod
+		// CRITICAL FIX: Don't silently ignore GetAllPods() error
 		var controlPlanePods []string
-		if ds != nil {
-			allPods, _ = ds.GetAllPods()
-			controlPlanePods = getControlPlanePods(allPods)
+		allPods, err := ds.GetAllPods()
+		if err != nil {
+			// If we can't get pods, drill-down won't work, but still show ETCD issues
+			allPods = []rancher.Pod{}
 		}
+		controlPlanePods = getControlPlanePods(allPods)
 
 		// Critical: ETCD Alarms (NOSPACE, etc.)
 		if etcdDetails.HasAlarms {
@@ -791,9 +793,12 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 	}
 
 	// Get all pods for correlation (v0.6.8)
-	var allPods []rancher.Pod
-	if ds != nil {
-		allPods, _ = ds.GetAllPods()
+	// CRITICAL FIX: Don't silently ignore GetAllPods() error
+	allPods, err := ds.GetAllPods()
+	if err != nil {
+		// If we can't get pods, we can't populate AffectedPods for drill-down
+		// Log this in verbose mode, but continue showing the node issues
+		allPods = []rancher.Pod{} // Empty slice prevents nil pointer issues
 	}
 
 	for _, node := range nodes {

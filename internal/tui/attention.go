@@ -307,7 +307,7 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool, 
 	numStr := fmt.Sprintf("%*d. ", numWidth-2, num) // Right-align number with dynamic width
 
 	titleWidth := 30
-	descWidth := 25
+	descWidth := 50 // v0.6.8.1: Increased from 25 to show full node pressure details (Truth Only™)
 	nsWidth := 20
 
 	title := item.Title
