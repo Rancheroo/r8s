@@ -105,6 +105,22 @@ This document captures the core principles that guide r8s development. When maki
 
 ---
 
+### 12. Pause for Review
+> **Stop after feature branch commit. Only merge to main after explicit approval.**
+
+**Example**: v0.6.8 - Should have stopped after committing to feature branch, waited for review before merge/tag/push.
+
+**Application**: Release workflow must pause after branch commit:
+1. Implement feature on feature branch
+2. Run automated tests (`make test`)
+3. Commit to feature branch
+4. **STOP** - Request review before proceeding
+5. Only after approval: merge to main, tag, push
+
+**Why**: Allows review of implementation before it becomes production. Easier to iterate on feature branch than to revert from main.
+
+---
+
 ## Development Philosophy
 
 ### Maximum Information Extraction (v0.5.5-v0.5.6)
@@ -197,6 +213,13 @@ When designing a feature, ask:
 3. ✅ **Does it show automatically?** (Show, Don't Ask)
 4. ✅ **Is the state explicit?** (Explicit > Implicit)
 5. ✅ **Did we test at 10× scale?** (Test at 10× Scale)
+
+**Before merging to main:**
+
+6. ✅ **Did we pause for review?** (Pause for Review)
+   - Feature branch committed?
+   - Tests passing?
+   - Review requested before merge?
 
 ---
 
