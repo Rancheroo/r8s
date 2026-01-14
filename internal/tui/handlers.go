@@ -637,25 +637,27 @@ func (a *App) handleClusterEventPodSelection(keyNum string) tea.Cmd {
 
 	var selectedPod *rancher.Pod
 	for i := range allPods {
-		// Match pod name AND namespace to uniquely identify the pod
-		// Also match cluster if available (though Pod struct doesn't have ClusterID field)
-		if allPods[i].Name == podName && allPods[i].NamespaceID == eventItem.Namespace {
+		// v0.6.8.2 FIX: Match by pod name ONLY (namespace in eventItem is unreliable)
+		// In bundle mode, pod names are globally unique so this is safe
+		if allPods[i].Name == podName {
 			selectedPod = &allPods[i]
 			break
 		}
 	}
 
 	if selectedPod == nil {
-		a.error = fmt.Sprintf("Pod '%s' not found in namespace '%s'", podName, eventItem.Namespace)
+		a.error = fmt.Sprintf("Pod '%s' not found", podName)
 		return nil
 	}
 
-	// Extract namespace
+	// Extract namespace from the matched pod's NamespaceID
+	// Bundle mode: "cattle-system:default" → "default"
+	// Mock mode: "default" → "default"
 	namespace := selectedPod.NamespaceID
 	if strings.Contains(namespace, ":") {
 		parts := strings.Split(namespace, ":")
 		if len(parts) > 1 {
-			namespace = parts[1]
+			namespace = parts[len(parts)-1] // Take last part after final ":"
 		}
 	}
 
