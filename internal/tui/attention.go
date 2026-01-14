@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 )
 
 // Default dashboard cap - show top N items before requiring expansion
@@ -325,10 +326,18 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool, 
 		ns = ns[:nsWidth-3] + "..."
 	}
 
+	// v0.6.8.1: Account for emoji display width (emojis can be 1 or 2 cells wide)
+	emojiWidth := runewidth.StringWidth(item.Emoji)
+	// Adjust title padding to compensate for emoji width (assume 2-cell emoji, reduce padding by 1)
+	titlePadding := titleWidth
+	if emojiWidth > 1 {
+		titlePadding = titleWidth - (emojiWidth - 1)
+	}
+
 	line1 := fmt.Sprintf("%s%s %-*s  %-*s  %s",
 		numStr,
 		item.Emoji,
-		titleWidth, title,
+		titlePadding, title,
 		descWidth, desc,
 		ns,
 	)

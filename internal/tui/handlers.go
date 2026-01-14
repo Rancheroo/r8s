@@ -631,7 +631,7 @@ func (a *App) handleClusterEventPodSelection(keyNum string) tea.Cmd {
 	// Find pod details to get namespace
 	allPods, err := a.dataSource.GetAllPods()
 	if err != nil {
-		a.error = "Failed to get pod list"
+		a.error = fmt.Sprintf("Failed to get pod list: %v", err)
 		return nil
 	}
 
