@@ -827,6 +827,13 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.savedRowName = "" // Clear after restoration
 		}
 
+	case clusterEventMsg:
+		// v0.6.8.1: Cluster event drill-down view ready
+		// State was already updated in handleClusterEventDrillDown()
+		// This just triggers the re-render
+		a.loading = false
+		return a, nil
+
 	case errMsg:
 		a.loading = false
 		a.error = msg.Error()
