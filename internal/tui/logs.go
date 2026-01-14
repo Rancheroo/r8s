@@ -772,7 +772,46 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 	return result
 }
 
-// buildEventsSection formats recent pod events (v0.6.0: Warning events only, truncated)
+// truncateEventMessage intelligently truncates long event messages while preserving key info
+// v0.6.8: Smart truncation that keeps event type, error codes, and key details visible
+func truncateEventMessage(msg string, maxLen int) string {
+	if len(msg) <= maxLen {
+		return msg
+	}
+
+	// For very long messages, use smart truncation:
+	// Keep the beginning (has event type/reason) and end (often has error codes)
+	// Format: "Beginning... ...end (truncated)"
+
+	const truncatedSuffix = " (truncated)"
+	const ellipsis = "..."
+
+	// Reserve space for suffix and ellipsis
+	availableLen := maxLen - len(truncatedSuffix) - len(ellipsis)*2
+	if availableLen < 20 {
+		// Very short maxLen - just truncate at beginning
+		return msg[:maxLen-len(truncatedSuffix)] + truncatedSuffix
+	}
+
+	// Split available space: 60% beginning, 40% end
+	beginLen := (availableLen * 6) / 10
+	endLen := availableLen - beginLen
+
+	// Try to break at word boundaries
+	beginning := msg[:beginLen]
+	if lastSpace := strings.LastIndex(beginning, " "); lastSpace > beginLen-10 {
+		beginning = msg[:lastSpace]
+	}
+
+	ending := msg[len(msg)-endLen:]
+	if firstSpace := strings.Index(ending, " "); firstSpace > 0 && firstSpace < 10 {
+		ending = msg[len(msg)-endLen+firstSpace+1:]
+	}
+
+	return beginning + ellipsis + ending + truncatedSuffix
+}
+
+// buildEventsSection formats recent pod events (v0.6.0: Warning events only, v0.6.8: smart truncation)
 func (a *App) buildEventsSection(events []rancher.Event) string {
 	header := `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 RECENT EVENTS
@@ -809,12 +848,8 @@ func (a *App) buildEventsSection(events []rancher.Event) string {
 			countStr = fmt.Sprintf(" (x%d)", event.Count)
 		}
 
-		// Truncate message at 80 chars (v0.6.0)
-		message := event.Message
-		maxLen := 80
-		if len(message) > maxLen {
-			message = message[:maxLen] + " (truncated)"
-		}
+		// Smart truncate message at 80 chars (v0.6.8)
+		message := truncateEventMessage(event.Message, 80)
 
 		// Format: emoji + reason + message + count
 		eventLines = append(eventLines, fmt.Sprintf("  ⚠️  %s: %s%s",

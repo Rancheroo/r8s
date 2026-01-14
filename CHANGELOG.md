@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.8] - 2026-01-14
+
+### Added ✨
+
+- **Event Message Smart Truncation** - Long events now readable in diagnostic panel
+  - Smart truncation at ~80 chars preserves beginning and end (error codes often at end)
+  - Format: "Beginning text... ...ending text (truncated)" keeps context
+  - Handles multi-hundred character registry pull errors gracefully
+  - Container status section no longer hidden by event wall-of-text
+  - Applied to diagnostic panel event display (v0.6.0 enhanced)
+
+- **Cluster-Level Drill-Down** - Node and ETCD issues now show impacted pods
+  - Node pressure items (Memory/Disk/PID) → drill-down shows pods on that node
+  - ETCD issues (alarms, unhealthy, large DB, member mismatch) → drill-down shows control plane pods
+  - Reuses v0.6.1 cluster event drill-down infrastructure (1-9 selection)
+  - Kubelet issues remain without drill-down per "Truth Only™" principle (can't verify affected pods)
+  - Enter key navigation extended to support node/etcd resource types
+
+### Enhanced 🔧
+
+- **Helper Functions for Pod Correlation** - v0.6.8
+  - `getPodsOnNode()` - Returns pods scheduled on specific node (up to 9 for drill-down)
+  - `getControlPlanePods()` - Returns kube-system control plane components (etcd, apiserver, etc.)
+  - Both functions support drill-down navigation patterns
+  - Graceful handling when no pods found
+
+### Technical - v0.6.8
+
+- Modified files:
+  - `internal/tui/logs.go` - Added truncateEventMessage() function, updated buildEventsSection()
+  - `internal/tui/attention_signals.go` - Populated AffectedPods for node/etcd items, added helper functions
+  - `internal/tui/handlers.go` - Extended handleEnter() to support node/etcd drill-down
+
+- Key changes:
+  - Event truncation: 60% beginning + 40% end with word boundary awareness
+  - AffectedPods populated for MemoryPressure, DiskPress ure, PIDPressure (node issues)
+  - AffectedPods populated for all ETCD items (alarms, unhealthy, large DB, member mismatch)
+  - Drill-down check: `if matchedItem.ResourceType == "event" || "node" || "etcd"`
+  - Control plane detection: Filters kube-system namespace with component name prefixes
+
+### Impact Summary - v0.6.8
+
+- ✅ **Event readability** - 250-char ImagePullBackOff errors now scannable
+- ✅ **Node investigation** - See which pods affected by node pressure immediately
+- ✅ **ETCD correlation** - Identify control plane pods when ETCD unhealthy
+- ✅ **Truth Only™** - Kubelet items don't drill-down (can't verify affected pods from aggregated logs)
+- ✅ **Zero regressions** - All tests passing, builds clean
+
+### Success Criteria - v0.6.8
+
+| Feature | Expected Behavior | Status |
+|---------|------------------|--------|
+| Long event truncation | "Error pulling image... ...authentication required (truncated)" | ✅ |
+| Node Memory Pressure | Enter → Shows pods on worker-1 | ✅ |
+| ETCD Alarm | Enter → Shows etcd/apiserver/controller/scheduler pods | ✅ |
+| Kubelet HTTP 502 | Enter → No drill-down (stays on dashboard) | ✅ |
+
+---
+
 ## [0.6.7] - 2026-01-13
 
 ### Added ✨

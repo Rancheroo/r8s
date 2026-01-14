@@ -334,9 +334,17 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 		}
 	}
 
-	// Check ETCD health (v0.5.10 parser - rich diagnostics)
+	// Check ETCD health (v0.5.10 parser - rich diagnostics, v0.6.8: drill-down support)
 	etcdDetails, err := ds.GetEtcdDetails()
 	if err == nil && etcdDetails != nil {
+		// Get control plane pods for drill-down (v0.6.8)
+		var allPods []rancher.Pod
+		var controlPlanePods []string
+		if ds != nil {
+			allPods, _ = ds.GetAllPods()
+			controlPlanePods = getControlPlanePods(allPods)
+		}
+
 		// Critical: ETCD Alarms (NOSPACE, etc.)
 		if etcdDetails.HasAlarms {
 			leaderInfo := ""
@@ -351,6 +359,7 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 				Namespace:    "etcd",
 				Count:        etcdDetails.AlarmCount,
 				ResourceType: "etcd",
+				AffectedPods: controlPlanePods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -364,6 +373,7 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 				Description:  "Unhealthy endpoints",
 				Namespace:    "etcd",
 				ResourceType: "etcd",
+				AffectedPods: controlPlanePods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -377,6 +387,7 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 				Description:  fmt.Sprintf("%s - compaction recommended", etcdDetails.DBSize),
 				Namespace:    "etcd",
 				ResourceType: "etcd",
+				AffectedPods: controlPlanePods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -403,6 +414,7 @@ func detectClusterHealth(ds datasource.DataSource) []AttentionItem {
 				Description:  fmt.Sprintf("Expected 3 members, found %d%s", etcdDetails.MemberCount, leaderInfo),
 				Namespace:    "etcd",
 				ResourceType: "etcd",
+				AffectedPods: controlPlanePods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -769,7 +781,7 @@ func detectOOMIssues(ds datasource.DataSource) []AttentionItem {
 	return items
 }
 
-// detectNodeIssues detects node pressure conditions (v0.6.4)
+// detectNodeIssues detects node pressure conditions (v0.6.4, v0.6.8: drill-down support)
 func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 	var items []AttentionItem
 
@@ -778,9 +790,18 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 		return items
 	}
 
+	// Get all pods for correlation (v0.6.8)
+	var allPods []rancher.Pod
+	if ds != nil {
+		allPods, _ = ds.GetAllPods()
+	}
+
 	for _, node := range nodes {
 		// Cache taint info to avoid redundant calls
 		taintInfo := getTaintInfo(node)
+
+		// Get pods on this node (v0.6.8)
+		affectedPods := getPodsOnNode(allPods, node.Name)
 
 		// Memory Pressure Detection
 		if node.MemoryPressure {
@@ -799,6 +820,7 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 				Emoji:        "🔴",
 				Namespace:    "cluster",
 				ResourceType: "node",
+				AffectedPods: affectedPods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -819,6 +841,7 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 				Emoji:        "💿",
 				Namespace:    "cluster",
 				ResourceType: "node",
+				AffectedPods: affectedPods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -839,6 +862,7 @@ func detectNodeIssues(ds datasource.DataSource) []AttentionItem {
 				Emoji:        "⚡",
 				Namespace:    "cluster",
 				ResourceType: "node",
+				AffectedPods: affectedPods, // v0.6.8: Enable drill-down
 				Timestamp:    time.Now(),
 			})
 		}
@@ -955,6 +979,66 @@ func getTaintInfo(node datasource.NodeConditions) string {
 	}
 
 	return strings.Join(parts, ", ")
+}
+
+// getPodsOnNode returns pod names for pods scheduled on the given node (v0.6.8)
+func getPodsOnNode(allPods []rancher.Pod, nodeName string) []string {
+	var podNames []string
+
+	for _, pod := range allPods {
+		// Match by NodeName field (from kubectl output)
+		if pod.NodeName == nodeName {
+			podNames = append(podNames, pod.Name)
+		}
+		// Also check NodeID as fallback
+		if pod.NodeID == nodeName && pod.NodeName == "" {
+			podNames = append(podNames, pod.Name)
+		}
+	}
+
+	// Limit to top 9 pods for drill-down (matches cluster event pattern)
+	if len(podNames) > 9 {
+		podNames = podNames[:9]
+	}
+
+	return podNames
+}
+
+// getControlPlanePods returns pod names for control plane components (v0.6.8)
+func getControlPlanePods(allPods []rancher.Pod) []string {
+	var podNames []string
+
+	// Common control plane component prefixes
+	controlPlaneNames := []string{
+		"etcd",
+		"kube-apiserver",
+		"kube-controller-manager",
+		"kube-scheduler",
+	}
+
+	for _, pod := range allPods {
+		// Check if in kube-system namespace
+		namespace := extractNamespace(pod.NamespaceID)
+		if namespace != "kube-system" {
+			continue
+		}
+
+		// Check if pod name starts with a control plane component name
+		podNameLower := strings.ToLower(pod.Name)
+		for _, cpName := range controlPlaneNames {
+			if strings.HasPrefix(podNameLower, cpName) {
+				podNames = append(podNames, pod.Name)
+				break
+			}
+		}
+	}
+
+	// Limit to top 9 pods for drill-down
+	if len(podNames) > 9 {
+		podNames = podNames[:9]
+	}
+
+	return podNames
 }
 
 // isHealthyReadyStatus checks if a pod's ready status indicates all containers are ready

@@ -68,14 +68,19 @@ func (a *App) handleEnter() tea.Cmd {
 		}
 
 		// v0.6.1: Handle cluster event drill-down
-		if matchedItem.ResourceType == "event" && len(matchedItem.AffectedPods) > 0 {
-			return a.handleClusterEventDrillDown(matchedItem)
+		// v0.6.8: Extended to support node and etcd drill-down
+		if len(matchedItem.AffectedPods) > 0 {
+			// Drill-down available for: event, node, etcd
+			if matchedItem.ResourceType == "event" ||
+				matchedItem.ResourceType == "node" ||
+				matchedItem.ResourceType == "etcd" {
+				return a.handleClusterEventDrillDown(matchedItem)
+			}
 		}
 
-		// v0.6.7: Fix Issue #17 - Comprehensive non-pod resource type handling
+		// v0.6.7/v0.6.8: Comprehensive non-pod resource type handling
 		// Only pod items with valid PodName can navigate to diagnostics
-		// All other resource types (kubelet, etcd, node, system, daemonset, event, log)
-		// should return nil (no-op) until proper drill-down views are implemented
+		// Kubelet, system, daemonset, log items without drill-down return nil
 		if matchedItem.ResourceType != "pod" || matchedItem.PodName == "" {
 			return nil
 		}
