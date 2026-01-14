@@ -524,23 +524,27 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.loading = true
 				return a, a.fetchCRDs(clusterID)
 			}
-		case "1":
-			if a.isNamespaceResourceView() {
-				a.currentView.viewType = ViewPods
-				a.loading = true
-				return a, a.refreshCurrentView()
+		case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+			// v0.6.8.1: Handle pod selection from cluster event drill-down
+			if a.currentView.viewType == ViewClusterEvent {
+				return a, a.handleClusterEventPodSelection(msg.String())
 			}
-		case "2":
+			// Namespace view switching (1=Pods, 2=Deployments, 3=Services)
 			if a.isNamespaceResourceView() {
-				a.currentView.viewType = ViewDeployments
-				a.loading = true
-				return a, a.refreshCurrentView()
-			}
-		case "3":
-			if a.isNamespaceResourceView() {
-				a.currentView.viewType = ViewServices
-				a.loading = true
-				return a, a.refreshCurrentView()
+				switch msg.String() {
+				case "1":
+					a.currentView.viewType = ViewPods
+					a.loading = true
+					return a, a.refreshCurrentView()
+				case "2":
+					a.currentView.viewType = ViewDeployments
+					a.loading = true
+					return a, a.refreshCurrentView()
+				case "3":
+					a.currentView.viewType = ViewServices
+					a.loading = true
+					return a, a.refreshCurrentView()
+				}
 			}
 		case "c":
 			// Navigate from Attention Dashboard to Clusters

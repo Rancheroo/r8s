@@ -1017,7 +1017,9 @@ func (a *App) renderClusterEventPanel() string {
 	var eventItem *AttentionItem
 	for i := range a.attentionItems {
 		item := &a.attentionItems[i]
-		if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
+		// v0.6.8.1: Support node and etcd types in addition to event
+		if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
+			item.EventReason == a.currentView.eventReason {
 			eventItem = item
 			break
 		}

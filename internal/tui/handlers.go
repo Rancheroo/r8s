@@ -5,6 +5,7 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -576,5 +577,74 @@ func (a *App) handleClusterEventDrillDown(item *AttentionItem) tea.Cmd {
 	// No loading needed - we already have the data
 	a.loading = false
 
-	return nil
+	// CRITICAL FIX v0.6.8.1: Return a cmd to trigger re-render
+	// Returning nil prevents Bubble Tea from updating the view
+	return func() tea.Msg {
+		return clusterEventMsg{}
+	}
+}
+
+// clusterEventMsg triggers view update for cluster event drill-down
+type clusterEventMsg struct{}
+
+// handleClusterEventPodSelection handles 1-9 key presses in cluster event view (v0.6.8.1)
+func (a *App) handleClusterEventPodSelection(keyNum string) tea.Cmd {
+	// Convert key to index (1-based to 0-based)
+	podIndex, err := strconv.Atoi(keyNum)
+	if err != nil || podIndex < 1 || podIndex > 9 {
+		return nil
+	}
+	podIndex-- // Convert to 0-based
+
+	// Find the event item from attentionItems matching current eventReason
+	var eventItem *AttentionItem
+	for i := range a.attentionItems {
+		item := &a.attentionItems[i]
+		// Match by eventReason (works for event, node, and etcd types)
+		if item.EventReason == a.currentView.eventReason ||
+			(item.ResourceType == "node" && strings.Contains(item.Title, a.currentView.eventReason)) ||
+			(item.ResourceType == "etcd" && strings.Contains(item.Title, a.currentView.eventReason)) {
+			eventItem = item
+			break
+		}
+	}
+
+	if eventItem == nil || podIndex >= len(eventItem.AffectedPods) {
+		return nil
+	}
+
+	// Get selected pod name
+	podName := eventItem.AffectedPods[podIndex]
+
+	// Find pod details to get namespace
+	allPods, err := a.dataSource.GetAllPods()
+	if err != nil {
+		a.error = "Failed to get pod list"
+		return nil
+	}
+
+	var selectedPod *rancher.Pod
+	for i := range allPods {
+		if allPods[i].Name == podName {
+			selectedPod = &allPods[i]
+			break
+		}
+	}
+
+	if selectedPod == nil {
+		a.error = fmt.Sprintf("Pod '%s' not found", podName)
+		return nil
+	}
+
+	// Extract namespace
+	namespace := selectedPod.NamespaceID
+	if strings.Contains(namespace, ":") {
+		parts := strings.Split(namespace, ":")
+		if len(parts) > 1 {
+			namespace = parts[1]
+		}
+	}
+
+	// Navigate to pod logs using unified navigation
+	return a.navigateToLogs(a.currentView.clusterID, namespace, podName, "")
 }
