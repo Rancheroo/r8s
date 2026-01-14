@@ -282,10 +282,12 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				// Find the event item - match by EventReason not Title
 				// (Title includes count prefix like "1578699× DNSConfigForming")
+				// v0.6.8.1: Support node and etcd types in addition to event
 				var eventItem *AttentionItem
 				for i := range a.attentionItems {
 					item := &a.attentionItems[i]
-					if item.ResourceType == "event" && item.EventReason == a.currentView.eventReason {
+					if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
+						item.EventReason == a.currentView.eventReason {
 						eventItem = item
 						break
 					}
@@ -372,7 +374,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					item := visualOrder[a.attentionCursor]
 
 					// v0.6.1: Handle cluster event drill-down
-					if item.ResourceType == "event" && len(item.AffectedPods) > 0 {
+					// v0.6.8.1: Extended to support node and etcd drill-down
+					if (item.ResourceType == "event" || item.ResourceType == "node" || item.ResourceType == "etcd") &&
+						len(item.AffectedPods) > 0 {
 						return a, a.handleClusterEventDrillDown(&item)
 					}
 
