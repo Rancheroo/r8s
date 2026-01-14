@@ -327,18 +327,26 @@ func (a *App) renderAttentionItem(num int, item AttentionItem, isSelected bool, 
 	}
 
 	// v0.6.8.1: Account for emoji display width (emojis can be 1 or 2 cells wide)
+	// Problem: fmt.Sprintf counts runes, not display width
+	// Solution: Pad manually using actual display widths
 	emojiWidth := runewidth.StringWidth(item.Emoji)
-	// Adjust title padding to compensate for emoji width (assume 2-cell emoji, reduce padding by 1)
-	titlePadding := titleWidth
+	titleDisplayWidth := runewidth.StringWidth(title)
+	descDisplayWidth := runewidth.StringWidth(desc)
+
+	// Calculate padding needed for each column
+	titlePad := titleWidth - titleDisplayWidth
+	descPad := descWidth - descDisplayWidth
+
+	// Add extra padding if emoji is wider than 1 cell
 	if emojiWidth > 1 {
-		titlePadding = titleWidth - (emojiWidth - 1)
+		titlePad += (emojiWidth - 1) // Compensate for wide emoji
 	}
 
-	line1 := fmt.Sprintf("%s%s %-*s  %-*s  %s",
+	line1 := fmt.Sprintf("%s%s %s%s  %s%s  %s",
 		numStr,
 		item.Emoji,
-		titlePadding, title,
-		descWidth, desc,
+		title, strings.Repeat(" ", titlePad),
+		desc, strings.Repeat(" ", descPad),
 		ns,
 	)
 

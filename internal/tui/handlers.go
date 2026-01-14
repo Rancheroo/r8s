@@ -637,14 +637,16 @@ func (a *App) handleClusterEventPodSelection(keyNum string) tea.Cmd {
 
 	var selectedPod *rancher.Pod
 	for i := range allPods {
-		if allPods[i].Name == podName {
+		// Match pod name AND namespace to uniquely identify the pod
+		// Also match cluster if available (though Pod struct doesn't have ClusterID field)
+		if allPods[i].Name == podName && allPods[i].NamespaceID == eventItem.Namespace {
 			selectedPod = &allPods[i]
 			break
 		}
 	}
 
 	if selectedPod == nil {
-		a.error = fmt.Sprintf("Pod '%s' not found", podName)
+		a.error = fmt.Sprintf("Pod '%s' not found in namespace '%s'", podName, eventItem.Namespace)
 		return nil
 	}
 
