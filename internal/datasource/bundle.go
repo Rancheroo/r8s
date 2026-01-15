@@ -3,6 +3,7 @@ package datasource
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -310,34 +311,9 @@ func (ds *BundleDataSource) GetContainers(namespace, pod string) ([]string, erro
 		}
 	}
 
-	// Fallback: try kubectl pods output for container count only
-	// Generate fallback names only if we have count info but no real names
-	kubectlPods, err := ds.getKubectlPods()
-	if err == nil {
-		for _, p := range kubectlPods {
-			if p.NamespaceID == namespace && p.Name == pod {
-				// Parse READY column for count (e.g., "2/2" means 2 total containers)
-				if p.KubectlReady != "" {
-					parts := strings.Split(p.KubectlReady, "/")
-					if len(parts) == 2 {
-						var totalContainers int
-						fmt.Sscanf(parts[1], "%d", &totalContainers)
-
-						if totalContainers > 0 {
-							// Use generic fallback names - better than fabricated "container-1"
-							containers := make([]string, totalContainers)
-							for i := 0; i < totalContainers; i++ {
-								containers[i] = "default" // Use conventional fallback
-							}
-							return containers, nil
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// No pod information found - return empty slice
+	// Principle #1: Truth Only™ - Don't fabricate container names
+	// If we can't determine real container names, return empty
+	// This aligns with "Principle #11: Empty is Valid"
 	return []string{}, nil
 }
 
@@ -373,16 +349,8 @@ func (ds *BundleDataSource) DescribeDeployment(clusterID, namespace, name string
 		}
 	}
 
-	// Return a mock structure if not found in bundle
-	return map[string]interface{}{
-		"apiVersion": "apps/v1",
-		"kind":       "Deployment",
-		"metadata": map[string]interface{}{
-			"name":      name,
-			"namespace": namespace,
-		},
-		"note": "Bundle data - limited details available",
-	}, nil
+	// Principle #1: Truth Only™ - return error instead of mock data
+	return nil, fmt.Errorf("deployment %s/%s not found in bundle", namespace, name)
 }
 
 // DescribeService returns detailed service information from bundle
@@ -398,16 +366,8 @@ func (ds *BundleDataSource) DescribeService(clusterID, namespace, name string) (
 		}
 	}
 
-	// Return a mock structure if not found in bundle
-	return map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "Service",
-		"metadata": map[string]interface{}{
-			"name":      name,
-			"namespace": namespace,
-		},
-		"note": "Bundle data - limited details available",
-	}, nil
+	// Principle #1: Truth Only™ - return error instead of mock data
+	return nil, fmt.Errorf("service %s/%s not found in bundle", namespace, name)
 }
 
 // Mode returns the display string for bundle mode
@@ -515,22 +475,15 @@ func (ds *BundleDataSource) GetEventsByPod(namespace, podName string) ([]rancher
 
 	// Sort by priority: Warnings first, then by LastSeen descending (most recent first)
 	// This ensures most important/recent events appear first
-	if len(podEvents) > 1 {
-		// Simple bubble sort - good enough for small event lists
-		for i := 0; i < len(podEvents)-1; i++ {
-			for j := 0; j < len(podEvents)-i-1; j++ {
-				// Warnings before Normal
-				if podEvents[j].Type == "Normal" && podEvents[j+1].Type == "Warning" {
-					podEvents[j], podEvents[j+1] = podEvents[j+1], podEvents[j]
-					continue
-				}
-				// If same type, sort by time (most recent first)
-				if podEvents[j].Type == podEvents[j+1].Type && podEvents[j].LastSeen < podEvents[j+1].LastSeen {
-					podEvents[j], podEvents[j+1] = podEvents[j+1], podEvents[j]
-				}
-			}
+	// Use stdlib sort.Slice for O(n log n) performance (Principle #8: O(n log n) Always)
+	sort.Slice(podEvents, func(i, j int) bool {
+		// Warnings before Normal
+		if podEvents[i].Type != podEvents[j].Type {
+			return podEvents[i].Type == "Warning"
 		}
-	}
+		// Same type: most recent first
+		return podEvents[i].LastSeen > podEvents[j].LastSeen
+	})
 
 	return podEvents, nil
 }
