@@ -23,24 +23,46 @@ r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. Th
 
 ## 🚀 What's Coming
 
-### v0.7.0 "Testing & Performance" (Target: April 2026)
-**For Support Teams**: Faster, more reliable analysis of large bundles
+### v0.7.0 "Maximum Information Extraction" (Target: April 2026)
+**For Support Teams**: Extract 60% more data from bundles + faster performance
 
-- **⚡ Performance**: 2-5 second dashboard loads eliminated (large 800MB+ bundles)
+**New Data Sources** (90% bundle coverage vs current 30%):
+- **💾 Storage**: PersistentVolumes, PVCs, StatefulSets with health indicators
+- **🖥️ System Health**: dmesg analysis (OOM kills, kernel panics), disk space monitoring
+- **📋 Control Plane**: RKE2 server logs from journald with error detection
+- **⚙️ Configuration**: ConfigMaps, HelmCharts (Rancher apps) with linkage to pods
+- **📊 Bundle Completeness**: Indicator showing which data is available (e.g., "76% complete")
+
+**Performance Improvements**:
+- **⚡ Cache Optimization**: Eliminates 2-5 second dashboard loads on 800MB+ bundles
+- **🚀 Async Operations**: Non-blocking CRD counting and resource fetching
+- **📈 Namespace Health**: Pre-computed rankings show worst namespaces first
+
+**Quality Infrastructure**:
 - **🔄 CI/CD Pipeline**: Automated testing prevents regressions
 - **📊 Quality Gates**: 50% test coverage enforced automatically
-- **🎯 Scale Testing**: Validated with 1000+ pod bundles
-- **🧪 Regression Protection**: Automated principle compliance checks
+- **🧪 Principle Compliance**: Automated checks on every commit
 
-### v0.8.0 "Production Hardening" (Target: August 2026)
-**For Support Teams**: Enterprise-ready reliability for critical escalations
+### v0.8.0 "Production Hardening + Advanced Diagnostics" (Target: August 2026)
+**For Support Teams**: Enterprise-ready reliability + complete bundle analysis
 
+**Additional Data Extraction** (90%+ bundle coverage):
+- **🌐 Networking**: Ingress rules, Endpoints, Service→Pod mapping
+- **⚙️ Workloads**: Jobs, CronJobs, ReplicaSets, HorizontalPodAutoscalers
+- **🔧 etcd Health**: Complete cluster health, alarms (space quota), member status
+- **🔍 Network Debugging**: iptables rules, routing tables for advanced troubleshooting
+
+**Production Quality**:
 - **🏆 80% Test Coverage**: Production-grade quality assurance
-- **⚡ <2s Dashboard Load**: Even with 1000 pods
+- **⚡ <2s Dashboard Load**: Even with 1000 pods (40-50% faster than v0.6.x)
+- **📈 Memory Optimization**: <500MB for large bundles (vs current ~1GB)
+- **💪 Zero Known Bugs**: All critical/high severity issues resolved
+
+**Enterprise Features**:
 - **📖 Complete Documentation**: Troubleshooting playbooks, deployment guides
 - **🔒 Security Audit**: Complete security review
-- **💪 Zero Known Bugs**: All critical/high severity issues resolved
-- **📈 Memory Optimization**: <500MB for large bundles (vs current ~1GB)
+- **📊 Bundle Health Scoring**: Automated quality assessment (e.g., "72% complete - missing journald logs")
+- **🎯 Stress Testing**: Validated with 1000+ pod clusters, 10M+ log lines
 
 **Why These Matter for Support:**
 - Faster troubleshooting = Faster resolution
