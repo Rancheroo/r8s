@@ -1,23 +1,54 @@
 # r8s
 
-> **r8s v0.6.8 "Event Truncation + Cluster Drill-Down" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
+> **r8s v0.6.9 "Principle Compliance Sprint" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**What's new in 0.6.8:** 
-- Smart event truncation (long error messages now readable in diagnostic panel)
-- Cluster-level drill-down (node pressure & ETCD issues → see affected pods)
-- Inline diagnostics with root cause + fix recommendations
-- Enhanced OOM, kubelet, and node pressure detection
+**Latest: v0.6.9** (January 2026)
+- **Quality improvements**: 98% code compliance with development principles
+- **Performance**: Faster event sorting (O(n log n) optimization)
+- **Truth Only™**: No more fabricated data - shows real bundle contents or clear errors
+- **Testing**: Regression tests added to prevent future issues
 
-**Recent releases:** 
-- **0.6.7** - Inline diagnostics (2-line format with root cause)
-- **0.6.6** - OOM root cause display
-- **0.6.5** - Kubelet issue detection
-- **0.6.4** - Node pressure indicators
+**Recent v0.6.x highlights:**
+- **0.6.8** - Smart event truncation + cluster-level drill-down for node/ETCD issues
+- **0.6.7** - Inline diagnostics (2-line root cause + fix recommendations)
+- **0.6.6** - OOM root cause detection and display
+- **0.6.5** - Kubelet issue detection from journald logs
+
+---
+
+## 🚀 What's Coming
+
+### v0.7.0 "Testing & Performance" (Target: April 2026)
+**For Support Teams**: Faster, more reliable analysis of large bundles
+
+- **⚡ Performance**: 2-5 second dashboard loads eliminated (large 800MB+ bundles)
+- **🔄 CI/CD Pipeline**: Automated testing prevents regressions
+- **📊 Quality Gates**: 50% test coverage enforced automatically
+- **🎯 Scale Testing**: Validated with 1000+ pod bundles
+- **🧪 Regression Protection**: Automated principle compliance checks
+
+### v0.8.0 "Production Hardening" (Target: August 2026)
+**For Support Teams**: Enterprise-ready reliability for critical escalations
+
+- **🏆 80% Test Coverage**: Production-grade quality assurance
+- **⚡ <2s Dashboard Load**: Even with 1000 pods
+- **📖 Complete Documentation**: Troubleshooting playbooks, deployment guides
+- **🔒 Security Audit**: Complete security review
+- **💪 Zero Known Bugs**: All critical/high severity issues resolved
+- **📈 Memory Optimization**: <500MB for large bundles (vs current ~1GB)
+
+**Why These Matter for Support:**
+- Faster troubleshooting = Faster resolution
+- No crashes on large bundles = Analyze any cluster
+- Better performance = Handle escalations under pressure
+- Automated quality = Fewer tool bugs to work around
+
+See [docs/development/ROADMAP_V0.6-V0.8.md](docs/development/ROADMAP_V0.6-V0.8.md) for complete roadmap.
 
 ---
 
