@@ -10,13 +10,17 @@
 ## Test Cases
 
 ### TC-001: Code Compilation
+
 **Purpose:** Verify code compiles without errors  
-**Prerequisites:** Go toolchain available  
+**Prerequisites:** Go toolchain available
+
 **Steps:**
+
 ```bash
 cd /workspace/r8s
 go build ./...
 ```
+
 **Expected Result:** No errors, exit code 0  
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
@@ -25,12 +29,16 @@ go build ./...
 ---
 
 ### TC-002: Unit Tests
-**Purpose:** Verify all tests pass  
+
+**Purpose:** Verify all tests pass
+
 **Steps:**
+
 ```bash
 cd /workspace/r8s
 go test ./...
 ```
+
 **Expected Result:** All packages pass (ok status)  
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
@@ -39,13 +47,17 @@ go test ./...
 ---
 
 ### TC-003: Binary Build
-**Purpose:** Verify binary builds with version info  
+
+**Purpose:** Verify binary builds with version info
+
 **Steps:**
+
 ```bash
 cd /workspace/r8s
 make build
 ./bin/r8s version
 ```
+
 **Expected Result:** Binary created, version string displayed  
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
@@ -54,16 +66,22 @@ make build
 ---
 
 ### TC-004: Demo Mode (Synthetic Data)
-**Purpose:** Verify S1-CRITICAL-1 (Delete Demo Bundle) works  
+
+**Purpose:** Verify S1-CRITICAL-1 (Delete Demo Bundle) works
+
 **Steps:**
+
 ```bash
 ./bin/r8s
 ```
+
 **Expected Result:**
+
 - TUI displays
 - Title shows "[MOCK] cluster"
 - Attention Dashboard loads with synthetic pods/events
 - 3 critical + 5 warnings displayed
+
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
 **Artifacts:** (screenshot of Attention Dashboard)
@@ -71,17 +89,24 @@ make build
 ---
 
 ### TC-005: Bundle Mode (Real Data)
-**Purpose:** Verify r8s works with real Rancher bundles  
-**Prerequisites:** Path to extracted bundle directory  
+
+**Purpose:** Verify r8s works with real Rancher bundles
+
+**Prerequisites:** Path to extracted bundle directory
+
 **Steps:**
+
 ```bash
 ./bin/r8s /path/to/bundle
 ```
+
 **Expected Result:**
+
 - TUI displays
 - Title shows "[BUNDLE] <hostname>"
 - Real cluster data loads
 - Bundle health shown (e.g., "BUNDLE 100%")
+
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
 **Artifacts:** (screenshot of bundle mode)
@@ -89,11 +114,15 @@ make build
 ---
 
 ### TC-006: UI Responsiveness (Async Loading)
-**Purpose:** Verify S1-HIGH-1 (Fix UI Blocking) works  
+
+**Purpose:** Verify S1-HIGH-1 (Fix UI Blocking) works
+
 **Steps:**
+
 1. Launch r8s: `./bin/r8s`
 2. Navigate through views: Press `c` for classic, `Enter` on items
 3. Check for freezing during data loads
+
 **Expected Result:** UI remains responsive, no freezing  
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
@@ -102,23 +131,32 @@ make build
 ---
 
 ### TC-007: Pre-Commit Hook Installation
-**Purpose:** Verify S1-HIGH-2 (Pre-Commit Hooks) works  
+
+**Purpose:** Verify S1-HIGH-2 (Pre-Commit Hooks) works
+
 **Steps:**
+
 ```bash
 cd /workspace/r8s
+
 # Install hook
 ln -s ../../scripts/pre-commit-hook.sh .git/hooks/pre-commit
+
 # Verify installation
 ls -la .git/hooks/pre-commit
+
 # Test with a dummy change
 echo "# test" >> README.md
 git add README.md
 git commit -m "test hook"  # Should run checks
 ```
+
 **Expected Result:**
+
 - Hook installed (symlink created)
 - On commit: formatting check, go vet, tests run
 - Commit blocked if checks fail
+
 **Actual Result:** __________  
 **Status:** ⬜ PASS / ⬜ FAIL / ⬜ N/A  
 **Artifacts:** (paste hook output)
@@ -128,6 +166,7 @@ git commit -m "test hook"  # Should run checks
 ## Release Decision
 
 **All critical tests must pass (TC-001 through TC-006):**
+
 - [ ] TC-001: Compilation
 - [ ] TC-002: Unit Tests
 - [ ] TC-003: Binary Build
@@ -136,15 +175,18 @@ git commit -m "test hook"  # Should run checks
 - [ ] TC-006: UI Responsiveness
 
 **Optional (TC-007):**
+
 - [ ] TC-007: Pre-Commit Hook
 
 **Decision:**
+
 - ⬜ **APPROVE** — All critical tests pass, release can proceed
 - ⬜ **CONDITIONAL** — Minor issues, release with known limitations
 - ⬜ **REJECT** — Critical test failed, do not release
 
 **Release Notes:**
-```
+
+```text
 v0.7.0-sprint1 — Performance & Build Optimization
 
 Changes:

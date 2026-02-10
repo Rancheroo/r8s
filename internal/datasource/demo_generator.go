@@ -2,7 +2,6 @@ package datasource
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
@@ -13,7 +12,6 @@ import (
 // Replaces the embedded example-log-bundle to reduce repository size
 func GenerateSyntheticDemo() *bundle.Bundle {
 	now := time.Now()
-	rand.Seed(now.UnixNano())
 
 	return &bundle.Bundle{
 		Path:        "",
