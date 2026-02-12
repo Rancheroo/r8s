@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "helm" in pod "helm-install-rke2-calico-chl9q" not found

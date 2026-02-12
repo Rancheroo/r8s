@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "csi-provisioner" in pod "csi-provisioner-7d9f559dcd-cl8vn" not found

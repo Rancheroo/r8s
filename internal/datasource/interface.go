@@ -199,7 +199,8 @@ type OOMAnalysis struct {
 	MemoryLimit   string // "1Gi"
 	MemoryRequest string // "512Mi"
 	OOMKillTime   string
-	IsNodeOOM     bool // vs container OOM
+	IsNodeOOM     bool   // vs container OOM
+	QoSClass      string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-2)
 }
 
 // ResourceSpec represents pod resource specifications

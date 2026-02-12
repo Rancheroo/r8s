@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "calico-typha" in pod "calico-typha-b74b9cb47-l5kcf" not found

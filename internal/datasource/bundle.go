@@ -661,6 +661,7 @@ func (ds *BundleDataSource) GetOOMAnalysis() ([]OOMAnalysis, error) {
 			MemoryRequest: a.MemoryRequest,
 			OOMKillTime:   a.OOMKillTime,
 			IsNodeOOM:     a.IsNodeOOM,
+			QoSClass:      a.QoSClass, // S3-MEDIUM-2: Include QoS class
 		})
 	}
 

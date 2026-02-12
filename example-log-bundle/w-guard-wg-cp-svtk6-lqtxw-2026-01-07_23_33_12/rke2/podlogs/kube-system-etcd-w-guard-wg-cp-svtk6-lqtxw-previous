@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "etcd" in pod "etcd-w-guard-wg-cp-svtk6-lqtxw" not found

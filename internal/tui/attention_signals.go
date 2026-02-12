@@ -750,6 +750,11 @@ func detectOOMIssues(ds datasource.DataSource) []AttentionItem {
 			desc = fmt.Sprintf("Exceeded limit: %s", oom.MemoryLimit)
 		}
 
+		// S3-MEDIUM-2: Add QoS class to description if available
+		if oom.QoSClass != "" {
+			desc = fmt.Sprintf("%s [QoS: %s]", desc, oom.QoSClass)
+		}
+
 		// Extract namespace and pod name
 		// PodName format from bundle can be "namespace/podname" or just "podname"
 		namespace := "default"
