@@ -6,6 +6,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -1020,7 +1021,89 @@ type crdCountTickMsg struct{}
 // crdCountTick returns a command that sends a crdCountTickMsg after a delay
 // This batches CRD count fetches to avoid overwhelming the UI (S1-HIGH-1)
 func (a *App) crdCountTick() tea.Cmd {
-	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
+	return tea.Tick(250*time.Millisecond, func(t time.Time) tea.Msg {
 		return crdCountTickMsg{}
 	})
+}
+
+// processPendingCRDCounts processes queued CRD count fetch requests
+// It drains the pending queue, marks items as loading, and returns commands
+// to fetch counts asynchronously (S1-HIGH-1)
+func (a *App) processPendingCRDCounts() tea.Cmd {
+	if len(a.crdCountsPending) == 0 {
+		return nil
+	}
+
+	var cmds []tea.Cmd
+
+	// Process up to 5 pending items per tick to avoid blocking
+	processed := 0
+	for key := range a.crdCountsPending {
+		if processed >= 5 {
+			break
+		}
+
+		// Parse key: clusterID+group+resource
+		parts := strings.Split(key, "+")
+		if len(parts) != 3 {
+			delete(a.crdCountsPending, key)
+			continue
+		}
+
+		clusterID, group, resource := parts[0], parts[1], parts[2]
+
+		// Mark as loading, remove from pending
+		a.crdCountsLoading[key] = true
+		delete(a.crdCountsPending, key)
+
+		// Create fetch command
+		cmd := a.fetchCRDCountAsync(clusterID, group, resource, key)
+		cmds = append(cmds, cmd)
+		processed++
+	}
+
+	// Reschedule tick if more items remain
+	if len(a.crdCountsPending) > 0 {
+		cmds = append(cmds, a.crdCountTick())
+	}
+
+	return tea.Batch(cmds...)
+}
+
+// fetchCRDCountAsync fetches CRD instance count asynchronously
+// Returns a command that sends crdCountMsg when complete (S1-HIGH-1)
+func (a *App) fetchCRDCountAsync(clusterID, group, resource, key string) tea.Cmd {
+	return func() tea.Msg {
+		if a.dataSource == nil {
+			return crdCountMsg{key: key, count: 0}
+		}
+
+		// Get storage version for this CRD
+		var version string
+		for _, crd := range a.crds {
+			if crd.Spec.Group == group && crd.Spec.Names.Plural == resource {
+				for _, v := range crd.Spec.Versions {
+					if v.Storage {
+						version = v.Name
+						break
+					}
+				}
+				if version == "" && len(crd.Spec.Versions) > 0 {
+					version = crd.Spec.Versions[0].Name
+				}
+				break
+			}
+		}
+
+		if version == "" {
+			return crdCountMsg{key: key, count: 0}
+		}
+
+		instances, err := a.dataSource.GetCRDInstances(clusterID, group, version, resource)
+		if err != nil {
+			return crdCountMsg{key: key, count: 0}
+		}
+
+		return crdCountMsg{key: key, count: len(instances)}
+	}
 }
