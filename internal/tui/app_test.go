@@ -133,7 +133,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 		{
 			name:         "clusters view",
 			context:      ViewContext{viewType: ViewClusters},
-			wantContains: "[LIVE] r8s - Clusters",
+			wantContains: "[OFFLINE MODE - Mock Data] r8s - Clusters",
 		},
 		{
 			name: "projects view",
@@ -141,7 +141,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 				viewType:    ViewProjects,
 				clusterName: "test-cluster",
 			},
-			wantContains: "[LIVE] Cluster: test-cluster > Projects",
+			wantContains: "[OFFLINE MODE - Mock Data] Cluster: test-cluster > Projects",
 		},
 		{
 			name: "namespaces view",
@@ -150,7 +150,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 				clusterName: "test-cluster",
 				projectName: "test-project",
 			},
-			wantContains: "[LIVE] Cluster: test-cluster > Project: test-project > Namespaces",
+			wantContains: "[OFFLINE MODE - Mock Data] Cluster: test-cluster > Project: test-project > Namespaces",
 		},
 		{
 			name: "pods view",
@@ -160,7 +160,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 				projectName:   "test-project",
 				namespaceName: "default",
 			},
-			wantContains: "[LIVE] Cluster: test-cluster > Project: test-project > Namespace: default > Pods",
+			wantContains: "[OFFLINE MODE - Mock Data] Cluster: test-cluster > Project: test-project > Namespace: default > Pods",
 		},
 		{
 			name: "deployments view",
@@ -170,7 +170,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 				projectName:   "test-project",
 				namespaceName: "default",
 			},
-			wantContains: "[LIVE] Cluster: test-cluster > Project: test-project > Namespace: default > Deployments",
+			wantContains: "[OFFLINE MODE - Mock Data] Cluster: test-cluster > Project: test-project > Namespace: default > Deployments",
 		},
 		{
 			name: "services view",
@@ -180,7 +180,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 				projectName:   "test-project",
 				namespaceName: "default",
 			},
-			wantContains: "[LIVE] Cluster: test-cluster > Project: test-project > Namespace: default > Services",
+			wantContains: "[OFFLINE MODE - Mock Data] Cluster: test-cluster > Project: test-project > Namespace: default > Services",
 		},
 		{
 			name: "CRDs view",
@@ -188,7 +188,7 @@ func TestBreadcrumbGeneration(t *testing.T) {
 				viewType:    ViewCRDs,
 				clusterName: "test-cluster",
 			},
-			wantContains: "[LIVE] Cluster: test-cluster > CRDs",
+			wantContains: "[OFFLINE MODE - Mock Data] Cluster: test-cluster > CRDs",
 		},
 	}
 
