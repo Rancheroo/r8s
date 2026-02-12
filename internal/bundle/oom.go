@@ -179,6 +179,41 @@ func extractPodNameFromOOMMessage(message, eventName string) string {
 	return eventName
 }
 
+// normalizePodName extracts the bare pod name from various formats
+// Handles: "namespace/pod-name", "pod-name", "pod-name-abc123" (with suffix)
+func normalizePodName(podName string) string {
+	// Remove namespace prefix if present
+	if idx := strings.LastIndex(podName, "/"); idx != -1 {
+		podName = podName[idx+1:]
+	}
+
+	// Strip any hash suffixes (e.g., "pod-name-abc123" -> "pod-name")
+	// Kubernetes often appends random suffixes
+	parts := strings.Split(podName, "-")
+	if len(parts) > 1 {
+		// Check if last part looks like a hash (alphanumeric, 5+ chars)
+		lastPart := parts[len(parts)-1]
+		if len(lastPart) >= 5 && isHashLike(lastPart) {
+			return strings.Join(parts[:len(parts)-1], "-")
+		}
+	}
+
+	return podName
+}
+
+// isHashLike checks if a string looks like a Kubernetes hash suffix
+func isHashLike(s string) bool {
+	if len(s) < 5 {
+		return false
+	}
+	for _, r := range s {
+		if !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')) {
+			return false
+		}
+	}
+	return true
+}
+
 // enrichWithQoSClass attempts to add QoS class information from pod manifests
 // Falls back gracefully if manifests are not available
 // S3-MEDIUM-2: Parse pod manifests to extract QoS class
@@ -191,10 +226,16 @@ func enrichWithQoSClass(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysi
 	// Build map of pod name to QoS class
 	qosMap := buildQoSMapFromManifests(manifestsPath)
 
-	// Enrich OOM events
+	// Enrich OOM events with normalized pod name matching
 	for i := range oomEvents {
-		if qosClass, exists := qosMap[oomEvents[i].PodName]; exists {
+		normalizedName := normalizePodName(oomEvents[i].PodName)
+		if qosClass, exists := qosMap[normalizedName]; exists {
 			oomEvents[i].QoSClass = qosClass
+		} else {
+			// Debug: log when no match found (helps identify parsing issues)
+			// This can be enabled for troubleshooting:
+			// fmt.Printf("DEBUG: No QoS match for pod '%s' (normalized: '%s')\n",
+			//     oomEvents[i].PodName, normalizedName)
 		}
 	}
 
@@ -282,6 +323,8 @@ func calculatePodQoSClass(containers []interface{}) string {
 	for _, c := range containers {
 		container, ok := c.(map[string]interface{})
 		if !ok {
+			// Malformed container spec - can't guarantee QoS
+			allHaveLimits = false
 			continue
 		}
 
@@ -305,8 +348,8 @@ func calculatePodQoSClass(containers []interface{}) string {
 			if m, ok := requests["memory"].(string); ok {
 				memRequest = m
 			}
-			if c, ok := requests["cpu"].(string); ok {
-				cpuRequest = c
+			if cpuReq, ok := requests["cpu"].(string); ok {
+				cpuRequest = cpuReq
 			}
 		}
 
@@ -315,9 +358,16 @@ func calculatePodQoSClass(containers []interface{}) string {
 			if m, ok := limits["memory"].(string); ok {
 				memLimit = m
 			}
-			if c, ok := limits["cpu"].(string); ok {
-				cpuLimit = c
+			if cpuLim, ok := limits["cpu"].(string); ok {
+				cpuLimit = cpuLim
 			}
+		}
+
+		// Per Kubernetes rules: if requests are missing but limits exist,
+		// treat requests as equal to limits for QoS calculation
+		if hasLimits && !hasRequests {
+			memRequest = memLimit
+			cpuRequest = cpuLimit
 		}
 
 		// Check if this container has limits

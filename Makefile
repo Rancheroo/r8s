@@ -37,9 +37,10 @@ vet: ## Run go vet
 tidy: ## Tidy go.mod
 	go mod tidy
 
-clean: ## Remove build artifacts
+clean: ## Remove build artifacts and coverage files
 	rm -rf $(BUILD_DIR)
-	@echo "Cleaned build directory"
+	rm -f coverage.out coverage.html
+	@echo "Cleaned build directory and coverage files"
 
 coverage: ## Generate test coverage report
 	@echo "Generating coverage report..."
