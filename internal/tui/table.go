@@ -566,7 +566,8 @@ func (a *App) updateTable() {
 // updateContainerSelectTable updates the table for container selection view
 // S3-MEDIUM-1: Multi-container pod support with diagnostic info
 func (a *App) updateContainerSelectTable() {
-	if len(a.containers) == 0 {
+	// S4-HIGH-2: Check containerDetails (the data source for rows) not containers
+	if len(a.containerDetails) == 0 {
 		a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
 			WithRows([]table.Row{table.NewRow(table.RowData{"message": "No containers available"})}).
 			HeaderStyle(headerStyle).
@@ -577,13 +578,8 @@ func (a *App) updateContainerSelectTable() {
 		return
 	}
 
-	// Diagnostic-focused columns
-	columns := []table.Column{
-		table.NewColumn("container", "Container", 25),
-		table.NewColumn("status", "Status", 12),
-		table.NewColumn("restarts", "Restarts", 10),
-		table.NewColumn("resources", "Resources", 30),
-	}
+	// S4-HIGH-2: Use terminal-adaptive column widths instead of fixed widths
+	columns := a.calculateColumnWidths(getContainerSelectColumnSpecs())
 
 	rows := []table.Row{}
 	for _, info := range a.containerDetails {

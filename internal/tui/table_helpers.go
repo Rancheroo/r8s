@@ -174,3 +174,14 @@ func getAttentionColumnSpecs() []ColumnSpec {
 		{"count", "COUNT", 0.10, 6},      // 10% for count
 	}
 }
+
+// getContainerSelectColumnSpecs returns column specifications for the container selection table.
+// S4-HIGH-2: Terminal-adaptive column widths for multi-container pod view
+func getContainerSelectColumnSpecs() []ColumnSpec {
+	return []ColumnSpec{
+		{"container", "Container", 0.35, 20},  // 35% for container name
+		{"status", "Status", 0.15, 10},        // 15% for status
+		{"restarts", "Restarts", 0.15, 8},     // 15% for restart count
+		{"resources", "Resources", 0.35, 20},  // 35% for resource limits
+	}
+}
