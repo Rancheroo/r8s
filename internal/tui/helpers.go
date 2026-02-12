@@ -516,12 +516,17 @@ func (a *App) fetchContainerDiagnostics(namespace, podName string, containerName
 	// Try to get resource specs from datasource
 	var resourceSpecs []datasource.ResourceSpec
 	if a.dataSource != nil {
-		// Get pod resources - try full pod name first, then without namespace
-		specs, _ := a.dataSource.GetPodResources(podName)
-		if specs == nil {
-			specs, _ = a.dataSource.GetPodResources(namespace + "/" + podName)
+		// Get pod resources - try full pod name first, then with namespace prefix
+		specs, err := a.dataSource.GetPodResources(podName)
+		if err != nil || len(specs) == 0 {
+			specs, err = a.dataSource.GetPodResources(namespace + "/" + podName)
 		}
-		resourceSpecs = specs
+		// Only use specs if we got valid data without errors
+		if err == nil && len(specs) > 0 {
+			resourceSpecs = specs
+		} else if err != nil {
+			fmt.Printf("DEBUG: Could not get resource specs for pod %s/%s: %v\n", namespace, podName, err)
+		}
 	}
 
 	// Build resource spec map by container name
@@ -561,9 +566,18 @@ func (a *App) fetchContainerDiagnostics(namespace, podName string, containerName
 			Restarts: 0,
 		}
 
-		// Determine ready status
+		// Determine ready status and restarts
+		// NOTE: In bundle mode, we only have pod-level restart counts from kubectl
+		// Per-container restart data would require parsing full pod YAML from manifests
+		// TODO: Enhance to read ContainerStatuses from pod manifests if available
 		if podInfo != nil {
-			info.Restarts = podInfo.KubectlRestarts
+			// Use pod-level restarts as approximation (distributed across containers)
+			// Mark as approximate when we have multiple containers
+			if len(containerNames) > 1 {
+				info.Restarts = podInfo.KubectlRestarts / len(containerNames) // Approximate
+			} else {
+				info.Restarts = podInfo.KubectlRestarts
+			}
 			// If we know ready count, mark first N as ready
 			if i < readyContainers {
 				info.Ready = true

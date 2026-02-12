@@ -258,6 +258,9 @@ func (a *App) handleEnter() tea.Cmd {
 
 		a.currentContainer = containerName
 
+		// Clear any previous pod/log state to prevent data leakage between containers
+		a.clearPodState()
+
 		// Navigate to logs with selected container
 		a.currentView = ViewContext{
 			viewType:      ViewLogs,
@@ -371,8 +374,10 @@ func (a *App) handleViewLogs() tea.Cmd {
 	// S3-MEDIUM-1: Check for multiple containers
 	containers, err := a.dataSource.GetContainers(namespaceName, podName)
 	if err != nil {
-		// Fall back to single container behavior on error
-		containers = []string{""}
+		// Log error and handle gracefully - don't pass empty string to fetchLogs
+		fmt.Printf("ERROR: Failed to get containers for pod %s/%s: %v\n", namespaceName, podName, err)
+		// Let downstream handle empty container list appropriately
+		containers = nil
 	}
 
 	a.containers = containers
