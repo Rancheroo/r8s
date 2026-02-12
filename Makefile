@@ -1,4 +1,4 @@
-.PHONY: build install test clean run fmt vet tidy help
+.PHONY: build install test clean run fmt vet tidy coverage help
 
 # Build variables
 BINARY_NAME=r8s
@@ -40,6 +40,13 @@ tidy: ## Tidy go.mod
 clean: ## Remove build artifacts
 	rm -rf $(BUILD_DIR)
 	@echo "Cleaned build directory"
+
+coverage: ## Generate test coverage report
+	@echo "Generating coverage report..."
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -1
+	@echo "Coverage report: coverage.out"
+	@echo "View HTML: go tool cover -html=coverage.out -o coverage.html"
 
 dev: tidy fmt vet ## Run development checks (tidy, fmt, vet)
 	@echo "Development checks complete"
