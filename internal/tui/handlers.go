@@ -249,6 +249,31 @@ func (a *App) handleEnter() tea.Cmd {
 		a.loading = true
 		return a.fetchCRDInstances(a.currentView.clusterID, selectedCRD.Spec.Group, storageVersion, selectedCRD.Spec.Names.Plural)
 
+	case ViewContainerSelect:
+		// S3-MEDIUM-1: Handle container selection
+		containerName := safeRowString(selected, "container")
+		if containerName == "" {
+			return nil
+		}
+
+		a.currentContainer = containerName
+
+		// Navigate to logs with selected container
+		a.currentView = ViewContext{
+			viewType:      ViewLogs,
+			clusterID:     a.currentView.clusterID,
+			clusterName:   a.currentView.clusterName,
+			projectID:     a.currentView.projectID,
+			projectName:   a.currentView.projectName,
+			namespaceID:   a.currentView.namespaceID,
+			namespaceName: a.currentView.namespaceName,
+			podName:       a.currentView.podName,
+			containerName: containerName,
+		}
+
+		a.loading = true
+		return a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName, containerName, a.showPrevious)
+
 	default:
 		return nil
 	}
@@ -330,6 +355,7 @@ func (a *App) handleDescribe() tea.Cmd {
 }
 
 // handleViewLogs navigates to logs view for the selected pod
+// S3-MEDIUM-1: Supports multi-container pod selection
 func (a *App) handleViewLogs() tea.Cmd {
 	if a.table.HighlightedRow().Data == nil {
 		return nil
@@ -342,8 +368,43 @@ func (a *App) handleViewLogs() tea.Cmd {
 		return nil // Skip if required fields are missing
 	}
 
+	// S3-MEDIUM-1: Check for multiple containers
+	containers, err := a.dataSource.GetContainers(namespaceName, podName)
+	if err != nil {
+		// Fall back to single container behavior on error
+		containers = []string{""}
+	}
+
+	a.containers = containers
+
+	// S3-MEDIUM-1: Fetch diagnostic info for containers
+	a.containerDetails = a.fetchContainerDiagnostics(namespaceName, podName, containers)
+
 	// Push current view to stack
 	a.viewStack = append(a.viewStack, a.currentView)
+
+	// S3-MEDIUM-1: If multiple containers, show selection UI first
+	if len(containers) > 1 {
+		a.currentView = ViewContext{
+			viewType:      ViewContainerSelect,
+			clusterID:     a.currentView.clusterID,
+			clusterName:   a.currentView.clusterName,
+			projectID:     a.currentView.projectID,
+			projectName:   a.currentView.projectName,
+			namespaceID:   a.currentView.namespaceID,
+			namespaceName: namespaceName,
+			podName:       podName,
+		}
+		a.updateContainerSelectTable()
+		return nil
+	}
+
+	// Single container - go straight to logs
+	if len(containers) == 1 {
+		a.currentContainer = containers[0]
+	} else {
+		a.currentContainer = ""
+	}
 
 	// Navigate to logs view
 	a.currentView = ViewContext{
@@ -355,7 +416,7 @@ func (a *App) handleViewLogs() tea.Cmd {
 		namespaceID:   a.currentView.namespaceID,
 		namespaceName: namespaceName,
 		podName:       podName,
-		containerName: "", // TODO: Support multi-container pods later
+		containerName: a.currentContainer,
 	}
 
 	a.loading = true
@@ -390,6 +451,11 @@ func (a *App) refreshCurrentView() tea.Cmd {
 		return a.fetchCRDInstances(a.currentView.clusterID, a.currentView.crdGroup, a.currentView.crdVersion, a.currentView.crdResource)
 	case ViewLogs:
 		return a.fetchLogs(a.currentView.clusterID, a.currentView.namespaceName, a.currentView.podName, a.currentContainer, a.showPrevious)
+	case ViewContainerSelect:
+		// S3-MEDIUM-1: Container selection doesn't need refresh - just ensure table is up to date
+		a.updateContainerSelectTable()
+		a.loading = false
+		return nil
 	default:
 		return nil
 	}

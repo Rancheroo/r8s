@@ -6,6 +6,7 @@ package tui
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,7 +32,8 @@ const (
 	ViewCRDs
 	ViewCRDInstances
 	ViewLogs
-	ViewClusterEvent // v0.6.1: Cluster event drill-down
+	ViewClusterEvent   // v0.6.1: Cluster event drill-down
+	ViewContainerSelect // S3-MEDIUM-1: Container selection for multi-container pods
 )
 
 // ViewContext holds context for the current view
@@ -58,6 +60,21 @@ type ViewContext struct {
 	nodeName    string // v0.6.8: Node name for node-type events
 }
 
+// ContainerInfo holds diagnostic information for a container
+// S3-MEDIUM-1: Enhanced container selection with diagnostic data
+type ContainerInfo struct {
+	Name          string
+	Status        string // Running, Waiting, Terminated
+	Restarts      int
+	Image         string
+	MemoryRequest string
+	MemoryLimit   string
+	CPURequest    string
+	CPULimit      string
+	QoSClass      string
+	Ready         bool
+}
+
 // App represents the main TUI application
 type App struct {
 	config     *config.Config
@@ -82,6 +99,11 @@ type App struct {
 
 	projectNamespaceCounts map[string]int
 
+	// Async CRD instance counts (cached to prevent UI blocking)
+	crdInstanceCounts    map[string]int    // Key: clusterID+group+resource, Value: count
+	crdCountsLoading     map[string]bool   // Key: clusterID+group+resource, Value: loading state
+	crdCountsPending     map[string]struct{} // Queue of pending CRD count fetches
+
 	// UI state
 	table              table.Model
 	logViewport        viewport.Model
@@ -102,6 +124,7 @@ type App struct {
 	// Log viewing state
 	currentContainer string   // Current container being viewed
 	containers       []string // Available containers for current pod
+	containerDetails []ContainerInfo // S3-MEDIUM-1: Diagnostic info for containers
 	tailMode         bool     // Auto-refresh tail mode
 	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
 	showPrevious     bool     // Show previous logs (for crashed containers)
@@ -191,17 +214,20 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	initialView := ViewContext{viewType: ViewAttention}
 
 	return &App{
-		config:          cfg,
-		dataSource:      ds,
-		offlineMode:     offlineMode,
-		bundleMode:      bundleMode,
-		bundlePath:      bundlePath,
-		launchCount:     cfg.LaunchCount, // v0.5.7: Track for help hint
-		loading:         true,
-		currentView:     initialView,
-		sortMode:        SortByCount,                 // Default to count-based sorting
-		sortModes:       make(map[ViewType]SortMode), // Per-view sort state
-		cachedPodCounts: make(map[string]PodCounts),  // Pod E/W count cache
+		config:             cfg,
+		dataSource:         ds,
+		offlineMode:        offlineMode,
+		bundleMode:         bundleMode,
+		bundlePath:         bundlePath,
+		launchCount:        cfg.LaunchCount, // v0.5.7: Track for help hint
+		loading:            true,
+		currentView:        initialView,
+		sortMode:           SortByCount,                 // Default to count-based sorting
+		sortModes:          make(map[ViewType]SortMode), // Per-view sort state
+		cachedPodCounts:    make(map[string]PodCounts),  // Pod E/W count cache
+		crdInstanceCounts:  make(map[string]int),        // CRD count cache (S1-HIGH-1)
+		crdCountsLoading:   make(map[string]bool),       // CRD loading state (S1-HIGH-1)
+		crdCountsPending:   make(map[string]struct{}),   // CRD fetch queue (S1-HIGH-1)
 	}
 }
 
@@ -224,6 +250,9 @@ func (a *App) Init() tea.Cmd {
 		// For other views, try clusters first
 		cmds = append(cmds, a.fetchClusters())
 	}
+
+	// Start CRD count processing tick (S1-HIGH-1: async CRD counts)
+	cmds = append(cmds, a.crdCountTick())
 
 	return tea.Batch(cmds...)
 }
@@ -733,6 +762,17 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.error = ""
 		a.updateTable()
 
+	case crdCountMsg:
+		// Async CRD count fetch completed (S1-HIGH-1)
+		a.crdInstanceCounts[msg.key] = msg.count
+		delete(a.crdCountsLoading, msg.key)
+		a.updateTable() // Refresh UI with new count
+
+	case crdCountTickMsg:
+		// Process any pending CRD count fetches (S1-HIGH-1)
+		cmd := a.processPendingCRDCounts()
+		return a, cmd
+
 	case describeMsg:
 		a.loading = false
 		a.showingDescribe = true
@@ -966,4 +1006,21 @@ type logsMsg struct {
 // attentionMsg represents attention dashboard analysis results
 type attentionMsg struct {
 	items []AttentionItem
+}
+
+// crdCountMsg is sent when async CRD instance count fetch completes (S1-HIGH-1)
+type crdCountMsg struct {
+	key   string // clusterID+group+resource
+	count int
+}
+
+// crdCountTickMsg triggers processing of pending CRD count fetches (S1-HIGH-1)
+type crdCountTickMsg struct{}
+
+// crdCountTick returns a command that sends a crdCountTickMsg after a delay
+// This batches CRD count fetches to avoid overwhelming the UI (S1-HIGH-1)
+func (a *App) crdCountTick() tea.Cmd {
+	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
+		return crdCountTickMsg{}
+	})
 }

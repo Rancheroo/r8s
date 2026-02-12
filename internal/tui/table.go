@@ -562,3 +562,68 @@ func (a *App) updateTable() {
 		}
 	}
 }
+
+// updateContainerSelectTable updates the table for container selection view
+// S3-MEDIUM-1: Multi-container pod support with diagnostic info
+func (a *App) updateContainerSelectTable() {
+	if len(a.containers) == 0 {
+		a.table = table.New([]table.Column{table.NewColumn("message", "MESSAGE", 80)}).
+			WithRows([]table.Row{table.NewRow(table.RowData{"message": "No containers available"})}).
+			HeaderStyle(headerStyle).
+			WithBaseStyle(baseStyle).
+			WithPageSize(a.height - 8).
+			Focused(false).
+			BorderRounded()
+		return
+	}
+
+	// Diagnostic-focused columns
+	columns := []table.Column{
+		table.NewColumn("container", "Container", 25),
+		table.NewColumn("status", "Status", 12),
+		table.NewColumn("restarts", "Restarts", 10),
+		table.NewColumn("resources", "Resources", 30),
+	}
+
+	rows := []table.Row{}
+	for _, info := range a.containerDetails {
+		// Format status with emoji
+		statusEmoji := "🟢"
+		if !info.Ready {
+			statusEmoji = "🟡"
+		}
+		if info.Status == "Terminated" {
+			statusEmoji = "🔴"
+		}
+
+		// Format resources
+		resources := "-"
+		if info.MemoryLimit != "" {
+			resources = fmt.Sprintf("%s/%s", info.MemoryRequest, info.MemoryLimit)
+			if info.QoSClass != "" {
+				resources += fmt.Sprintf(" (%s)", info.QoSClass)
+			}
+		}
+
+		// Format restarts
+		restarts := fmt.Sprintf("%d", info.Restarts)
+		if info.Restarts > 10 {
+			restarts = fmt.Sprintf("🔥 %d", info.Restarts)
+		}
+
+		rows = append(rows, table.NewRow(table.RowData{
+			"container": info.Name,
+			"status":    fmt.Sprintf("%s %s", statusEmoji, info.Status),
+			"restarts":  restarts,
+			"resources": resources,
+		}))
+	}
+
+	a.table = table.New(columns).
+		WithRows(rows).
+		HeaderStyle(headerStyle).
+		WithBaseStyle(baseStyle).
+		WithPageSize(a.height - 8).
+		Focused(true).
+		BorderRounded()
+}

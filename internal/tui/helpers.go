@@ -5,12 +5,14 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/evertras/bubble-table/table"
 
+	"github.com/Rancheroo/r8s/internal/datasource"
 	"github.com/Rancheroo/r8s/internal/rancher"
 )
 
@@ -98,6 +100,9 @@ func (a *App) getBreadcrumb() string {
 	case ViewLogs:
 		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pod: %s > Logs",
 			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName, a.currentView.podName)
+	case ViewContainerSelect:
+		return modeIndicator + fmt.Sprintf("Cluster: %s > Project: %s > Namespace: %s > Pod: %s > Select Container",
+			a.currentView.clusterName, a.currentView.projectName, a.currentView.namespaceName, a.currentView.podName)
 	default:
 		return modeIndicator + "r8s - Rancher Navigator"
 	}
@@ -149,6 +154,10 @@ func (a *App) getStatusText() string {
 	case ViewCRDInstances:
 		count := len(a.crdInstances)
 		status = fmt.Sprintf(" %s%d %s instances | 'd'=describe(soon) 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count, a.currentView.crdKind)
+
+	case ViewContainerSelect:
+		count := len(a.containers)
+		status = fmt.Sprintf(" %s%d containers | Enter=view logs 'Esc'=back | '?'=help 'q'=quit ", offlinePrefix, count)
 
 	case ViewLogs:
 		// FIX 4: Show visible log count instead of total count
@@ -400,6 +409,11 @@ func getContextualTips(viewType ViewType) []string {
 			"ℹ️ Press 'i' to toggle detailed CRD descriptions",
 			"🔍 Enter key browses instances for the selected CRD",
 		}
+	case ViewContainerSelect:
+		return []string{
+			"📦 Select a container to view its logs",
+			"🔄 Multi-container pods show this picker automatically",
+		}
 	case ViewDeployments:
 		return []string{
 			"📊 READY column shows current/desired replica counts",
@@ -492,4 +506,85 @@ func (a *App) navigateToLogs(clusterID, namespace, podName, containerName string
 	// Trigger loading state and fetch logs
 	a.loading = true
 	return a.fetchLogs(clusterID, namespace, podName, containerName, a.showPrevious)
+}
+
+// fetchContainerDiagnostics fetches diagnostic info for all containers in a pod
+// S3-MEDIUM-1: Enhanced container selection with diagnostic data
+func (a *App) fetchContainerDiagnostics(namespace, podName string, containerNames []string) []ContainerInfo {
+	var details []ContainerInfo
+
+	// Try to get resource specs from datasource
+	var resourceSpecs []datasource.ResourceSpec
+	if a.dataSource != nil {
+		// Get pod resources - try full pod name first, then without namespace
+		specs, _ := a.dataSource.GetPodResources(podName)
+		if specs == nil {
+			specs, _ = a.dataSource.GetPodResources(namespace + "/" + podName)
+		}
+		resourceSpecs = specs
+	}
+
+	// Build resource spec map by container name
+	resourceMap := make(map[string]datasource.ResourceSpec)
+	for _, spec := range resourceSpecs {
+		resourceMap[spec.ContainerName] = spec
+	}
+
+	// Try to get pod info for status
+	podReady := "Unknown"
+	var podInfo *rancher.Pod
+	if a.dataSource != nil {
+		pods, _ := a.dataSource.GetPods("", namespace)
+		for i := range pods {
+			if pods[i].Name == podName {
+				podInfo = &pods[i]
+				podReady = pods[i].KubectlReady
+				break
+			}
+		}
+	}
+
+	// Parse ready status (e.g., "3/3" means 3 ready out of 3 total)
+	readyContainers := 0
+	if podReady != "" && strings.Contains(podReady, "/") {
+		parts := strings.Split(podReady, "/")
+		if len(parts) == 2 {
+			readyContainers, _ = strconv.Atoi(parts[0])
+		}
+	}
+
+	// Build diagnostic info for each container
+	for i, name := range containerNames {
+		info := ContainerInfo{
+			Name:     name,
+			Status:   "Running", // Default assumption
+			Restarts: 0,
+		}
+
+		// Determine ready status
+		if podInfo != nil {
+			info.Restarts = podInfo.KubectlRestarts
+			// If we know ready count, mark first N as ready
+			if i < readyContainers {
+				info.Ready = true
+				info.Status = "Running"
+			} else {
+				info.Ready = false
+				info.Status = "Waiting"
+			}
+		}
+
+		// Add resource info if available
+		if spec, exists := resourceMap[name]; exists {
+			info.MemoryRequest = spec.MemoryRequest
+			info.MemoryLimit = spec.MemoryLimit
+			info.CPURequest = spec.CPURequest
+			info.CPULimit = spec.CPULimit
+			info.QoSClass = spec.QoSClass
+		}
+
+		details = append(details, info)
+	}
+
+	return details
 }

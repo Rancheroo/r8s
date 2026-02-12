@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // OOMAnalysis represents an out-of-memory event analysis
@@ -15,7 +17,8 @@ type OOMAnalysis struct {
 	MemoryLimit   string // "1Gi"
 	MemoryRequest string // "512Mi"
 	OOMKillTime   string
-	IsNodeOOM     bool // vs container OOM
+	IsNodeOOM     bool   // vs container OOM
+	QoSClass      string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-1)
 }
 
 // AnalyzeOOMEvents analyzes kubectl events and pod data to identify OOM kills
@@ -178,14 +181,166 @@ func extractPodNameFromOOMMessage(message, eventName string) string {
 
 // enrichWithQoSClass attempts to add QoS class information from pod manifests
 // Falls back gracefully if manifests are not available
+// S3-MEDIUM-2: Parse pod manifests to extract QoS class
 func enrichWithQoSClass(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	// TODO: Parse manifestsPath to extract QoS class information from pod manifests
 	manifestsPath := filepath.Join(bundleRoot, "rke2/pod-manifests")
 	if _, err := os.Stat(manifestsPath); os.IsNotExist(err) {
 		return oomEvents
 	}
 
+	// Build map of pod name to QoS class
+	qosMap := buildQoSMapFromManifests(manifestsPath)
+
+	// Enrich OOM events
+	for i := range oomEvents {
+		if qosClass, exists := qosMap[oomEvents[i].PodName]; exists {
+			oomEvents[i].QoSClass = qosClass
+		}
+	}
+
 	return oomEvents
+}
+
+// buildQoSMapFromManifests scans all pod manifest YAMLs and builds a map of pod name to QoS class
+func buildQoSMapFromManifests(manifestsPath string) map[string]string {
+	qosMap := make(map[string]string)
+
+	files, err := os.ReadDir(manifestsPath)
+	if err != nil {
+		return qosMap
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".yaml") && !strings.HasSuffix(file.Name(), ".yml") {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Join(manifestsPath, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		podName, qosClass := parsePodYAMLForQoS(string(content))
+		if podName != "" {
+			qosMap[podName] = qosClass
+		}
+	}
+
+	return qosMap
+}
+
+// parsePodYAMLForQoS parses a pod YAML and extracts pod name and calculates QoS class
+func parsePodYAMLForQoS(yamlContent string) (string, string) {
+	// Parse YAML into generic map structure
+	var pod map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlContent), &pod); err != nil {
+		return "", ""
+	}
+
+	// Check if this is a Pod kind
+	if kind, ok := pod["kind"].(string); !ok || kind != "Pod" {
+		return "", ""
+	}
+
+	// Extract pod name from metadata
+	metadata, ok := pod["metadata"].(map[string]interface{})
+	if !ok {
+		return "", ""
+	}
+
+	podName, ok := metadata["name"].(string)
+	if !ok {
+		return "", ""
+	}
+
+	// Extract spec
+	spec, ok := pod["spec"].(map[string]interface{})
+	if !ok {
+		return podName, "BestEffort"
+	}
+
+	// Get containers
+	containers, ok := spec["containers"].([]interface{})
+	if !ok || len(containers) == 0 {
+		return podName, "BestEffort"
+	}
+
+	// Calculate QoS class for all containers
+	return podName, calculatePodQoSClass(containers)
+}
+
+// calculatePodQoSClass determines QoS class based on container resources
+// Kubernetes QoS rules:
+// - Guaranteed: Every container has memory and CPU limits set, and limits == requests
+// - Burstable: At least one container has a request/limit set, but not Guaranteed
+// - BestEffort: No requests or limits set for any container
+func calculatePodQoSClass(containers []interface{}) string {
+	allHaveLimits := true
+	allLimitsEqualRequests := true
+	hasAnyResources := false
+
+	for _, c := range containers {
+		container, ok := c.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		resources, ok := container["resources"].(map[string]interface{})
+		if !ok {
+			// No resources for this container
+			allHaveLimits = false
+			continue
+		}
+
+		requests, hasRequests := resources["requests"].(map[string]interface{})
+		limits, hasLimits := resources["limits"].(map[string]interface{})
+
+		memRequest := ""
+		cpuRequest := ""
+		memLimit := ""
+		cpuLimit := ""
+
+		if hasRequests {
+			hasAnyResources = true
+			if m, ok := requests["memory"].(string); ok {
+				memRequest = m
+			}
+			if c, ok := requests["cpu"].(string); ok {
+				cpuRequest = c
+			}
+		}
+
+		if hasLimits {
+			hasAnyResources = true
+			if m, ok := limits["memory"].(string); ok {
+				memLimit = m
+			}
+			if c, ok := limits["cpu"].(string); ok {
+				cpuLimit = c
+			}
+		}
+
+		// Check if this container has limits
+		if memLimit == "" || cpuLimit == "" {
+			allHaveLimits = false
+		}
+
+		// Check if limits equal requests
+		if memRequest != memLimit || cpuRequest != cpuLimit {
+			allLimitsEqualRequests = false
+		}
+	}
+
+	// Determine QoS class
+	if allHaveLimits && allLimitsEqualRequests {
+		return "Guaranteed"
+	}
+
+	if hasAnyResources {
+		return "Burstable"
+	}
+
+	return "BestEffort"
 }
 
 // enrichWithNodeMemory attempts to correlate OOM events with node memory pressure
