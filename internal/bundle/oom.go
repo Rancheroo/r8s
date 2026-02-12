@@ -219,23 +219,29 @@ func isHashLike(s string) bool {
 // S3-MEDIUM-2: Parse pod manifests to extract QoS class
 func enrichWithQoSClass(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
 	manifestsPath := filepath.Join(bundleRoot, "rke2/pod-manifests")
+	fmt.Printf("DEBUG enrichWithQoSClass: looking at %s\n", manifestsPath)
 	if _, err := os.Stat(manifestsPath); os.IsNotExist(err) {
+		fmt.Printf("DEBUG: No pod-manifests dir found\n")
 		return oomEvents
 	}
+	fmt.Printf("DEBUG: Found pod-manifests dir\n")
 
 	// Build map of pod name to QoS class
 	qosMap := buildQoSMapFromManifests(manifestsPath)
+	fmt.Printf("DEBUG: Built QoS map with %d entries\n", len(qosMap))
+	for name, qos := range qosMap {
+		fmt.Printf("DEBUG: QoS map: %s -> %s\n", name, qos)
+	}
 
 	// Enrich OOM events with normalized pod name matching
 	for i := range oomEvents {
 		normalizedName := normalizePodName(oomEvents[i].PodName)
+		fmt.Printf("DEBUG: Looking for QoS for pod '%s' (normalized: '%s')\n", oomEvents[i].PodName, normalizedName)
 		if qosClass, exists := qosMap[normalizedName]; exists {
 			oomEvents[i].QoSClass = qosClass
+			fmt.Printf("DEBUG: Found QoS %s for %s\n", qosClass, normalizedName)
 		} else {
-			// Debug: log when no match found (helps identify parsing issues)
-			// This can be enabled for troubleshooting:
-			// fmt.Printf("DEBUG: No QoS match for pod '%s' (normalized: '%s')\n",
-			//     oomEvents[i].PodName, normalizedName)
+			fmt.Printf("DEBUG: No QoS match for '%s'\n", normalizedName)
 		}
 	}
 

@@ -170,11 +170,16 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 	var pods []PodInfo
 	bundleRoot := getBundleRoot(extractPath)
 
+	// DEBUG: Print what we're looking for
+	fmt.Printf("DEBUG InventoryPods: bundleRoot=%s\n", bundleRoot)
+
 	// Look for pod logs in rke2/podlogs/
 	podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
 	if _, err := os.Stat(podlogsDir); os.IsNotExist(err) {
+		fmt.Printf("DEBUG: No podlogs dir at %s\n", podlogsDir)
 		return pods, nil // No pod logs directory
 	}
+	fmt.Printf("DEBUG: Found podlogs dir at %s\n", podlogsDir)
 
 	// Map to track pods we've seen
 	podMap := make(map[string]*PodInfo)
@@ -230,8 +235,17 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 	// Also parse pod manifests to get container names
 	// This handles cases where log filenames don't include container names
 	manifestsDir := filepath.Join(bundleRoot, "rke2", "pod-manifests")
+	fmt.Printf("DEBUG: Looking for manifests at %s\n", manifestsDir)
 	if _, err := os.Stat(manifestsDir); err == nil {
+		fmt.Printf("DEBUG: Found manifests dir, parsing...\n")
 		parsePodManifestsForContainers(manifestsDir, podMap)
+	} else {
+		fmt.Printf("DEBUG: No manifests dir found: %v\n", err)
+	}
+
+	// DEBUG: Print what we found
+	for key, pod := range podMap {
+		fmt.Printf("DEBUG: Pod %s has %d containers: %v\n", key, len(pod.Containers), pod.Containers)
 	}
 
 	// Convert map to slice
