@@ -666,3 +666,86 @@ func ParseStatefulSets(extractPath string) ([]rancher.StatefulSet, error) {
 
 	return statefulsets, nil
 }
+
+// ParseConfigMaps parses kubectl get configmaps output from bundle
+// Format: NAMESPACE NAME DATA AGE
+func ParseConfigMaps(extractPath string) ([]rancher.ConfigMap, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/configmaps")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var configmaps []rancher.ConfigMap
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 4 {
+			continue
+		}
+
+		dataCount := 0
+		if len(fields) >= 3 {
+			fmt.Sscanf(fields[2], "%d", &dataCount)
+		}
+
+		configmaps = append(configmaps, rancher.ConfigMap{
+			Namespace: fields[0],
+			Name:      fields[1],
+			Data:      dataCount,
+			Age:       fields[len(fields)-1],
+		})
+	}
+
+	return configmaps, nil
+}
+
+// ParseHelmCharts parses kubectl get helmcharts output from bundle
+// Format: NAMESPACE NAME CHART VERSION STATUS REPO AGE
+func ParseHelmCharts(extractPath string) ([]rancher.HelmChart, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/helmcharts")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var helmcharts []rancher.HelmChart
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		// Need at least: NAMESPACE NAME CHART VERSION STATUS AGE (6 fields minimum)
+		if len(fields) < 6 {
+			continue
+		}
+
+		chart := rancher.HelmChart{
+			Namespace: fields[0],
+			Name:      fields[1],
+			Chart:     fields[2],
+			Version:   fields[3],
+			Status:    fields[4],
+			Age:       fields[len(fields)-1],
+		}
+
+		// Repo is optional, may be at position 5 if present
+		if len(fields) >= 7 {
+			chart.Repo = fields[5]
+		}
+
+		helmcharts = append(helmcharts, chart)
+	}
+
+	return helmcharts, nil
+}

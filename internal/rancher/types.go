@@ -398,3 +398,22 @@ type StatefulSet struct {
 	StorageClass string `json:"storageClass"` // Storage class name (if applicable)
 	Age          string `json:"age"`          // Human-readable age
 }
+
+// ConfigMap represents a Kubernetes ConfigMap
+type ConfigMap struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Data      int    `json:"dataCount"` // Number of data entries (optional, may be 0)
+	Age       string `json:"age"`       // Human-readable age
+}
+
+// HelmChart represents a Rancher HelmChart resource
+type HelmChart struct {
+	Name       string `json:"name"`
+	Namespace  string `json:"namespace"`
+	Chart      string `json:"chart"`      // Chart name (e.g., "rancher-monitoring")
+	Version    string `json:"version"`    // Chart version
+	Status     string `json:"status"`     // Deployed, Failed, Pending
+	Repo       string `json:"repo"`       // Helm repository
+	Age        string `json:"age"`        // Human-readable age
+}
