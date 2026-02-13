@@ -8,6 +8,7 @@
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
 **Latest: v0.6.9** (January 2026)
+- **CI/CD**: Fully automated testing with lint and coverage gates
 - **Quality improvements**: 98% code compliance with development principles
 - **Performance**: Faster event sorting (O(n log n) optimization)
 - **Truth Only™**: No more fabricated data - shows real bundle contents or clear errors
