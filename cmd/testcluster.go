@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -90,7 +91,9 @@ func runTestCluster(cmd *cobra.Command, args []string) error {
 
 	b, err := bundle.Load(opts)
 	if err != nil {
-		return fmt.Errorf("failed to load bundle: %w", err)
+		// Exit code 2: Bundle parsing error (as documented)
+		fmt.Fprintf(os.Stderr, "Error: failed to load bundle: %v\n", err)
+		os.Exit(2)
 	}
 
 	// Run tests
@@ -439,33 +442,13 @@ func outputSummary(results []TestResult) {
 	}
 }
 
-// outputJSON prints results as JSON
+// outputJSON prints results as JSON using proper JSON encoding
 func outputJSON(results []TestResult) {
-	// Simple JSON output
-	fmt.Println("[")
-	for i, r := range results {
-		fmt.Printf("  {\n")
-		fmt.Printf("    \"name\": \"%s\",\n", r.Name)
-		fmt.Printf("    \"status\": \"%s\",\n", r.Status)
-		fmt.Printf("    \"description\": \"%s\"", r.Description)
-		if len(r.Details) > 0 {
-			fmt.Printf(",\n    \"details\": [\n")
-			for j, d := range r.Details {
-				fmt.Printf("      \"%s\"", d)
-				if j < len(r.Details)-1 {
-					fmt.Printf(",")
-				}
-				fmt.Println()
-			}
-			fmt.Printf("    ]")
-		}
-		fmt.Printf("\n  }")
-		if i < len(results)-1 {
-			fmt.Printf(",")
-		}
-		fmt.Println()
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(results); err != nil {
+		fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", err)
 	}
-	fmt.Println("]")
 }
 
 func init() {
