@@ -204,7 +204,7 @@ func parseDBSize(sizeStr string) int64 {
 	}
 
 	var size float64
-	fmt.Sscanf(parts[0], "%f", &size)
+	_, _ = fmt.Sscanf(parts[0], "%f", &size)
 	unit := strings.ToUpper(parts[1])
 
 	switch unit {

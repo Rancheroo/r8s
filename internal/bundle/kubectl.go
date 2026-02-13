@@ -113,8 +113,8 @@ func ParseDeployments(extractPath string) ([]rancher.Deployment, error) {
 		readyParts := strings.Split(ready, "/")
 		var readyReplicas, totalReplicas int
 		if len(readyParts) == 2 {
-			fmt.Sscanf(readyParts[0], "%d", &readyReplicas)
-			fmt.Sscanf(readyParts[1], "%d", &totalReplicas)
+			_, _ = fmt.Sscanf(readyParts[0], "%d", &readyReplicas)
+			_, _ = fmt.Sscanf(readyParts[1], "%d", &totalReplicas)
 		}
 
 		deployments = append(deployments, rancher.Deployment{
