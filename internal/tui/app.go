@@ -913,6 +913,11 @@ func (a *App) View() string {
 		return a.renderClusterEventPanel()
 	}
 
+	// S3-MEDIUM-1: Special rendering for container selection view
+	if a.currentView.viewType == ViewContainerSelect {
+		return a.renderContainerSelectView()
+	}
+
 	// Build view components
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
 	statusText := a.getStatusText()

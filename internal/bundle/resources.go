@@ -172,16 +172,169 @@ func parseYAMLResourceSpecs(yamlContent, targetPodName string) []ResourceSpec {
 }
 
 // parsePodDescribe parses resource specs from kubectl describe pods output
+// Updated for PR #418: Now reads from rke2/kubectl/poddescribe/ directory
 func parsePodDescribe(bundleRoot, podName string) ([]ResourceSpec, error) {
-	describePath := filepath.Join(bundleRoot, "rke2/kubectl/nodesdescribe") // Note: this is nodes, not pods
+	poddescribeDir := filepath.Join(bundleRoot, "rke2/kubectl/poddescribe")
 
-	content, err := os.ReadFile(describePath)
+	// Check if new poddescribe directory exists (PR #418)
+	if _, err := os.Stat(poddescribeDir); err == nil {
+		return parsePodDescribeDir(poddescribeDir, podName)
+	}
+
+	// Fallback: try old nodesdescribe format
+	nodesdescribePath := filepath.Join(bundleRoot, "rke2/kubectl/nodesdescribe")
+	if content, err := os.ReadFile(nodesdescribePath); err == nil {
+		return parseDescribeResourceSpecs(string(content), podName)
+	}
+
+	return nil, fmt.Errorf("no pod describe data found")
+}
+
+// parsePodDescribeDir parses the new PR #418 poddescribe directory structure
+func parsePodDescribeDir(poddescribeDir, targetPodName string) ([]ResourceSpec, error) {
+	files, err := os.ReadDir(poddescribeDir)
 	if err != nil {
 		return nil, err
 	}
 
-	// This would parse kubectl describe output - simplified for now
-	return parseDescribeResourceSpecs(string(content), podName)
+	var allSpecs []ResourceSpec
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		// Read each namespace's poddescribe file
+		content, err := os.ReadFile(filepath.Join(poddescribeDir, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		specs := parsePodDescribeOutput(string(content), targetPodName)
+		allSpecs = append(allSpecs, specs...)
+	}
+
+	return allSpecs, nil
+}
+
+// parsePodDescribeOutput parses kubectl describe pod output format
+func parsePodDescribeOutput(content, targetPodName string) []ResourceSpec {
+	var specs []ResourceSpec
+
+	// Split into pod blocks (separated by blank lines)
+	pods := strings.Split(content, "\n\n")
+
+	for _, podBlock := range pods {
+		podBlock = strings.TrimSpace(podBlock)
+		if podBlock == "" {
+			continue
+		}
+
+		lines := strings.Split(podBlock, "\n")
+		var podName, namespace, qosClass string
+		var containers []ContainerSpec
+		var currentContainer string
+		var inContainers bool
+		var inLimits bool
+
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+
+			// Pod name
+			if strings.HasPrefix(line, "Name:") {
+				podName = strings.TrimSpace(strings.TrimPrefix(line, "Name:"))
+				// Skip if we're looking for a specific pod and this isn't it
+				if targetPodName != "" && !strings.Contains(targetPodName, podName) {
+					break
+				}
+			}
+
+			// Namespace
+			if strings.HasPrefix(line, "Namespace:") {
+				namespace = strings.TrimSpace(strings.TrimPrefix(line, "Namespace:"))
+			}
+
+			// QoS Class
+			if strings.HasPrefix(line, "QoS Class:") {
+				qosClass = strings.TrimSpace(strings.TrimPrefix(line, "QoS Class:"))
+			}
+
+			// Enter Containers section
+			if line == "Containers:" {
+				inContainers = true
+				continue
+			}
+
+			// Container name (indented)
+			if inContainers && strings.HasSuffix(line, ":") && !strings.Contains(line, "/") {
+				currentContainer = strings.TrimSuffix(line, ":")
+				containers = append(containers, ContainerSpec{Name: currentContainer})
+				inLimits = false
+				continue
+			}
+
+			// Resource Limits section
+			if inContainers && strings.Contains(line, "Limits:") {
+				inLimits = true
+				continue
+			}
+
+			// Resource Requests section
+			if inContainers && strings.Contains(line, "Requests:") {
+				inLimits = false
+				continue
+			}
+
+			// Memory limit/request
+			if inContainers && strings.HasPrefix(line, "memory:") {
+				memVal := strings.TrimSpace(strings.TrimPrefix(line, "memory:"))
+				if len(containers) > 0 {
+					if inLimits {
+						containers[len(containers)-1].MemoryLimit = memVal
+					} else {
+						containers[len(containers)-1].MemoryRequest = memVal
+					}
+				}
+			}
+
+			// CPU limit/request
+			if inContainers && strings.HasPrefix(line, "cpu:") {
+				cpuVal := strings.TrimSpace(strings.TrimPrefix(line, "cpu:"))
+				if len(containers) > 0 {
+					if inLimits {
+						containers[len(containers)-1].CPULimit = cpuVal
+					} else {
+						containers[len(containers)-1].CPURequest = cpuVal
+					}
+				}
+			}
+		}
+
+		// Create ResourceSpec for each container
+		for _, container := range containers {
+			spec := ResourceSpec{
+				PodName:       fmt.Sprintf("%s/%s", namespace, podName),
+				ContainerName: container.Name,
+				MemoryRequest: container.MemoryRequest,
+				MemoryLimit:   container.MemoryLimit,
+				CPURequest:    container.CPURequest,
+				CPULimit:      container.CPULimit,
+				QoSClass:      qosClass,
+			}
+			specs = append(specs, spec)
+		}
+	}
+
+	return specs
+}
+
+// ContainerSpec holds container-level resource info
+type ContainerSpec struct {
+	Name          string
+	MemoryRequest string
+	MemoryLimit   string
+	CPURequest    string
+	CPULimit      string
 }
 
 // parsePodsResourceColumns parses resource specs from kubectl get pods with resource columns

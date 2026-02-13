@@ -4,8 +4,6 @@
 package tui
 
 import (
-	"strings"
-
 	"github.com/evertras/bubble-table/table"
 )
 
@@ -45,30 +43,6 @@ func (a *App) calculateColumnWidths(specs []ColumnSpec) []table.Column {
 
 // truncateWithEllipsis truncates text consistently across all tables
 // If text exceeds maxWidth, truncate and add "..."
-// truncateWithEllipsis truncates text to fit within maxWidth characters, appending "..." when truncation occurs.
-// If maxWidth is less than or equal to 0 it returns an empty string. If maxWidth is 1–3 it returns that many dots.
-// If text already fits within maxWidth it is returned unchanged.
-func truncateWithEllipsis(text string, maxWidth int) string {
-	if maxWidth <= 0 {
-		return ""
-	}
-
-	if len(text) <= maxWidth {
-		return text
-	}
-
-	if maxWidth <= 3 {
-		return strings.Repeat(".", maxWidth)
-	}
-
-	return text[:maxWidth-3] + "..."
-}
-
-// Common column specifications for different view types
-// getCRDColumnSpecs defines proportional column specifications for the CRD view.
-// Each ColumnSpec specifies the column key, header title, proportional width (ratio) and minimum width in characters; ratios are applied to available table width when computing final column sizes.
-// The returned slice contains specs for the columns: name, group, kind, scope, and instances.
-
 func getCRDColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.35, 20},          // 35% of width, min 20 chars

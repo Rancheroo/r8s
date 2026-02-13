@@ -194,12 +194,15 @@ type KubeletIssue struct {
 
 // OOMAnalysis represents an out-of-memory event analysis
 type OOMAnalysis struct {
-	PodName       string
-	ContainerName string
-	MemoryLimit   string // "1Gi"
-	MemoryRequest string // "512Mi"
-	OOMKillTime   string
-	IsNodeOOM     bool // vs container OOM
+	PodName            string
+	ContainerName      string
+	MemoryLimit        string // "1Gi"
+	MemoryRequest      string // "512Mi"
+	OOMKillTime        string
+	IsNodeOOM          bool   // vs container OOM
+	QoSClass           string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-2)
+	NodeName           string // Node the pod was running on (S3-MEDIUM-3)
+	NodeMemoryPressure bool   // Was the node under memory pressure? (S3-MEDIUM-3)
 }
 
 // ResourceSpec represents pod resource specifications

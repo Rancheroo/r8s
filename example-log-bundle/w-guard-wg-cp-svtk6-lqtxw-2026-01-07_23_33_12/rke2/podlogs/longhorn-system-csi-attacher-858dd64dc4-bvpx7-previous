@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "csi-attacher" in pod "csi-attacher-858dd64dc4-bvpx7" not found

@@ -99,26 +99,28 @@ To prevent roadmap gaps like v0.7.0/v0.8.0 promises being missed, the Product Ma
 
 ---
 
-### 🆕 SPRINT 4: Data Coverage Sprint (March 2026)
-**Theme**: Close v0.7.0 data extraction gaps
-**Duration**: 3 weeks
-**Total Effort**: ~35 hours
+### 🆕 SPRINT 4: Foundation Sprint (March 2026) - REPRIORITIZED
+**Theme**: Low Effort, High Gain + Future-Proofing
+**Duration**: 1 week (reduced from 3)
+**Total Effort**: ~12 hours
 
 | ID | Task | Effort | Musk's Law | Rationale |
 |----|------|--------|------------|-----------|
 | S4-CRITICAL-1 | CI/CD Pipeline (GitHub Actions) | 4h | 🤖 AUTOMATE | Block releases without tests |
-| S4-HIGH-1 | Storage: PV/PVC/StatefulSet parsers | 8h | 🧠 QUESTION | Top support topic missing |
-| S4-HIGH-2 | System Health: dmesg OOM detection | 6h | 🧠 QUESTION | Proactive issue detection |
-| S4-HIGH-3 | Control Plane: RKE2 journald parser | 6h | 🧠 QUESTION | RKE2 essential logs |
 | S4-HIGH-4 | Bundle completeness indicator | 4h | 🚀 ACCELERATE | Transparency for users |
 | S4-HIGH-5 | 50% coverage enforcement | 4h | 🤖 AUTOMATE | Quality gate automation |
-| S4-MEDIUM-1 | ConfigMaps + HelmCharts | 5h | ⚙️ SIMPLIFY | Config debugging |
+
+**Deferred to Backlog/Sprint 6:**
+- ~~S4-HIGH-1~~ Storage: PV/PVC/StatefulSet parsers (8h) - Heavy parsing, add when requested
+- ~~S4-HIGH-2~~ System Health: dmesg OOM detection (6h) - New parser type, nice-to-have
+- ~~S4-HIGH-3~~ Control Plane: RKE2 journald parser (6h) - Complex format, Sprint 5 candidate
+- ~~S4-MEDIUM-1~~ ConfigMaps + HelmCharts (5h) - Lower priority, backlog
 
 **Success Criteria**:
-- All v0.7.0 README promises fulfilled
-- CI/CD blocks PRs with <50% coverage
-- Bundle completeness indicator live
-- 90% bundle data coverage (Phase 1 of MAXIMUM_INFO_EXTRACTION_PLAN.md)
+- CI/CD runs on every PR
+- Bundle completeness shown on startup
+- Coverage enforcement blocks <50% PRs
+- Sprint 3 branches merged cleanly
 
 ---
 
@@ -259,13 +261,22 @@ Sep ████ v1.0 planning
 
 ---
 
-## BACKLOG: Technical Debt (Retained)
+## BACKLOG: Technical Debt + Deferred Work
 
+### Technical Debt
 | ID | Task | Priority | Musk's Law |
 |----|------|----------|------------|
 | BACKLOG-1 | Remove Unused Rancher API Structs | MEDIUM | 🗑️ DELETE |
 | BACKLOG-2 | Audit Redundant Error Wrapping | LOW | ⚙️ SIMPLIFY |
 | BACKLOG-3 | Automate Changelog Generation | LOW | 🤖 AUTOMATE |
+
+### Deferred from Sprint 4 (Add When Requested)
+| ID | Task | Effort | Trigger |
+|----|------|--------|---------|
+| BACKLOG-4 | Storage: PV/PVC/StatefulSet parsers | 8h | Customer asks for storage debugging |
+| BACKLOG-5 | System Health: dmesg OOM detection | 6h | Need kernel-level diagnostics |
+| BACKLOG-6 | Control Plane: RKE2 journald parser | 6h | Control plane issues in support cases |
+| BACKLOG-7 | ConfigMaps + HelmCharts parsing | 5h | Config debugging becomes priority |
 
 ---
 

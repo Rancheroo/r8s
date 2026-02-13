@@ -1,7 +1,6 @@
 package datasource
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -655,12 +654,15 @@ func (ds *BundleDataSource) GetOOMAnalysis() ([]OOMAnalysis, error) {
 	var result []OOMAnalysis
 	for _, a := range analysis {
 		result = append(result, OOMAnalysis{
-			PodName:       a.PodName,
-			ContainerName: a.ContainerName,
-			MemoryLimit:   a.MemoryLimit,
-			MemoryRequest: a.MemoryRequest,
-			OOMKillTime:   a.OOMKillTime,
-			IsNodeOOM:     a.IsNodeOOM,
+			PodName:            a.PodName,
+			ContainerName:      a.ContainerName,
+			MemoryLimit:        a.MemoryLimit,
+			MemoryRequest:      a.MemoryRequest,
+			OOMKillTime:        a.OOMKillTime,
+			IsNodeOOM:          a.IsNodeOOM,
+			QoSClass:           a.QoSClass,           // S3-MEDIUM-2: Include QoS class
+			NodeName:           a.NodeName,           // S3-MEDIUM-3: Include node name
+			NodeMemoryPressure: a.NodeMemoryPressure, // S3-MEDIUM-3: Include node pressure status
 		})
 	}
 
@@ -722,11 +724,3 @@ func (ds *BundleDataSource) Close() error {
 	return nil
 }
 
-// Helper function to pretty-print JSON for describe views
-func prettifyJSON(v interface{}) string {
-	jsonBytes, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("%+v", v)
-	}
-	return string(jsonBytes)
-}

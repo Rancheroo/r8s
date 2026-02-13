@@ -1,9 +1,0 @@
-Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                     
-udp   UNCONN 0      0               [::]:51820         [::]:*                                               
-tcp   LISTEN 0      4096               *:9796             *:*    users:(("node_exporter",pid=791523,fd=3))  
-tcp   LISTEN 0      4096               *:9345             *:*    users:(("rke2",pid=8828,fd=6))             
-tcp   LISTEN 0      4096               *:9369             *:*    users:(("pushprox-client",pid=791596,fd=3))
-tcp   LISTEN 0      4096               *:5473             *:*    users:(("calico-typha",pid=11423,fd=6))    
-tcp   LISTEN 0      4096               *:10250            *:*    users:(("kubelet",pid=8869,fd=14))         
-tcp   LISTEN 0      128             [::]:22            [::]:*    users:(("sshd",pid=244192,fd=4))           
-tcp   LISTEN 0      4096               *:6443             *:*    users:(("kube-apiserver",pid=9110,fd=3))   

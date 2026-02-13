@@ -170,11 +170,16 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 	var pods []PodInfo
 	bundleRoot := getBundleRoot(extractPath)
 
+	// DEBUG: Print what we're looking for
+	fmt.Printf("DEBUG InventoryPods: bundleRoot=%s\n", bundleRoot)
+
 	// Look for pod logs in rke2/podlogs/
 	podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
 	if _, err := os.Stat(podlogsDir); os.IsNotExist(err) {
+		fmt.Printf("DEBUG: No podlogs dir at %s\n", podlogsDir)
 		return pods, nil // No pod logs directory
 	}
+	fmt.Printf("DEBUG: Found podlogs dir at %s\n", podlogsDir)
 
 	// Map to track pods we've seen
 	podMap := make(map[string]*PodInfo)
@@ -225,6 +230,32 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Also parse pod manifests to get container names
+	// This handles cases where log filenames don't include container names
+	manifestsDir := filepath.Join(bundleRoot, "rke2", "pod-manifests")
+	fmt.Printf("DEBUG: Looking for manifests at %s\n", manifestsDir)
+	if _, err := os.Stat(manifestsDir); err == nil {
+		fmt.Printf("DEBUG: Found manifests dir, parsing...\n")
+		parsePodManifestsForContainers(manifestsDir, podMap)
+	} else {
+		fmt.Printf("DEBUG: No manifests dir found: %v\n", err)
+	}
+
+	// Also parse poddescribe output (PR #418) for container names
+	poddescribeDir := filepath.Join(bundleRoot, "rke2", "kubectl", "poddescribe")
+	fmt.Printf("DEBUG: Looking for poddescribe at %s\n", poddescribeDir)
+	if _, err := os.Stat(poddescribeDir); err == nil {
+		fmt.Printf("DEBUG: Found poddescribe dir, parsing...\n")
+		parsePodDescribeForContainers(poddescribeDir, podMap)
+	} else {
+		fmt.Printf("DEBUG: No poddescribe dir found: %v\n", err)
+	}
+
+	// DEBUG: Print what we found
+	for key, pod := range podMap {
+		fmt.Printf("DEBUG: Pod %s has %d containers: %v\n", key, len(pod.Containers), pod.Containers)
 	}
 
 	// Convert map to slice
@@ -303,6 +334,187 @@ func contains(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+// parsePodManifestsForContainers scans pod manifest YAMLs to extract container names
+// This supplements container info that may be missing from log filenames
+func parsePodManifestsForContainers(manifestsDir string, podMap map[string]*PodInfo) {
+	files, err := os.ReadDir(manifestsDir)
+	if err != nil {
+		return
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".yaml") && !strings.HasSuffix(file.Name(), ".yml") {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Join(manifestsDir, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		// Parse YAML to extract pod name and containers
+		containers, podNamespace, podName := parsePodYAMLForContainers(string(content))
+		if podName == "" || len(containers) == 0 {
+			continue
+		}
+
+		// Find matching pod in map
+		key := podNamespace + "/" + podName
+		if pod, exists := podMap[key]; exists {
+			// Add containers that aren't already in the list
+			for _, container := range containers {
+				if !contains(pod.Containers, container) {
+					pod.Containers = append(pod.Containers, container)
+				}
+			}
+		}
+	}
+}
+
+// parsePodYAMLForContainers extracts container names from pod YAML
+func parsePodYAMLForContainers(yamlContent string) ([]string, string, string) {
+	var containers []string
+	var podName, namespace string
+
+	lines := strings.Split(yamlContent, "\n")
+	var inMetadata, inSpec, inContainers bool
+	var indentLevel int
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Track section entry
+		if trimmed == "metadata:" {
+			inMetadata = true
+			inSpec = false
+			continue
+		}
+		if trimmed == "spec:" {
+			inMetadata = false
+			inSpec = true
+			continue
+		}
+		if inSpec && trimmed == "containers:" {
+			inContainers = true
+			indentLevel = len(line) - len(trimmed)
+			continue
+		}
+
+		// Extract pod name from metadata
+		if inMetadata && strings.HasPrefix(trimmed, "name:") {
+			parts := strings.SplitN(trimmed, ":", 2)
+			if len(parts) == 2 {
+				podName = strings.TrimSpace(parts[1])
+			}
+		}
+
+		// Extract namespace from metadata
+		if inMetadata && strings.HasPrefix(trimmed, "namespace:") {
+			parts := strings.SplitN(trimmed, ":", 2)
+			if len(parts) == 2 {
+				namespace = strings.TrimSpace(parts[1])
+			}
+		}
+
+		// Extract container names from containers section
+		if inContainers {
+			currentIndent := len(line) - len(trimmed)
+			// Check if we've exited the containers section
+			if currentIndent <= indentLevel && trimmed != "" {
+				inContainers = false
+				continue
+			}
+
+			// Container entry starts with "- name:"
+			if strings.HasPrefix(trimmed, "- name:") {
+				parts := strings.SplitN(trimmed, ":", 2)
+				if len(parts) == 2 {
+					containerName := strings.TrimSpace(parts[1])
+					containers = append(containers, containerName)
+				}
+			}
+		}
+
+		// Simple heuristic: stop at end of file or next top-level section
+		if i > 0 && (strings.HasPrefix(trimmed, "status:") || strings.HasPrefix(trimmed, "---")) {
+			break
+		}
+	}
+
+	return containers, namespace, podName
+}
+
+// parsePodDescribeForContainers parses poddescribe output to extract container names
+// Uses PR #418 format: rke2/kubectl/poddescribe/<namespace>
+func parsePodDescribeForContainers(poddescribeDir string, podMap map[string]*PodInfo) {
+	files, err := os.ReadDir(poddescribeDir)
+	if err != nil {
+		return
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Join(poddescribeDir, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		// Parse each pod in the describe output
+		pods := strings.Split(string(content), "\n\n")
+		for _, podBlock := range pods {
+			lines := strings.Split(podBlock, "\n")
+			var podName, namespace string
+			var containers []string
+			var inContainers bool
+
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+
+				if strings.HasPrefix(line, "Name:") {
+					podName = strings.TrimSpace(strings.TrimPrefix(line, "Name:"))
+				}
+
+				if strings.HasPrefix(line, "Namespace:") {
+					namespace = strings.TrimSpace(strings.TrimPrefix(line, "Namespace:"))
+				}
+
+				if line == "Containers:" {
+					inContainers = true
+					continue
+				}
+
+				// Container names are lines ending with ":" in the Containers section
+				if inContainers && strings.HasSuffix(line, ":") && !strings.Contains(line, "/") {
+					containerName := strings.TrimSuffix(line, ":")
+					if containerName != "" && containerName != "Containers" {
+						containers = append(containers, containerName)
+					}
+				}
+
+				// Exit containers section on empty line or new section
+				if inContainers && line == "" {
+					inContainers = false
+				}
+			}
+
+			// Update pod in map
+			if podName != "" && namespace != "" {
+				key := namespace + "/" + podName
+				if pod, exists := podMap[key]; exists {
+					for _, container := range containers {
+						if !contains(pod.Containers, container) {
+							pod.Containers = append(pod.Containers, container)
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // InventoryLogFiles scans the bundle for all log files.

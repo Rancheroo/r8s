@@ -602,3 +602,29 @@ func (a *App) fetchContainerDiagnostics(namespace, podName string, containerName
 
 	return details
 }
+
+// renderContainerSelectView renders the container selection view
+// S3-MEDIUM-1: Multi-container pod support
+func (a *App) renderContainerSelectView() string {
+	// Build breadcrumb showing where we are
+	breadcrumb := breadcrumbStyle.Render(
+		fmt.Sprintf("%s > %s > %s > Select Container",
+			a.currentView.clusterName,
+			a.currentView.projectName,
+			a.currentView.namespaceName,
+		),
+	)
+
+	// Status bar with instructions
+	statusText := statusStyle.Render(" Select container and press Enter | Press Esc to go back ")
+
+	// Build the view
+	var components []string
+	components = append(components, breadcrumb)
+	components = append(components, "")
+	components = append(components, a.table.View())
+	components = append(components, "")
+	components = append(components, statusText)
+
+	return lipgloss.JoinVertical(lipgloss.Left, components...)
+}
