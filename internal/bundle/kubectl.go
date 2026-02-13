@@ -547,7 +547,7 @@ type DaemonSetInfo struct {
 }
 
 // ParsePVs parses kubectl get pv output from bundle
-// Format: NAME STATUS VOLUME CAPACITY ACCESS MODES STORAGECLASS AGE
+// Format: NAME CAPACITY ACCESS MODES RECLAIM POLICY STATUS CLAIM STORAGECLASS [REASON] AGE
 func ParsePVs(extractPath string) ([]rancher.PersistentVolume, error) {
 	bundleRoot := getBundleRoot(extractPath)
 	path := filepath.Join(bundleRoot, "rke2/kubectl/pv")
@@ -565,25 +565,27 @@ func ParsePVs(extractPath string) ([]rancher.PersistentVolume, error) {
 		}
 
 		fields := strings.Fields(line)
-		if len(fields) < 6 {
+		// NAME CAPACITY ACCESS MODES RECLAIM POLICY STATUS CLAIM STORAGECLASS [REASON] AGE
+		// Unbound PVs (Available) have empty CLAIM, resulting in 7 fields instead of 8
+		if len(fields) < 7 {
 			continue
 		}
 
 		pv := rancher.PersistentVolume{
-			Name:         fields[0],
-			Status:       fields[1],
-			StorageClass: fields[5],
-			Age:          fields[len(fields)-1],
+			Name:     fields[0],
+			Capacity: fields[1],
+			Status:   fields[4],
+			Age:      fields[len(fields)-1],
 		}
 
-		// Capacity is typically field 3
-		if len(fields) > 3 {
-			pv.Capacity = fields[3]
-		}
-
-		// Claim is typically field 4 if format is "namespace/claim-name"
-		if len(fields) > 4 && strings.Contains(fields[4], "/") {
-			pv.Claim = fields[4]
+		// Handle both bound (8+ fields) and unbound (7 fields) PVs
+		if len(fields) >= 8 {
+			// Bound PV: has CLAIM column populated
+			pv.Claim = fields[5]
+			pv.StorageClass = fields[6]
+		} else {
+			// Unbound PV (Available): CLAIM is empty, StorageClass is field 5
+			pv.StorageClass = fields[5]
 		}
 
 		pvs = append(pvs, pv)
