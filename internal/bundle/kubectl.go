@@ -566,17 +566,26 @@ func ParsePVs(extractPath string) ([]rancher.PersistentVolume, error) {
 
 		fields := strings.Fields(line)
 		// NAME CAPACITY ACCESS MODES RECLAIM POLICY STATUS CLAIM STORAGECLASS [REASON] AGE
-		if len(fields) < 8 {
+		// Unbound PVs (Available) have empty CLAIM, resulting in 7 fields instead of 8
+		if len(fields) < 7 {
 			continue
 		}
 
 		pv := rancher.PersistentVolume{
-			Name:         fields[0],
-			Capacity:     fields[1],
-			Status:       fields[4],
-			Claim:        fields[5],
-			StorageClass: fields[6],
-			Age:          fields[len(fields)-1],
+			Name:     fields[0],
+			Capacity: fields[1],
+			Status:   fields[4],
+			Age:      fields[len(fields)-1],
+		}
+
+		// Handle both bound (8+ fields) and unbound (7 fields) PVs
+		if len(fields) >= 8 {
+			// Bound PV: has CLAIM column populated
+			pv.Claim = fields[5]
+			pv.StorageClass = fields[6]
+		} else {
+			// Unbound PV (Available): CLAIM is empty, StorageClass is field 5
+			pv.StorageClass = fields[5]
 		}
 
 		pvs = append(pvs, pv)
