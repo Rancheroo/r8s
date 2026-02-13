@@ -71,13 +71,17 @@ Jan 01 10:15:00 node1 rke2-server[1234]: F0101 10:15:00.000000 1234 panic.go:1] 
 func TestParseJournald_NoIssues(t *testing.T) {
 	tmpDir := t.TempDir()
 	systemlogsDir := filepath.Join(tmpDir, "systemlogs")
-	os.MkdirAll(systemlogsDir, 0755)
+	if err := os.MkdirAll(systemlogsDir, 0755); err != nil {
+		t.Fatalf("Failed to create test directory: %v", err)
+	}
 
 	logData := `
 Jan 01 10:00:00 node1 rke2-server[1234]: I0101 10:00:00.000000 1234 server.go:1] Normal operation
 Jan 01 10:01:00 node1 rke2-server[1234]: I0101 10:01:00.000000 1234 server.go:1] Still running
 `
-	os.WriteFile(filepath.Join(systemlogsDir, "journald-rke2-server"), []byte(logData), 0644)
+	if err := os.WriteFile(filepath.Join(systemlogsDir, "journald-rke2-server"), []byte(logData), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
 
 	events, _ := ParseJournald(tmpDir)
 	
