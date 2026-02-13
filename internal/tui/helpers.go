@@ -117,18 +117,24 @@ func (a *App) getStatusText() string {
 		offlinePrefix = offlineModeIndicator
 	}
 
+	// Add bundle completeness indicator in bundle mode
+	bundleIndicator := ""
+	if a.bundleMode {
+		bundleIndicator = fmt.Sprintf("Bundle:%d%% | ", a.bundleCompleteness)
+	}
+
 	switch a.currentView.viewType {
 	case ViewClusters:
 		count := len(a.clusters)
-		status = fmt.Sprintf(" %s%d clusters | Enter=projects 'C'=CRDs 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d clusters | Enter=projects 'C'=CRDs 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewProjects:
 		count := len(a.projects)
-		status = fmt.Sprintf(" %s%d projects | Enter=namespaces 'C'=CRDs 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d projects | Enter=namespaces 'C'=CRDs 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewNamespaces:
 		count := len(a.namespaces)
-		status = fmt.Sprintf(" %s%d namespaces | Enter=pods 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d namespaces | Enter=pods 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewPods:
 		count := len(a.pods)
@@ -137,27 +143,27 @@ func (a *App) getStatusText() string {
 		if !exists {
 			sortMode = a.sortMode
 		}
-		status = fmt.Sprintf(" %s%d pods | Sort: %s | 's'=sort 'l'=logs 'd'=describe '1/2/3'=switch | '?'=help 'q'=quit ", offlinePrefix, count, sortMode.String())
+		status = fmt.Sprintf(" %s%s%d pods | Sort: %s | 's'=sort 'l'=logs 'd'=describe '1/2/3'=switch | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count, sortMode.String())
 
 	case ViewDeployments:
 		count := len(a.deployments)
-		status = fmt.Sprintf(" %s%d deployments | 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d deployments | 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewServices:
 		count := len(a.services)
-		status = fmt.Sprintf(" %s%d services | 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d services | 'd'=describe '1/2/3'=switch view 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewCRDs:
 		count := len(a.crds)
-		status = fmt.Sprintf(" %s%d CRDs | 'i'=toggle description Enter=instances 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d CRDs | 'i'=toggle description Enter=instances 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewCRDInstances:
 		count := len(a.crdInstances)
-		status = fmt.Sprintf(" %s%d %s instances | 'd'=describe(soon) 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, count, a.currentView.crdKind)
+		status = fmt.Sprintf(" %s%s%d %s instances | 'd'=describe(soon) 'r'=refresh | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count, a.currentView.crdKind)
 
 	case ViewContainerSelect:
 		count := len(a.containers)
-		status = fmt.Sprintf(" %s%d containers | Enter=view logs 'Esc'=back | '?'=help 'q'=quit ", offlinePrefix, count)
+		status = fmt.Sprintf(" %s%s%d containers | Enter=view logs 'Esc'=back | '?'=help 'q'=quit ", offlinePrefix, bundleIndicator, count)
 
 	case ViewLogs:
 		// FIX 4: Show visible log count instead of total count
@@ -183,7 +189,7 @@ func (a *App) getStatusText() string {
 		}
 
 		statusInfo := strings.Join(parts, " | ")
-		status = fmt.Sprintf(" %s%s | 'w'=wrap 't'=tail Ctrl+E/W/A=filter '/'=search | Esc=back q=quit ", offlinePrefix, statusInfo)
+		status = fmt.Sprintf(" %s%s%s | 'w'=wrap 't'=tail Ctrl+E/W/A=filter '/'=search | Esc=back q=quit ", offlinePrefix, bundleIndicator, statusInfo)
 
 	default:
 		status = fmt.Sprintf(" %sPress 'Esc' to go back | '?' for help | 'q' to quit ", offlinePrefix)
