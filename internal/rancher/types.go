@@ -368,3 +368,33 @@ type Event struct {
 	ObjectKind    string `json:"objectKind"`    // Extracted from Object (e.g., "pod", "node")
 	ContainerName string `json:"containerName"` // Extracted from SubObject (v0.5.6)
 }
+
+// PersistentVolume represents a Kubernetes PersistentVolume
+type PersistentVolume struct {
+	Name         string `json:"name"`
+	Status       string `json:"status"`       // Available, Bound, Released, Failed
+	StorageClass string `json:"storageClass"` // Storage class name
+	Capacity     string `json:"capacity"`     // Storage capacity (e.g., "10Gi")
+	Claim        string `json:"claim"`        // namespace/claim-name
+	Age          string `json:"age"`          // Human-readable age
+}
+
+// PersistentVolumeClaim represents a Kubernetes PersistentVolumeClaim
+type PersistentVolumeClaim struct {
+	Name         string `json:"name"`
+	Namespace    string `json:"namespace"`
+	Status       string `json:"status"`       // Pending, Bound, Lost
+	StorageClass string `json:"storageClass"` // Storage class name
+	Capacity     string `json:"capacity"`     // Storage capacity (e.g., "10Gi")
+	Volume       string `json:"volume"`       // Bound PV name
+	Age          string `json:"age"`          // Human-readable age
+}
+
+// StatefulSet represents a Kubernetes StatefulSet
+type StatefulSet struct {
+	Name         string `json:"name"`
+	Namespace    string `json:"namespace"`
+	Replicas     string `json:"replicas"`     // ready/total format
+	StorageClass string `json:"storageClass"` // Storage class name (if applicable)
+	Age          string `json:"age"`          // Human-readable age
+}
