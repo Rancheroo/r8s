@@ -47,7 +47,7 @@ func SafeInt(v interface{}) int {
 	case string:
 		// Try to parse string to int
 		var i int
-		fmt.Sscanf(val, "%d", &i)
+		_, _ = fmt.Sscanf(val, "%d", &i)
 		return i
 	default:
 		return 0

@@ -24,7 +24,7 @@ on:
 
 env:
   GO_VERSION: '1.23'
-  MIN_COVERAGE: '50'
+  MIN_COVERAGE: '5' # Temporary low threshold while building coverage (current ~8.5%)
 
 jobs:
   # Job 1: Build and Test
@@ -83,24 +83,17 @@ jobs:
     - name: Generate coverage report
       run: make coverage
     
-    # Check minimum coverage threshold (temporarily disabled - TODO: add tests to reach 50%)
-    # - name: Check coverage threshold
-    #   run: |
-    #     COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-    #     echo "Total coverage: ${COVERAGE}%"
-    #     echo "Minimum required: ${{ env.MIN_COVERAGE }}%"
-    #     if (( $(echo "$COVERAGE < ${{ env.MIN_COVERAGE }}" | bc -l) )); then
-    #       echo "ERROR: Coverage ${COVERAGE}% is below minimum ${{ env.MIN_COVERAGE }}%"
-    #       exit 1
-    #     fi
-    #     echo "✓ Coverage check passed"
-    
-    # TEMP: Just report coverage without enforcing threshold
-    - name: Report coverage
+    # Check minimum coverage threshold
+    - name: Check coverage threshold
       run: |
         COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
         echo "Total coverage: ${COVERAGE}%"
-        echo "(Coverage threshold check temporarily disabled)"
+        echo "Minimum required: ${{ env.MIN_COVERAGE }}%"
+        if (( $(echo "$COVERAGE < ${{ env.MIN_COVERAGE }}" | bc -l) )); then
+          echo "ERROR: Coverage ${COVERAGE}% is below minimum ${{ env.MIN_COVERAGE }}%"
+          exit 1
+        fi
+        echo "✓ Coverage check passed"
     
     # Upload coverage report as artifact
     - name: Upload coverage report
@@ -118,7 +111,7 @@ jobs:
         COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}')
         echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
         echo "- Total Coverage: **${COVERAGE}**" >> $GITHUB_STEP_SUMMARY
-        echo "- Minimum Required: **${{ env.MIN_COVERAGE }}%** (threshold check temporarily disabled)" >> $GITHUB_STEP_SUMMARY
+        echo "- Minimum Required: **${{ env.MIN_COVERAGE }}%**" >> $GITHUB_STEP_SUMMARY
 
   # Job 2: Lint checks
   lint:

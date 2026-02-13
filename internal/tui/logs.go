@@ -650,7 +650,7 @@ func (a *App) buildContainerStatusSection(pod *rancher.Pod, events []rancher.Eve
 
 	// Extract ready/total counts
 	var readyCount, totalCount int
-	fmt.Sscanf(ready, "%d/%d", &readyCount, &totalCount)
+	_, _ = fmt.Sscanf(ready, "%d/%d", &readyCount, &totalCount)
 
 	// Build status summary
 	statusLine := fmt.Sprintf("  Containers: %d/%d ready", readyCount, totalCount)
