@@ -1,7 +1,6 @@
 package datasource
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -723,11 +722,3 @@ func (ds *BundleDataSource) Close() error {
 	return nil
 }
 
-// Helper function to pretty-print JSON for describe views
-func prettifyJSON(v interface{}) string {
-	jsonBytes, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("%+v", v)
-	}
-	return string(jsonBytes)
-}

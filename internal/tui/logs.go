@@ -910,25 +910,6 @@ func (a *App) buildInvestigationSection(state string, restarts int) string {
 	return header + "\n\n" + strings.Join(steps, "\n")
 }
 
-// buildExternalToolsSection provides guidance on external analysis tools
-func (a *App) buildExternalToolsSection() string {
-	return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛠️  EXTERNAL TOOLS FOR LOG ANALYSIS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  When logs ARE available elsewhere:
-
-  • lnav - Advanced terminal log viewer with filtering & search
-    Install: brew install lnav  OR  apt install lnav
-    Usage:   lnav /path/to/bundle/rke2/podlogs/namespace_*/
-
-  • kubectl logs - View logs from live cluster
-    Usage:   kubectl logs <pod> -n <namespace>
-    Previous: kubectl logs <pod> -n <namespace> --previous
-
-  • Integrated in r8s - Press [Ctrl+P] for previous container logs`
-}
-
 // renderNoLogsMessage renders a simple "no logs" message when user pressed 'l' but pod has no logs
 func (a *App) renderNoLogsMessage() string {
 	breadcrumb := breadcrumbStyle.Render(a.getBreadcrumb())
