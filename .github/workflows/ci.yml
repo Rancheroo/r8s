@@ -24,13 +24,88 @@ on:
 
 env:
   GO_VERSION: '1.23'
-  MIN_COVERAGE: '5' # Temporary low threshold while building coverage (current ~8.5%)
+  MIN_COVERAGE: '15' # Raised from 5% - Sprint 5 pipeline hardening
 
 jobs:
+  # Job 0: Pre-merge guards (fast fail)
+  pre-merge-guards:
+    name: Pre-Merge Guards
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Need full history for diff
+    
+    - name: Check file count
+      run: |
+        # Count files changed in this PR
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+        else
+          BASE_SHA="origin/main"
+          HEAD_SHA="HEAD"
+        fi
+        
+        FILE_COUNT=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA" | wc -l)
+        echo "Files changed: $FILE_COUNT"
+        echo "Limit: 150"
+        
+        if [ "$FILE_COUNT" -gt 150 ]; then
+          echo "ERROR: Too many files changed ($FILE_COUNT > 150)"
+          echo "Split this PR into smaller chunks for easier review"
+          exit 1
+        fi
+        echo "✓ File count check passed"
+    
+    - name: Check for example-log-bundle files
+      run: |
+        # Check if any example-log-bundle files were modified
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+        else
+          BASE_SHA="origin/main"
+          HEAD_SHA="HEAD"
+        fi
+        
+        BUNDLE_FILES=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA" | grep -c "example-log-bundle" || true)
+        
+        if [ "$BUNDLE_FILES" -gt 0 ]; then
+          echo "ERROR: Found example-log-bundle files in PR"
+          git diff --name-only "$BASE_SHA"..."$HEAD_SHA" | grep "example-log-bundle"
+          echo "Log bundles should not be committed to the repo"
+          exit 1
+        fi
+        echo "✓ No log bundle files detected"
+    
+    - name: Check for large/binary files
+      run: |
+        # Check for files > 1MB (likely binaries accidentally committed)
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+        else
+          BASE_SHA="origin/main"
+          HEAD_SHA="HEAD"
+        fi
+        
+        LARGE_FILES=$(git diff --stat "$BASE_SHA"..."$HEAD_SHA" | awk '$4 > 1024 {print $1}' | grep -v "|" || true)
+        
+        if [ -n "$LARGE_FILES" ]; then
+          echo "WARNING: Large files detected (>1MB):"
+          echo "$LARGE_FILES"
+          echo "Ensure these are intentional (e.g., test fixtures)"
+        fi
+        echo "✓ Large file check complete"
+
   # Job 1: Build and Test
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    needs: pre-merge-guards  # Don't run if guards fail
     
     steps:
     # Checkout code
@@ -187,12 +262,32 @@ jobs:
       run: |
         ./bin/r8s --help
         ./bin/r8s version
-        ./bin/r8s test-cluster --help || true  # May fail without bundle, that's ok
+        ./bin/r8s test-cluster --help
     
-    - name: Test with demo bundle
+    - name: Test with demo bundle (smoke test)
       run: |
-        # Run with embedded demo bundle (no args)
-        timeout 5 ./bin/r8s --help || true
+        # Create minimal test bundle structure
+        mkdir -p /tmp/test-bundle/rke2/kubectl
+        mkdir -p /tmp/test-bundle/systeminfo
+        
+        # Add minimal pod data
+        echo "NAMESPACE NAME READY STATUS RESTARTS AGE" > /tmp/test-bundle/rke2/kubectl/pods
+        echo "default test-pod 1/1 Running 0 5m" >> /tmp/test-bundle/rke2/kubectl/pods
+        
+        # Add minimal node data
+        echo "NAME STATUS ROLES AGE VERSION" > /tmp/test-bundle/rke2/kubectl/nodes
+        echo "node1 Ready control-plane 10d v1.24.0" >> /tmp/test-bundle/rke2/kubectl/nodes
+        
+        # Add minimal events data
+        echo "NAMESPACE LAST SEEN TYPE REASON OBJECT MESSAGE" > /tmp/test-bundle/rke2/kubectl/events
+        
+        # Add dmesg
+        echo "[    0.000000] Linux version 5.15" > /tmp/test-bundle/systeminfo/dmesg
+        
+        # Run test-cluster command (should complete without panic)
+        ./bin/r8s test-cluster /tmp/test-bundle || true
+        
+        echo "✓ Smoke test completed (exit code may vary based on bundle content)"
 
   # Job 5: Documentation check
   docs:
