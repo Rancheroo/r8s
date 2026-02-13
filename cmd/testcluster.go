@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -90,7 +91,9 @@ func runTestCluster(cmd *cobra.Command, args []string) error {
 
 	b, err := bundle.Load(opts)
 	if err != nil {
-		return fmt.Errorf("failed to load bundle: %w", err)
+		// Exit code 2: Bundle parsing error (as documented)
+		fmt.Fprintf(os.Stderr, "Error: failed to load bundle: %v\n", err)
+		os.Exit(2)
 	}
 
 	// Run tests
@@ -137,7 +140,69 @@ func runTests(b *bundle.Bundle, extractPath string) []TestResult {
 	// Test 5: Bundle Completeness
 	results = append(results, testBundleCompleteness(extractPath))
 
+	// Test 6: dmesg OOM Detection (NEW)
+	results = append(results, testDMesgOOM(extractPath))
+
+	// Test 7: RKE2 Journald Analysis (NEW)
+	results = append(results, testJournaldIssues(extractPath))
+
 	return results
+}
+
+// testJournaldIssues checks for RKE2 control plane issues
+func testJournaldIssues(extractPath string) TestResult {
+	result := TestResult{
+		Name:        "RKE2 Control Plane Check",
+		Status:      "PASS",
+		Description: "Analyze journald logs for critical errors",
+	}
+
+	events, err := bundle.ParseJournald(extractPath)
+	if err != nil {
+		result.Status = "SKIP"
+		result.Description = fmt.Sprintf("Could not parse journald: %v", err)
+		return result
+	}
+
+	if !events.HasIssues() {
+		result.Details = append(result.Details, "No critical control plane issues found")
+		return result
+	}
+
+	result.Status = "FAIL"
+	result.Description = "Critical issues found in control plane logs"
+
+	// Add details for each category
+	if len(events.ServerRestarts) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d Server Restarts detected", len(events.ServerRestarts)))
+	}
+	if len(events.EtcdIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d etcd issues detected", len(events.EtcdIssues)))
+	}
+	if len(events.CertificateIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d Certificate issues detected", len(events.CertificateIssues)))
+	}
+	if len(events.APIServerIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d API Server issues detected", len(events.APIServerIssues)))
+	}
+	if len(events.AgentIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d Agent/Connection issues detected", len(events.AgentIssues)))
+	}
+
+	// List top critical issues
+	critical := events.GetCriticalIssues()
+	if len(critical) > 0 {
+		result.Details = append(result.Details, "", "Top Critical Events:")
+		count := 0
+		for _, event := range critical {
+			if count >= 5 { break }
+			result.Details = append(result.Details, fmt.Sprintf("  [%s] %s: %s", 
+				event.Timestamp.Format("15:04:05"), event.Unit, event.Message))
+			count++
+		}
+	}
+
+	return result
 }
 
 // testOOMEvents checks for OOM kill events
@@ -306,6 +371,42 @@ func testPodHealth(extractPath string) TestResult {
 	return result
 }
 
+// testDMesgOOM checks for OOM kills in dmesg
+func testDMesgOOM(extractPath string) TestResult {
+	result := TestResult{
+		Name:        "Kernel OOM Detection",
+		Status:      "PASS",
+		Description: "Check dmesg for OOM kills and memory pressure",
+	}
+
+	analysis, err := bundle.ParseDMesg(extractPath)
+	if err != nil {
+		result.Status = "SKIP"
+		result.Description = fmt.Sprintf("Could not parse dmesg: %v", err)
+		return result
+	}
+
+	if !analysis.HasOOMKills() {
+		result.Details = append(result.Details, "No OOM kills found in kernel logs")
+		return result
+	}
+
+	result.Status = "FAIL"
+	result.Description = fmt.Sprintf("Found %d OOM kill(s) in kernel logs", len(analysis.OOMKills))
+
+	for _, kill := range analysis.OOMKills {
+		detail := fmt.Sprintf("  • %s (PID %d, OOM score: %d)", 
+			kill.VictimName, kill.VictimPID, kill.OOMScore)
+		result.Details = append(result.Details, detail)
+	}
+
+	if analysis.MemoryPressure {
+		result.Details = append(result.Details, "  ⚠ Memory cgroup pressure detected")
+	}
+
+	return result
+}
+
 // testBundleCompleteness checks if bundle has all expected data
 func testBundleCompleteness(extractPath string) TestResult {
 	result := TestResult{
@@ -439,33 +540,13 @@ func outputSummary(results []TestResult) {
 	}
 }
 
-// outputJSON prints results as JSON
+// outputJSON prints results as JSON using proper JSON encoding
 func outputJSON(results []TestResult) {
-	// Simple JSON output
-	fmt.Println("[")
-	for i, r := range results {
-		fmt.Printf("  {\n")
-		fmt.Printf("    \"name\": \"%s\",\n", r.Name)
-		fmt.Printf("    \"status\": \"%s\",\n", r.Status)
-		fmt.Printf("    \"description\": \"%s\"", r.Description)
-		if len(r.Details) > 0 {
-			fmt.Printf(",\n    \"details\": [\n")
-			for j, d := range r.Details {
-				fmt.Printf("      \"%s\"", d)
-				if j < len(r.Details)-1 {
-					fmt.Printf(",")
-				}
-				fmt.Println()
-			}
-			fmt.Printf("    ]")
-		}
-		fmt.Printf("\n  }")
-		if i < len(results)-1 {
-			fmt.Printf(",")
-		}
-		fmt.Println()
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(results); err != nil {
+		fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", err)
 	}
-	fmt.Println("]")
 }
 
 func init() {

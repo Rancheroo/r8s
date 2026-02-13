@@ -1,0 +1,202 @@
+# CodeRabbit Configuration for r8s
+# This file helps CodeRabbit understand our codebase patterns and principles
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+version: 1
+
+# Language-specific settings
+language_settings:
+  go:
+    enabled: true
+    allow_unsafe: false
+    
+# Reviews
+reviews:
+  # Profile: chill = fewer nitpicks, assertive = more suggestions
+  profile: assertive
+  
+  # Auto-review settings
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: ["main", "sprint*", "feature/*"]
+  
+  # What to review
+  path_filters:
+    - "!**/*.md"  # Skip markdown files
+    - "!docs/**"  # Skip documentation
+    - "!vendor/**"  # Skip vendored code
+  
+  # Tools to run
+  tools:
+    golangci-lint:
+      enabled: true
+  
+  # Auto-reply settings - posts at start of each review
+  auto_reply:
+    enabled: true
+    message: |
+      ## 🐰 CodeRabbit Review Started
+
+      I'm your AI teammate on this PR. My job is to:
+      - ✅ Catch bugs and issues
+      - ✅ Enforce our 8 principles (Truth Only™, etc.)
+      - ✅ Suggest improvements
+      - ✅ Learn from your responses
+
+      **I am part of the team.** When I suggest something:
+      - Fix it if it's a real issue
+      - Explain if it's intentional (I learn from this!)
+      - Discuss if you're unsure
+
+      See [CODERABBIT_GUIDE.md](docs/development/CODERABBIT_GUIDE.md) for how we work together.
+
+      Let's ship quality code! 🚀
+    
+# Knowledge base - helps CodeRabbit understand our patterns
+knowledge_base:
+  # Our coding principles (from PRINCIPLES.md)
+  principles:
+    - id: truth-only
+      name: "Truth Only™"
+      description: "r8s only displays truth. Better to show nothing than wrong data."
+      patterns:
+        - "Avoid mock data fallbacks"
+        - "Return errors instead of fabricated data"
+        - "Empty is a valid state"
+    
+    - id: no-feature
+      name: "Best Feature = No Feature"
+      description: "Smart defaults beat options. Delete complexity, don't improve it."
+      patterns:
+        - "Prefer removal over complication"
+        - "Fewer options = better UX"
+    
+    - id: explicit-mode
+      name: "Explicit > Implicit"
+      description: "Clear modes, flags, and indicators reduce confusion."
+      patterns:
+        - "Use mode indicators ([BUNDLE], [LIVE])"
+        - "Make state obvious"
+    
+    - id: complete-removal
+      name: "Complete Removal"
+      description: "Partial deletions create tech debt. Delete entirely or keep fully."
+      patterns:
+        - "Delete all related code, not just comments"
+        - "No 'maybe later' commented blocks"
+    
+    - id: test-scale
+      name: "Test at 10× Scale"
+      description: "Test features at max values. UI scaling breaks exponentially."
+      patterns:
+        - "Test with --scan=1000"
+        - "Test with 500+ pods"
+        - "Find breaking points early"
+    
+    - id: use-interfaces
+      name: "Use Your Interfaces"
+      description: "Trust abstractions you designed. Bypassing creates bugs."
+      patterns:
+        - "Use DataSource interface everywhere"
+        - "Avoid type assertions"
+    
+    - id: on-log-n
+      name: "O(n log n) Always"
+      description: "Algorithm complexity matters. Use standard library sorting."
+      patterns:
+        - "Use sort.Slice, not bubble sort"
+        - "Never write manual sorting"
+    
+    - id: minimal-keys
+      name: "Minimal Keys"
+      description: "Enter/Esc navigation should suffice for 90% of workflows."
+      patterns:
+        - "Fewer hotkeys = better UX"
+        - "Make good defaults instead of options"
+
+  # Common patterns in our codebase
+  patterns:
+    - name: "Bundle Analysis Pattern"
+      description: |
+        All bundle parsers follow this structure:
+        1. Parse file at known path (from rancher2_logs_collector.sh)
+        2. Return typed struct or error
+        3. Handle missing files gracefully (return empty, not error)
+        4. Include comprehensive tests
+      examples:
+        - internal/bundle/kubectl.go
+        - internal/bundle/dmesg.go
+        - internal/bundle/journald.go
+    
+    - name: "TUI Update Pattern"
+      description: |
+        Bubble Tea updates use async commands:
+        1. Create tea.Msg type for the event
+        2. Add handler in Update() switch
+        3. Return tea.Cmd for async work
+        4. Update state and trigger UI refresh
+      examples:
+        - internal/tui/app.go
+    
+    - name: "Error Handling Pattern"
+      description: |
+        Our error handling philosophy:
+        1. Fail fast in development (panic on programming errors)
+        2. Graceful degradation in production (log and continue)
+        3. Never return mock data on error
+        4. Empty result is valid (not an error)
+
+  # Files that define our architecture
+  key_files:
+    - path: docs/development/PRINCIPLES.md
+      description: "Core development principles - READ FIRST"
+    
+    - path: docs/development/BUNDLE_DEPENDENCY_ANALYSIS.md
+      description: "Bundle structure and parser requirements"
+    
+    - path: internal/rancher/types.go
+      description: "Core data structures"
+    
+    - path: internal/datasource/bundle.go
+      description: "Bundle data source implementation"
+    
+    - path: internal/datasource/datasource.go
+      description: "DataSource interface - use this!"
+
+# Learn from our responses
+learning:
+  # CodeRabbit will learn from our review responses
+  enabled: true
+  
+  # Common responses we've given (to help it learn faster)
+  common_responses:
+    - pattern: "os.Exit in RunE"
+      response: "Intentional for CI contract. Exit codes signal test status."
+    
+    - pattern: "unchecked error return"
+      response: "Tolerant parsing - ignore errors, return zero values."
+    
+    - pattern: "multiple completeness systems"
+      response: "Intentional separation: UI (simple) vs validation (precise)."
+    
+    - pattern: "test name suggests full"
+      response: "Rename to clarify scope (e.g., _RequiredFilesPresent)."
+
+# Chat settings
+chat:
+  # Auto-reply settings
+  auto_reply:
+    enabled: true
+    
+  # Custom instructions for the AI
+  custom_instructions: |
+    When reviewing r8s code:
+    1. Check PRINCIPLES.md for relevant principles
+    2. Verify bundle parsers handle missing files gracefully
+    3. Ensure TUI updates follow async pattern
+    4. Flag mock data or fallbacks as violations
+    5. Prefer suggesting deletions over additions
+    6. Test suggestions against 10× scale
+    
+    Be direct and specific. Cite principles when relevant.

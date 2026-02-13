@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/evertras/bubble-table/table"
 
+	"github.com/Rancheroo/r8s/internal/bundle"
 	"github.com/Rancheroo/r8s/internal/config"
 	"github.com/Rancheroo/r8s/internal/datasource"
 	"github.com/Rancheroo/r8s/internal/rancher"
@@ -133,10 +134,11 @@ type App struct {
 	showRawLogs      bool            // Show raw logs instead of diagnostic panel (toggle with 'l')
 
 	// App state
-	offlineMode bool   // Flag to indicate running without live Rancher connection
-	bundleMode  bool   // Flag to indicate bundle mode
-	bundlePath  string // Path to loaded bundle
-	launchCount int    // Number of TUI launches for help hint (v0.5.7)
+	offlineMode        bool   // Flag to indicate running without live Rancher connection
+	bundleMode         bool   // Flag to indicate bundle mode
+	bundlePath         string // Path to loaded bundle
+	bundleCompleteness int    // Bundle completeness percentage (0-100)
+	launchCount        int    // Number of TUI launches for help hint (v0.5.7)
 
 	// Attention Dashboard
 	attentionItems    []AttentionItem // Detected issues for attention dashboard
@@ -214,21 +216,28 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	// Always start with Attention Dashboard (the killer feature)
 	initialView := ViewContext{viewType: ViewAttention}
 
+	// Calculate bundle completeness if in bundle mode
+	bundleCompleteness := 0
+	if bundleMode {
+		bundleCompleteness = bundle.QuickCompletenessCheck(bundlePath)
+	}
+
 	return &App{
-		config:            cfg,
-		dataSource:        ds,
-		offlineMode:       offlineMode,
-		bundleMode:        bundleMode,
-		bundlePath:        bundlePath,
-		launchCount:       cfg.LaunchCount, // v0.5.7: Track for help hint
-		loading:           true,
-		currentView:       initialView,
-		sortMode:          SortByCount,                 // Default to count-based sorting
-		sortModes:         make(map[ViewType]SortMode), // Per-view sort state
-		cachedPodCounts:   make(map[string]PodCounts),  // Pod E/W count cache
-		crdInstanceCounts: make(map[string]int),        // CRD count cache (S1-HIGH-1)
-		crdCountsLoading:  make(map[string]bool),       // CRD loading state (S1-HIGH-1)
-		crdCountsPending:  make(map[string]struct{}),   // CRD fetch queue (S1-HIGH-1)
+		config:             cfg,
+		dataSource:         ds,
+		offlineMode:        offlineMode,
+		bundleMode:         bundleMode,
+		bundlePath:         bundlePath,
+		bundleCompleteness: bundleCompleteness,
+		launchCount:        cfg.LaunchCount, // v0.5.7: Track for help hint
+		loading:            true,
+		currentView:        initialView,
+		sortMode:           SortByCount,                 // Default to count-based sorting
+		sortModes:          make(map[ViewType]SortMode), // Per-view sort state
+		cachedPodCounts:    make(map[string]PodCounts),  // Pod E/W count cache
+		crdInstanceCounts:  make(map[string]int),        // CRD count cache (S1-HIGH-1)
+		crdCountsLoading:   make(map[string]bool),       // CRD loading state (S1-HIGH-1)
+		crdCountsPending:   make(map[string]struct{}),   // CRD fetch queue (S1-HIGH-1)
 	}
 }
 

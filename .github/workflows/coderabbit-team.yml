@@ -1,0 +1,95 @@
+# GitHub Action: CodeRabbit Team Integration
+# This workflow welcomes CodeRabbit to the PR and establishes team context
+
+name: CodeRabbit Team Welcome
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  welcome-coderabbit:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, 'coderabbit'))
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Post Team Welcome
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const welcomeMessage = `## 🐰 CodeRabbit - Team Member Onboarding
+
+            Welcome to the PR, @coderabbitai! 
+
+            As a reminder, you are a **team member**, not just a tool:
+
+            ### Your Role on This PR
+            - Review code against our 8 principles
+            - Catch bugs and suggest improvements  
+            - Learn from our responses
+            - Escalate concerns if needed
+
+            ### How We Work Together
+            1. **You review** → Post findings
+            2. **We respond** → Explain or fix
+            3. **You learn** → Update your understanding
+            4. **We all improve** → Better code, better reviews
+
+            ### Quick Links
+            - [Team Guide](docs/development/CODERABBIT_GUIDE.md)
+            - [Our Principles](docs/development/PRINCIPLES.md)
+            - [Your Config](.coderabbit.yaml)
+
+            ### Team Members on This PR
+            - **Author:** @${{ github.event.pull_request.user.login }}
+            - **Reviewers:** CodeRabbit + human reviewers
+            - **Sprint:** Current sprint
+
+            ---
+
+            *Let's build something great together! 🚀*
+
+            cc: @coderabbitai`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: welcomeMessage
+            });
+
+      - name: Track CodeRabbit Comments
+        if: github.event_name == 'issue_comment' && contains(github.event.comment.user.login, 'coderabbit')
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          echo "CodeRabbit commented on PR #${PR_NUMBER}"
+          echo "Comment preview: ${COMMENT_BODY}"
+          # Future: Could log this to a metrics system
+
+      - name: Update CodeRabbit Metrics
+        if: github.event_name == 'issue_comment' && contains(github.event.comment.user.login, 'coderabbit')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Track metrics about CodeRabbit's review quality
+            const comment = context.payload.comment.body;
+            
+            // Categorize comment type
+            let category = 'general';
+            if (comment.includes('🧹 Nitpick')) category = 'nitpick';
+            if (comment.includes('⚠️ Potential issue')) category = 'warning';
+            if (comment.includes('✅')) category = 'acknowledged';
+            if (comment.includes('🐛')) category = 'bug';
+            
+            console.log(`CodeRabbit comment category: ${category}`);
+            
+            // Future: Send to analytics/tracking system
+            // Could track: catch rate, false positive rate, resolution time
