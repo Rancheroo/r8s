@@ -140,6 +140,9 @@ func runTests(b *bundle.Bundle, extractPath string) []TestResult {
 	// Test 5: Bundle Completeness
 	results = append(results, testBundleCompleteness(extractPath))
 
+	// Test 6: dmesg OOM Detection (NEW)
+	results = append(results, testDMesgOOM(extractPath))
+
 	return results
 }
 
@@ -304,6 +307,42 @@ func testPodHealth(extractPath string) TestResult {
 		result.Description = fmt.Sprintf("Found %d unhealthy pod(s)", len(unhealthyPods))
 	} else {
 		result.Details = append(result.Details, "All pods are healthy")
+	}
+
+	return result
+}
+
+// testDMesgOOM checks for OOM kills in dmesg
+func testDMesgOOM(extractPath string) TestResult {
+	result := TestResult{
+		Name:        "Kernel OOM Detection",
+		Status:      "PASS",
+		Description: "Check dmesg for OOM kills and memory pressure",
+	}
+
+	analysis, err := bundle.ParseDMesg(extractPath)
+	if err != nil {
+		result.Status = "SKIP"
+		result.Description = fmt.Sprintf("Could not parse dmesg: %v", err)
+		return result
+	}
+
+	if !analysis.HasOOMKills() {
+		result.Details = append(result.Details, "No OOM kills found in kernel logs")
+		return result
+	}
+
+	result.Status = "FAIL"
+	result.Description = fmt.Sprintf("Found %d OOM kill(s) in kernel logs", len(analysis.OOMKills))
+
+	for _, kill := range analysis.OOMKills {
+		detail := fmt.Sprintf("  • %s (PID %d, OOM score: %d)", 
+			kill.VictimName, kill.VictimPID, kill.OOMScore)
+		result.Details = append(result.Details, detail)
+	}
+
+	if analysis.MemoryPressure {
+		result.Details = append(result.Details, "  ⚠ Memory cgroup pressure detected")
 	}
 
 	return result
