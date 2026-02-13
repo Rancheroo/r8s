@@ -143,7 +143,66 @@ func runTests(b *bundle.Bundle, extractPath string) []TestResult {
 	// Test 6: dmesg OOM Detection (NEW)
 	results = append(results, testDMesgOOM(extractPath))
 
+	// Test 7: RKE2 Journald Analysis (NEW)
+	results = append(results, testJournaldIssues(extractPath))
+
 	return results
+}
+
+// testJournaldIssues checks for RKE2 control plane issues
+func testJournaldIssues(extractPath string) TestResult {
+	result := TestResult{
+		Name:        "RKE2 Control Plane Check",
+		Status:      "PASS",
+		Description: "Analyze journald logs for critical errors",
+	}
+
+	events, err := bundle.ParseJournald(extractPath)
+	if err != nil {
+		result.Status = "SKIP"
+		result.Description = fmt.Sprintf("Could not parse journald: %v", err)
+		return result
+	}
+
+	if !events.HasIssues() {
+		result.Details = append(result.Details, "No critical control plane issues found")
+		return result
+	}
+
+	result.Status = "FAIL"
+	result.Description = "Critical issues found in control plane logs"
+
+	// Add details for each category
+	if len(events.ServerRestarts) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d Server Restarts detected", len(events.ServerRestarts)))
+	}
+	if len(events.EtcdIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d etcd issues detected", len(events.EtcdIssues)))
+	}
+	if len(events.CertificateIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d Certificate issues detected", len(events.CertificateIssues)))
+	}
+	if len(events.APIServerIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d API Server issues detected", len(events.APIServerIssues)))
+	}
+	if len(events.AgentIssues) > 0 {
+		result.Details = append(result.Details, fmt.Sprintf("  • %d Agent/Connection issues detected", len(events.AgentIssues)))
+	}
+
+	// List top critical issues
+	critical := events.GetCriticalIssues()
+	if len(critical) > 0 {
+		result.Details = append(result.Details, "", "Top Critical Events:")
+		count := 0
+		for _, event := range critical {
+			if count >= 5 { break }
+			result.Details = append(result.Details, fmt.Sprintf("  [%s] %s: %s", 
+				event.Timestamp.Format("15:04:05"), event.Unit, event.Message))
+			count++
+		}
+	}
+
+	return result
 }
 
 // testOOMEvents checks for OOM kill events

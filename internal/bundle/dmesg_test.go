@@ -3,6 +3,7 @@ package bundle
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -139,7 +140,7 @@ func TestDMesgAnalysis_GetOOMKillSummary(t *testing.T) {
 	if summary == "" {
 		t.Error("Expected non-empty summary")
 	}
-	if !contains(summary, "2 OOM kill(s)") {
+	if !strings.Contains(summary, "2 OOM kill(s)") {
 		t.Errorf("Summary should mention '2 OOM kill(s)', got: %s", summary)
 	}
 
@@ -149,21 +150,8 @@ func TestDMesgAnalysis_GetOOMKillSummary(t *testing.T) {
 	}
 	
 	summary = analysisWithoutOOM.GetOOMKillSummary()
-	if !contains(summary, "No OOM kills detected") {
+	if !strings.Contains(summary, "No OOM kills detected") {
 		t.Errorf("Summary should say 'No OOM kills detected', got: %s", summary)
 	}
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || 
-		(len(s) > 0 && len(substr) > 0 && findSubstring(s, substr)))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}

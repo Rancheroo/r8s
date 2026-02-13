@@ -23,7 +23,7 @@ type CompletenessResult struct {
 	Percentage      int // 0-100
 	MissingRequired []string
 	MissingOptional []string
-	PresentFiles    []string // List of what was found
+	PresentFileList []string // List of what was found
 }
 
 // IsComplete returns true if all required files are present
@@ -100,9 +100,12 @@ func AnalyzeCompleteness(extractPath string) (*CompletenessResult, error) {
 
 	result := &CompletenessResult{
 		TotalFiles:      len(expectedFiles),
-		PresentFiles:    make([]string, 0),
+		PresentFiles:    0,
+		RequiredFiles:   0,
+		RequiredPresent: 0,
 		MissingRequired: make([]string, 0),
 		MissingOptional: make([]string, 0),
+		PresentFileList: make([]string, 0),
 	}
 
 	totalWeight := 0
@@ -122,7 +125,7 @@ func AnalyzeCompleteness(extractPath string) (*CompletenessResult, error) {
 		if exists {
 			result.PresentFiles++
 			presentWeight += file.Weight
-			result.PresentFiles = append(result.PresentFiles, file.Description)
+			result.PresentFileList = append(result.PresentFileList, file.Description)
 			
 			if file.Required {
 				result.RequiredPresent++

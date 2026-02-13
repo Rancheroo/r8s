@@ -48,15 +48,15 @@ func ParseDMesg(extractPath string) (*DMesgAnalysis, error) {
 	
 	// OOM kill patterns
 	// Example: [1234567.890123] Out of memory: Killed process 12345 (nginx) total-vm:131072kB, anon-rss:65536kB, file-rss:0kB, shmem-rss:0kB, UID:0 pgtables:128kB oom_score_adj:0
-	oomKillRegex := regexp.MustCompile(`\[([\d.]+)\]\s*Out of memory:\s*Killed process\s+(\d+)\s+\(([^)]+)\).*oom_score_adj:(-?\d+)`)
+	oomKillRegex := regexp.MustCompile(`\[\s*([\d.]+)\s*\]\s*Out of memory:\s*Killed process\s+(\d+)\s+\(([^)]+)\).*oom_score_adj:(-?\d+)`)
 	
 	// Memory pressure pattern
 	// Example: [1234567.890123] Memory cgroup out of memory: Kill process 12345 (nginx) score 999 or sacrifice child
-	cgroupOOMRegex := regexp.MustCompile(`\[([\d.]+)\]\s*Memory cgroup out of memory`)
+	cgroupOOMRegex := regexp.MustCompile(`\[\s*([\d.]+)\s*\]\s*Memory cgroup out of memory`)
 	
 	// Process killed summary
 	// Example: [1234567.890123] oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=cri-containerd-abc123.scope,mems_allowed=0,oom_memcg=/system.slice/containerd.service,task_memcg=/kubepods.slice/...,task=nginx,pid=12345,uid=0
-	oomKillDetailRegex := regexp.MustCompile(`\[([\d.]+)\]\s*oom-kill:.*task=([^,]+),pid=(\d+)`)
+	oomKillDetailRegex := regexp.MustCompile(`\[\s*([\d.]+)\s*\]\s*oom-kill:.*task=([^,]+),pid=(\d+)`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
