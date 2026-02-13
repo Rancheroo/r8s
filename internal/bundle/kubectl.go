@@ -571,20 +571,12 @@ func ParsePVs(extractPath string) ([]rancher.PersistentVolume, error) {
 		}
 
 		pv := rancher.PersistentVolume{
-			Name:     fields[0],
-			Capacity: fields[1],
-			Status:   fields[4],
-			Age:      fields[len(fields)-1],
-		}
-
-		// Claim is field 5 (format: "namespace/claim-name")
-		if len(fields) > 5 {
-			pv.Claim = fields[5]
-		}
-
-		// StorageClass is field 6
-		if len(fields) > 6 {
-			pv.StorageClass = fields[6]
+			Name:         fields[0],
+			Capacity:     fields[1],
+			Status:       fields[4],
+			Claim:        fields[5],
+			StorageClass: fields[6],
+			Age:          fields[len(fields)-1],
 		}
 
 		pvs = append(pvs, pv)
