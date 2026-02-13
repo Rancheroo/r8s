@@ -168,7 +168,7 @@ func ParseServices(extractPath string) ([]rancher.Service, error) {
 			parts := strings.Split(portStr, "/")
 			if len(parts) == 2 {
 				var port int
-				fmt.Sscanf(parts[0], "%d", &port)
+				_, _ = fmt.Sscanf(parts[0], "%d", &port)
 				protocol := parts[1]
 
 				ports = append(ports, rancher.ServicePort{
@@ -303,7 +303,7 @@ func ParsePods(extractPath string) ([]rancher.Pod, error) {
 		var restarts int
 
 		// Parse restart count from field[4]
-		fmt.Sscanf(fields[4], "%d", &restarts)
+		_, _ = fmt.Sscanf(fields[4], "%d", &restarts)
 
 		// Find the IP field (starts with numbers and dots, or is IPv6)
 		// IP is always before NODE
@@ -406,7 +406,7 @@ func ParseEvents(extractPath string) ([]rancher.Event, error) {
 		name := fields[len(fields)-1]
 
 		var count int
-		fmt.Sscanf(countStr, "%d", &count)
+		_, _ = fmt.Sscanf(countStr, "%d", &count)
 
 		// Extract pod name from object field (format: "pod/pod-name")
 		podName := ""
