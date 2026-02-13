@@ -24,7 +24,7 @@ on:
 
 env:
   GO_VERSION: '1.23'
-  MIN_COVERAGE: '5' # Temporary low threshold while building coverage (current ~8.5%)
+  MIN_COVERAGE: '10' # Interim threshold - Sprint 6 target: 50% (current: ~10%)
 
 jobs:
   # Job 1: Build and Test
