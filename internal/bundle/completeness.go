@@ -32,12 +32,13 @@ func (c *CompletenessResult) IsComplete() bool {
 }
 
 // GetStatus returns a human-readable status string
+// Thresholds align with GetStatusColor() for consistent UX
 func (c *CompletenessResult) GetStatus() string {
 	if c.Percentage == 100 {
 		return "Complete"
-	} else if c.Percentage >= 75 {
+	} else if c.Percentage >= 70 {
 		return "Good"
-	} else if c.Percentage >= 50 {
+	} else if c.Percentage >= 40 {
 		return "Partial"
 	}
 	return "Minimal"
@@ -135,7 +136,8 @@ func AnalyzeCompleteness(extractPath string) (*CompletenessResult, error) {
 			if info.IsDir() {
 				entries, err := os.ReadDir(fullPath)
 				if err != nil || len(entries) == 0 {
-					// Directory exists but is empty - count as partial
+					// Directory exists but is empty - count as partial (50% weight)
+					// Integer truncation is intentional: odd weights round down
 					presentWeight -= file.Weight / 2
 				}
 			}

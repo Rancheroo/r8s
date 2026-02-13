@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAnalyzeCompleteness_Complete(t *testing.T) {
+func TestAnalyzeCompleteness_FullBundle(t *testing.T) {
 	tmpDir := t.TempDir()
 	
 	// Create all required files
@@ -109,9 +109,10 @@ func TestAnalyzeCompleteness_WithPodLogs(t *testing.T) {
 	}
 
 	// Should have higher percentage with podlogs
-	// Total weight ~96, present ~45 (pods 15 + nodes 10 + events 10 + podlogs 10) -> ~46%
-	if result.Percentage < 45 {
-		t.Errorf("Expected higher percentage with podlogs, got %d", result.Percentage)
+	// Total weight ~96, present ~45 (pods 15 + nodes 10 + events 10 + podlogs 10) -> ~47%
+	// Expected range: 46-48% to account for minor weight calculation variations
+	if result.Percentage < 46 || result.Percentage > 48 {
+		t.Errorf("Expected percentage between 46-48 with podlogs, got %d", result.Percentage)
 	}
 }
 
@@ -122,10 +123,11 @@ func TestCompletenessResult_GetStatus(t *testing.T) {
 	}{
 		{100, "Complete"},
 		{90, "Good"},
-		{75, "Good"},
-		{74, "Partial"},
+		{70, "Good"},
+		{69, "Partial"},
 		{50, "Partial"},
-		{49, "Minimal"},
+		{40, "Partial"},
+		{39, "Minimal"},
 		{0, "Minimal"},
 	}
 
