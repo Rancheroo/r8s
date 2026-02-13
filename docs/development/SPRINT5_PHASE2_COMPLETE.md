@@ -48,21 +48,24 @@ Sprint 5 Phase 2 consolidated all backlog parser work into a single comprehensiv
 ## Architecture Impact
 
 ### New Files
-```
+
+```text
 internal/bundle/
 ├── completeness.go          # Bundle analysis
 ├── completeness_test.go     # Tests
 ├── dmesg.go                 # OOM detection
 ├── dmesg_test.go            # Tests
 ├── journald.go              # Journald parser
-└── journald_test.go         # Tests
+├── journald_test.go         # Tests
+└── kubectl_test.go          # Tests
 
 cmd/
 └── testcluster.go           # CLI command
 ```
 
 ### Modified Files
-```
+
+```text
 internal/bundle/kubectl.go   # Added PV, PVC, StatefulSet, ConfigMap, HelmChart parsers
 internal/rancher/types.go    # Added new data structures
 ```

@@ -53,14 +53,15 @@ Clean up all CI/CD issues and establish automated quality gates.
 
 ## Branch Strategy
 
-```
+```text
 feature/sprint6-ci-stability
-├── fix/lint-warnings          # Issue #44
-├── fix/coverage-threshold     # Issue #45
-└── fix/go-compatibility       # Issue #45 (Go version)
+├── fix/lint-warnings          # Issue `#44`
+├── fix/coverage-threshold     # Issue `#45`
+└── fix/go-compatibility       # Issue `#45` (Go version)
 ```
 
 **Rules:**
+
 - Each fix in its own branch for reviewability
 - All branches merge to `feature/sprint6-ci-stability`
 - Final PR to main only when all checks green

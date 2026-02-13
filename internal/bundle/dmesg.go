@@ -130,13 +130,15 @@ func (d *DMesgAnalysis) CorrelateWithPods(podEvents map[string]int) map[string]b
 	correlated := make(map[string]bool)
 
 	for _, kill := range d.OOMKills {
-		// Try to match process name with pod/container names
-		// Common patterns: "nginx", "java", "python", etc.
 		victimLower := strings.ToLower(kill.VictimName)
-		
+
+		// Skip very short names to avoid false positive matches
+		if len(victimLower) < 3 {
+			continue
+		}
+
 		for podName := range podEvents {
 			podLower := strings.ToLower(podName)
-			// Simple heuristic: if victim name appears in pod name
 			if strings.Contains(podLower, victimLower) || strings.Contains(victimLower, podLower) {
 				correlated[podName] = true
 			}

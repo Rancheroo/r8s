@@ -66,9 +66,12 @@ jobs:
 
       - name: Track CodeRabbit Comments
         if: github.event_name == 'issue_comment' && contains(github.event.comment.user.login, 'coderabbit')
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
-          echo "CodeRabbit commented on PR #${{ github.event.issue.number }}"
-          echo "Comment preview: ${{ github.event.comment.body }}"
+          echo "CodeRabbit commented on PR #${PR_NUMBER}"
+          echo "Comment preview: ${COMMENT_BODY}"
           # Future: Could log this to a metrics system
 
       - name: Update CodeRabbit Metrics

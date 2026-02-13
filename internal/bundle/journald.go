@@ -85,7 +85,7 @@ func parseJournaldFile(filePath string, events *RKE2ControlPlaneEvents) {
 	unit := detectUnitFromPath(filePath)
 
 	scanner := bufio.NewScanner(file)
-	
+
 	// Common RKE2 error patterns
 	patterns := map[string]*regexp.Regexp{
 		"server_restart":   regexp.MustCompile(`(?i)rke2.*starting|Starting.*rke2|started.*rke2`),
@@ -98,10 +98,10 @@ func parseJournaldFile(filePath string, events *RKE2ControlPlaneEvents) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		
+
 		// Try to parse timestamp (various formats)
 		timestamp := parseJournaldTimestamp(line)
-		
+
 		// Check against patterns
 		for errorType, pattern := range patterns {
 			if pattern.MatchString(line) {
@@ -111,7 +111,7 @@ func parseJournaldFile(filePath string, events *RKE2ControlPlaneEvents) {
 					Message:   extractMessage(line),
 					Severity:  determineSeverity(errorType, line),
 				}
-				
+
 				switch errorType {
 				case "server_restart":
 					events.ServerRestarts = append(events.ServerRestarts, event)
@@ -156,7 +156,7 @@ func parseJournaldTimestamp(line string) time.Time {
 		"2006-01-02T15:04:05",
 		"2006-01-02 15:04:05",
 	}
-	
+
 	for _, format := range formats {
 		if len(line) >= len(format) {
 			if t, err := time.Parse(format, line[:len(format)]); err == nil {
@@ -168,7 +168,7 @@ func parseJournaldTimestamp(line string) time.Time {
 			}
 		}
 	}
-	
+
 	return time.Now()
 }
 
@@ -190,23 +190,23 @@ func extractMessage(line string) string {
 // determineSeverity determines the severity of an event
 func determineSeverity(errorType, message string) string {
 	messageLower := strings.ToLower(message)
-	
-	if strings.Contains(messageLower, "fatal") || 
+
+	if strings.Contains(messageLower, "fatal") ||
 	   strings.Contains(messageLower, "panic") ||
 	   strings.Contains(messageLower, "critical") {
 		return "critical"
 	}
-	
-	if strings.Contains(messageLower, "error") || 
+
+	if strings.Contains(messageLower, "error") ||
 	   errorType == "cert_error" ||
 	   errorType == "etcd_error" {
 		return "error"
 	}
-	
+
 	if strings.Contains(messageLower, "warn") {
 		return "warning"
 	}
-	
+
 	return "info"
 }
 
@@ -216,7 +216,8 @@ func (e *RKE2ControlPlaneEvents) HasIssues() bool {
 		len(e.AgentIssues) > 0 ||
 		len(e.CertificateIssues) > 0 ||
 		len(e.EtcdIssues) > 0 ||
-		len(e.APIServerIssues) > 0
+		len(e.APIServerIssues) > 0 ||
+		len(e.UnknownErrors) > 0
 }
 
 // GetSummary returns a human-readable summary
@@ -227,7 +228,7 @@ func (e *RKE2ControlPlaneEvents) GetSummary() string {
 
 	var parts []string
 	parts = append(parts, "RKE2 Control Plane Issues Detected:")
-	
+
 	if len(e.ServerRestarts) > 0 {
 		parts = append(parts, fmt.Sprintf("  • %d server restart(s)", len(e.ServerRestarts)))
 	}
@@ -243,6 +244,9 @@ func (e *RKE2ControlPlaneEvents) GetSummary() string {
 	if len(e.AgentIssues) > 0 {
 		parts = append(parts, fmt.Sprintf("  • %d agent connection issue(s)", len(e.AgentIssues)))
 	}
+	if len(e.UnknownErrors) > 0 {
+		parts = append(parts, fmt.Sprintf("  • %d unknown error(s)", len(e.UnknownErrors)))
+	}
 
 	return strings.Join(parts, "\n")
 }
@@ -250,7 +254,7 @@ func (e *RKE2ControlPlaneEvents) GetSummary() string {
 // GetCriticalIssues returns only critical and error severity issues
 func (e *RKE2ControlPlaneEvents) GetCriticalIssues() []ControlPlaneEvent {
 	var critical []ControlPlaneEvent
-	
+
 	for _, event := range e.ServerRestarts {
 		if event.Severity == "critical" || event.Severity == "error" {
 			critical = append(critical, event)
@@ -276,6 +280,11 @@ func (e *RKE2ControlPlaneEvents) GetCriticalIssues() []ControlPlaneEvent {
 			critical = append(critical, event)
 		}
 	}
-	
+	for _, event := range e.UnknownErrors {
+		if event.Severity == "critical" || event.Severity == "error" {
+			critical = append(critical, event)
+		}
+	}
+
 	return critical
 }
