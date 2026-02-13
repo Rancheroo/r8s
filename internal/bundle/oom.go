@@ -12,13 +12,15 @@ import (
 
 // OOMAnalysis represents an out-of-memory event analysis
 type OOMAnalysis struct {
-	PodName       string
-	ContainerName string
-	MemoryLimit   string // "1Gi"
-	MemoryRequest string // "512Mi"
-	OOMKillTime   string
-	IsNodeOOM     bool   // vs container OOM
-	QoSClass      string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-1)
+	PodName           string
+	ContainerName     string
+	MemoryLimit       string // "1Gi"
+	MemoryRequest     string // "512Mi"
+	OOMKillTime       string
+	IsNodeOOM         bool   // vs container OOM
+	QoSClass          string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-1)
+	NodeName          string // Node the pod was running on (S3-MEDIUM-3)
+	NodeMemoryPressure bool  // Was the node under memory pressure? (S3-MEDIUM-3)
 }
 
 // AnalyzeOOMEvents analyzes kubectl events and pod data to identify OOM kills
@@ -401,12 +403,124 @@ func calculatePodQoSClass(containers []interface{}) string {
 
 // enrichWithNodeMemory attempts to correlate OOM events with node memory pressure
 // Falls back gracefully if node data is not available
+// S3-MEDIUM-3: Parse node describe output to correlate OOM events with node memory pressure
 func enrichWithNodeMemory(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	// TODO: Parse nodesDescribePath to analyze node memory pressure during OOM events
 	nodesDescribePath := filepath.Join(bundleRoot, "rke2/kubectl/nodesdescribe")
 	if _, err := os.Stat(nodesDescribePath); os.IsNotExist(err) {
 		return oomEvents
 	}
 
+	// Parse node conditions to get pressure status
+	nodes, err := ParseNodeDescribe(bundleRoot)
+	if err != nil {
+		return oomEvents
+	}
+
+	// Build map of node name to memory pressure status
+	nodePressureMap := make(map[string]bool)
+	for _, node := range nodes {
+		nodePressureMap[node.Name] = node.MemoryPressure
+	}
+
+	// Enrich OOM events with node pressure data
+	// First, try to get node names from pod manifests if not already set
+	oomEvents = enrichWithNodeNames(oomEvents, bundleRoot)
+
+	// Now correlate with node pressure
+	for i := range oomEvents {
+		if oomEvents[i].NodeName != "" {
+			if hasPressure, exists := nodePressureMap[oomEvents[i].NodeName]; exists {
+				oomEvents[i].NodeMemoryPressure = hasPressure
+				// Mark as node-level OOM if node was under pressure
+				if hasPressure {
+					oomEvents[i].IsNodeOOM = true
+				}
+			}
+		}
+	}
+
 	return oomEvents
+}
+
+// enrichWithNodeNames extracts node names from pod manifests for OOM events
+// S3-MEDIUM-3: Track which node the OOM'd pod was running on
+func enrichWithNodeNames(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
+	manifestsPath := filepath.Join(bundleRoot, "rke2/pod-manifests")
+	if _, err := os.Stat(manifestsPath); os.IsNotExist(err) {
+		return oomEvents
+	}
+
+	// Build map of normalized pod name to node name
+	podNodeMap := buildPodNodeMap(manifestsPath)
+
+	// Enrich OOM events with node names
+	for i := range oomEvents {
+		normalizedName := normalizePodName(oomEvents[i].PodName)
+		if nodeName, exists := podNodeMap[normalizedName]; exists {
+			oomEvents[i].NodeName = nodeName
+		}
+	}
+
+	return oomEvents
+}
+
+// buildPodNodeMap scans pod manifests and builds a map of pod name to node name
+func buildPodNodeMap(manifestsPath string) map[string]string {
+	podNodeMap := make(map[string]string)
+
+	files, err := os.ReadDir(manifestsPath)
+	if err != nil {
+		return podNodeMap
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".yaml") && !strings.HasSuffix(file.Name(), ".yml") {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Join(manifestsPath, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		podName, nodeName := parsePodYAMLForNode(string(content))
+		if podName != "" && nodeName != "" {
+			podNodeMap[podName] = nodeName
+		}
+	}
+
+	return podNodeMap
+}
+
+// parsePodYAMLForNode extracts pod name and node name from pod YAML
+func parsePodYAMLForNode(yamlContent string) (string, string) {
+	var pod map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlContent), &pod); err != nil {
+		return "", ""
+	}
+
+	// Check if this is a Pod kind
+	if kind, ok := pod["kind"].(string); !ok || kind != "Pod" {
+		return "", ""
+	}
+
+	// Extract pod name from metadata
+	metadata, ok := pod["metadata"].(map[string]interface{})
+	if !ok {
+		return "", ""
+	}
+
+	podName, ok := metadata["name"].(string)
+	if !ok {
+		return "", ""
+	}
+
+	// Extract node name from spec
+	spec, ok := pod["spec"].(map[string]interface{})
+	if !ok {
+		return podName, ""
+	}
+
+	nodeName, _ := spec["nodeName"].(string)
+	return podName, nodeName
 }

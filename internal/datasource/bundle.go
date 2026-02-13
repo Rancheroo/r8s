@@ -655,13 +655,15 @@ func (ds *BundleDataSource) GetOOMAnalysis() ([]OOMAnalysis, error) {
 	var result []OOMAnalysis
 	for _, a := range analysis {
 		result = append(result, OOMAnalysis{
-			PodName:       a.PodName,
-			ContainerName: a.ContainerName,
-			MemoryLimit:   a.MemoryLimit,
-			MemoryRequest: a.MemoryRequest,
-			OOMKillTime:   a.OOMKillTime,
-			IsNodeOOM:     a.IsNodeOOM,
-			QoSClass:      a.QoSClass, // S3-MEDIUM-2: Include QoS class
+			PodName:            a.PodName,
+			ContainerName:      a.ContainerName,
+			MemoryLimit:        a.MemoryLimit,
+			MemoryRequest:      a.MemoryRequest,
+			OOMKillTime:        a.OOMKillTime,
+			IsNodeOOM:          a.IsNodeOOM,
+			QoSClass:           a.QoSClass,           // S3-MEDIUM-2: Include QoS class
+			NodeName:           a.NodeName,           // S3-MEDIUM-3: Include node name
+			NodeMemoryPressure: a.NodeMemoryPressure, // S3-MEDIUM-3: Include node pressure status
 		})
 	}
 
