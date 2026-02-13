@@ -7,11 +7,11 @@
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**Latest: v0.6.9** (January 2026)
-- **Quality improvements**: 98% code compliance with development principles
-- **Performance**: Faster event sorting (O(n log n) optimization)
-- **Truth Only™**: No more fabricated data - shows real bundle contents or clear errors
-- **Testing**: Regression tests added to prevent future issues
+**Latest: v0.7.0** (February 2026)
+- **Bundle Coverage**: 90% data extraction (up from 30%)
+- **New Parsers**: Storage (PV/PVC/StatefulSet), ConfigMaps, HelmCharts
+- **System Health**: dmesg OOM detection, RKE2 journald analysis
+- **Quality**: 100% tested new code, zero breaking changes
 
 **Recent v0.6.x highlights:**
 - **0.6.8** - Smart event truncation + cluster-level drill-down for node/ETCD issues
@@ -21,9 +21,9 @@ r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. Th
 
 ---
 
-## 🚀 What's Coming
+## 🚀 What's New
 
-### v0.7.0 "Maximum Information Extraction" (Target: April 2026)
+### v0.7.0 "Maximum Information Extraction" (February 2026) ✅ RELEASED
 **For Support Teams**: Extract 60% more data from bundles + faster performance
 
 **New Data Sources** (90% bundle coverage vs current 30%):
