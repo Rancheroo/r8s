@@ -41,8 +41,8 @@ func (a *App) calculateColumnWidths(specs []ColumnSpec) []table.Column {
 	return columns
 }
 
-// truncateWithEllipsis truncates text consistently across all tables
-// If text exceeds maxWidth, truncate and add "..."
+// getCRDColumnSpecs returns column specifications for the CRD table view.
+// Columns: name (35%), group (25%), kind (18%), scope (12%), instances (10%).
 func getCRDColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
 		{"name", "NAME", 0.35, 20},          // 35% of width, min 20 chars
@@ -153,9 +153,9 @@ func getAttentionColumnSpecs() []ColumnSpec {
 // S4-HIGH-2: Terminal-adaptive column widths for multi-container pod view
 func getContainerSelectColumnSpecs() []ColumnSpec {
 	return []ColumnSpec{
-		{"container", "Container", 0.35, 20},  // 35% for container name
-		{"status", "Status", 0.15, 10},        // 15% for status
-		{"restarts", "Restarts", 0.15, 8},     // 15% for restart count
-		{"resources", "Resources", 0.35, 20},  // 35% for resource limits
+		{"container", "Container", 0.35, 20}, // 35% for container name
+		{"status", "Status", 0.15, 10},       // 15% for status
+		{"restarts", "Restarts", 0.15, 8},    // 15% for restart count
+		{"resources", "Resources", 0.35, 20}, // 35% for resource limits
 	}
 }

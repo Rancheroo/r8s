@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -83,7 +84,7 @@ func runTUI(cmd *cobra.Command, args []string) error {
 
 	// Check if app initialization failed - print error and exit cleanly
 	if app.HasError() {
-		return fmt.Errorf(app.GetError())
+		return errors.New(app.GetError())
 	}
 
 	p := tea.NewProgram(

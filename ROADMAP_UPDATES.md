@@ -1,8 +1,9 @@
 # r8s Roadmap Updates
 
-**Last Updated**: 2026-02-12
-**Source**: Comprehensive Gap Analysis + Product Manager Responsibilities + Musk's Laws Review
-**Status**: Sprint-ready tasks with effort estimates
+**Last Updated**: 2026-02-13
+**Source**: Comprehensive Gap Analysis + Product Manager Responsibilities + Musk's Laws Review + README Promise Audit
+**Status**: Sprint-ready tasks with effort estimates + Quick Wins Added
+**Audit Reference**: See `docs/development/V0.7.0_README_AUDIT.md` for full promise gap analysis
 
 ---
 
@@ -99,28 +100,64 @@ To prevent roadmap gaps like v0.7.0/v0.8.0 promises being missed, the Product Ma
 
 ---
 
-### 🆕 SPRINT 4: Foundation Sprint (March 2026) - REPRIORITIZED
-**Theme**: Low Effort, High Gain + Future-Proofing
-**Duration**: 1 week (reduced from 3)
-**Total Effort**: ~12 hours
+### 🆕 SPRINT 4: Foundation Sprint (March 2026) - REPRIORITIZED + QUICK WINS
+**Theme**: Low Effort, High Gain + Future-Proofing + Ship Value Faster
+**Duration**: 1 week (expanded with quick wins)
+**Total Effort**: ~19 hours (was 12h — added 7h of quick wins)
 
+#### Sprint 4A: Infrastructure (Required) — 12h
 | ID | Task | Effort | Musk's Law | Rationale |
 |----|------|--------|------------|-----------|
 | S4-CRITICAL-1 | CI/CD Pipeline (GitHub Actions) | 4h | 🤖 AUTOMATE | Block releases without tests |
 | S4-HIGH-4 | Bundle completeness indicator | 4h | 🚀 ACCELERATE | Transparency for users |
 | S4-HIGH-5 | 50% coverage enforcement | 4h | 🤖 AUTOMATE | Quality gate automation |
 
-**Deferred to Backlog/Sprint 6:**
-- ~~S4-HIGH-1~~ Storage: PV/PVC/StatefulSet parsers (8h) - Heavy parsing, add when requested
-- ~~S4-HIGH-2~~ System Health: dmesg OOM detection (6h) - New parser type, nice-to-have
-- ~~S4-HIGH-3~~ Control Plane: RKE2 journald parser (6h) - Complex format, Sprint 5 candidate
-- ~~S4-MEDIUM-1~~ ConfigMaps + HelmCharts (5h) - Lower priority, backlog
+#### Sprint 4B: Quick Wins (Ship Value Faster) — 7h
+| ID | Task | Effort | README Link | Musk's Law |
+|----|------|--------|-------------|------------|
+| S4-QUICK-1 | CodeRabbit polish fixes (CR#10,12,13,7) | 3h | Polish | ⚙️ SIMPLIFY |
+| S4-QUICK-2 | Minimal dmesg parser (OOM kills only) | 2h | Promise #2 partial | 🚀 ACCELERATE |
+| S4-QUICK-3 | File-count bundle completeness v1 | 2h | Promise #5 fast version | 🚀 ACCELERATE |
+
+**Why Quick Wins Matter:**
+- Deliver user value while infrastructure work is in progress
+- Break complexity into manageable bites
+- Maintain momentum with visible progress
+- Prevent "all infrastructure, no features" trap
+
+**Principle Applied:** See `PRINCIPLES.md` #13 — "Ship Value in Manageable Bites"
+
+**Explicitly Deferred to Sprint 6:**
+| ID | Promise | README Ref | Effort | Deferral Reason |
+|----|---------|------------|--------|-----------------|
+| ~~S4-HIGH-1~~ | Storage: PV/PVC/StatefulSet parsers | Promise #1 | 8h | Heavy parsing—needs dedicated sprint |
+| ~~S4-HIGH-2~~ | System Health: Full dmesg analysis | Promise #2 | 6h | Partial coverage via S4-QUICK-2 |
+| ~~S4-HIGH-3~~ | Control Plane: RKE2 journald parser | Promise #3 | 6h | Complex format—Sprint 5 candidate |
+| ~~S4-MEDIUM-1~~ | ConfigMaps + HelmCharts | Promise #4 | 5h | Lower priority, user demand unclear |
+
+**README Promise Gap Tracking:**
+| Promise | Status | Sprint | Notes |
+|---------|--------|--------|-------|
+| #1 Storage (PV/PVC) | 🔴 DEFERRED | Sprint 6 | 90% coverage promise at risk |
+| #2 System Health (dmesg) | 🟡 PARTIAL | Sprint 4B | OOM-only via S4-QUICK-2 |
+| #3 Control Plane (journald) | 🔴 DEFERRED | Sprint 6 | RKE2 support incomplete |
+| #4 ConfigMaps/Helm | 🔴 DEFERRED | Sprint 6 | Lower priority |
+| #5 Bundle Completeness | 🟢 ON TRACK | Sprint 4A | Full implementation |
+| #6 Cache Optimization | 🟡 MOVED | Sprint 5 | v0.7.x maintenance release |
+| #7 Async Operations | 🟢 ON TRACK | Sprint 5 | Partially done Sprint 3 |
+| #8 Namespace Health | 🟡 MOVED | Sprint 5 | v0.7.x maintenance release |
+| #9 CI/CD Pipeline | 🟢 ON TRACK | Sprint 4A | Core infrastructure |
+| #10 50% Test Coverage | 🟢 ON TRACK | Sprint 4A | Quality gate automation |
 
 **Success Criteria**:
 - CI/CD runs on every PR
-- Bundle completeness shown on startup
+- Bundle completeness shown on startup (file-count v1 acceptable)
 - Coverage enforcement blocks <50% PRs
 - Sprint 3 branches merged cleanly
+- CodeRabbit high-priority items resolved
+- dmesg OOM detection working (minimal version)
+
+**Audit Reference:** See `docs/development/V0.7.0_README_AUDIT.md` for full gap analysis
 
 ---
 

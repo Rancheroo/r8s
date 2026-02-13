@@ -114,4 +114,3 @@ func generateImagePullContext(ds datasource.DataSource, namespace, podName strin
 
 	return ctx
 }
-

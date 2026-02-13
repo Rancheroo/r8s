@@ -39,15 +39,15 @@ var _ DataSource = (*syntheticDataSource)(nil)
 func (ds *syntheticDataSource) GetClusters() ([]rancher.Cluster, error) {
 	return []rancher.Cluster{
 		{
-			ID:        "demo-cluster-id",
-			Type:      "cluster",
-			Name:      "demo-cluster",
-			State:     "active",
-			Provider:  "demo",
-			Created:   time.Now().Add(-30 * 24 * time.Hour),
-			Labels:    map[string]string{},
-			Links:     map[string]string{},
-			Actions:   map[string]string{},
+			ID:       "demo-cluster-id",
+			Type:     "cluster",
+			Name:     "demo-cluster",
+			State:    "active",
+			Provider: "demo",
+			Created:  time.Now().Add(-30 * 24 * time.Hour),
+			Labels:   map[string]string{},
+			Links:    map[string]string{},
+			Actions:  map[string]string{},
 		},
 	}, nil
 }
@@ -64,7 +64,7 @@ func (ds *syntheticDataSource) GetProjects(clusterID string) ([]rancher.Project,
 		{ID: "p-payments", Name: "payments", ClusterID: clusterID, State: "active", Created: time.Now()},
 		{ID: "p-logging", Name: "logging", ClusterID: clusterID, State: "active", Created: time.Now()},
 	}
-	
+
 	// Namespace counts per project
 	counts := map[string]int{
 		"p-default":    1,
@@ -76,7 +76,7 @@ func (ds *syntheticDataSource) GetProjects(clusterID string) ([]rancher.Project,
 		"p-payments":   1,
 		"p-logging":    1,
 	}
-	
+
 	return projects, counts, nil
 }
 
@@ -92,7 +92,7 @@ func (ds *syntheticDataSource) GetNamespaces(clusterID, projectID string) ([]ran
 		"p-payments":   {{ID: "ns-payments", Name: "payments", ProjectID: projectID, State: "active", Created: time.Now()}},
 		"p-logging":    {{ID: "ns-logging", Name: "logging", ProjectID: projectID, State: "active", Created: time.Now()}},
 	}
-	
+
 	if ns, ok := nsMap[projectID]; ok {
 		return ns, nil
 	}
@@ -112,38 +112,38 @@ func (ds *syntheticDataSource) GetAllPods() ([]rancher.Pod, error) {
 // convertBundlePodsToRancherPods converts bundle.PodInfo to rancher.Pod
 func (ds *syntheticDataSource) convertBundlePodsToRancherPods(filterNS string) []rancher.Pod {
 	var pods []rancher.Pod
-	
+
 	statusMap := map[string]string{
-		"nginx-deployment-7c4c7b8f5-x2v9p":      "Running",
-		"frontend-app-5d9c8b7f4-k3m8n":           "CrashLoopBackOff",
-		"backend-api-6f8d9c7b5-p9q2r":            "ImagePullBackOff",
-		"redis-cache-0":                          "Running",
-		"postgres-db-0":                          "OOMKilled",
-		"worker-cronjob-27981234-ab12c":          "Completed",
-		"payment-service-9a8b7c6d5-e4f3g":        "Pending",
-		"elasticsearch-0":                        "Running",
-		"prometheus-server-5c9d4b8f7-x1y2z":      "Running",
-		"grafana-7d8e9f0a1-b2c3d":                "ContainerCreating",
+		"nginx-deployment-7c4c7b8f5-x2v9p":  "Running",
+		"frontend-app-5d9c8b7f4-k3m8n":      "CrashLoopBackOff",
+		"backend-api-6f8d9c7b5-p9q2r":       "ImagePullBackOff",
+		"redis-cache-0":                     "Running",
+		"postgres-db-0":                     "OOMKilled",
+		"worker-cronjob-27981234-ab12c":     "Completed",
+		"payment-service-9a8b7c6d5-e4f3g":   "Pending",
+		"elasticsearch-0":                   "Running",
+		"prometheus-server-5c9d4b8f7-x1y2z": "Running",
+		"grafana-7d8e9f0a1-b2c3d":           "ContainerCreating",
 	}
-	
+
 	readyMap := map[string]string{
-		"nginx-deployment-7c4c7b8f5-x2v9p":      "1/1",
-		"frontend-app-5d9c8b7f4-k3m8n":           "0/1",
-		"backend-api-6f8d9c7b5-p9q2r":            "0/1",
-		"redis-cache-0":                          "1/1",
-		"postgres-db-0":                          "0/1",
-		"worker-cronjob-27981234-ab12c":          "0/1",
-		"payment-service-9a8b7c6d5-e4f3g":        "0/1",
-		"elasticsearch-0":                        "1/1",
-		"prometheus-server-5c9d4b8f7-x1y2z":      "1/1",
-		"grafana-7d8e9f0a1-b2c3d":                "0/1",
+		"nginx-deployment-7c4c7b8f5-x2v9p":  "1/1",
+		"frontend-app-5d9c8b7f4-k3m8n":      "0/1",
+		"backend-api-6f8d9c7b5-p9q2r":       "0/1",
+		"redis-cache-0":                     "1/1",
+		"postgres-db-0":                     "0/1",
+		"worker-cronjob-27981234-ab12c":     "0/1",
+		"payment-service-9a8b7c6d5-e4f3g":   "0/1",
+		"elasticsearch-0":                   "1/1",
+		"prometheus-server-5c9d4b8f7-x1y2z": "1/1",
+		"grafana-7d8e9f0a1-b2c3d":           "0/1",
 	}
-	
+
 	for _, podInfo := range ds.bundle.Pods {
 		if filterNS != "" && podInfo.Namespace != filterNS {
 			continue
 		}
-		
+
 		pod := rancher.Pod{
 			ID:            fmt.Sprintf("%s/%s", podInfo.Namespace, podInfo.Name),
 			Type:          "pod",
@@ -162,7 +162,7 @@ func (ds *syntheticDataSource) convertBundlePodsToRancherPods(filterNS string) [
 		}
 		pods = append(pods, pod)
 	}
-	
+
 	return pods
 }
 
@@ -178,11 +178,11 @@ func (ds *syntheticDataSource) GetServices(projectID, namespace string) ([]ranch
 		{ID: "svc-2", Name: "nginx-service", NamespaceID: "default", State: "active", ClusterIP: "10.43.12.34", Kind: "LoadBalancer", Created: time.Now()},
 		{ID: "svc-3", Name: "backend-api", NamespaceID: "production", State: "active", ClusterIP: "10.43.56.78", Kind: "ClusterIP", Created: time.Now()},
 	}
-	
+
 	if namespace == "" {
 		return services, nil
 	}
-	
+
 	var filtered []rancher.Service
 	for _, svc := range services {
 		if svc.NamespaceID == namespace {

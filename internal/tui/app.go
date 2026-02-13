@@ -33,7 +33,7 @@ const (
 	ViewCRDs
 	ViewCRDInstances
 	ViewLogs
-	ViewClusterEvent   // v0.6.1: Cluster event drill-down
+	ViewClusterEvent    // v0.6.1: Cluster event drill-down
 	ViewContainerSelect // S3-MEDIUM-1: Container selection for multi-container pods
 )
 
@@ -101,9 +101,9 @@ type App struct {
 	projectNamespaceCounts map[string]int
 
 	// Async CRD instance counts (cached to prevent UI blocking)
-	crdInstanceCounts    map[string]int    // Key: clusterID+group+resource, Value: count
-	crdCountsLoading     map[string]bool   // Key: clusterID+group+resource, Value: loading state
-	crdCountsPending     map[string]struct{} // Queue of pending CRD count fetches
+	crdInstanceCounts map[string]int      // Key: clusterID+group+resource, Value: count
+	crdCountsLoading  map[string]bool     // Key: clusterID+group+resource, Value: loading state
+	crdCountsPending  map[string]struct{} // Queue of pending CRD count fetches
 
 	// UI state
 	table              table.Model
@@ -123,14 +123,14 @@ type App struct {
 	currentMatch  int   // Current match index
 
 	// Log viewing state
-	currentContainer string   // Current container being viewed
-	containers       []string // Available containers for current pod
+	currentContainer string          // Current container being viewed
+	containers       []string        // Available containers for current pod
 	containerDetails []ContainerInfo // S3-MEDIUM-1: Diagnostic info for containers
-	tailMode         bool     // Auto-refresh tail mode
-	filterLevel      string   // Log level filter: "", "ERROR", "WARN", "INFO"
-	showPrevious     bool     // Show previous logs (for crashed containers)
-	wordWrap         bool     // Enable word wrapping for long log lines
-	showRawLogs      bool     // Show raw logs instead of diagnostic panel (toggle with 'l')
+	tailMode         bool            // Auto-refresh tail mode
+	filterLevel      string          // Log level filter: "", "ERROR", "WARN", "INFO"
+	showPrevious     bool            // Show previous logs (for crashed containers)
+	wordWrap         bool            // Enable word wrapping for long log lines
+	showRawLogs      bool            // Show raw logs instead of diagnostic panel (toggle with 'l')
 
 	// App state
 	offlineMode bool   // Flag to indicate running without live Rancher connection
@@ -215,20 +215,20 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 	initialView := ViewContext{viewType: ViewAttention}
 
 	return &App{
-		config:             cfg,
-		dataSource:         ds,
-		offlineMode:        offlineMode,
-		bundleMode:         bundleMode,
-		bundlePath:         bundlePath,
-		launchCount:        cfg.LaunchCount, // v0.5.7: Track for help hint
-		loading:            true,
-		currentView:        initialView,
-		sortMode:           SortByCount,                 // Default to count-based sorting
-		sortModes:          make(map[ViewType]SortMode), // Per-view sort state
-		cachedPodCounts:    make(map[string]PodCounts),  // Pod E/W count cache
-		crdInstanceCounts:  make(map[string]int),        // CRD count cache (S1-HIGH-1)
-		crdCountsLoading:   make(map[string]bool),       // CRD loading state (S1-HIGH-1)
-		crdCountsPending:   make(map[string]struct{}),   // CRD fetch queue (S1-HIGH-1)
+		config:            cfg,
+		dataSource:        ds,
+		offlineMode:       offlineMode,
+		bundleMode:        bundleMode,
+		bundlePath:        bundlePath,
+		launchCount:       cfg.LaunchCount, // v0.5.7: Track for help hint
+		loading:           true,
+		currentView:       initialView,
+		sortMode:          SortByCount,                 // Default to count-based sorting
+		sortModes:         make(map[ViewType]SortMode), // Per-view sort state
+		cachedPodCounts:   make(map[string]PodCounts),  // Pod E/W count cache
+		crdInstanceCounts: make(map[string]int),        // CRD count cache (S1-HIGH-1)
+		crdCountsLoading:  make(map[string]bool),       // CRD loading state (S1-HIGH-1)
+		crdCountsPending:  make(map[string]struct{}),   // CRD fetch queue (S1-HIGH-1)
 	}
 }
 
@@ -648,7 +648,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.logViewport.SetContent(a.renderLogsWithColors())
 				a.logViewport.GotoTop()
 				for i := 0; i < a.searchMatches[a.currentMatch]; i++ {
-					a.logViewport.LineDown(1)
+					a.logViewport.ScrollDown(1)
 				}
 				return a, nil
 			}
@@ -662,7 +662,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				a.logViewport.SetContent(a.renderLogsWithColors())
 				a.logViewport.GotoTop()
 				for i := 0; i < a.searchMatches[a.currentMatch]; i++ {
-					a.logViewport.LineDown(1)
+					a.logViewport.ScrollDown(1)
 				}
 				return a, nil
 			}

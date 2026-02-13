@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/Rancheroo/r8s/internal/rancher"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ParseCRDs parses kubectl get crds output from bundle
@@ -48,7 +50,7 @@ func ParseCRDs(extractPath string) ([]rancher.CRD, error) {
 		group := strings.Join(parts[1:], ".")
 
 		// Generate kind by capitalizing plural (simple heuristic)
-		kind := strings.Title(plural)
+		kind := cases.Title(language.English).String(plural)
 		// Remove trailing 's' for kind if present
 		if strings.HasSuffix(kind, "s") && len(kind) > 1 {
 			kind = kind[:len(kind)-1]

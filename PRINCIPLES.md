@@ -180,6 +180,41 @@ A change in the collector script is a P1 issue for R8s.
 
 ---
 
+### 13. **Ship Value in Manageable Bites**
+
+Break complexity into quick wins alongside infrastructure. Never do "all foundation, no features" or "all features, no foundation."
+
+**The Pattern:**
+```
+Sprint Structure:
+├── 60% Infrastructure (CI/CD, testing, foundations)
+├── 30% Quick Wins (visible value, 1-2 hour tasks)
+└── 10% Buffer (emergencies, scope creep)
+```
+
+**Quick Win Criteria:**
+- Can ship in 1-2 hours
+- Delivers visible user value
+- Doesn't block infrastructure work
+- Can be done in parallel
+
+**Examples:**
+- CodeRabbit polish fixes while CI/CD is being built
+- Minimal dmesg parser (OOM only) while full system health is planned
+- File-count bundle completeness while full scoring is developed
+
+**Anti-Patterns:**
+- ❌ "Sprint 4 is all infrastructure, no user-visible changes"
+- ❌ "We'll ship everything at once in 3 months"
+- ❌ "Quick fixes don't count as sprint work"
+
+**Musk's Law Alignment:**
+- 🧠 QUESTION: "Is this the smallest valuable slice?"
+- ⚙️ SIMPLIFY: Break big features into shippable chunks
+- 🚀 ACCELERATE: Ship something every sprint, not just plan
+
+---
+
 ## Principle Violations = Technical Debt
 
 Every time we violate these principles, we create future incidents:

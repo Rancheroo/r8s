@@ -943,8 +943,7 @@ func parseMemoryToBytes(s string) int64 {
 	multiplier := int64(1)
 	switch strings.ToLower(unit) {
 	case "":
-		// Raw bytes
-		multiplier = 1
+		// Raw bytes - multiplier already 1
 	case "k":
 		multiplier = 1000
 	case "ki":

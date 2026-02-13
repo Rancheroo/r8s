@@ -561,7 +561,7 @@ func (a *App) performSearch() {
 		a.logViewport.SetContent(a.renderLogsWithColors())
 		a.logViewport.GotoTop()
 		for i := 0; i < a.searchMatches[0]; i++ {
-			a.logViewport.LineDown(1)
+			a.logViewport.ScrollDown(1)
 		}
 	}
 }

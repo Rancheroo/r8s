@@ -48,7 +48,7 @@ EXIT CODES:
 }
 
 var (
-	testClusterAll    bool // Show all pods, not just issues
+	testClusterAll    bool   // Show all pods, not just issues
 	testClusterFormat string // Output format: table, json, summary
 )
 
@@ -271,15 +271,15 @@ func testPodHealth(extractPath string) TestResult {
 		// Check both State (from Rancher API) and KubectlStatus (from bundle)
 		state := strings.ToLower(pod.State)
 		kubectlStatus := strings.ToLower(pod.KubectlStatus)
-		
+
 		isUnhealthy := false
 		statusDisplay := pod.State
-		
+
 		// Check Rancher State
 		if strings.Contains(state, "error") || strings.Contains(state, "failed") {
 			isUnhealthy = true
 		}
-		
+
 		// Check kubectl status (more detailed from bundle)
 		if strings.Contains(kubectlStatus, "crashloop") ||
 			strings.Contains(kubectlStatus, "error") ||
@@ -288,7 +288,7 @@ func testPodHealth(extractPath string) TestResult {
 			isUnhealthy = true
 			statusDisplay = pod.KubectlStatus
 		}
-		
+
 		if isUnhealthy {
 			unhealthyPods = append(unhealthyPods, pod.Name)
 			result.Details = append(result.Details,

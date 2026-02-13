@@ -12,15 +12,15 @@ import (
 
 // OOMAnalysis represents an out-of-memory event analysis
 type OOMAnalysis struct {
-	PodName           string
-	ContainerName     string
-	MemoryLimit       string // "1Gi"
-	MemoryRequest     string // "512Mi"
-	OOMKillTime       string
-	IsNodeOOM         bool   // vs container OOM
-	QoSClass          string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-1)
-	NodeName          string // Node the pod was running on (S3-MEDIUM-3)
-	NodeMemoryPressure bool  // Was the node under memory pressure? (S3-MEDIUM-3)
+	PodName            string
+	ContainerName      string
+	MemoryLimit        string // "1Gi"
+	MemoryRequest      string // "512Mi"
+	OOMKillTime        string
+	IsNodeOOM          bool   // vs container OOM
+	QoSClass           string // "Guaranteed", "Burstable", "BestEffort" (S3-MEDIUM-1)
+	NodeName           string // Node the pod was running on (S3-MEDIUM-3)
+	NodeMemoryPressure bool   // Was the node under memory pressure? (S3-MEDIUM-3)
 }
 
 // AnalyzeOOMEvents analyzes kubectl events and pod data to identify OOM kills

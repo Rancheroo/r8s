@@ -96,30 +96,69 @@
 
 ## Sprint 4 Proposed Tasks
 
-### S4-CRITICAL-1: Fix High Priority CodeRabbit Items
+### Sprint 4A: Infrastructure (Required)
+
+#### S4-CRITICAL-1: Fix High Priority CodeRabbit Items
 **Effort:** 4 hours  
 **Files:** `oom.go`, `handlers.go`, `helpers.go`  
 **Deliverable:** PR with fixes, all 6 items resolved
 
-### S4-HIGH-1: Complete CRD Async Loading
+#### S4-CRITICAL-2: CI/CD Pipeline (GitHub Actions)
+**Effort:** 4 hours  
+**Files:** `.github/workflows/test.yml`  
+**Deliverable:** Automated testing on every PR, coverage gates
+
+#### S4-HIGH-1: 50% Test Coverage Enforcement
+**Effort:** 4 hours  
+**Files:** `Makefile`, `.github/workflows/test.yml`  
+**Deliverable:** Coverage gates block PRs below 50%
+
+### Sprint 4B: Quick Wins (Ship Value Faster)
+
+#### S4-QUICK-1: CodeRabbit Polish Fixes (Items #7, #10, #12, #13)
 **Effort:** 3 hours  
-**Files:** `app.go`  
-**Deliverable:** processPendingCRDCounts fully implemented
+**Files:** `table.go`, `Makefile`, `ROADMAP_UPDATES.md`  
+**Deliverable:** Low-hanging fruit from CodeRabbit review
 
-### S4-HIGH-2: Terminal-Adaptive Column Widths
+| Item | File | Issue | Effort |
+|------|------|-------|--------|
+| #7 | `app.go:1020-1026` | CRD batching tick too aggressive (100ms → 250-500ms) | 1h |
+| #10 | `table.go:580-586` | Fixed column widths break terminal-adaptive | 1h |
+| #12 | `Makefile:44-49` | clean target misses coverage artifacts | 0.5h |
+| #13 | `ROADMAP_UPDATES.md:273-274` | "Next Review" timestamp in past | 0.5h |
+
+#### S4-QUICK-2: Minimal dmesg Parser (OOM Kills Only)
 **Effort:** 2 hours  
-**Files:** `table.go`  
-**Deliverable:** All tables use calculateColumnWidths()
+**Files:** `internal/bundle/dmesg.go` (new)  
+**Deliverable:** Parse dmesg for OOM kills, show in dashboard
 
-### S4-MEDIUM-1: Polish Release Script
+**Scope:** Limited to OOM kill detection only (not full dmesg analysis)
+- Read `dmesg` output from bundle
+- Pattern match for OOM kill messages
+- Add to Attention Dashboard as "Kernel OOM Kill" items
+- **README Promise:** Partially satisfies Promise #2 (System Health)
+
+#### S4-QUICK-3: File-Count Bundle Completeness v1
 **Effort:** 2 hours  
-**Files:** `scripts/release.sh`, `Makefile`  
-**Deliverable:** Cross-platform builds, clean coverage
+**Files:** `internal/bundle/completeness.go` (new), `internal/tui/app.go`  
+**Deliverable:** Simple percentage based on file count vs expected
 
-### S4-MEDIUM-2: Documentation Cleanup
-**Effort:** 1 hour  
-**Files:** `ROADMAP_UPDATES.md`  
-**Deliverable:** Markdown linting fixes
+**Scope:** Simple v1 implementation
+- Count files in bundle vs expected file list
+- Show percentage on startup (e.g., "Bundle: 76% complete")
+- Expected files: pods, nodes, events, logs, dmesg, etc.
+- **README Promise:** Satisfies Promise #5 (Bundle Completeness)
+
+### Sprint 4C: Deferred to Sprint 5+ (Documented)
+
+| ID | Task | Deferred To | Reason |
+|----|------|-------------|--------|
+| ~~S4-HIGH-2~~ | Complete CRD Async Loading | Sprint 5 | Complex async state management |
+| ~~S4-HIGH-3~~ | Storage: PV/PVC/StatefulSet | Sprint 6 | Heavy parsing, needs dedicated time |
+| ~~S4-HIGH-4~~ | System Health: Full dmesg | Sprint 6 | S4-QUICK-2 covers immediate need |
+| ~~S4-HIGH-5~~ | Control Plane: RKE2 journald | Sprint 6 | Complex parser, user demand unclear |
+| ~~S4-MEDIUM-1~~ | ConfigMaps + HelmCharts | Sprint 6 | Lower priority |
+| ~~S4-MEDIUM-2~~ | Polish Release Script | Backlog | Cross-platform builds nice-to-have |
 
 ---
 

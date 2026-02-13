@@ -109,6 +109,7 @@ func TestRenderAttentionDashboard_LargeDataset(t *testing.T) {
 	if len(app.attentionItems) > defaultDashboardCap && !app.attentionExpanded {
 		// Should contain the "...and X more" message
 		// Note: Can't easily check rendered output due to styling, but verify no panic
+		_ = app // Verify no panic when accessing attention items
 	}
 }
 

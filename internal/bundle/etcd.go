@@ -180,8 +180,8 @@ func ParseEtcdEndpointStatus(extractPath string) (string, string, int64, string,
 			// Parse raft term and index
 			var term int
 			var index int64
-			fmt.Sscanf(raftTerm, "%d", &term)
-			fmt.Sscanf(raftIndex, "%d", &index)
+			_, _ = fmt.Sscanf(raftTerm, "%d", &term)
+			_, _ = fmt.Sscanf(raftIndex, "%d", &index)
 
 			// Only return leader ID if this is the leader
 			if isLeader != "true" {
