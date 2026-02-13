@@ -545,3 +545,122 @@ type DaemonSetInfo struct {
 	Namespace string
 	Ready     string
 }
+
+// ParsePVs parses kubectl get pv output from bundle
+// Format: NAME STATUS VOLUME CAPACITY ACCESS MODES STORAGECLASS AGE
+func ParsePVs(extractPath string) ([]rancher.PersistentVolume, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/pv")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var pvs []rancher.PersistentVolume
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 6 {
+			continue
+		}
+
+		pv := rancher.PersistentVolume{
+			Name:         fields[0],
+			Status:       fields[1],
+			StorageClass: fields[5],
+			Age:          fields[len(fields)-1],
+		}
+
+		// Capacity is typically field 3
+		if len(fields) > 3 {
+			pv.Capacity = fields[3]
+		}
+
+		// Claim is typically field 4 if format is "namespace/claim-name"
+		if len(fields) > 4 && strings.Contains(fields[4], "/") {
+			pv.Claim = fields[4]
+		}
+
+		pvs = append(pvs, pv)
+	}
+
+	return pvs, nil
+}
+
+// ParsePVCs parses kubectl get pvc output from bundle
+// Format: NAMESPACE NAME STATUS VOLUME CAPACITY ACCESS MODES STORAGECLASS AGE
+func ParsePVCs(extractPath string) ([]rancher.PersistentVolumeClaim, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/pvc")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var pvcs []rancher.PersistentVolumeClaim
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 7 {
+			continue
+		}
+
+		pvc := rancher.PersistentVolumeClaim{
+			Namespace:    fields[0],
+			Name:         fields[1],
+			Status:       fields[2],
+			Volume:       fields[3],
+			Capacity:     fields[4],
+			StorageClass: fields[len(fields)-2],
+			Age:          fields[len(fields)-1],
+		}
+
+		pvcs = append(pvcs, pvc)
+	}
+
+	return pvcs, nil
+}
+
+// ParseStatefulSets parses kubectl get statefulsets output from bundle
+// Format: NAMESPACE NAME READY AGE
+func ParseStatefulSets(extractPath string) ([]rancher.StatefulSet, error) {
+	bundleRoot := getBundleRoot(extractPath)
+	path := filepath.Join(bundleRoot, "rke2/kubectl/statefulsets")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	var statefulsets []rancher.StatefulSet
+
+	for i, line := range lines {
+		if i == 0 || strings.TrimSpace(line) == "" {
+			continue // Skip header and empty lines
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 4 {
+			continue
+		}
+
+		statefulsets = append(statefulsets, rancher.StatefulSet{
+			Namespace: fields[0],
+			Name:      fields[1],
+			Replicas:  fields[2],
+			Age:       fields[len(fields)-1],
+		})
+	}
+
+	return statefulsets, nil
+}
