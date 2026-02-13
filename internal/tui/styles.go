@@ -5,7 +5,6 @@ import "github.com/charmbracelet/lipgloss"
 var (
 	// Colors (k9s-inspired)
 	colorCyan     = lipgloss.Color("14")
-	colorBlue     = lipgloss.Color("33")
 	colorGreen    = lipgloss.Color("10")
 	colorYellow   = lipgloss.Color("11")
 	colorRed      = lipgloss.Color("9")
@@ -81,12 +80,6 @@ var (
 				Padding(0, 2).
 				Width(100).
 				Align(lipgloss.Center)
-
-	// Highlighted row style for table selection
-	highlightedStyle = lipgloss.NewStyle().
-				Foreground(colorWhite).
-				Background(lipgloss.Color("62")). // Dark blue background
-				Bold(true)
 
 	// Log level styles
 	logErrorStyle = lipgloss.NewStyle().

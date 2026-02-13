@@ -100,56 +100,6 @@ func validateAndResolvePath(path string, verbose bool) (string, os.FileInfo, err
 	return absPath, info, nil
 }
 
-// validateBundleStructure verifies a directory contains valid bundle structure
-func validateBundleStructure(dir string, verbose bool) error {
-	// Check for RKE2 bundle markers
-	rke2Dir := filepath.Join(dir, "rke2")
-	if _, err := os.Stat(rke2Dir); os.IsNotExist(err) {
-		if verbose {
-			return fmt.Errorf("not a valid RKE2 bundle\n\n"+
-				"Missing: rke2/ directory\n"+
-				"Path checked: %s\n\n"+
-				"EXPECTED STRUCTURE:\n"+
-				"  bundle-folder/\n"+
-				"    ├── rke2/\n"+
-				"    │   ├── kubectl/\n"+
-				"    │   ├── podlogs/\n"+
-				"    │   └── ...\n"+
-				"    └── (other bundle files)\n\n"+
-				"HINT: This folder doesn't appear to be an extracted RKE2 support bundle", rke2Dir)
-		}
-		return fmt.Errorf("missing rke2/ directory - not a valid bundle")
-	}
-
-	// Check for kubectl data or podlogs
-	kubectlDir := filepath.Join(dir, "rke2", "kubectl")
-	podlogsDir := filepath.Join(dir, "rke2", "podlogs")
-
-	hasKubectl := false
-	hasPodlogs := false
-
-	if info, err := os.Stat(kubectlDir); err == nil && info.IsDir() {
-		hasKubectl = true
-	}
-	if info, err := os.Stat(podlogsDir); err == nil && info.IsDir() {
-		hasPodlogs = true
-	}
-
-	if !hasKubectl && !hasPodlogs {
-		if verbose {
-			return fmt.Errorf("bundle appears incomplete\n\n" +
-				"Missing both:\n" +
-				"  - rke2/kubectl/ (for resource data)\n" +
-				"  - rke2/podlogs/ (for pod logs)\n\n" +
-				"HINT: This may be a partial or corrupted bundle extraction")
-		}
-		return fmt.Errorf("missing kubectl/ and podlogs/ - bundle appears incomplete")
-	}
-
-	return nil
-}
-
-// loadFromExtractedPath loads bundle data from an extracted directory
 func loadFromExtractedPath(extractPath, originalPath string, size int64, opts ImportOptions) (*Bundle, error) {
 	if opts.Verbose {
 		fmt.Println("Parsing bundle data...")
