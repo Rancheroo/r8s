@@ -31,6 +31,27 @@ reviews:
   tools:
     golangci-lint:
       enabled: true
+  
+  # Auto-reply settings - posts at start of each review
+  auto_reply:
+    enabled: true
+    message: |
+      ## 🐰 CodeRabbit Review Started
+
+      I'm your AI teammate on this PR. My job is to:
+      - ✅ Catch bugs and issues
+      - ✅ Enforce our 8 principles (Truth Only™, etc.)
+      - ✅ Suggest improvements
+      - ✅ Learn from your responses
+
+      **I am part of the team.** When I suggest something:
+      - Fix it if it's a real issue
+      - Explain if it's intentional (I learn from this!)
+      - Discuss if you're unsure
+
+      See [CODERABBIT_GUIDE.md](docs/development/CODERABBIT_GUIDE.md) for how we work together.
+
+      Let's ship quality code! 🚀
     
 # Knowledge base - helps CodeRabbit understand our patterns
 knowledge_base:

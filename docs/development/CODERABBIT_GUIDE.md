@@ -18,12 +18,35 @@ Like any team member, CodeRabbit:
 
 ## Team Workflow with CodeRabbit
 
+### Automatic Onboarding (Every Review)
+
+When CodeRabbit starts a review, it automatically posts a team welcome message:
+
+> 🐰 **CodeRabbit Review Started**
+> 
+> I'm your AI teammate on this PR. My job is to:
+> - ✅ Catch bugs and issues
+> - ✅ Enforce our 8 principles (Truth Only™, etc.)
+> - ✅ Suggest improvements
+> - ✅ Learn from your responses
+> 
+> **I am part of the team.** When I suggest something:
+> - Fix it if it's a real issue
+> - Explain if it's intentional (I learn from this!)
+> - Discuss if you're unsure
+
+This happens automatically on every PR to establish:
+1. **Team context** - CodeRabbit is a teammate, not a tool
+2. **Expectations** - How we interact and learn from each other
+3. **Quick links** - Reference our principles and patterns
+
 ### During Development
 1. **Write code** as usual
 2. **Self-review** against principles before pushing
 3. **Push PR** and wait for CodeRabbit's review
-4. **Discuss findings** - treat each comment as a conversation
-5. **Update config** if we discover new patterns
+4. **See welcome message** - Team context established
+5. **Discuss findings** - Treat each comment as a conversation
+6. **Update config** if we discover new patterns
 
 ### Code Review Etiquette (Same for Humans and AI)
 
