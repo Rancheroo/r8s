@@ -148,6 +148,6 @@ func (d *DMesgAnalysis) CorrelateWithPods(podEvents map[string]int) map[string]b
 
 func parseIntSafe(s string) int {
 	var n int
-	fmt.Sscanf(s, "%d", &n)
+	_, _ = fmt.Sscanf(s, "%d", &n) // Tolerant parsing - ignore errors, return 0 on failure
 	return n
 }

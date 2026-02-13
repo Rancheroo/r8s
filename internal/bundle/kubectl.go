@@ -691,8 +691,8 @@ func ParseConfigMaps(extractPath string) ([]rancher.ConfigMap, error) {
 		}
 
 		dataCount := 0
-		if len(fields) >= 3 {
-			fmt.Sscanf(fields[2], "%d", &dataCount)
+		if _, err := fmt.Sscanf(fields[2], "%d", &dataCount); err != nil {
+			dataCount = 0 // Non-numeric DATA column, default to 0
 		}
 
 		configmaps = append(configmaps, rancher.ConfigMap{

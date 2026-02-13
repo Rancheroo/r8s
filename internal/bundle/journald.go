@@ -11,6 +11,9 @@ import (
 )
 
 // JournaldEntry represents a single journald log entry
+// NOTE: Currently unused but kept for future structured parsing
+// TODO: Implement structured journald parsing or remove in cleanup
+//lint:ignore U1000 Reserved for future use
 type JournaldEntry struct {
 	Timestamp   time.Time
 	Unit        string           // Service unit name (e.g., rke2-server)
@@ -123,6 +126,7 @@ func parseJournaldFile(filePath string, events *RKE2ControlPlaneEvents) {
 				default:
 					events.UnknownErrors = append(events.UnknownErrors, event)
 				}
+				break // One classification per line (first match wins)
 			}
 		}
 	}
@@ -170,11 +174,15 @@ func parseJournaldTimestamp(line string) time.Time {
 
 // extractMessage extracts the message part from a log line
 func extractMessage(line string) string {
-	// Remove common syslog prefixes
-	// Example: "Jan 02 15:04:05 hostname rke2[1234]: message"
-	parts := strings.SplitN(line, ":", 2)
-	if len(parts) == 2 {
-		return strings.TrimSpace(parts[1])
+	// Look for "]: " which typically follows syslog PID brackets
+	if idx := strings.Index(line, "]: "); idx != -1 {
+		return strings.TrimSpace(line[idx+3:])
+	}
+	// Fallback: look for first ": " after position 15 (skip timestamp region)
+	if len(line) > 15 {
+		if idx := strings.Index(line[15:], ": "); idx != -1 {
+			return strings.TrimSpace(line[15+idx+2:])
+		}
 	}
 	return strings.TrimSpace(line)
 }

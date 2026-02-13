@@ -218,7 +218,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 
 	// Calculate bundle completeness if in bundle mode
 	bundleCompleteness := 0
-	if bundleMode && bundlePath != "" {
+	if bundleMode {
 		bundleCompleteness = bundle.QuickCompletenessCheck(bundlePath)
 	}
 
