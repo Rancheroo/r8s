@@ -4,7 +4,7 @@
 # Features:
 # - Build verification on every push/PR
 # - Test execution with race detection
-# - Coverage reporting (50% minimum)
+# - Coverage reporting (60% minimum)
 # - Cross-platform build checks
 # - Artifact upload for coverage reports
 #
@@ -24,7 +24,7 @@ on:
 
 env:
   GO_VERSION: '1.23'
-  MIN_COVERAGE: '10' # Interim threshold - Sprint 6 target: 50% (current: ~10%)
+  MIN_COVERAGE: '60' # Sprint 6 achieved: 61.4% coverage, gate at 60%
 
 jobs:
   # Job 1: Build and Test
