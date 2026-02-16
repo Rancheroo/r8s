@@ -33,25 +33,7 @@ reviews:
       enabled: true
   
   # Auto-reply settings - posts at start of each review
-  auto_reply:
-    enabled: true
-    message: |
-      ## 🐰 CodeRabbit Review Started
-
-      I'm your AI teammate on this PR. My job is to:
-      - ✅ Catch bugs and issues
-      - ✅ Enforce our 8 principles (Truth Only™, etc.)
-      - ✅ Suggest improvements
-      - ✅ Learn from your responses
-
-      **I am part of the team.** When I suggest something:
-      - Fix it if it's a real issue
-      - Explain if it's intentional (I learn from this!)
-      - Discuss if you're unsure
-
-      See [CODERABBIT_GUIDE.md](docs/development/CODERABBIT_GUIDE.md) for how we work together.
-
-      Let's ship quality code! 🚀
+  auto_reply: true
     
 # Knowledge base - helps CodeRabbit understand our patterns
 knowledge_base:
@@ -185,17 +167,5 @@ learning:
 
 # Chat settings
 chat:
-  # Auto-reply to comments (boolean)
+  # Auto-reply to comments
   auto_reply: true
-    
-  # Custom instructions for the AI
-  custom_instructions: |
-    When reviewing r8s code:
-    1. Check PRINCIPLES.md for relevant principles
-    2. Verify bundle parsers handle missing files gracefully
-    3. Ensure TUI updates follow async pattern
-    4. Flag mock data or fallbacks as violations
-    5. Prefer suggesting deletions over additions
-    6. Test suggestions against 10× scale
-    
-    Be direct and specific. Cite principles when relevant.
