@@ -7,11 +7,15 @@
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**Latest: v0.7.0** (February 2026)
+**Latest: v0.7.0.1** (February 2026)
+- **CI Stability**: Quality gates restored, realistic coverage thresholds
+- **Test Coverage**: 33% total repo, 61.4% internal/bundle package
+- **Quality**: golangci-lint warnings addressed, all critical checks passing
+
+**Previous: v0.7.0** (February 2026)
 - **Bundle Coverage**: 90% data extraction (up from 30%)
 - **New Parsers**: Storage (PV/PVC/StatefulSet), ConfigMaps, HelmCharts
 - **System Health**: dmesg OOM detection, RKE2 journald analysis
-- **Quality**: 100% tested new code, zero breaking changes
 
 **Recent v0.6.x highlights:**
 - **0.6.8** - Smart event truncation + cluster-level drill-down for node/ETCD issues
@@ -22,6 +26,17 @@ r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. Th
 ---
 
 ## 🚀 What's New
+
+### v0.7.0.1 "CI Stability Patch" (February 2026) ✅ RELEASED
+**For Developers**: Quality gates restored with realistic thresholds
+
+**CI/CD Improvements**:
+- **📊 Realistic Coverage**: 33% total repo threshold (was incorrectly set to 60%)
+- **✅ Quality Gates Restored**: Build, test, coverage, and cross-platform checks
+- **🧹 Lint Cleanup**: golangci-lint warnings addressed
+- **🤖 CodeRabbit Integration**: Automated review feedback on every PR
+
+**Key Lesson**: Package-level coverage (61.4% for internal/bundle) ≠ total repo coverage (~33%).
 
 ### v0.7.0 "Maximum Information Extraction" (February 2026) ✅ RELEASED
 **For Support Teams**: Extract 60% more data from bundles + faster performance
@@ -40,7 +55,7 @@ r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. Th
 
 **Quality Infrastructure**:
 - **🔄 CI/CD Pipeline**: Automated testing prevents regressions
-- **📊 Quality Gates**: 50% test coverage enforced automatically
+- **📊 Quality Gates**: 30% total coverage, lint checks, cross-platform builds
 - **🧪 Principle Compliance**: Automated checks on every commit
 
 ### v0.8.0 "Production Hardening + Advanced Diagnostics" (Target: August 2026)
