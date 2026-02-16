@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] - 2026-02-13
 
 ### Added
+
 - **Bundle Completeness Indicator** (#34) - Shows % of expected files found in support bundles
 - **dmesg OOM Detection Parser** (#40) - Detects Out-of-Memory kills from kernel logs
 - **PV/PVC/StatefulSet Parsers** (#39) - Full persistent volume analysis
@@ -20,10 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CodeRabbit Integration** - Automatic team welcome on PR reviews
 
 ### Fixed
+
 - Exit codes, JSON output, and unbound PV handling (#37, #38, #49)
 - Corrected ParsePVs column mapping (#48)
 
 ### Stats
+
 - +2,216/-55 lines changed across 19 files
 - All new parsers: 100% test coverage
 - No breaking changes

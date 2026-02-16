@@ -57,11 +57,16 @@ Consider adding a `SilenceErrors: true` and `PostRun` hook for cleaner separatio
 ### Current Code
 ```go
 func parseSomething(path string) []Item {
-    file, _ := os.Open(path)  // ← CodeRabbit: "Error not checked"
+    file, err := os.Open(path)
+    if err != nil {
+        return nil  // Tolerant parsing: missing file = empty result
+    }
     defer file.Close()
     // ... parse ...
 }
 ```
+
+**Note:** The actual code checks for nil/err before defer. The pattern is tolerant parsing, not unchecked errors.
 
 ### Why Deferred (Intentional)
 
