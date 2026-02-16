@@ -52,7 +52,9 @@ type NodeConditions struct {
 // ParseNodeDescribe parses kubectl describe node output
 func ParseNodeDescribe(extractPath string) ([]NodeConditions, error) {
 	bundleRoot := getBundleRoot(extractPath)
-	path := filepath.Join(bundleRoot, "rke2/kubectl/nodesdescribe")
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
+	path := filepath.Join(resolver.GetKubectlDir(), "nodesdescribe")
 
 	content, err := os.ReadFile(path)
 	if err != nil {

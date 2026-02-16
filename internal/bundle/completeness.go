@@ -58,15 +58,15 @@ func (c *CompletenessResult) GetStatusColor() string {
 	}
 }
 
-// Define expected bundle files
+// Define expected bundle files for RKE2
 // Based on rancher2_logs_collector.sh output structure
-func getExpectedFiles() []BundleFile {
+func getRKE2ExpectedFiles() []BundleFile {
 	return []BundleFile{
 		// Required files (core diagnostic data)
 		{Path: "rke2/kubectl/pods", Required: true, Description: "Pod list", Weight: 15},
 		{Path: "rke2/kubectl/nodes", Required: true, Description: "Node list", Weight: 10},
 		{Path: "rke2/kubectl/events", Required: true, Description: "Cluster events", Weight: 10},
-		
+
 		// Important but not required
 		{Path: "rke2/kubectl/deployments", Required: false, Description: "Deployments", Weight: 5},
 		{Path: "rke2/kubectl/daemonsets", Required: false, Description: "DaemonSets", Weight: 5},
@@ -76,28 +76,77 @@ func getExpectedFiles() []BundleFile {
 		{Path: "rke2/kubectl/statefulsets", Required: false, Description: "StatefulSets", Weight: 3},
 		{Path: "rke2/kubectl/configmaps", Required: false, Description: "ConfigMaps", Weight: 2},
 		{Path: "rke2/kubectl/helmcharts", Required: false, Description: "HelmCharts", Weight: 2},
-		
+
 		// Pod logs (any presence counts)
 		{Path: "rke2/podlogs", Required: false, Description: "Pod logs", Weight: 10},
-		
+
 		// System information
 		{Path: "systeminfo/dmesg", Required: false, Description: "Kernel logs (dmesg)", Weight: 5},
 		{Path: "systeminfo/meminfo", Required: false, Description: "Memory info", Weight: 3},
 		{Path: "systeminfo/cpuinfo", Required: false, Description: "CPU info", Weight: 2},
 		{Path: "systeminfo/dfh", Required: false, Description: "Disk usage", Weight: 3},
-		
+
 		// etcd data
 		{Path: "rke2/etcd/endpoint_status", Required: false, Description: "etcd status", Weight: 5},
-		
+
 		// Journald logs
 		{Path: "systemlogs", Required: false, Description: "System logs", Weight: 5},
+	}
+}
+
+// getK3sExpectedFiles defines expected files for K3s bundles
+func getK3sExpectedFiles() []BundleFile {
+	return []BundleFile{
+		// Required files (core diagnostic data)
+		{Path: "k3s/kubectl/pods", Required: true, Description: "Pod list", Weight: 15},
+		{Path: "k3s/kubectl/nodes", Required: true, Description: "Node list", Weight: 10},
+		{Path: "k3s/kubectl/events", Required: true, Description: "Cluster events", Weight: 10},
+
+		// Important but not required
+		{Path: "k3s/kubectl/deployments", Required: false, Description: "Deployments", Weight: 5},
+		{Path: "k3s/kubectl/daemonsets", Required: false, Description: "DaemonSets", Weight: 5},
+		{Path: "k3s/kubectl/services", Required: false, Description: "Services", Weight: 5},
+		{Path: "k3s/kubectl/pv", Required: false, Description: "PersistentVolumes", Weight: 3},
+		{Path: "k3s/kubectl/pvc", Required: false, Description: "PVCs", Weight: 3},
+		{Path: "k3s/kubectl/statefulsets", Required: false, Description: "StatefulSets", Weight: 3},
+		{Path: "k3s/kubectl/configmaps", Required: false, Description: "ConfigMaps", Weight: 2},
+		{Path: "k3s/kubectl/helmcharts", Required: false, Description: "HelmCharts", Weight: 2},
+
+		// Pod logs (any presence counts)
+		{Path: "k3s/podlogs", Required: false, Description: "Pod logs", Weight: 10},
+
+		// System information (same as RKE2)
+		{Path: "systeminfo/dmesg", Required: false, Description: "Kernel logs (dmesg)", Weight: 5},
+		{Path: "systeminfo/meminfo", Required: false, Description: "Memory info", Weight: 3},
+		{Path: "systeminfo/cpuinfo", Required: false, Description: "CPU info", Weight: 2},
+		{Path: "systeminfo/dfh", Required: false, Description: "Disk usage", Weight: 3},
+
+		// etcd data
+		{Path: "k3s/etcd/endpoint_status", Required: false, Description: "etcd status", Weight: 5},
+
+		// Journald logs
+		{Path: "systemlogs", Required: false, Description: "System logs", Weight: 5},
+	}
+}
+
+// getExpectedFiles returns format-appropriate expected files
+func getExpectedFiles(format BundleFormat) []BundleFile {
+	switch format {
+	case FormatK3s:
+		return getK3sExpectedFiles()
+	case FormatRKE2:
+		return getRKE2ExpectedFiles()
+	default:
+		// Default to RKE2 for backward compatibility
+		return getRKE2ExpectedFiles()
 	}
 }
 
 // AnalyzeCompleteness checks bundle completeness
 func AnalyzeCompleteness(extractPath string) (*CompletenessResult, error) {
 	bundleRoot := getBundleRoot(extractPath)
-	expectedFiles := getExpectedFiles()
+	format := DetectFormat(extractPath)
+	expectedFiles := getExpectedFiles(format)
 
 	result := &CompletenessResult{
 		TotalFiles:      len(expectedFiles),

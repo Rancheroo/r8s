@@ -219,11 +219,11 @@ func calculateBundleStats(extractPath string) (fileCount int, totalSize int64, e
 func InventoryPods(extractPath string) ([]PodInfo, error) {
 	var pods []PodInfo
 	bundleRoot := getBundleRoot(extractPath)
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
 
-
-
-	// Look for pod logs in rke2/podlogs/
-	podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
+	// Look for pod logs using PathResolver
+	podlogsDir := resolver.GetPodLogsDir()
 	if _, err := os.Stat(podlogsDir); os.IsNotExist(err) {
 		return pods, nil // No pod logs directory
 	}
@@ -281,17 +281,16 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 
 	// Also parse pod manifests to get container names
 	// This handles cases where log filenames don't include container names
-	manifestsDir := filepath.Join(bundleRoot, "rke2", "pod-manifests")
+	manifestsDir := resolver.GetPodManifestsDir()
 	if _, err := os.Stat(manifestsDir); err == nil {
 		parsePodManifestsForContainers(manifestsDir, podMap)
 	}
 
 	// Also parse poddescribe output (PR #418) for container names
-	poddescribeDir := filepath.Join(bundleRoot, "rke2", "kubectl", "poddescribe")
+	poddescribeDir := resolver.GetPodDescribeDir()
 	if _, err := os.Stat(poddescribeDir); err == nil {
 		parsePodDescribeForContainers(poddescribeDir, podMap)
 	}
-
 
 	// Convert map to slice
 	for _, pod := range podMap {
@@ -556,9 +555,11 @@ func parsePodDescribeForContainers(poddescribeDir string, podMap map[string]*Pod
 func InventoryLogFiles(extractPath string) ([]LogFileInfo, error) {
 	var logFiles []LogFileInfo
 	bundleRoot := getBundleRoot(extractPath)
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
 
-	// Scan pod logs
-	podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
+	// Scan pod logs using PathResolver
+	podlogsDir := resolver.GetPodLogsDir()
 	if stat, err := os.Stat(podlogsDir); err == nil && stat.IsDir() {
 		err := filepath.Walk(podlogsDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {

@@ -26,7 +26,8 @@ func ValidateBundle(path string) error {
 	}
 
 	// Check for required subdirectories (at least one must exist)
-	requiredDirs := []string{"rke2", "kubectl"}
+	// Support RKE2, K3s, and kubectl-only bundles
+	requiredDirs := []string{"rke2", "k3s", "kubectl"}
 	hasRequired := false
 
 	for _, dir := range requiredDirs {
@@ -38,13 +39,13 @@ func ValidateBundle(path string) error {
 	}
 
 	if !hasRequired {
-		return fmt.Errorf("not a valid RKE2 bundle at: %s\n\n"+
+		return fmt.Errorf("not a valid support bundle at: %s\n\n"+
 			"Expected structure:\n"+
 			"  bundle-dir/\n"+
-			"    rke2/ or kubectl/  (required)\n"+
-			"    etcd/              (optional)\n"+
-			"    journald/          (optional)\n"+
-			"    systeminfo/        (optional)\n\n"+
+			"    rke2/ or k3s/ or kubectl/  (required)\n"+
+			"    etcd/                      (optional)\n"+
+			"    journald/                  (optional)\n"+
+			"    systeminfo/                (optional)\n\n"+
 			"Hint: Point to the extracted bundle directory, not the tarball", path)
 	}
 

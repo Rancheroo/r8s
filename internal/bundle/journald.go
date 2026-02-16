@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -54,17 +53,14 @@ func ParseJournald(extractPath string) (*RKE2ControlPlaneEvents, error) {
 		UnknownErrors:     make([]ControlPlaneEvent, 0),
 	}
 
-	// Try multiple possible paths for journald logs
-	possiblePaths := []string{
-		"systemlogs/journald-rke2-server",
-		"systemlogs/journald-rke2-agent",
-		"rke2/agent-logs/rke2-server",
-		"rke2/agent-logs/rke2-agent",
-		"systemlogs/syslog", // Fallback to syslog
-	}
+	// Use PathResolver to get distro-specific journald paths
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
 
-	for _, path := range possiblePaths {
-		fullPath := filepath.Join(bundleRoot, path)
+	// Try distro-specific journald paths
+	possiblePaths := resolver.GetJournaldPaths()
+
+	for _, fullPath := range possiblePaths {
 		if _, err := os.Stat(fullPath); err == nil {
 			parseJournaldFile(fullPath, events)
 		}
