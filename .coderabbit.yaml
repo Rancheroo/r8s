@@ -185,9 +185,8 @@ learning:
 
 # Chat settings
 chat:
-  # Auto-reply settings
-  auto_reply:
-    enabled: true
+  # Auto-reply to comments (boolean)
+  auto_reply: true
     
   # Custom instructions for the AI
   custom_instructions: |
