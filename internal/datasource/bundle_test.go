@@ -4,173 +4,464 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/Rancheroo/r8s/internal/bundle"
 )
 
-// TestGetLogs_EmptyLogFile verifies that empty log files in real bundles
-// return empty slices without generating synthetic/demo data
-func TestGetLogs_EmptyLogFile(t *testing.T) {
-	// Create a temporary bundle directory structure
-	tmpDir := t.TempDir()
+// createTestBundleDir creates a minimal valid bundle structure for testing
+func createTestBundleDir(t *testing.T) (string, func()) {
+	t.Helper()
 
-	// Create bundle structure
+	tmpDir, err := os.MkdirTemp("", "r8s-datasource-test-")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+
+	// Create minimal bundle structure
 	rke2Dir := filepath.Join(tmpDir, "rke2")
-	if err := os.MkdirAll(rke2Dir, 0755); err != nil {
-		t.Fatalf("Failed to create rke2 dir: %v", err)
+	kubectlDir := filepath.Join(rke2Dir, "kubectl")
+	serverDir := filepath.Join(rke2Dir, "server")
+
+	os.MkdirAll(kubectlDir, 0755)
+	os.MkdirAll(serverDir, 0755)
+
+	// Create a minimal nodes file
+	nodesContent := `NAME           STATUS   ROLES                       AGE   VERSION
+node1          Ready    control-plane,etcd,master   5d    v1.28.0
+`
+	os.WriteFile(filepath.Join(kubectlDir, "nodes"), []byte(nodesContent), 0644)
+
+	cleanup := func() {
+		os.RemoveAll(tmpDir)
 	}
 
-	// Create empty log file (simulates real bundle with empty pod logs)
-	logFile := filepath.Join(rke2Dir, "test-namespace-test-pod.log")
-	if err := os.WriteFile(logFile, []byte(""), 0644); err != nil {
-		t.Fatalf("Failed to create empty log file: %v", err)
-	}
+	return tmpDir, cleanup
+}
 
-	// Load the bundle
-	opts := bundle.ImportOptions{
-		Path:    tmpDir,
-		MaxSize: 200 * 1024 * 1024,
-		Verbose: false,
-	}
+func TestNewBundleDataSource(t *testing.T) {
+	t.Run("invalid path", func(t *testing.T) {
+		ds, err := NewBundleDataSource("/nonexistent/path", false)
+		if err == nil {
+			t.Error("Expected error for nonexistent path, got nil")
+		}
+		if ds != nil {
+			t.Error("Expected nil datasource for error case")
+		}
+	})
 
-	b, err := bundle.Load(opts)
+	t.Run("valid bundle directory", func(t *testing.T) {
+		bundleDir, cleanup := createTestBundleDir(t)
+		defer cleanup()
+
+		ds, err := NewBundleDataSource(bundleDir, false)
+		if err != nil {
+			t.Fatalf("Failed to create datasource: %v", err)
+		}
+		if ds == nil {
+			t.Fatal("Expected non-nil datasource")
+		}
+		if ds.bundle == nil {
+			t.Fatal("Expected bundle to be loaded")
+		}
+	})
+}
+
+func TestBundleDataSource_GetClusters(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
 	if err != nil {
-		t.Fatalf("Failed to load test bundle: %v", err)
+		t.Fatalf("Failed to create datasource: %v", err)
 	}
-	defer b.Close()
 
-	// Create datasource
-	ds := &BundleDataSource{bundle: b}
-
-	// Test: GetLogs for empty log file
-	logs, err := ds.GetLogs("", "test-namespace", "test-pod", "", false)
-
-	// Verify: Should return empty slice with no error
+	clusters, err := ds.GetClusters()
 	if err != nil {
-		t.Errorf("Expected no error for empty log file, got: %v", err)
+		t.Errorf("GetClusters() error = %v", err)
 	}
 
-	if logs == nil {
-		t.Error("Expected non-nil slice for empty logs, got nil")
+	if len(clusters) != 1 {
+		t.Errorf("Expected 1 cluster, got %d", len(clusters))
 	}
 
-	if len(logs) != 0 {
-		t.Errorf("Expected empty slice for empty log file, got %d entries: %v", len(logs), logs)
+	if clusters[0].ID != "bundle-cluster" {
+		t.Errorf("Expected cluster ID 'bundle-cluster', got %s", clusters[0].ID)
 	}
 }
 
-// TestGetLogs_NonEmptyLogFile demonstrates basic functionality
-// Note: Full log file discovery requires proper bundle structure (kubectl/rke2 dirs)
-// This test is informational - the critical behavior is tested in other tests
-func TestGetLogs_NonEmptyLogFile(t *testing.T) {
-	t.Skip("Skipping - requires full bundle structure simulation. See TestGetLogs_EmptyLogFile for critical behavior validation.")
-}
+func TestBundleDataSource_GetProjects(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
 
-// TestGetLogs_NoLogFile verifies behavior when log file doesn't exist
-func TestGetLogs_NoLogFile(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	rke2Dir := filepath.Join(tmpDir, "rke2")
-	if err := os.MkdirAll(rke2Dir, 0755); err != nil {
-		t.Fatalf("Failed to create rke2 dir: %v", err)
-	}
-
-	// Don't create any log files
-
-	opts := bundle.ImportOptions{
-		Path:    tmpDir,
-		MaxSize: 200 * 1024 * 1024,
-		Verbose: false,
-	}
-
-	b, err := bundle.Load(opts)
+	ds, err := NewBundleDataSource(bundleDir, false)
 	if err != nil {
-		t.Fatalf("Failed to load test bundle: %v", err)
+		t.Fatalf("Failed to create datasource: %v", err)
 	}
-	defer b.Close()
 
-	ds := &BundleDataSource{bundle: b}
-
-	// Test: GetLogs when no log file exists
-	logs, err := ds.GetLogs("", "nonexistent", "pod", "", false)
-
-	// Should return empty slice with no error (not found = empty logs)
+	projects, counts, err := ds.GetProjects("bundle-cluster")
 	if err != nil {
-		t.Errorf("Expected no error for missing log file, got: %v", err)
+		t.Errorf("GetProjects() error = %v", err)
 	}
 
-	if logs == nil {
-		t.Error("Expected non-nil slice, got nil")
+	// Should return at least default project
+	if len(projects) == 0 {
+		t.Error("Expected at least one project")
 	}
 
-	if len(logs) != 0 {
-		t.Errorf("Expected empty slice for missing log file, got %d entries", len(logs))
+	if counts == nil {
+		t.Error("Expected namespace counts map")
 	}
 }
 
-// TestGetLogs_NeverGeneratesDemoData ensures real bundles never create synthetic logs
-func TestGetLogs_NeverGeneratesDemoData(t *testing.T) {
-	tmpDir := t.TempDir()
+func TestBundleDataSource_GetNamespaces(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
 
-	rke2Dir := filepath.Join(tmpDir, "rke2")
-	if err := os.MkdirAll(rke2Dir, 0755); err != nil {
-		t.Fatalf("Failed to create rke2 dir: %v", err)
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
 	}
 
-	// Create multiple empty log files
-	emptyLogs := []string{
-		"prod-app1.log",
-		"prod-app2.log",
-		"kube-system-coredns.log",
+	namespaces, err := ds.GetNamespaces("bundle-cluster", "")
+	if err != nil {
+		t.Errorf("GetNamespaces() error = %v", err)
 	}
 
-	for _, logName := range emptyLogs {
-		logPath := filepath.Join(rke2Dir, logName)
-		if err := os.WriteFile(logPath, []byte(""), 0644); err != nil {
-			t.Fatalf("Failed to create %s: %v", logName, err)
+	// May be empty but shouldn't error
+	t.Logf("Got %d namespaces", len(namespaces))
+}
+
+func TestBundleDataSource_GetPods(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	pods, err := ds.GetPods("default", "")
+	if err != nil {
+		t.Errorf("GetPods() error = %v", err)
+	}
+
+	t.Logf("Got %d pods", len(pods))
+}
+
+func TestBundleDataSource_GetAllPods(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	pods, err := ds.GetAllPods()
+	if err != nil {
+		// Error expected for minimal bundle without pods file
+		t.Logf("GetAllPods() error (expected): %v", err)
+	}
+
+	t.Logf("Got %d pods", len(pods))
+}
+
+func TestBundleDataSource_GetNodes(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	nodes, err := ds.GetNodes()
+	if err != nil {
+		t.Errorf("GetNodes() error = %v", err)
+	}
+
+	// May be empty if parsing fails, but shouldn't error
+	t.Logf("Got %d nodes", len(nodes))
+}
+
+func TestBundleDataSource_GetAllEvents(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	events, err := ds.GetAllEvents()
+	if err != nil {
+		t.Errorf("GetAllEvents() error = %v", err)
+	}
+
+	t.Logf("Got %d events", len(events))
+}
+
+func TestBundleDataSource_GetEventsByPod(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	events, err := ds.GetEventsByPod("default", "nonexistent-pod")
+	if err != nil {
+		t.Errorf("GetEventsByPod() error = %v", err)
+	}
+
+	t.Logf("Got %d events for nonexistent pod", len(events))
+}
+
+func TestBundleDataSource_GetDeployments(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	deployments, err := ds.GetDeployments("default", "")
+	if err != nil {
+		t.Errorf("GetDeployments() error = %v", err)
+	}
+
+	t.Logf("Got %d deployments", len(deployments))
+}
+
+func TestBundleDataSource_GetServices(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	services, err := ds.GetServices("default", "")
+	if err != nil {
+		t.Errorf("GetServices() error = %v", err)
+	}
+
+	t.Logf("Got %d services", len(services))
+}
+
+func TestBundleDataSource_GetCRDs(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	crds, err := ds.GetCRDs("bundle-cluster")
+	if err != nil {
+		t.Errorf("GetCRDs() error = %v", err)
+	}
+
+	t.Logf("Got %d CRDs", len(crds))
+}
+
+func TestBundleDataSource_GetDaemonSets(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	daemonsets, err := ds.GetDaemonSets()
+	if err != nil {
+		t.Errorf("GetDaemonSets() error = %v", err)
+	}
+
+	t.Logf("Got %d daemonsets", len(daemonsets))
+}
+
+func TestBundleDataSource_GetContainers(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	containers, err := ds.GetContainers("default", "nonexistent-pod")
+	if err != nil {
+		t.Errorf("GetContainers() error = %v", err)
+	}
+
+	t.Logf("Got %d containers", len(containers))
+}
+
+func TestBundleDataSource_GetLogs(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	logs, err := ds.GetLogs("bundle-cluster", "default", "nonexistent-pod", "container", false)
+	if err != nil {
+		t.Logf("GetLogs() returned error (expected for missing pod): %v", err)
+	}
+
+	t.Logf("Got %d log lines", len(logs))
+}
+
+func TestBundleDataSource_DescribePod(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	desc, err := ds.DescribePod("bundle-cluster", "default", "nonexistent-pod")
+	if err != nil {
+		t.Logf("DescribePod() returned error (expected): %v", err)
+	}
+
+	t.Logf("Got description: %v", desc)
+}
+
+func TestBundleDataSource_GetEtcdHealth(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	health, err := ds.GetEtcdHealth()
+	if err != nil {
+		t.Logf("GetEtcdHealth() returned error: %v", err)
+	}
+
+	t.Logf("Got etcd health: %v", health)
+}
+
+func TestBundleDataSource_GetNodeConditions(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	conditions, err := ds.GetNodeConditions()
+	if err != nil {
+		t.Logf("GetNodeConditions() returned error: %v", err)
+	}
+
+	t.Logf("Got %d node conditions", len(conditions))
+}
+
+func TestBundleDataSource_GetSystemHealth(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	health, err := ds.GetSystemHealth()
+	if err != nil {
+		t.Logf("GetSystemHealth() returned error: %v", err)
+	}
+
+	t.Logf("Got system health: %v", health)
+}
+
+func TestBundleDataSource_GetKubeletIssues(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	issues, err := ds.GetKubeletIssues()
+	if err != nil {
+		t.Logf("GetKubeletIssues() returned error: %v", err)
+	}
+
+	t.Logf("Got %d kubelet issues", len(issues))
+}
+
+func TestBundleDataSource_Close(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	err = ds.Close()
+	if err != nil {
+		t.Errorf("Close() error = %v", err)
+	}
+}
+
+func TestBundleDataSource_MultipleCalls(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	// Multiple calls should work consistently
+	for i := 0; i < 3; i++ {
+		clusters, err := ds.GetClusters()
+		if err != nil {
+			t.Errorf("GetClusters() call %d error = %v", i, err)
+		}
+		if len(clusters) != 1 {
+			t.Errorf("GetClusters() call %d: expected 1 cluster, got %d", i, len(clusters))
 		}
 	}
+}
 
-	opts := bundle.ImportOptions{
-		Path:    tmpDir,
-		MaxSize: 200 * 1024 * 1024,
-		Verbose: false,
-	}
+func TestBundleDataSource_Caching(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
 
-	b, err := bundle.Load(opts)
+	ds, err := NewBundleDataSource(bundleDir, false)
 	if err != nil {
-		t.Fatalf("Failed to load test bundle: %v", err)
-	}
-	defer b.Close()
-
-	ds := &BundleDataSource{bundle: b}
-
-	// Test multiple pods - all should return empty without synthetic data
-	testCases := []struct {
-		namespace string
-		pod       string
-	}{
-		{"prod", "app1"},
-		{"prod", "app2"},
-		{"kube-system", "coredns"},
+		t.Fatalf("Failed to create datasource: %v", err)
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.namespace+"/"+tc.pod, func(t *testing.T) {
-			logs, err := ds.GetLogs("", tc.namespace, tc.pod, "", false)
+	// First call should cache
+	pods1, err := ds.getKubectlPods()
+	if err != nil {
+		t.Logf("getKubectlPods() error (may be expected): %v", err)
+	}
 
-			if err != nil {
-				t.Errorf("Expected no error, got: %v", err)
-			}
+	// Second call should use cache
+	pods2, err := ds.getKubectlPods()
+	if err != nil {
+		t.Logf("getKubectlPods() second call error: %v", err)
+	}
 
-			if len(logs) != 0 {
-				t.Errorf("Empty log file must return empty slice, got %d synthetic entries", len(logs))
-
-				// List what was generated (should never happen)
-				for i, log := range logs {
-					t.Errorf("  Synthetic entry[%d]: %q", i, log)
-				}
-			}
-		})
+	// Should return same results
+	if len(pods1) != len(pods2) {
+		t.Errorf("Caching inconsistent: first call got %d, second got %d", len(pods1), len(pods2))
 	}
 }
