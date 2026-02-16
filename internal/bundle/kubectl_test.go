@@ -104,9 +104,9 @@ helmcharts.helm.cattle.io      2024-01-15T10:30:00Z
 }
 
 func TestParseDeployments(t *testing.T) {
-	content := `NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
-nginx-deployment        3/3     3            3           5d
-redis-deployment        2/3     3            2           3d
+	content := `NAMESPACE   NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+default     nginx-deployment        3/3     3            3           5d
+default     redis-deployment        2/3     3            2           3d
 `
 
 	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
@@ -152,9 +152,9 @@ nginx-svc    NodePort    10.43.123.45   <none>        80:30080/TCP   2d
 }
 
 func TestParsePods(t *testing.T) {
-	content := `NAMESPACE     NAME                     READY   STATUS    RESTARTS   AGE
-kube-system   kube-proxy-abc123        1/1     Running   0          5d
-default       nginx-7d4c7f6d9-x2k3p    1/1     Running   0          2d
+	content := `NAMESPACE     NAME                     READY   STATUS    RESTARTS   AGE     IP            NODE
+kube-system   kube-proxy-abc123        1/1     Running   0          5d      10.0.1.10     node1
+default       nginx-7d4c7f6d9-x2k3p    1/1     Running   0          2d      10.0.2.20     node2
 `
 
 	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
@@ -212,9 +212,9 @@ node2          Ready    <none>                      5d    v1.28.0+rke2r1
 }
 
 func TestParseEvents(t *testing.T) {
-	content := `LAST SEEN   TYPE      REASON              OBJECT                        MESSAGE
-5m          Normal    Scheduled           pod/nginx-7d4c7f6d9-x2k3p    Successfully assigned default/nginx
-1m          Warning   FailedMount         pod/some-pod                  MountVolume.SetUp failed
+	content := `NAMESPACE   LAST_SEEN   TYPE      REASON              OBJECT                        SUBOBJECT              SOURCE            MESSAGE                                       FIRST_SEEN   COUNT   NAME
+default     5m          Normal    Scheduled           pod/nginx-7d4c7f6d9-x2k3p    spec.containers{nginx}   default-scheduler Successfully assigned default/nginx to node1   1h           1       event-1
+default     1m          Warning   FailedMount         pod/some-pod                  <none>                 kubelet           MountVolume.SetUp failed for volume            5m           5       event-2
 `
 
 	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
@@ -240,9 +240,9 @@ func TestParseEvents(t *testing.T) {
 
 func TestParsePodsWithContainerStatus(t *testing.T) {
 	// Test with containers in different states
-	content := `NAMESPACE     NAME                     READY   STATUS             RESTARTS   AGE
-default       crash-loop-pod           0/1     CrashLoopBackOff   5          1d
-default       pending-pod              0/1     Pending            0          10m
+	content := `NAMESPACE     NAME                     READY   STATUS             RESTARTS   AGE     IP            NODE
+default       crash-loop-pod           0/1     CrashLoopBackOff   5          1d      10.0.3.30     node1
+default       pending-pod              0/1     Pending            0          10m     <none>        node2
 `
 
 	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
