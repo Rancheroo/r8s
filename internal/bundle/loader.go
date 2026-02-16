@@ -278,22 +278,32 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 			len(pods), len(logFiles), len(kubectlPods), len(events), len(deployments), len(services), len(crds), len(namespaces))
 	}
 
+	// Detect format and create path resolver
+	format := DetectFormat(extractPath)
+	bundleRoot := getBundleRoot(extractPath)
+	pathResolver := NewPathResolver(bundleRoot, format)
+
+	if opts.Verbose {
+		fmt.Printf("✓ Format: %s, Distro: %s\n", format, pathResolver.GetDistro())
+	}
+
 	// Create bundle
 	bundle := &Bundle{
-		Path:        originalPath,
-		ExtractPath: extractPath,
-		Manifest:    manifest,
-		Pods:        pods,
-		LogFiles:    logFiles,
-		CRDs:        crdsI,
-		Deployments: deploymentsI,
-		Services:    servicesI,
-		Namespaces:  namespacesI,
-		Events:      eventsI,
-		Loaded:      true,
-		Size:        size,
-		IsTemporary: false, // Bundles are already extracted, never temporary
-		Health:      health,
+		Path:         originalPath,
+		ExtractPath:  extractPath,
+		Manifest:     manifest,
+		Pods:         pods,
+		LogFiles:     logFiles,
+		CRDs:         crdsI,
+		Deployments:  deploymentsI,
+		Services:     servicesI,
+		Namespaces:   namespacesI,
+		Events:       eventsI,
+		Loaded:       true,
+		Size:         size,
+		IsTemporary:  false, // Bundles are already extracted, never temporary
+		Health:       health,
+		PathResolver: pathResolver,
 	}
 
 	return bundle, nil

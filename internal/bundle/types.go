@@ -42,6 +42,9 @@ type Bundle struct {
 
 	// Health tracks bundle completeness and data quality
 	Health *BundleHealth
+
+	// PathResolver provides distro-specific path resolution (RKE2, K3s)
+	PathResolver PathResolver
 }
 
 // BundleManifest contains metadata extracted from a support bundle.
