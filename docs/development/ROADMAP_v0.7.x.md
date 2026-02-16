@@ -1,308 +1,323 @@
 # r8s v0.7.x Release Series Roadmap
-
-**Series Theme:** "From Functional to Intelligent"
-
----
-
-## 📊 Release Overview
-
-| Version | Target | Theme | Key Deliverables |
-|---------|--------|-------|------------------|
-| **v0.7.0** | Feb 2026 | Maximum Information | ✅ RELEASED - 90% bundle coverage |
-| **v0.7.1** | Mar 2026 | Multi-Distro Support | K3s + RKE1 compatibility |
-| **v0.7.2** | Mar 2026 | CI Stability | All checks green, 50% coverage |
-| **v0.7.3** | Apr 2026 | AI Analysis v1 | Smart issue correlation, root cause hints |
-| **v0.7.4** | Apr 2026 | AI Assistant Mode | Natural language queries, guided debugging |
-| **v0.7.5** | May 2026 | Performance | <2s dashboard, memory optimization |
+**Theme:** "Quality First, Intelligence Second"  
+**Guiding Principles:** Musk's 5 Laws + r8s 12 Principles  
+**Last Updated:** 2026-02-16
 
 ---
 
-## 🔮 v0.7.1 "Multi-Distro Support" (March 2026)
+## 🎯 Executive Summary
 
-**Goal:** Support K3s and RKE1 bundles, not just RKE2
+**v0.7.0** ✅ SHIPPED — Maximum Information (90% bundle coverage)
 
-### Features
-- [ ] K3s bundle format detection
-- [ ] RKE1 bundle format detection  
-- [ ] Dynamic path abstraction (no hardcoded `rke2/`)
-- [ ] Distro-specific parsers (etcd locations vary)
-- [ ] Test bundles for all three distros
+**Series Goal:** Ship quality releases that don't break users, while building toward intelligent analysis features.
 
-### Technical Work
-- [ ] Refactor 18+ hardcoded RKE2 paths
-- [ ] Add `DistroType` to Bundle struct
-- [ ] Create path helper methods
-- [ ] Update validation logic
-
-**Files:**
-- `internal/bundle/types.go` - Add FormatK3s, FormatRKE1
-- `internal/bundle/manifest.go` - Dynamic path resolution
-- `internal/bundle/detect.go` - Multi-distro detection
-
-**Estimated:** 2-3 week sprint
+**Core Constraint:** CI Stability is the foundation. No features ship on red builds.
 
 ---
 
-## 🔧 v0.7.2 "CI Stability & Quality Gates" (March 2026)
+## 📊 Release Overview (Simplified)
 
-**Goal:** All CI checks passing, enforce quality automatically
+| Version | Target | Theme | Key Deliverables | Complexity |
+|---------|--------|-------|------------------|------------|
+| **v0.7.1** | Mar 2026 | Foundation | CI green, 50% coverage, clean lint | Medium |
+| **v0.7.2** | Mar 2026 | K3s Core | K3s detection, 5-file path refactor | Medium |
+| **v0.7.3** | Apr 2026 | Smart UI | Pattern grouping, TUI wizard v1 | Medium-High |
+| **v0.7.4** | May 2026 | Intelligence | Root cause hints, knowledge base | High |
+| **v0.7.5** | Jun 2026 | Scale | Performance, 1000+ pod support | Medium |
+| **v0.8.0** | Aug 2026 | Production | 80% coverage, security audit | High |
 
-### Features
-- [ ] Fix all golangci-lint warnings (#44)
-- [ ] Re-enable lint job in CI
-- [ ] Achieve 50% test coverage (#45)
-- [ ] Re-enable coverage threshold check
+---
+
+## 🔧 v0.7.1 "Foundation First" (March 2026)
+
+**Goal:** CI Stability is non-negotiable foundation
+
+### Must Have (Binary Gates)
+- [ ] `make lint` passes (0 warnings)
+- [ ] `make test` passes (50% coverage)
+- [ ] All GitHub Actions green
 - [ ] Cross-platform builds (Linux, macOS, Windows)
-- [ ] Remove dead code
-- [ ] Standardize error handling
 
-### Quality Gates (Enforced)
-- [ ] All PRs must pass lint
-- [ ] All PRs must have >50% coverage on new code
-- [ ] No disabled CI jobs
-- [ ] Clean build on all platforms
+### Musk's Laws Applied
+**Law 1 (Question):** Do we need 100% coverage or just critical paths?  
+→ *Decision:* 50% on critical paths, not legacy TUI.
 
-**Estimated:** 1-2 week sprint
+**Law 2 (Delete):** Remove dead code, unused imports, commented blocks.  
+→ *Action:* `staticcheck` pass required.
+
+**Law 4 (Accelerate):** Parallel CI jobs, faster feedback.  
+→ *Action:* Split lint/test/build into parallel jobs.
+
+### TUI/UX Perspective
+- **Problem:** Current TUI code is legacy, hard to test
+- **Solution:** Don't refactor TUI now — isolate it with interfaces for v0.7.3
+- **Quick Win:** Document TUI entry points for future wizard work
+
+### Quality Gates (PRINCIPLES.md)
+- **#8 O(n log n):** Ensure no new bubble sorts
+- **#11 Fail Fast:** CI catches issues before merge
+- **#12 Graceful:** Tests verify error handling
 
 ---
 
-## 🤖 v0.7.3 "AI Analysis Engine v1" (April 2026)
+## 🌐 v0.7.2 "K3s Core" (March 2026)
 
-**Goal:** AI-powered issue correlation and root cause analysis
+**Goal:** Support K3s bundles (80/20 rule — not RKE1 yet)
 
-### Features
+### Must Have
+- [ ] K3s format detection (not RKE1)
+- [ ] Path abstraction (5 core files only, not 18)
+- [ ] Smoke tests for K3s bundles
+- [ ] RKE2 regression tests pass
 
-#### 1. Smart Issue Correlation
-```
-Before: Show 50 separate warnings
-After:  "These 12 warnings are all caused by etcd leader election issues"
-```
+### Musk's Laws Applied
+**Law 1 (Question):** Do users need RKE1 or just K3s?  
+→ *Decision:* K3s only. RKE1 deferred to v0.7.5.
 
-- [ ] Pattern matching engine for related issues
-- [ ] Event clustering (group by root cause)
-- [ ] Cross-resource correlation (pod → node → etcd)
-- [ ] Severity scoring (not just Warning/Error)
+**Law 2 (Delete):** Don't abstract all paths — just the hot 5.  
+→ *Action:* Focus on `manifest.go`, `validate.go`, core parsers.
 
-#### 2. Root Cause Hints
-```
-Issue: Pod stuck in Pending
-AI Hint: "Node node-1 has DiskPressure. Clean up images with: crictl rmi --prune"
-```
+**Law 3 (Simplify):** One abstraction interface, not three.  
+→ *Action:* `Bundle.DistroPath(resource string)` — done.
 
-- [ ] Knowledge base of common root causes
-- [ ] Context-aware suggestions
+### TUI/UX Perspective
+- **No TUI changes** — pure backend work
+- **UX Win:** Users can now analyze K3s bundles same as RKE2
+- **Future Prep:** Path abstraction enables future distros without TUI changes
+
+### Quality Gates
+- **#6 Bundle First:** Verify against real K3s support bundles
+- **#10 Minimize Dependencies:** No new external deps
+- **#4 O(n log n):** Path resolution must be O(1)
+
+---
+
+## 🎨 v0.7.3 "Smart UI" (April 2026)
+
+**Goal:** Pattern grouping + TUI Wizard foundation
+
+### Must Have
+- [ ] Pattern matching engine (groups related issues)
+- [ ] Knowledge base (10 common patterns)
+- [ ] TUI Wizard framework (Bubble Tea)
+- [ ] Debug wizard v1 (step-by-step diagnosis)
+
+### Musk's Laws Applied
+**Law 1 (Question):** Do we need full AI or just smart grouping?  
+→ *Decision:* Grouping first. Root cause hints deferred.
+
+**Law 3 (Simplify):** Reuse existing TUI components.  
+→ *Action:* Refactor, don't rewrite. Component library approach.
+
+**Law 5 (Automate):** Auto-detect patterns, no manual config.  
+→ *Action:* Pattern engine runs automatically on bundle load.
+
+### TUI/UX Perspective — **PRIMARY FOCUS**
+**TUI-Expert Role Spawned**
+
+**Key UX Problems to Solve:**
+1. **Information Overload:** 50+ warnings overwhelm users
+   - *Solution:* Group into "12 etcd issues" collapsible sections
+   
+2. **No Guidance:** Users don't know what to check first
+   - *Solution:* Wizard asks "Is it a node problem? Network? Resources?"
+   
+3. **Keyboard Navigation:** Current TUI has inconsistent shortcuts
+   - *Solution:* Standardize on vim-like + arrow keys
+
+**UX Quick Wins:**
+- Collapsible issue groups (m key to expand/collapse)
+- Color-coded severity (not just Warning/Error)
+- Progress indicator for large bundles
+- "Next Steps" hint at bottom of screen
+
+### Deliverables
+- `internal/tui/wizard` package
+- `internal/ai/patterns` engine
+- Refactored `internal/tui/components` library
+- Style guide for future TUI work
+
+### Quality Gates
+- **#7 Document APIs:** TUI components documented
+- **#8 Test at 10x:** Test with 1000+ issue bundles
+- **#11 Fail Fast:** Wizard handles missing data gracefully
+
+---
+
+## 🤖 v0.7.4 "Intelligence" (May 2026)
+
+**Goal:** Root cause hints + knowledge base expansion
+
+### Must Have
+- [ ] Root cause hints ("This pod is crashing because...")
+- [ ] Knowledge base expansion (50+ patterns)
 - [ ] Confidence scoring (Certain/Likely/Possible)
+- [ ] Historical pattern learning (from memories)
 
-#### 3. Anomaly Detection
-- [ ] Detect unusual patterns ("This pod has restarted 50x more than others")
-- [ ] Compare against healthy baselines
-- [ ] Highlight outliers in resource usage
+### Musk's Laws Applied
+**Law 1 (Question):** Do we need 100% accuracy or just helpful hints?  
+→ *Decision:* "Possible" causes with confidence scores. Never wrong > misleading.
 
-#### 4. Log Insight Extraction
-- [ ] Automatically extract key errors from large logs
-- [ ] Summarize repeated patterns
-- [ ] Link errors to specific pods/timelines
+**Law 4 (Accelerate):** Cache pattern results.  
+→ *Action:* Pattern engine caches bundle analysis.
 
-### Technical Implementation
-```go
-// New package: internal/ai
-package ai
+### TUI/UX Perspective
+- **Inline Hints:** Show root cause in issue list, not separate screen
+- **Confidence Badges:** 🟢 Certain 🟡 Likely ⚪ Possible
+- **Evidence Link:** "Why?" key shows reasoning
 
-// IssueCorrelator finds related problems
-type IssueCorrelator struct {
-    patterns []CorrelationPattern
-}
-
-func (ic *IssueCorrelator) FindClusters(issues []Issue) []IssueCluster
-
-// RootCauseAnalyzer suggests fixes
-type RootCauseAnalyzer struct {
-    knowledgeBase KnowledgeBase
-}
-
-func (rca *RootCauseAnalyzer) Analyze(issue Issue) RootCauseHint
-
-// AnomalyDetector finds outliers
-type AnomalyDetector struct {
-    baselines BaselineStore
-}
-
-func (ad *AnomalyDetector) Detect(bundle *Bundle) []Anomaly
-```
-
-### AI Knowledge Base
-- [ ] Common Kubernetes failure patterns
-- [ ] Rancher/RKE2 specific issues
-- [ ] Historical issue database (from memories)
-- [ ] CVE correlations
-
-**Estimated:** 3-4 week sprint
+### Quality Gates
+- **#5 Handle Errors:** Wrong hints damage trust — confidence scores required
+- **#9 Log Decisions:** Pattern matches logged for debugging
 
 ---
 
-## 🗣️ v0.7.4 "AI Assistant Mode" (April 2026)
+## ⚡ v0.7.5 "Scale" (June 2026)
 
-**Goal:** Natural language interaction with r8s
+**Goal:** Performance + RKE1 support
 
-### Features
-
-#### 1. Natural Language Queries
-```bash
-$ r8s --ask "why is pod nginx crashing?"
-
-AI: Looking at pod nginx in default namespace...
-    Found: 3 OOMKilled events in last hour
-    Memory limit: 128Mi, Peak usage: 156Mi
-    Suggestion: Increase memory limit to 256Mi
-    Command: kubectl set resources deployment/nginx --limits=memory=256Mi
-```
-
-- [ ] Parse natural language questions
-- [ ] Query bundle data intelligently
-- [ ] Generate human-readable answers
-
-#### 2. Guided Debugging
-```bash
-$ r8s --guided-debug
-
-AI: I see your cluster has issues. Let's diagnose:
-    1. Is it a node problem? [Check nodes - 2 NotReady]
-    2. Is it a networking issue? [Check CNI - calico pods crashing]
-    3. Is it resource pressure? [Check top - node-1 at 95% memory]
-    
-    Root cause: Node memory pressure causing CNI failures
-    Fix: Add memory or reduce workload
-```
-
-- [ ] Interactive troubleshooting wizard
-- [ ] Step-by-step diagnosis
-- [ ] Context-aware questions
-
-#### 3. Report Generation
-```bash
-$ r8s --generate-report --format=markdown
-
-Creates: comprehensive analysis report with:
-- Executive summary
-- Critical issues (top 5)
-- Recommendations (prioritized)
-- Supporting evidence (logs, events)
-```
-
-- [ ] One-click report generation
-- [ ] Multiple formats (Markdown, PDF, HTML)
-- [ ] Executive summary vs detailed view
-
-### Technical Implementation
-```go
-// New package: internal/assistant
-package assistant
-
-// NLQueryParser converts questions to queries
-type NLQueryParser struct {
-    model LLMClient  // Local or API-based
-}
-
-func (nlp *NLQueryParser) Parse(query string) (*QueryIntent, error)
-
-// GuidedDebugger interactive troubleshooting
-type GuidedDebugger struct {
-    bundle *Bundle
-    state  DebugState
-}
-
-func (gd *GuidedDebugger) NextStep() DebugStep
-
-// ReportGenerator creates analysis reports
-type ReportGenerator struct {
-    template ReportTemplate
-}
-
-func (rg *ReportGenerator) Generate(bundle *Bundle, format Format) (Report, error)
-```
-
-### Integration Options
-**Option A: Local LLM (Privacy-first)**
-- Use local model (llama.cpp, ollama)
-- No data leaves machine
-- Slower but fully private
-
-**Option B: API with opt-in**
-- Use OpenAI/Anthropic APIs
-- User must explicitly enable
-- Clear data usage warnings
-- Fallback to local if no connectivity
-
-**Option C: Hybrid**
-- Simple queries: local model
-- Complex analysis: API (with permission)
-- User controls per-session
-
-**Estimated:** 3-4 week sprint
-
----
-
-## ⚡ v0.7.5 "Performance Optimization" (May 2026)
-
-**Goal:** <2s dashboard load even with 1000+ pods
-
-### Features
-- [ ] Parallel bundle parsing
-- [ ] Incremental dashboard updates
-- [ ] Memory-mapped file access for large bundles
-- [ ] Lazy loading for off-screen data
-- [ ] Compression for parsed data
+### Must Have
+- [ ] <2s dashboard load (1000+ pods)
+- [ ] <500MB memory (1GB bundles)
+- [ ] RKE1 support (deferred from v0.7.2)
 - [ ] Benchmark suite
 
-### Targets
-- Dashboard load: <2s (from current 5-10s on large bundles)
-- Memory usage: <500MB for 1GB bundles (from ~1GB)
-- 1000+ pods handled smoothly
+### Musk's Laws Applied
+**Law 3 (Simplify):** Parallel parsing, not complex caching.  
+→ *Action:* goroutines for independent parsers.
 
-**Estimated:** 2-3 week sprint
+**Law 4 (Accelerate):** Lazy loading for off-screen data.  
+→ *Action:* Only parse what's visible.
 
----
-
-## 📅 Release Cadence
-
-```
-Feb: v0.7.0 ✅ RELEASED
-Mar: v0.7.1 (K3s) + v0.7.2 (CI)
-Apr: v0.7.3 (AI Analysis) + v0.7.4 (Assistant)
-May: v0.7.5 (Performance)
-Jun: v0.8.0 Planning Begins
-```
-
-**Hotfix Policy:**
-- Critical bug: v0.7.X+1 within 24h
-- Security issue: v0.7.X+1 immediately
-- Minor fix: Roll into next planned release
+### TUI/UX Perspective
+- **Progressive Loading:** Show partial results immediately
+- **Memory Warning:** Alert if bundle >500MB before load
+- **Cancel Operation:** Ctrl+C interrupts parsing gracefully
 
 ---
 
-## 🎯 Success Metrics
+## 🔮 v0.8.0 "Production" (Aug 2026)
 
-| Metric | v0.7.0 | v0.7.5 Target |
-|--------|--------|---------------|
-| Bundle Coverage | 90% | 95% |
-| Test Coverage | 10% | 70% |
-| Dashboard Load | 5-10s | <2s |
-| Distros Supported | 1 (RKE2) | 3 (RKE2, K3s, RKE1) |
-| AI Features | 0 | 2 major |
-| CI Passing | Partial | 100% |
+**Goal:** Enterprise-ready
 
----
-
-## 🔄 v0.8.0 Preview (June-August 2026)
-
-**Theme:** "Production Hardening"
-
-- 80% test coverage
-- Complete documentation
-- Security audit
-- Stress testing (10M+ log lines)
-- Enterprise features
+### Must Have
+- [ ] 80% test coverage
+- [ ] Security audit
+- [ ] Complete documentation
+- [ ] Stress testing (10M log lines)
+- [ ] Long-term support (LTS) commitment
 
 ---
 
-*This roadmap is living - update as priorities shift.*
+## 🎯 Quick Wins by Phase
+
+### This Week (v0.7.1 prep)
+| Win | Effort | Impact | Musk Law |
+|-----|--------|--------|----------|
+| Enable coverage at 10% | 5 min | CI enforcement starts | #5 Automate |
+| Fix top 5 lint warnings | 2 hrs | Reduces noise | #2 Delete |
+| Document TUI entry points | 30 min | Unblocks v0.7.3 | #7 Document |
+
+### Sprint 6 (v0.7.1)
+| Win | Effort | Impact | Musk Law |
+|-----|--------|--------|----------|
+| Parallel CI jobs | 1 hr | Faster feedback | #4 Accelerate |
+| Remove dead code | 2 hrs | Cleaner codebase | #2 Delete |
+| Interface for TUI | 4 hrs | Enables testing | #3 Simplify |
+
+### v0.7.2 (K3s)
+| Win | Effort | Impact | Musk Law |
+|-----|--------|--------|----------|
+| Path abstraction (5 files) | 2 days | Multi-distro foundation | #3 Simplify |
+| K3s smoke test | 4 hrs | Validates approach | #1 Question |
+
+### v0.7.3 (Smart UI)
+| Win | Effort | Impact | Musk Law |
+|-----|--------|--------|----------|
+| Collapsible issue groups | 1 day | Reduces overwhelm | #2 Delete (complexity) |
+| Pattern engine v1 | 3 days | Smart grouping | #5 Automate |
+| Wizard framework | 2 days | Guided debugging | #3 Simplify |
+
+---
+
+## 🛡️ Quality Assurance Throughout
+
+### CI/CD (Every Release)
+- [ ] All PRs pass lint
+- [ ] Coverage never decreases
+- [ ] No disabled CI jobs
+- [ ] Cross-platform builds
+
+### Code Review (Every PR)
+- [ ] CodeRabbit review
+- [ ] Manual review for architecture
+- [ ] Test coverage check
+- [ ] Documentation update
+
+### Testing (Every Release)
+- [ ] Unit tests (new code)
+- [ ] Integration tests (bundle parsing)
+- [ ] Regression tests (RKE2 bundles)
+- [ ] Manual QA (TUI workflows)
+
+---
+
+## 🎪 Team Role Spawns
+
+| Phase | Role | Trigger | Focus |
+|-------|------|---------|-------|
+| v0.7.1 | Rex + Luna | Now | CI Stability |
+| v0.7.2 | Rex | Sprint 6 done | K3s backend |
+| v0.7.3 | TUI-Expert | v0.7.2 done | Wizard UI |
+| v0.7.3 | Rex | Parallel | Pattern engine |
+| v0.7.4 | PM-Bridge | v0.7.3 done | User validation |
+| v0.7.5 | Performance-Tester | Pre-release | Benchmarks |
+| v0.8.0 | Security-Auditor | v0.7.5 done | Security review |
+
+---
+
+## 📈 Success Metrics
+
+| Metric | v0.7.0 | v0.7.2 | v0.7.5 | v0.8.0 |
+|--------|--------|--------|--------|--------|
+| Bundle Coverage | 90% | 90% | 95% | 95% |
+| Test Coverage | 10% | 50% | 60% | 80% |
+| CI Passing | Partial | 100% | 100% | 100% |
+| Distros | 1 | 2 | 3 | 3 |
+| AI Features | 0 | 0 | 2 | 3 |
+| Dashboard Load | 5-10s | 5-10s | <2s | <2s |
+
+---
+
+## 🔄 Musk's Laws Applied Throughout
+
+| Law | Application |
+|-----|-------------|
+| **1. Question** | RKE1 deferred — do users need it? |
+| **2. Delete** | Dead code, 18→5 file refactor |
+| **3. Simplify** | One path interface, component library |
+| **4. Accelerate** | Parallel CI, lazy loading |
+| **5. Automate** | Pattern detection, CI gates |
+
+---
+
+## 📝 Principles Compliance
+
+| Principle | How We Apply It |
+|-----------|-----------------|
+| **#1 Delete First** | Remove before adding features |
+| **#2 Interfaces** | Bundle.DistroPath() abstraction |
+| **#3 Test at 10x** | 1000+ pod bundles in tests |
+| **#4 O(n log n)** | Pattern matching is O(n) |
+| **#5 Handle Errors** | Confidence scores on hints |
+| **#6 Bundle First** | Real K3s bundles for testing |
+| **#7 Document** | TUI components, APIs |
+| **#8 Optimize** | Lazy loading, parallel parsing |
+| **#9 Log Decisions** | Pattern matches logged |
+| **#10 Minimize Deps** | No new external deps in v0.7.x |
+| **#11 Fail Fast** | CI catches issues |
+| **#12 Graceful** | Wizard handles missing data |
+
+---
+
+*This roadmap follows Musk's Law #2: Delete before adding. Every feature must justify its existence.*

@@ -245,9 +245,6 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 	}
 
 
-	for key, pod := range podMap {
-	}
-
 	// Convert map to slice
 	for _, pod := range podMap {
 		pods = append(pods, *pod)
