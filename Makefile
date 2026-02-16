@@ -1,4 +1,4 @@
-.PHONY: build install test clean run fmt vet tidy coverage help
+.PHONY: build install test clean run fmt vet tidy coverage help lint ci dev
 
 # Build variables
 BINARY_NAME=r8s

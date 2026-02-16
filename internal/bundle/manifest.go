@@ -234,14 +234,12 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 	manifestsDir := filepath.Join(bundleRoot, "rke2", "pod-manifests")
 	if _, err := os.Stat(manifestsDir); err == nil {
 		parsePodManifestsForContainers(manifestsDir, podMap)
-	} else {
 	}
 
 	// Also parse poddescribe output (PR #418) for container names
 	poddescribeDir := filepath.Join(bundleRoot, "rke2", "kubectl", "poddescribe")
 	if _, err := os.Stat(poddescribeDir); err == nil {
 		parsePodDescribeForContainers(poddescribeDir, podMap)
-	} else {
 	}
 
 
