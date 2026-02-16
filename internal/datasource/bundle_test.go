@@ -465,3 +465,152 @@ func TestBundleDataSource_Caching(t *testing.T) {
 		t.Errorf("Caching inconsistent: first call got %d, second got %d", len(pods1), len(pods2))
 	}
 }
+
+func TestBundleDataSource_GetCRDInstances(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	// GetCRDInstances returns empty list for bundle mode
+	instances, err := ds.GetCRDInstances("cluster1", "group", "v1", "widgets")
+	if err != nil {
+		t.Errorf("GetCRDInstances() error = %v", err)
+	}
+	if len(instances) != 0 {
+		t.Errorf("GetCRDInstances() expected empty list, got %d items", len(instances))
+	}
+}
+
+func TestBundleDataSource_DescribeDeployment(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	desc, err := ds.DescribeDeployment("bundle-cluster", "default", "nonexistent-deployment")
+	if err != nil {
+		t.Logf("DescribeDeployment() error (expected): %v", err)
+	}
+
+	t.Logf("Got description: %v", desc)
+}
+
+func TestBundleDataSource_DescribeService(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	desc, err := ds.DescribeService("bundle-cluster", "default", "nonexistent-service")
+	if err != nil {
+		t.Logf("DescribeService() error (expected): %v", err)
+	}
+
+	t.Logf("Got description: %v", desc)
+}
+
+func TestBundleDataSource_GetEtcdDetails(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	details, err := ds.GetEtcdDetails()
+	if err != nil {
+		t.Logf("GetEtcdDetails() error: %v", err)
+	}
+
+	t.Logf("Got etcd details: %v", details)
+}
+
+func TestBundleDataSource_GetPodResources(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	resources, err := ds.GetPodResources("nonexistent-pod")
+	if err != nil {
+		t.Logf("GetPodResources() error: %v", err)
+	}
+
+	t.Logf("Got %d resource specs", len(resources))
+}
+
+func TestBundleDataSource_GetDiagnosticContext(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	ctx, err := ds.GetDiagnosticContext("default", "nonexistent-pod")
+	if err != nil {
+		t.Logf("GetDiagnosticContext() error: %v", err)
+	}
+
+	t.Logf("Got diagnostic context: %v", ctx)
+}
+
+func TestBundleDataSource_GetBundleHealth(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	health := ds.GetBundleHealth()
+	t.Logf("Got bundle health: %+v", health)
+}
+
+func TestBundleDataSource_Mode(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	mode := ds.Mode()
+	if mode != "BUNDLE" {
+		t.Errorf("Mode() = %v, want BUNDLE", mode)
+	}
+}
+
+func TestBundleDataSource_GetOOMAnalysis(t *testing.T) {
+	bundleDir, cleanup := createTestBundleDir(t)
+	defer cleanup()
+
+	ds, err := NewBundleDataSource(bundleDir, false)
+	if err != nil {
+		t.Fatalf("Failed to create datasource: %v", err)
+	}
+
+	analysis, err := ds.GetOOMAnalysis()
+	if err != nil {
+		t.Logf("GetOOMAnalysis() error: %v", err)
+	}
+
+	t.Logf("Got %d OOM analyses", len(analysis))
+}
