@@ -140,6 +140,9 @@ const (
 	// FormatRKE2 represents an RKE2 support bundle
 	FormatRKE2 BundleFormat = "rke2-support-bundle"
 
+	// FormatK3s represents a K3s support bundle (v0.7.1)
+	FormatK3s BundleFormat = "k3s-support-bundle"
+
 	// FormatKubectl represents a kubectl cluster-info dump
 	FormatKubectl BundleFormat = "kubectl-cluster-info"
 

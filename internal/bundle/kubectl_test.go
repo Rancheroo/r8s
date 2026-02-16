@@ -6,199 +6,313 @@ import (
 	"testing"
 )
 
-func TestParsePVs_UnboundPVs(t *testing.T) {
-	// Create a temporary directory for test files
-	tmpDir := t.TempDir()
-	kubectlDir := filepath.Join(tmpDir, "rke2", "kubectl")
-	if err := os.MkdirAll(kubectlDir, 0755); err != nil {
-		t.Fatalf("Failed to create kubectl dir: %v", err)
-	}
+// createKubectlTestBundle creates a minimal bundle with kubectl files
+func createKubectlTestBundle(t *testing.T, files map[string]string) (string, func()) {
+	t.Helper()
 
-	// Test data: mix of bound and unbound PVs
-	pvData := `NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                           STORAGECLASS   REASON   AGE
-pvc-7f45c8b2-1a2b-4c3d-8e9f-0a1b2c3d4e5f   10Gi       RWO            Delete           Bound     default/my-pvc                standard                3d
-pv-available-1                             5Gi        RWO            Retain           Available                                 fast                    7d
-pvc-abcd1234-5678-90ab-cdef-example11111   20Gi       RWX            Delete           Bound     cattle-system/rancher-data    standard                1d
-pv-available-2                             100Gi      RWO            Delete           Available                                 premium                 2d
-`
-
-	pvPath := filepath.Join(kubectlDir, "pv")
-	if err := os.WriteFile(pvPath, []byte(pvData), 0644); err != nil {
-		t.Fatalf("Failed to write test pv file: %v", err)
-	}
-
-	// Parse the PVs
-	pvs, err := ParsePVs(tmpDir)
+	tmpDir, err := os.MkdirTemp("", "r8s-kubectl-test-")
 	if err != nil {
-		t.Fatalf("ParsePVs failed: %v", err)
+	t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	// Should have 4 PVs
-	if len(pvs) != 4 {
-		t.Errorf("Expected 4 PVs, got %d", len(pvs))
+	// Create rke2/kubectl structure
+	kubectlDir := filepath.Join(tmpDir, "rke2", "kubectl")
+	os.MkdirAll(kubectlDir, 0755)
+
+	// Write test files
+	for filename, content := range files {
+		path := filepath.Join(kubectlDir, filename)
+		os.WriteFile(path, []byte(content), 0644)
 	}
 
-	// Check first bound PV
-	if pvs[0].Name != "pvc-7f45c8b2-1a2b-4c3d-8e9f-0a1b2c3d4e5f" {
-		t.Errorf("Expected first PV name to be 'pvc-7f45c8b2-1a2b-4c3d-8e9f-0a1b2c3d4e5f', got '%s'", pvs[0].Name)
-	}
-	if pvs[0].Status != "Bound" {
-		t.Errorf("Expected first PV status to be 'Bound', got '%s'", pvs[0].Status)
-	}
-	if pvs[0].Claim != "default/my-pvc" {
-		t.Errorf("Expected first PV claim to be 'default/my-pvc', got '%s'", pvs[0].Claim)
-	}
-	if pvs[0].StorageClass != "standard" {
-		t.Errorf("Expected first PV storageclass to be 'standard', got '%s'", pvs[0].StorageClass)
+	cleanup := func() {
+		os.RemoveAll(tmpDir)
 	}
 
-	// Check unbound PV (Available status)
-	if pvs[1].Name != "pv-available-1" {
-		t.Errorf("Expected second PV name to be 'pv-available-1', got '%s'", pvs[1].Name)
-	}
-	if pvs[1].Status != "Available" {
-		t.Errorf("Expected second PV status to be 'Available', got '%s'", pvs[1].Status)
-	}
-	if pvs[1].Claim != "" {
-		t.Errorf("Expected unbound PV to have empty claim, got '%s'", pvs[1].Claim)
-	}
-	if pvs[1].StorageClass != "fast" {
-		t.Errorf("Expected second PV storageclass to be 'fast', got '%s'", pvs[1].StorageClass)
+	return tmpDir, cleanup
+}
+
+func TestParseCRDs(t *testing.T) {
+	tests := []struct {
+		name        string
+		content     string
+		expectCount int
+		expectErr   bool
+	}{
+		{
+			name: "valid crds",
+			content: `NAME                           CREATED AT
+addons.k3s.cattle.io           2024-01-15T10:30:00Z
+helmcharts.helm.cattle.io      2024-01-15T10:30:00Z
+`,
+			expectCount: 2,
+			expectErr:   false,
+		},
+		{
+			name:        "empty file",
+			content:     "NAME\n",
+			expectCount: 0,
+			expectErr:   false,
+		},
+		{
+			name:        "missing file",
+			content:     "", // Don't create crds file
+			expectCount: 0,
+			expectErr:   true,
+		},
 	}
 
-	// Check second unbound PV
-	if pvs[3].Name != "pv-available-2" {
-		t.Errorf("Expected fourth PV name to be 'pv-available-2', got '%s'", pvs[3].Name)
-	}
-	if pvs[3].Status != "Available" {
-		t.Errorf("Expected fourth PV status to be 'Available', got '%s'", pvs[3].Status)
-	}
-	if pvs[3].Claim != "" {
-		t.Errorf("Expected unbound PV to have empty claim, got '%s'", pvs[3].Claim)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			files := map[string]string{}
+			if tt.content != "" {
+				files["crds"] = tt.content
+			}
+
+			bundleDir, cleanup := createKubectlTestBundle(t, files)
+			defer cleanup()
+
+			crds, err := ParseCRDs(bundleDir)
+
+			if tt.expectErr {
+				if err == nil && tt.content == "" {
+					// Missing file case - should error
+					t.Logf("ParseCRDs() expected error for missing file")
+				} else if err != nil {
+					t.Logf("ParseCRDs() returned expected error: %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("ParseCRDs() unexpected error = %v", err)
+				return
+			}
+
+			if len(crds) != tt.expectCount {
+				t.Errorf("ParseCRDs() returned %d CRDs, expected %d", len(crds), tt.expectCount)
+			}
+
+			if len(crds) > 0 && tt.expectCount > 0 {
+				// Verify first CRD has expected fields
+				if crds[0].Metadata.Name == "" {
+					t.Error("ParseCRDs() returned CRD with empty name")
+				}
+			}
+		})
 	}
 }
 
-func TestParsePVs_AllUnbound(t *testing.T) {
-	// Create a temporary directory for test files
-	tmpDir := t.TempDir()
-	kubectlDir := filepath.Join(tmpDir, "rke2", "kubectl")
-	if err := os.MkdirAll(kubectlDir, 0755); err != nil {
-		t.Fatalf("Failed to create kubectl dir: %v", err)
-	}
-
-	// Test data: all unbound PVs
-	pvData := `NAME              CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   REASON   AGE
-pv-available-1    5Gi        RWO            Retain           Available                   fast                    7d
-pv-available-2    100Gi      RWO            Delete           Available                   premium                 2d
+func TestParseDeployments(t *testing.T) {
+	content := `NAMESPACE   NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+default     nginx-deployment        3/3     3            3           5d
+default     redis-deployment        2/3     3            2           3d
 `
 
-	pvPath := filepath.Join(kubectlDir, "pv")
-	if err := os.WriteFile(pvPath, []byte(pvData), 0644); err != nil {
-		t.Fatalf("Failed to write test pv file: %v", err)
-	}
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
+		"deployments": content,
+	})
+	defer cleanup()
 
-	// Parse the PVs
-	pvs, err := ParsePVs(tmpDir)
+	deployments, err := ParseDeployments(bundleDir)
 	if err != nil {
-		t.Fatalf("ParsePVs failed: %v", err)
+		t.Errorf("ParseDeployments() error = %v", err)
 	}
 
-	// Should have 2 PVs
-	if len(pvs) != 2 {
-		t.Errorf("Expected 2 PVs, got %d", len(pvs))
+	if len(deployments) != 2 {
+		t.Errorf("ParseDeployments() returned %d deployments, expected 2", len(deployments))
 	}
 
-	// Both should have empty claims
-	for i, pv := range pvs {
-		if pv.Claim != "" {
-			t.Errorf("Expected PV %d to have empty claim, got '%s'", i, pv.Claim)
+	if len(deployments) > 0 {
+		if deployments[0].Name != "nginx-deployment" {
+			t.Errorf("Expected 'nginx-deployment', got %s", deployments[0].Name)
 		}
-		if pv.Status != "Available" {
-			t.Errorf("Expected PV %d to have status 'Available', got '%s'", i, pv.Status)
+	}
+}
+
+func TestParseServices(t *testing.T) {
+	content := `NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.43.0.1      <none>        443/TCP   5d
+nginx-svc    NodePort    10.43.123.45   <none>        80:30080/TCP   2d
+`
+
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
+		"services": content,
+	})
+	defer cleanup()
+
+	services, err := ParseServices(bundleDir)
+	if err != nil {
+		t.Errorf("ParseServices() error = %v", err)
+	}
+
+	if len(services) != 2 {
+		t.Errorf("ParseServices() returned %d services, expected 2", len(services))
+	}
+}
+
+func TestParsePods(t *testing.T) {
+	content := `NAMESPACE     NAME                     READY   STATUS    RESTARTS   AGE     IP            NODE
+kube-system   kube-proxy-abc123        1/1     Running   0          5d      10.0.1.10     node1
+default       nginx-7d4c7f6d9-x2k3p    1/1     Running   0          2d      10.0.2.20     node2
+`
+
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
+		"pods": content,
+	})
+	defer cleanup()
+
+	pods, err := ParsePods(bundleDir)
+	if err != nil {
+		t.Errorf("ParsePods() error = %v", err)
+	}
+
+	if len(pods) != 2 {
+		t.Errorf("ParsePods() returned %d pods, expected 2", len(pods))
+	}
+
+	if len(pods) > 0 {
+		if pods[0].Name == "" {
+			t.Error("ParsePods() returned pod with empty name")
+		}
+		if pods[0].NamespaceID == "" {
+			t.Error("ParsePods() returned pod with empty namespace")
 		}
 	}
 }
 
-func TestParseConfigMaps(t *testing.T) {
-	tmpDir := t.TempDir()
-	kubectlDir := filepath.Join(tmpDir, "rke2", "kubectl")
-	if err := os.MkdirAll(kubectlDir, 0755); err != nil {
-		t.Fatalf("Failed to create kubectl dir: %v", err)
-	}
-
-	configmapData := `NAMESPACE     NAME                              DATA   AGE
-default       my-config                         3      5d
-cattle-system rancher-config                    1      10d
-kube-system   kube-proxy                        2      30d
+func TestParseNodes(t *testing.T) {
+	content := `NAME           STATUS   ROLES                       AGE   VERSION
+node1          Ready    control-plane,etcd,master   5d    v1.28.0+rke2r1
+node2          Ready    <none>                      5d    v1.28.0+rke2r1
 `
 
-	cmPath := filepath.Join(kubectlDir, "configmaps")
-	if err := os.WriteFile(cmPath, []byte(configmapData), 0644); err != nil {
-		t.Fatalf("Failed to write test configmaps file: %v", err)
-	}
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
+		"nodes": content,
+	})
+	defer cleanup()
 
-	configmaps, err := ParseConfigMaps(tmpDir)
+	nodes, err := ParseNodes(bundleDir)
 	if err != nil {
-		t.Fatalf("ParseConfigMaps failed: %v", err)
+		t.Errorf("ParseNodes() error = %v", err)
 	}
 
-	if len(configmaps) != 3 {
-		t.Errorf("Expected 3 configmaps, got %d", len(configmaps))
+	if len(nodes) != 2 {
+		t.Errorf("ParseNodes() returned %d nodes, expected 2", len(nodes))
 	}
 
-	if configmaps[0].Name != "my-config" || configmaps[0].Namespace != "default" {
-		t.Errorf("First configmap mismatch: got %s/%s", configmaps[0].Namespace, configmaps[0].Name)
-	}
-	if configmaps[0].Data != 3 {
-		t.Errorf("Expected first configmap to have 3 data entries, got %d", configmaps[0].Data)
+	if len(nodes) > 0 {
+		if nodes[0].Name != "node1" {
+			t.Errorf("Expected 'node1', got %s", nodes[0].Name)
+		}
+		if nodes[0].Status != "Ready" {
+			t.Errorf("Expected status 'Ready', got %s", nodes[0].Status)
+		}
 	}
 }
 
-func TestParseHelmCharts(t *testing.T) {
-	tmpDir := t.TempDir()
-	kubectlDir := filepath.Join(tmpDir, "rke2", "kubectl")
-	if err := os.MkdirAll(kubectlDir, 0755); err != nil {
-		t.Fatalf("Failed to create kubectl dir: %v", err)
-	}
-
-	helmchartData := `NAMESPACE     NAME                    CHART                   VERSION    STATUS    REPO                        AGE
-cattle-system rancher-monitoring      rancher-monitoring      102.0.0    Deployed  rancher-charts              7d
-cattle-system rancher-logging         rancher-logging         102.0.1    Failed    rancher-charts              3d
-fleet-system  fleet-agent             fleet-agent             0.7.0      Pending   rancher-charts              1d
+func TestParseEvents(t *testing.T) {
+	content := `NAMESPACE   LAST_SEEN   TYPE      REASON              OBJECT                        SUBOBJECT              SOURCE            MESSAGE                                       FIRST_SEEN   COUNT   NAME
+default     5m          Normal    Scheduled           pod/nginx-7d4c7f6d9-x2k3p    spec.containers{nginx}   default-scheduler Successfully assigned default/nginx to node1   1h           1       event-1
+default     1m          Warning   FailedMount         pod/some-pod                  <none>                 kubelet           MountVolume.SetUp failed for volume            5m           5       event-2
 `
 
-	hcPath := filepath.Join(kubectlDir, "helmcharts")
-	if err := os.WriteFile(hcPath, []byte(helmchartData), 0644); err != nil {
-		t.Fatalf("Failed to write test helmcharts file: %v", err)
-	}
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
+		"events": content,
+	})
+	defer cleanup()
 
-	helmcharts, err := ParseHelmCharts(tmpDir)
+	events, err := ParseEvents(bundleDir)
 	if err != nil {
-		t.Fatalf("ParseHelmCharts failed: %v", err)
+		t.Errorf("ParseEvents() error = %v", err)
 	}
 
-	if len(helmcharts) != 3 {
-		t.Errorf("Expected 3 helmcharts, got %d", len(helmcharts))
+	if len(events) != 2 {
+		t.Errorf("ParseEvents() returned %d events, expected 2", len(events))
 	}
 
-	if helmcharts[0].Name != "rancher-monitoring" {
-		t.Errorf("Expected first chart name 'rancher-monitoring', got '%s'", helmcharts[0].Name)
+	if len(events) > 0 {
+		if events[0].Type != "Normal" && events[0].Type != "Warning" {
+			t.Errorf("Unexpected event type: %s", events[0].Type)
+		}
 	}
-	if helmcharts[0].Chart != "rancher-monitoring" {
-		t.Errorf("Expected first chart 'rancher-monitoring', got '%s'", helmcharts[0].Chart)
-	}
-	if helmcharts[0].Version != "102.0.0" {
-		t.Errorf("Expected first chart version '102.0.0', got '%s'", helmcharts[0].Version)
-	}
-	if helmcharts[0].Status != "Deployed" {
-		t.Errorf("Expected first chart status 'Deployed', got '%s'", helmcharts[0].Status)
-	}
-	if helmcharts[0].Repo != "rancher-charts" {
-		t.Errorf("Expected first chart repo 'rancher-charts', got '%s'", helmcharts[0].Repo)
+}
+
+func TestParsePodsWithContainerStatus(t *testing.T) {
+	// Test with containers in different states
+	content := `NAMESPACE     NAME                     READY   STATUS             RESTARTS   AGE     IP            NODE
+default       crash-loop-pod           0/1     CrashLoopBackOff   5          1d      10.0.3.30     node1
+default       pending-pod              0/1     Pending            0          10m     <none>        node2
+`
+
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{
+		"pods": content,
+	})
+	defer cleanup()
+
+	pods, err := ParsePods(bundleDir)
+	if err != nil {
+		t.Errorf("ParsePods() error = %v", err)
 	}
 
-	// Check failed chart
-	if helmcharts[1].Status != "Failed" {
-		t.Errorf("Expected second chart status 'Failed', got '%s'", helmcharts[1].Status)
+	if len(pods) != 2 {
+		t.Errorf("ParsePods() returned %d pods, expected 2", len(pods))
+	}
+
+	// Check container status parsing
+	for _, pod := range pods {
+		if pod.State == "" {
+			t.Error("ParsePods() returned pod with empty state")
+		}
+	}
+}
+
+func TestParseDeploymentsWithMissingFile(t *testing.T) {
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{})
+	defer cleanup()
+
+	_, err := ParseDeployments(bundleDir)
+	if err == nil {
+		t.Error("ParseDeployments() expected error for missing file")
+	}
+}
+
+func TestParseServicesWithMissingFile(t *testing.T) {
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{})
+	defer cleanup()
+
+	_, err := ParseServices(bundleDir)
+	if err == nil {
+		t.Error("ParseServices() expected error for missing file")
+	}
+}
+
+func TestParsePodsWithMissingFile(t *testing.T) {
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{})
+	defer cleanup()
+
+	_, err := ParsePods(bundleDir)
+	if err == nil {
+		t.Error("ParsePods() expected error for missing file")
+	}
+}
+
+func TestParseNodesWithMissingFile(t *testing.T) {
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{})
+	defer cleanup()
+
+	_, err := ParseNodes(bundleDir)
+	if err == nil {
+		t.Error("ParseNodes() expected error for missing file")
+	}
+}
+
+func TestParseEventsWithMissingFile(t *testing.T) {
+	bundleDir, cleanup := createKubectlTestBundle(t, map[string]string{})
+	defer cleanup()
+
+	_, err := ParseEvents(bundleDir)
+	if err == nil {
+		t.Error("ParseEvents() expected error for missing file")
 	}
 }

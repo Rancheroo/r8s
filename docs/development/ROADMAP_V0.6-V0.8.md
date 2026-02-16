@@ -27,6 +27,398 @@ This document provides a comprehensive roadmap for r8s releases v0.6.9 through v
 
 ---
 
+## 📦 v0.6.10 "Architecture Refactor & K3s Support"
+
+**Release Date**: Late February 2026  
+**Duration**: 3-4 week sprint  
+**Effort**: ~30-40 hours total  
+**Theme**: Inherited codebase review, cleanup, and multi-distro support
+
+### Objectives
+1. ✅ Complete codebase review (inherited from previous maintainer)
+2. ✅ Identify and eliminate redundant code, dead code, unnecessary abstractions
+3. ✅ Add K3s bundle compatibility (path abstraction: `rke2/` → `k3s/`)
+4. ✅ Consolidate duplicate implementations
+5. ✅ Improve code organization and reduce technical debt
+
+### Context
+This release addresses the reality that r8s was inherited from a previous developer who left the project. The codebase likely contains:
+- Unused functions and types
+- Over-engineered abstractions
+- Duplicated logic across packages
+- Hardcoded assumptions (like `rke2/` paths)
+- Inconsistent patterns
+
+This is a **big fix release** — focused on cleanup, not features.
+
+### Implementation Tasks
+
+#### Phase 1: Codebase Audit & Analysis (Week 1, ~8 hours)
+
+**Task 1a: Static Analysis & Dead Code Detection**
+```
+Tools to use:
+- golang.org/x/tools/cmd/deadcode (find unused code)
+- go vet ./... (standard analysis)
+- staticcheck ./... (deep analysis)
+- gocyclo (complexity detection)
+
+Files to create:
+- docs/development/CODEBASE_AUDIT.md (findings log)
+- scripts/audit-codebase.sh (automated checks)
+
+Areas to investigate:
+1. Unused exports (functions, types, constants)
+2. Functions called only from tests
+3. Interfaces with only one implementation
+4. Over-complex functions (cyclomatic >15)
+5. Duplicate code blocks
+6. Unused imports and dependencies
+
+Estimated Time: 4 hours
+```
+
+**Task 1b: Bundle Path Hardcoding Audit**
+```
+Current issue: 13 hardcoded "rke2" path references
+
+Files to examine:
+- internal/bundle/manifest.go (DetectFormat, path construction)
+- internal/bundle/validate.go (ValidateBundle)
+- internal/bundle/oom.go (event/pod paths)
+- internal/datasource/bundle_test.go (test fixtures)
+
+K3s bundle structure (same as RKE2, just different prefix):
+  k3s/kubectl/pods
+  k3s/podlogs/
+  k3s/kubectl/poddescribe/
+  k3s/pod-manifests/
+  systeminfo/
+  systemlogs/
+
+Action: Create distro-agnostic path abstraction
+
+Estimated Time: 2 hours
+```
+
+**Task 1c: Dependency & Import Analysis**
+```
+Check for:
+- Unused dependencies in go.mod
+- Import cycles
+- Heavy dependencies that could be replaced
+- Internal imports that bypass interfaces
+
+Commands:
+  go mod tidy
+  go list -m all | wc -l  (count dependencies)
+  go mod why <package>    (understand imports)
+
+Estimated Time: 2 hours
+```
+
+#### Phase 2: K3s Compatibility Implementation (Week 2, ~10 hours)
+
+**Task 2a: Bundle Format Extension**
+```
+File: internal/bundle/types.go
+
+Add:
+  FormatK3s BundleFormat = "k3s-support-bundle"
+
+Update Bundle struct:
+  DistroDir string // "rke2" or "k3s" - set during detection
+  DistroType BundleFormat // FormatRKE2 or FormatK3s
+
+Estimated Time: 1 hour
+```
+
+**Task 2b: Dynamic Path Resolution**
+```
+File: internal/bundle/manifest.go (and all path constructors)
+
+Pattern: Replace hardcoded paths with helper function
+
+BEFORE:
+  podsPath := filepath.Join(bundleRoot, "rke2", "kubectl", "pods")
+  eventsPath := filepath.Join(bundleRoot, "rke2", "kubectl", "events")
+  podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
+
+AFTER:
+  podsPath := b.KubectlPath("pods")
+  eventsPath := b.KubectlPath("events")
+  podlogsDir := b.PodLogsPath()
+
+New methods on Bundle:
+  func (b *Bundle) KubectlPath(resource string) string
+  func (b *Bundle) PodLogsPath() string
+  func (b *Bundle) PodManifestsPath() string
+  func (b *Bundle) PodDescribePath() string
+
+Estimated Time: 3 hours
+```
+
+**Task 2c: Multi-Distro Detection**
+```
+File: internal/bundle/manifest.go
+
+Update DetectFormat():
+  1. Check for rke2/ directory → FormatRKE2
+  2. Check for k3s/ directory → FormatK3s
+  3. Check for wrapper directories containing either
+  4. Return FormatUnknown if neither found
+
+Update ValidateBundle():
+  Accept either rke2 or k3s structure
+  Validate based on detected distro
+
+Estimated Time: 2 hours
+```
+
+**Task 2d: Test Fixtures for K3s**
+```
+Create test bundles:
+- testdata/bundles/minimal-k3s/ (minimal valid K3s bundle)
+- testdata/bundles/full-k3s/ (complete K3s bundle)
+
+Test cases:
+- TestDetectFormat_K3sBundle
+- TestLoadBundle_K3sStructure
+- TestInventoryPods_K3sPaths
+- Validate cross-distro consistency
+
+Estimated Time: 4 hours
+```
+
+#### Phase 3: Code Consolidation & Cleanup (Week 3, ~12 hours)
+
+**Task 3a: Remove Dead Code**
+```
+Based on audit findings:
+
+Common targets:
+- Unused exported functions
+- Types with no consumers
+- Constants only referenced in tests
+- "Future use" code that's never used
+- Commented-out legacy code
+
+Safety: 
+- Only remove if no references in non-test code
+- Keep if part of public API (for now)
+- Document removals in CHANGELOG
+
+Estimated Time: 3 hours
+```
+
+**Task 3b: Consolidate Duplicate Implementations**
+```
+Known areas to check:
+
+1. Container name parsing:
+   - parsePodManifestsForContainers() in manifest.go
+   - Similar logic in other files?
+   → Consolidate into single parser
+
+2. Pod log filename parsing:
+   - parsePodLogFilename() in manifest.go
+   - May exist elsewhere
+   → Single source of truth
+
+3. Namespace extraction:
+   - Various string splitting logic
+   → Use shared utility
+
+4. Path construction:
+   - filepath.Join() scattered everywhere
+   → Use Bundle helper methods
+
+Estimated Time: 4 hours
+```
+
+**Task 3c: Simplify Over-Engineered Code**
+```
+Look for:
+- Interfaces with single implementation
+- Unnecessary factory patterns
+- Complex type hierarchies
+- Premature abstractions
+
+Specific areas (from initial review):
+- DataSource interface implementations
+  - BundleDataSource
+  - EmbeddedDataSource  
+  - Could some methods be consolidated?
+
+- TUI state management
+  - Multiple similar message types
+  - Over-complicated update chains
+
+Estimated Time: 3 hours
+```
+
+**Task 3d: Standardize Error Handling**
+```
+Current inconsistencies:
+- Some functions return (nil, error)
+- Some return (empty, nil)
+- Some panic
+- Some log and continue
+
+Standardize per Principle #11 (Empty is Valid):
+- Not found → return empty, nil
+- Parse error → return error with context
+- Critical failure → return error
+
+Create helpers:
+  func IsNotFound(err error) bool
+  func WrapError(context string, err error) error
+
+Estimated Time: 2 hours
+```
+
+#### Phase 4: Documentation & Validation (Week 4, ~8 hours)
+
+**Task 4a: Update Bundle Documentation**
+```
+Files:
+- docs/development/BUNDLE_DEPENDENCY_ANALYSIS.md
+  - Add K3s section
+  - Document path abstractions
+  - Update collector script reference
+
+- README.md
+  - Mention K3s support
+  - Update bundle compatibility table
+
+Estimated Time: 2 hours
+```
+
+**Task 4b: Create Architecture Decision Records**
+```
+New file: docs/development/ADR/
+
+ADR-001: Multi-Distro Bundle Support
+- Why we added K3s
+- Path abstraction approach
+- Trade-offs considered
+
+ADR-002: Code Cleanup Guidelines
+- How we identify dead code
+- When to keep vs remove
+- Safety procedures
+
+Estimated Time: 2 hours
+```
+
+**Task 4c: Regression Testing**
+```
+Validate nothing broke:
+
+1. RKE2 bundles still work
+   - Load example bundle
+   - Verify all features functional
+   - Performance unchanged
+
+2. K3s bundles now work
+   - Load K3s test bundle
+   - Verify feature parity
+
+3. Edge cases
+   - Mixed/wrapper directories
+   - Missing subdirectories
+   - Corrupted paths
+
+Estimated Time: 3 hours
+```
+
+**Task 4d: Cleanup Documentation**
+```
+Create CODEBASE_AUDIT_SUMMARY.md:
+- What was found
+- What was removed/changed
+- Lessons learned
+- Recommendations for future
+
+Update CHANGELOG.md with v0.6.10 entry
+
+Estimated Time: 1 hour
+```
+
+### Success Criteria
+- [ ] Codebase audit complete (findings documented)
+- [ ] K3s bundles load and parse correctly
+- [ ] RKE2 bundles continue to work (regression tested)
+- [ ] Dead code removed (target: 5-10% reduction)
+- [ ] Duplicate logic consolidated
+- [ ] All paths use distro-agnostic abstractions
+- [ ] Test coverage maintained or improved
+- [ ] Documentation updated
+
+### Release Prompt for v0.6.10
+
+```markdown
+# v0.6.10 Release Prompt: Architecture Refactor & K3s Support
+
+## Objectives
+Clean up inherited codebase, add K3s compatibility, and establish 
+maintainable architecture for multi-distro support.
+
+## Implementation Checklist
+
+### Codebase Audit (8 hours)
+1. Run static analysis tools (deadcode, staticcheck, gocyclo)
+2. Document findings in CODEBASE_AUDIT.md
+3. Identify all hardcoded "rke2" paths (13 occurrences)
+4. Catalog redundant/duplicate implementations
+5. List over-engineered abstractions
+
+### K3s Support (10 hours)
+6. Add FormatK3s to bundle/types.go
+7. Extend DetectFormat() for k3s/ directory
+8. Create Bundle.DistroDir and path helper methods
+9. Replace all hardcoded "rke2" with dynamic paths
+10. Create K3s test bundles and validation tests
+11. Update ValidateBundle() for multi-distro
+
+### Code Cleanup (12 hours)
+12. Remove dead code identified in audit
+13. Consolidate duplicate implementations:
+    - Container name parsers
+    - Log filename parsers
+    - Namespace extraction utilities
+14. Simplify over-engineered code
+15. Standardize error handling patterns
+
+### Documentation & Testing (8 hours)
+16. Update BUNDLE_DEPENDENCY_ANALYSIS.md with K3s
+17. Create ADR-001 (Multi-Distro Support)
+18. Create ADR-002 (Code Cleanup Guidelines)
+19. Regression test: RKE2 bundles still work
+20. Validate: K3s bundles work correctly
+21. Update CHANGELOG.md
+22. Create CODEBASE_AUDIT_SUMMARY.md
+
+## Acceptance Criteria
+- K3s and RKE2 bundles both load correctly
+- Zero hardcoded distro paths (all use abstractions)
+- Code size reduced (fewer lines, simpler structure)
+- All tests passing
+- No performance regressions
+- Documentation complete
+
+## Definition of Done
+- [ ] Can load and analyze K3s support bundles
+- [ ] Can load and analyze RKE2 support bundles (regression)
+- [ ] Code audit findings addressed
+- [ ] Technical debt reduced
+- [ ] Architecture ready for future distros (RKE1, etc.)
+
+## Estimated Effort: 30-40 hours
+```
+
+---
+
 ## 📦 v0.6.9 "Principle Compliance Sprint"
 
 **Release Date**: Mid-February 2026  
@@ -843,7 +1235,7 @@ This release establishes r8s as production-ready.
 2026 Timeline:
 
 Jan ████ v0.6.8 (current)
-Feb ████ v0.6.9 (compliance + testing baseline)
+Feb ████████████ v0.6.9 (compliance) + v0.6.10 (refactor + K3s)
 Mar ████ 
 Apr ████████ v0.7.0 (CI/CD + 50% coverage)
 May ████
@@ -865,7 +1257,8 @@ Legend:
 |---------|----------|-------|--------|
 | v0.6.8 (current) | ~13% | - | Baseline |
 | v0.6.9 | 30% | +17% | ✅ 30% |
-| v0.7.0 | 50% | +20% | ✅ 50% |
+| v0.6.10 | 35% | +5% | 🟢 Maintain + K3s tests |
+| v0.7.0 | 50% | +15% | ✅ 50% |
 | v0.7.5 | 70% | +20% | ✅ 70% |
 | v0.8.0 | 80% | +10% | ✅ 80% |
 
@@ -891,6 +1284,8 @@ Legend:
 ### Critical Path
 ```
 v0.6.9 (Principle Fixes)
+    ↓
+v0.6.10 (Architecture Refactor + K3s)
     ↓
 v0.7.0 (CI/CD Infrastructure)
     ↓
@@ -918,5 +1313,5 @@ v1.0 (Stable Release)
 ---
 
 **Roadmap Maintained By**: Development Team  
-**Last Updated**: 2026-01-14  
-**Next Review**: After v0.7.0 release
+**Last Updated**: 2026-02-13  
+**Next Review**: After v0.6.10 release

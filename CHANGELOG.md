@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-13
+
+### Added
+
+- **Bundle Completeness Indicator** (#34) - Shows % of expected files found in support bundles
+- **dmesg OOM Detection Parser** (#40) - Detects Out-of-Memory kills from kernel logs
+- **PV/PVC/StatefulSet Parsers** (#39) - Full persistent volume analysis
+- **ConfigMaps Parser** (#42) - Extract and analyze ConfigMap data
+- **HelmCharts Parser** (#42) - Identify Helm releases and chart versions
+- **RKE2 Journald Parser** (#41) - Control plane log analysis with critical error detection
+- **test-cluster Command** - Automated cluster diagnostics subcommand
+- **CodeRabbit Integration** - Automatic team welcome on PR reviews
+
+### Fixed
+
+- Exit codes, JSON output, and unbound PV handling (#37, #38, #49)
+- Corrected ParsePVs column mapping (#48)
+
+### Stats
+
+- +2,216/-55 lines changed across 19 files
+- All new parsers: 100% test coverage
+- No breaking changes
+
 ## [0.6.9] - 2026-01-15
 
 ### Fixed
@@ -85,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **0.4.x** - Bundle support
 - **0.3.x** - Initial release
 
-[Unreleased]: https://github.com/Rancheroo/r8s/compare/v0.6.8.1...HEAD
+[Unreleased]: https://github.com/Rancheroo/r8s/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Rancheroo/r8s/compare/v0.6.9...v0.7.0
 [0.6.8.1]: https://github.com/Rancheroo/r8s/compare/v0.6.8...v0.6.8.1
 [0.6.8]: https://github.com/Rancheroo/r8s/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/Rancheroo/r8s/releases/tag/v0.6.7

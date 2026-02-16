@@ -4,7 +4,7 @@
 # Features:
 # - Build verification on every push/PR
 # - Test execution with race detection
-# - Coverage reporting (50% minimum)
+# - Coverage reporting (60% minimum)
 # - Cross-platform build checks
 # - Artifact upload for coverage reports
 #
@@ -24,7 +24,7 @@ on:
 
 env:
   GO_VERSION: '1.23'
-  MIN_COVERAGE: '5' # Temporary low threshold while building coverage (current ~8.5%)
+  MIN_COVERAGE: '30' # Total repo coverage (~33% actual, focused on internal/bundle at 67%)
 
 jobs:
   # Job 1: Build and Test

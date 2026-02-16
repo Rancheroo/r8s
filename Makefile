@@ -1,4 +1,4 @@
-.PHONY: build install test clean run fmt vet tidy coverage help
+.PHONY: build install test clean run fmt vet tidy coverage help lint ci dev
 
 # Build variables
 BINARY_NAME=r8s
@@ -49,7 +49,15 @@ coverage: ## Generate test coverage report
 	@echo "Coverage report: coverage.out"
 	@echo "View HTML: go tool cover -html=coverage.out -o coverage.html"
 
-dev: tidy fmt vet ## Run development checks (tidy, fmt, vet)
+lint: ## Run golangci-lint (Sprint 6 #44)
+	@echo "Running linter..."
+	@which golangci-lint > /dev/null 2>&1 || (echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	golangci-lint run --timeout=5m ./...
+
+ci: lint test coverage ## Run full CI pipeline locally (Sprint 6)
+	@echo "✓ CI checks complete"
+
+dev: tidy fmt vet lint ## Run development checks (tidy, fmt, vet, lint)
 	@echo "Development checks complete"
 
 .DEFAULT_GOAL := help

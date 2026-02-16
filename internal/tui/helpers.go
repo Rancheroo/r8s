@@ -530,8 +530,6 @@ func (a *App) fetchContainerDiagnostics(namespace, podName string, containerName
 		// Only use specs if we got valid data without errors
 		if err == nil && len(specs) > 0 {
 			resourceSpecs = specs
-		} else if err != nil {
-			fmt.Printf("DEBUG: Could not get resource specs for pod %s/%s: %v\n", namespace, podName, err)
 		}
 	}
 
