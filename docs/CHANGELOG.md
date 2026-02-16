@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-02-17
+
+### Added ✨
+
+- **K3s Bundle Support** - Full support for K3s log collector bundles
+  - Automatic format detection (RKE2/K3s/kubectl cluster-info)
+  - Path abstraction layer via `PathResolver` interface
+  - `K3sPathResolver` and `RKE2PathResolver` implementations
+  - Backward compatible — existing RKE2 bundles work unchanged
+
+- **PathResolver Interface** - Clean abstraction for distro-specific paths
+  - `GetKubectlDir()`, `GetPodLogsDir()`, `GetPodManifestsDir()`
+  - `GetPodDescribeDir()`, `GetAgentLogsDir()`, `GetEtcdDir()`
+  - `GetVersionFile()`, `GetJournaldPaths()`
+  - Factory function `NewPathResolver(bundleRoot, format)`
+
+### Enhanced 🔧
+
+- **Test Coverage** - 33% → 36.8% total repo coverage
+  - `internal/config`: 47.1% → 66.7% (+19.6%)
+  - `internal/datasource`: 26.0% → 66.3% (+40.3%)
+  - 50+ new test functions added across config, datasource, and bundle packages
+
+### Technical
+
+- **5 Core Files Refactored** to use PathResolver:
+  - `journald.go` - Uses `GetJournaldPaths()` for distro-specific paths
+  - `completeness.go` - Format-aware expected files (RKE2 vs K3s)
+  - `oom.go` - Uses `GetKubectlDir()`, `GetPodManifestsDir()`
+  - `nodes.go` - Uses `GetKubectlDir()` for nodesdescribe path
+  - `validate.go` - Checks for `k3s/`, `rke2/`, or `kubectl/` directories
+  - `manifest.go` - Uses PathResolver for `InventoryPods()`, `InventoryLogFiles()`
+
+### Files Changed
+
+- Added: `internal/bundle/paths.go`, `internal/bundle/paths_test.go`
+- Added: `internal/datasource/embedded_test.go`
+- Modified: `internal/bundle/*.go` (6 files)
+- Modified: `internal/config/config_test.go`
+- Modified: `internal/datasource/bundle_test.go`
+
 ## [0.6.8] - 2026-01-14
 
 ### Added ✨
