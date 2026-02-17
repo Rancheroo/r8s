@@ -113,6 +113,9 @@ func ComputeAttentionItems(ds datasource.DataSource, scanDepth int) []AttentionI
 	// Tier 5: System Health (Bundle only)
 	items = append(items, detectSystemHealth(ds)...)
 
+	// Tier 6: AI Pattern Detection (v0.7.2)
+	items = append(items, detectAIPatterns(ds)...)
+
 	// Sort by severity (Critical → Warning → Info)
 	sortAttentionItems(items)
 

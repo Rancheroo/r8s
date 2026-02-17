@@ -153,6 +153,9 @@ type App struct {
 
 	// Selection preservation
 	savedRowName string // Saved row name when navigating away
+
+	// AI Prompt Export (v0.7.2)
+	promptView *PromptView // Modal for displaying AI prompts
 }
 
 // HasError returns true if the app has an initialization error
@@ -238,6 +241,7 @@ func NewApp(cfg *config.Config, bundlePath string) *App {
 		crdInstanceCounts:  make(map[string]int),        // CRD count cache (S1-HIGH-1)
 		crdCountsLoading:   make(map[string]bool),       // CRD loading state (S1-HIGH-1)
 		crdCountsPending:   make(map[string]struct{}),   // CRD fetch queue (S1-HIGH-1)
+		promptView:         NewPromptView(),             // AI prompt export (v0.7.2)
 	}
 }
 
@@ -277,6 +281,27 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if a.showHelp {
 			if msg.String() == "?" || msg.String() == "esc" || msg.String() == "q" {
 				a.showHelp = false
+				return a, nil
+			}
+			return a, nil
+		}
+
+		// Handle AI prompt view (v0.7.2)
+		if a.promptView != nil && a.promptView.IsVisible() {
+			switch msg.String() {
+			case "q", "esc":
+				a.promptView.Hide()
+				return a, nil
+			case "c":
+				// Copy to clipboard would go here
+				// For now, just close - user can select+copy manually
+				a.promptView.Hide()
+				return a, nil
+			case "up", "k":
+				a.promptView.ScrollUp()
+				return a, nil
+			case "down", "j":
+				a.promptView.ScrollDown()
 				return a, nil
 			}
 			return a, nil
@@ -444,6 +469,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "?":
 			a.showHelp = true
 			return a, nil
+		case "p":
+			// AI Prompt Export (v0.7.2)
+			if a.currentView.viewType == ViewAttention && len(a.attentionItems) > 0 {
+				pg := NewPromptGenerator(nil, a.attentionItems, a.bundlePath)
+				prompt := pg.GenerateSupportPrompt()
+				a.promptView.Show(prompt, "support")
+				return a, nil
+			}
 		case "enter":
 			return a, a.handleEnter()
 		case "esc", "b":
@@ -901,6 +934,12 @@ func (a *App) View() string {
 
 	if a.showHelp {
 		return renderHelp(a.currentView.viewType)
+	}
+
+	// AI Prompt View (v0.7.2) - render as overlay
+	if a.promptView != nil && a.promptView.IsVisible() {
+		a.promptView.SetSize(a.width, a.height)
+		return a.promptView.Render()
 	}
 
 	if a.showingDescribe {
