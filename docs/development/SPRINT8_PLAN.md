@@ -20,6 +20,7 @@
 | **1. Question** | Do we need 10 AI patterns or 3 good ones? → **3** |
 | **2. Delete** | Remove RKE1, remove complex pattern schemas → **YAML simplicity** |
 | **3. Simplify** | Bundle health = missing files list + impact score. No complex scoring. |
+| **2. Delete** | TUI dead code audit — [TUI_DELETION_AUDIT.md](TUI_DELETION_AUDIT.md) — **9% code reduction** |
 | **4. Accelerate** | Demo-ready Day 8, polish Day 12-14 |
 | **5. Automate** | CI validates patterns work; UX engineer validates polish |
 
@@ -77,7 +78,44 @@ Demo scenario: Load demo bundle → AI panel shows:
 
 ---
 
-### P2: TUI Integration — Demo Polish (Days 9-10)
+### P2: CLI Commands — Headless Mode (Days 5-7)
+**Impact: HIGH | Effort: MEDIUM | Demo Value: 🔥🔥🔥**
+
+Headless commands for CI integration and AI workflows.
+
+| Command | Purpose | Demo Moment |
+|---------|---------|-------------|
+| `r8s validate bundle [path]` | Health check without TUI | "Works in CI pipelines" |
+| `r8s generate prompt [path]` | Export AI-ready prompts | "Pipe to Claude Code" |
+| `r8s export findings [path]` | JSON/YAML for monitoring | "Integrate with your tools" |
+| `r8s create demo-bundle --out` | Export synthetic demo | "Test without real bundles" |
+
+**Implementation:**
+```
+cmd/validate.go      # Bundle health validation
+cmd/generate.go      # Prompt generation (uses existing PromptGenerator)
+cmd/export.go        # Findings export
+cmd/create.go        # Demo bundle creation
+```
+
+**Demo Script (2 minutes):**
+```bash
+# 1. Validate bundle health (CI-friendly)
+$ r8s validate ./production-bundle/
+Bundle Health: 68% ⚠️
+Missing: podlogs/ (medium impact)
+
+# 2. Generate AI prompt for troubleshooting
+$ r8s generate prompt ./production-bundle/ --format=terminal
+# Copy-paste to Claude Code → get kubectl commands
+
+# 3. Export for monitoring integration
+$ r8s export findings ./production-bundle/ --format=json | jq '.critical[]'
+```
+
+---
+
+### P3: TUI Integration — Demo Polish (Days 8-10)
 **Impact: MEDIUM | Effort: MEDIUM | Demo Value: 🔥🔥🔥**
 
 What makes it showcase-ready:
@@ -94,14 +132,36 @@ UX Engineer focus:
 
 ---
 
-### P3: Documentation + Showcase Prep (Days 11-14)
+### P4: Documentation + Showcase Prep (Days 11-13)
 **Impact: MEDIUM | Effort: LOW | Demo Value: 🔥🔥**
 
 Deliverables:
 1. **Demo script** (3 min walkthrough)
 2. **Pattern authoring guide** (YAML format)
 3. **README update** (AI features section)
-4. **Recording-ready build** (clean terminal, no debug output)
+4. **CLI reference** (new commands documentation)
+5. **Recording-ready build** (clean terminal, no debug output)
+
+---
+
+### P5: TUI Cleanup — Musk's Law #2 (Day 14, Buffer)
+**Impact: LOW-MEDIUM | Effort: LOW | Code Health: 🔥🔥🔥**
+
+Background: [TUI_DELETION_AUDIT.md](TUI_DELETION_AUDIT.md)
+
+**What:**
+- Delete dead view types (`ViewClusters`, `ViewProjects`, `ViewNamespaces`)
+- Remove classic view toggle (`c` key) if product confirms
+- Simplify sort modes (remove Count sort)
+
+**Why:**
+- 9% code reduction (~860 lines)
+- Removes pre-v0.3.5 live API mode vestiges
+- Faster builds, less maintenance
+
+**Risk:** Low — Dead code, unreachable in bundle-only mode
+
+**Deliverable:** PR with deletions + passing tests
 
 ---
 
@@ -109,12 +169,19 @@ Deliverables:
 
 | Role | Allocation | Focus |
 |------|------------|-------|
-| **RancherSRE** | 60% | Health checker, pattern engine, integration |
+| **RancherSRE** | 70% | Health checker, CLI commands, pattern engine |
 | **CodeRabbit** | Continuous | Review all PRs |
-| **🎨 UX Engineer** | Days 9-14 **NEW** | TUI polish, accessibility, demo flow |
+| **🎨 UX Engineer** | Days 8-14 **NEW** | TUI polish, accessibility, demo flow |
 | **Management** | Demo Day | See AI features in action |
 
-**UX Engineer Scope:** Days 9-14 (TUI polish + showcase readiness)
+**RancherSRE Scope:**
+- Days 1-2: Bundle health core + `r8s validate`
+- Days 3-4: AI pattern engine + `r8s generate prompt`
+- Days 5-7: Pattern registry + remaining CLI commands
+- Days 11-13: Documentation + demo script
+- Day 14: TUI cleanup (buffer)
+
+**UX Engineer Scope:** Days 8-14 (TUI polish + showcase readiness)
 - Review TUI panels for consistency
 - Ensure keyboard navigation (Enter/Esc/Tab)
 - Accessibility: color contrast, clear labels
@@ -129,9 +196,11 @@ Deliverables:
 |-----------|--------|
 | Bundle Health v2 | Partial bundles show health indicator + still work |
 | AI Patterns | 3 patterns (OOM, ImagePull, CrashLoop) detect correctly |
+| **CLI Commands** | **4 commands working: validate, generate, export, create** |
 | TUI Polish | Keyboard nav works, colors accessible, clean demo |
 | **Coverage** | **Increase to 45%+ (from 36.8%)** |
 | Showcase Ready | 3-min demo script, clean build, no debug noise |
+| TUI Cleanup (bonus) | Dead view types removed, ~9% code reduction |
 
 ### 🎯 Coverage Strategy (80/20)
 
@@ -149,12 +218,15 @@ Deliverables:
 - ❌ `cmd/` package (mostly boilerplate)
 - ❌ `pkg/rancher/` (deprecated)
 
-**NOT Required:**
-- ❌ 10 patterns
+**NOT Required (v0.7.2):**
+- ❌ 10 patterns (doing 3)
 - ❌ Root cause hints
 - ❌ Pattern confidence scores
 - ❌ Anomaly detection
 - ❌ Natural language queries
+
+**Buffer/Filler (if time permits):**
+- 🧹 TUI cleanup — [TUI_DELETION_AUDIT.md](TUI_DELETION_AUDIT.md) — 9% code reduction
 
 ---
 
@@ -162,14 +234,13 @@ Deliverables:
 
 | Day | Focus | Milestone |
 |-----|-------|-----------|
-| 1-2 | Bundle health core + tests | `bundle.Health()` returns missing files + 80% coverage |
-| 3-4 | Health TUI integration + AI engine | Health visible, pattern interface ready |
-| 5-6 | Pattern registry + tests | YAML loader working, registry 70% coverage |
-| 7-8 | 3 patterns + tests | OOM, ImagePull, CrashLoop detect correctly |
-| **8** | **🎉 DEMO MILESTONE** | AI panel shows patterns live |
-| 9-10 | UX Engineer: TUI polish | Accessibility, keyboard flow, visual polish |
-| 11-12 | Coverage push + demo prep | Reach 45% total, demo script ready |
-| 13-14 | Buffer + release | Bug fixes, tag v0.7.2 |
+| 1-2 | Bundle health core + `validate` command | `r8s validate` working, 80% coverage |
+| 3-4 | AI engine + `generate prompt` | Pattern interface + prompt export ready |
+| 5-7 | Pattern registry + CLI commands | 3 patterns + `export` + `create demo-bundle` |
+| **7** | **🎉 DEMO MILESTONE** | "r8s as a power tool" demo ready |
+| 8-10 | TUI polish + UX Engineer | Accessibility, keyboard flow, visual polish |
+| 11-13 | Docs + showcase prep | Demo script, CLI reference, README updates |
+| 14 | TUI cleanup + release | Delete dead code, tag v0.7.2 |
 
 ---
 
@@ -203,12 +274,16 @@ Deliverables:
 - [ ] Bundle health v2: Partial bundles show health indicator
 - [ ] AI engine: Pattern interface + registry
 - [ ] 3 patterns: OOMKill, ImagePullBackOff, CrashLoopBackOff
+- [ ] **CLI: `r8s validate bundle` working**
+- [ ] **CLI: `r8s generate prompt` with 3 formats**
+- [ ] **CLI: `r8s export findings` JSON/YAML output**
+- [ ] **CLI: `r8s create demo-bundle` export to disk**
 - [ ] TUI: AI Analysis tab with 🔴🟡🟢 severity
 - [ ] TUI: Bundle Health visible in status
 - [ ] UX Engineer polish: Accessibility + keyboard flow
-- [ ] Demo script: 3-minute walkthrough written
+- [ ] Demo script: 3-minute walkthrough written (includes CLI demo)
 - [ ] Showcase recording: Backup ready
-- [ ] Coverage ≥ 36.8%
+- [ ] Coverage ≥ 45%
 - [ ] CI: All green, no flaky jobs
 
 ---

@@ -1,3 +1,5 @@
+// Package bundle provides health checking for support bundles.
+// Sprint 8: Bundle Health v2 - partial bundle support with impact scoring.
 package bundle
 
 import (
@@ -6,170 +8,210 @@ import (
 	"path/filepath"
 )
 
-// HealthChecker provides bundle completeness and quality analysis
-type HealthChecker struct {
-	bundle *Bundle
+// FileImportance indicates how critical a missing file is
+type FileImportance int
+
+const (
+	ImportanceCritical FileImportance = iota // Bundle unusable without this
+	ImportanceHigh                           // Major feature degraded
+	ImportanceMedium                         // Minor feature affected
+	ImportanceLow                            // Cosmetic only
+)
+
+// ExpectedFile represents a file that should be present in a bundle
+type ExpectedFile struct {
+	Path       string
+	Importance FileImportance
+	Category   string // e.g., "pods", "nodes", "logs", "system"
 }
 
-// CriticalFiles lists directories/files that are essential for accurate analysis
-var CriticalFiles = []string{
-	"rke2/kubectl",      // kubectl output (RKE2)
-	"k3s/kubectl",       // kubectl output (K3s)
-	"rke2/podlogs",      // pod logs (RKE2)
-	"k3s/podlogs",       // pod logs (K3s)
+// HealthCheck represents the result of a bundle health check
+type HealthCheck struct {
+	TotalFiles     int
+	FoundFiles     int
+	MissingFiles   []MissingFile
+	Completeness   float64 // 0.0 to 100.0
+	IsValid        bool    // Can be loaded (critical files present)
+	BundleType     string  // "RKE2", "K3s", "kubectl", "unknown"
+	Categories     map[string]CategoryHealth
 }
 
-// OptionalFiles lists files that enhance analysis but aren't required
-var OptionalFiles = []string{
-	"rke2/pod-manifests",
-	"k3s/pod-manifests",
-	"rke2/agent-logs",
-	"k3s/agent-logs",
-	"rke2/etcd",
-	"k3s/etcd",
-	"systemlogs",
-	"systeminfo",
+// MissingFile represents a missing file with its impact
+type MissingFile struct {
+	Path       string
+	Importance FileImportance
+	Category   string
+	Impact     string // Human-readable impact description
 }
 
-// NewHealthChecker creates a health checker for a bundle
-func NewHealthChecker(b *Bundle) *HealthChecker {
-	return &HealthChecker{bundle: b}
+// CategoryHealth represents health for a specific category
+type CategoryHealth struct {
+	Total    int
+	Found    int
+	Missing  int
+	Complete bool // 100% complete
 }
 
-// Check analyzes bundle completeness and returns health metrics
-func (hc *HealthChecker) Check() BundleHealth {
-	health := BundleHealth{
-		MissingFiles: []string{},
-		Warnings:     []string{},
+// ExpectedFiles returns the list of files we expect in a bundle
+// Sprint 8: RKE2 only for now, K3s to be added
+func ExpectedFiles() []ExpectedFile {
+	return []ExpectedFile{
+		// Critical files
+		{Path: "rke2/kubectl/pods", Importance: ImportanceCritical, Category: "pods"},
+		{Path: "rke2/kubectl/nodes", Importance: ImportanceCritical, Category: "nodes"},
+
+		// High importance
+		{Path: "rke2/kubectl/events", Importance: ImportanceHigh, Category: "events"},
+		{Path: "rke2/kubectl/deployments", Importance: ImportanceHigh, Category: "workloads"},
+		{Path: "rke2/etcd/endpoint_status", Importance: ImportanceHigh, Category: "etcd"},
+
+		// Medium importance
+		{Path: "rke2/kubectl/services", Importance: ImportanceMedium, Category: "networking"},
+		{Path: "rke2/kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
+		{Path: "rke2/dmesg", Importance: ImportanceMedium, Category: "system"},
+		{Path: "rke2/logs/journald.log", Importance: ImportanceMedium, Category: "logs"},
+
+		// Low importance (nice to have)
+		{Path: "rke2/kubectl/crds", Importance: ImportanceLow, Category: "crds"},
+		{Path: "rke2/kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
+		{Path: "rke2/sysstat/", Importance: ImportanceLow, Category: "system"},
+		{Path: "rke2/podlogs/", Importance: ImportanceLow, Category: "logs"},
+	}
+}
+
+// CheckHealth performs a health check on a bundle at the given path
+func CheckHealth(bundlePath string) (*HealthCheck, error) {
+	if _, err := os.Stat(bundlePath); err != nil {
+		return nil, fmt.Errorf("cannot access bundle path: %w", err)
 	}
 
-	if hc.bundle == nil || hc.bundle.ExtractPath == "" {
-		health.Warnings = append(health.Warnings, "No bundle loaded")
-		return health
+	expected := ExpectedFiles()
+	health := &HealthCheck{
+		TotalFiles:   len(expected),
+		Categories:   make(map[string]CategoryHealth),
+		MissingFiles: []MissingFile{},
 	}
 
-	root := hc.bundle.ExtractPath
+	// Check each expected file
+	for _, file := range expected {
+		fullPath := filepath.Join(bundlePath, file.Path)
+		found := false
 
-	// Check critical files
-	for _, critical := range CriticalFiles {
-		path := filepath.Join(root, critical)
-		exists := hc.pathExists(path)
-		health.TotalFiles++
-		if exists {
+		// Check if file or directory exists
+		info, err := os.Stat(fullPath)
+		if err == nil {
+			// For directories, check if they have contents
+			if info.IsDir() {
+				entries, err := os.ReadDir(fullPath)
+				if err == nil && len(entries) > 0 {
+					found = true
+				}
+			} else {
+				found = true
+			}
+		}
+
+		if found {
 			health.FoundFiles++
 		} else {
-			health.MissingFiles = append(health.MissingFiles, critical)
+			health.MissingFiles = append(health.MissingFiles, MissingFile{
+				Path:       file.Path,
+				Importance: file.Importance,
+				Category:   file.Category,
+				Impact:     impactDescription(file.Importance, file.Category),
+			})
+		}
+
+		// Update category stats
+		cat := health.Categories[file.Category]
+		cat.Total++
+		if found {
+			cat.Found++
+		} else {
+			cat.Missing++
+		}
+		cat.Complete = (cat.Found == cat.Total)
+		health.Categories[file.Category] = cat
+	}
+
+	// Calculate completeness
+	if health.TotalFiles > 0 {
+		health.Completeness = float64(health.FoundFiles) / float64(health.TotalFiles) * 100
+	}
+
+	// Determine if bundle is valid (critical files must be present)
+	health.IsValid = health.hasCriticalFiles()
+
+	// Detect bundle type
+	health.BundleType = detectBundleType(bundlePath)
+
+	return health, nil
+}
+
+// hasCriticalFiles returns true if all critical files are present
+func (h *HealthCheck) hasCriticalFiles() bool {
+	for _, missing := range h.MissingFiles {
+		if missing.Importance == ImportanceCritical {
+			return false
 		}
 	}
-
-	// Check optional files
-	for _, optional := range OptionalFiles {
-		path := filepath.Join(root, optional)
-		exists := hc.pathExists(path)
-		health.TotalFiles++
-		if exists {
-			health.FoundFiles++
-		}
-		// Optional files don't count as "missing" for health calculation
-	}
-
-	// Add warnings for missing critical data
-	if !hc.hasKubectlData(root) {
-		health.Warnings = append(health.Warnings, "Missing kubectl data: pod/namespace information unavailable")
-	}
-	if !hc.hasPodLogs(root) {
-		health.Warnings = append(health.Warnings, "Missing pod logs: container log analysis limited")
-	}
-	if !hc.hasSystemLogs(root) {
-		health.Warnings = append(health.Warnings, "Missing system logs: node-level diagnostics unavailable")
-	}
-
-	// Detect bundle format
-	format := hc.detectFormat(root)
-	health.BundleType = string(format)
-
-	return health
+	return true
 }
 
-// pathExists checks if a path exists (file or directory)
-func (hc *HealthChecker) pathExists(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
-}
-
-// hasKubectlData checks if kubectl directory exists in any format
-func (hc *HealthChecker) hasKubectlData(root string) bool {
-	paths := []string{
-		filepath.Join(root, "rke2", "kubectl"),
-		filepath.Join(root, "k3s", "kubectl"),
-	}
-	for _, p := range paths {
-		if hc.pathExists(p) {
-			return true
-		}
-	}
-	return false
-}
-
-// hasPodLogs checks if pod logs directory exists in any format
-func (hc *HealthChecker) hasPodLogs(root string) bool {
-	paths := []string{
-		filepath.Join(root, "rke2", "podlogs"),
-		filepath.Join(root, "k3s", "podlogs"),
-	}
-	for _, p := range paths {
-		if hc.pathExists(p) {
-			return true
-		}
-	}
-	return false
-}
-
-// hasSystemLogs checks if system logs exist
-func (hc *HealthChecker) hasSystemLogs(root string) bool {
-	paths := []string{
-		filepath.Join(root, "systemlogs"),
-		filepath.Join(root, "rke2", "agent-logs"),
-		filepath.Join(root, "k3s", "agent-logs"),
-	}
-	for _, p := range paths {
-		if hc.pathExists(p) {
-			return true
-		}
-	}
-	return false
-}
-
-// detectFormat determines the bundle type from directory structure
-func (hc *HealthChecker) detectFormat(root string) BundleFormat {
-	if hc.pathExists(filepath.Join(root, "rke2")) {
-		return FormatRKE2
-	}
-	if hc.pathExists(filepath.Join(root, "k3s")) {
-		return FormatK3s
-	}
-	if hc.pathExists(filepath.Join(root, "kubectl")) {
-		return FormatKubectl
-	}
-	return FormatUnknown
-}
-
-// IsCriticalMissing returns true if critical data is missing
-func (health *BundleHealth) IsCriticalMissing() bool {
-	return health.Percentage() < 70
-}
-
-// Summary returns a human-readable health summary
-func (health *BundleHealth) Summary() string {
-	pct := health.Percentage()
-	switch {
-	case pct >= 90:
-		return fmt.Sprintf("Excellent (%d%%)", pct)
-	case pct >= 70:
-		return fmt.Sprintf("Good (%d%%)", pct)
-	case pct >= 50:
-		return fmt.Sprintf("Fair (%d%%) — Some data may be incomplete", pct)
+// impactDescription returns a human-readable impact description
+func impactDescription(importance FileImportance, category string) string {
+	switch importance {
+	case ImportanceCritical:
+		return fmt.Sprintf("Bundle analysis severely limited without %s data", category)
+	case ImportanceHigh:
+		return fmt.Sprintf("Major %s analysis features unavailable", category)
+	case ImportanceMedium:
+		return fmt.Sprintf("Minor %s features may be limited", category)
+	case ImportanceLow:
+		return fmt.Sprintf("Optional %s data unavailable", category)
 	default:
-		return fmt.Sprintf("Poor (%d%%) — Critical data missing", pct)
+		return "Unknown impact"
 	}
+}
+
+// detectBundleType attempts to determine the bundle type
+func detectBundleType(bundlePath string) string {
+	// Check for RKE2 paths
+	if _, err := os.Stat(filepath.Join(bundlePath, "rke2")); err == nil {
+		return "RKE2"
+	}
+	// Check for K3s paths (Sprint 8: placeholder for future)
+	if _, err := os.Stat(filepath.Join(bundlePath, "k3s")); err == nil {
+		return "K3s"
+	}
+	// Check for generic kubectl
+	if _, err := os.Stat(filepath.Join(bundlePath, "kubectl")); err == nil {
+		return "kubectl"
+	}
+	return "unknown"
+}
+
+// Summary returns a one-line summary of the health check
+func (h *HealthCheck) Summary() string {
+	if !h.IsValid {
+		return fmt.Sprintf("Bundle Health: %.0f%% 🔴 CRITICAL - missing required files", h.Completeness)
+	}
+	if h.Completeness < 50 {
+		return fmt.Sprintf("Bundle Health: %.0f%% ⚠️  Partial bundle", h.Completeness)
+	}
+	if h.Completeness < 100 {
+		return fmt.Sprintf("Bundle Health: %.0f%% ⚠️  Mostly complete", h.Completeness)
+	}
+	return fmt.Sprintf("Bundle Health: %.0f%% ✅ Complete", h.Completeness)
+}
+
+// GetHighImpactMissing returns missing files with high importance
+func (h *HealthCheck) GetHighImpactMissing() []MissingFile {
+	var high []MissingFile
+	for _, m := range h.MissingFiles {
+		if m.Importance == ImportanceCritical || m.Importance == ImportanceHigh {
+			high = append(high, m)
+		}
+	}
+	return high
 }

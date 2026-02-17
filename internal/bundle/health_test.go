@@ -6,362 +6,233 @@ import (
 	"testing"
 )
 
-func TestNewHealthChecker(t *testing.T) {
-	bundle := &Bundle{ExtractPath: "/tmp/test"}
-	hc := NewHealthChecker(bundle)
-
-	if hc == nil {
-		t.Fatal("NewHealthChecker returned nil")
-	}
-	if hc.bundle != bundle {
-		t.Error("HealthChecker.bundle mismatch")
-	}
-}
-
-func TestHealthChecker_Check_EmptyBundle(t *testing.T) {
-	hc := NewHealthChecker(nil)
-	health := hc.Check()
-
-	if len(health.Warnings) == 0 {
-		t.Error("Expected warning for nil bundle")
-	}
-	if health.Percentage() != 100 {
-		t.Errorf("Empty bundle should be 100%%, got %d%%", health.Percentage())
-	}
-}
-
-func TestHealthChecker_Check_NoPath(t *testing.T) {
-	bundle := &Bundle{ExtractPath: ""}
-	hc := NewHealthChecker(bundle)
-	health := hc.Check()
-
-	if len(health.Warnings) == 0 {
-		t.Error("Expected warning for empty path")
-	}
-}
-
-func TestHealthChecker_Check_FullRKE2Bundle(t *testing.T) {
-	// Create temp directory structure for full RKE2 bundle
+func TestCheckHealth(t *testing.T) {
+	// Create temporary test directories
 	tmpDir := t.TempDir()
 
-	// Create all critical directories
-	dirs := []string{
-		"rke2/kubectl",
-		"rke2/podlogs",
-		"rke2/pod-manifests",
-		"rke2/agent-logs",
-		"rke2/etcd",
-		"systemlogs",
-		"systeminfo",
-	}
-	for _, dir := range dirs {
-		path := filepath.Join(tmpDir, dir)
-		if err := os.MkdirAll(path, 0755); err != nil {
-			t.Fatalf("Failed to create %s: %v", dir, err)
-		}
-	}
-
-	bundle := &Bundle{ExtractPath: tmpDir}
-	hc := NewHealthChecker(bundle)
-	health := hc.Check()
-
-	// Should find all critical + optional files
-	if health.FoundFiles == 0 {
-		t.Error("Expected found files in full bundle")
-	}
-	if len(health.Warnings) > 0 {
-		t.Errorf("Full bundle should have no warnings, got: %v", health.Warnings)
-	}
-	if health.BundleType != string(FormatRKE2) {
-		t.Errorf("Expected format %s, got %s", FormatRKE2, health.BundleType)
-	}
-}
-
-func TestHealthChecker_Check_PartialBundle(t *testing.T) {
-	// Create temp directory with only some files (partial bundle)
-	tmpDir := t.TempDir()
-
-	// Only create kubectl, missing podlogs
-	if err := os.MkdirAll(filepath.Join(tmpDir, "rke2", "kubectl"), 0755); err != nil {
-		t.Fatalf("Failed to create kubectl dir: %v", err)
-	}
-
-	bundle := &Bundle{ExtractPath: tmpDir}
-	hc := NewHealthChecker(bundle)
-	health := hc.Check()
-
-	// Should have warnings for missing data
-	if len(health.Warnings) == 0 {
-		t.Error("Expected warnings for partial bundle")
-	}
-
-	// Should detect missing pod logs warning
-	hasPodLogWarning := false
-	for _, w := range health.Warnings {
-		if w == "Missing pod logs: container log analysis limited" {
-			hasPodLogWarning = true
-			break
-		}
-	}
-	if !hasPodLogWarning {
-		t.Errorf("Expected pod log warning, got: %v", health.Warnings)
-	}
-}
-
-func TestHealthChecker_Check_K3sBundle(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	// Create K3s structure
-	dirs := []string{
-		"k3s/kubectl",
-		"k3s/podlogs",
-	}
-	for _, dir := range dirs {
-		path := filepath.Join(tmpDir, dir)
-		if err := os.MkdirAll(path, 0755); err != nil {
-			t.Fatalf("Failed to create %s: %v", dir, err)
-		}
-	}
-
-	bundle := &Bundle{ExtractPath: tmpDir}
-	hc := NewHealthChecker(bundle)
-	health := hc.Check()
-
-	if health.BundleType != string(FormatK3s) {
-		t.Errorf("Expected format %s, got %s", FormatK3s, health.BundleType)
-	}
-}
-
-func TestHealthChecker_Check_KubectlOnlyBundle(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	// Create kubectl-only structure (no rke2/k3s)
-	if err := os.MkdirAll(filepath.Join(tmpDir, "kubectl"), 0755); err != nil {
-		t.Fatalf("Failed to create kubectl dir: %v", err)
-	}
-
-	bundle := &Bundle{ExtractPath: tmpDir}
-	hc := NewHealthChecker(bundle)
-	health := hc.Check()
-
-	if health.BundleType != string(FormatKubectl) {
-		t.Errorf("Expected format %s, got %s", FormatKubectl, health.BundleType)
-	}
-}
-
-func TestHealthChecker_Check_UnknownBundle(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	// Create random files without known structure
-	if err := os.MkdirAll(filepath.Join(tmpDir, "random"), 0755); err != nil {
-		t.Fatalf("Failed to create random dir: %v", err)
-	}
-
-	bundle := &Bundle{ExtractPath: tmpDir}
-	hc := NewHealthChecker(bundle)
-	health := hc.Check()
-
-	if health.BundleType != string(FormatUnknown) {
-		t.Errorf("Expected format %s, got %s", FormatUnknown, health.BundleType)
-	}
-}
-
-func TestHealthChecker_pathExists(t *testing.T) {
-	tmpDir := t.TempDir()
-	hc := &HealthChecker{}
-
-	// Test existing path
-	if !hc.pathExists(tmpDir) {
-		t.Error("pathExists should return true for existing directory")
-	}
-
-	// Test non-existing path
-	fakePath := filepath.Join(tmpDir, "does-not-exist")
-	if hc.pathExists(fakePath) {
-		t.Error("pathExists should return false for non-existing path")
-	}
-}
-
-func TestHealthChecker_hasKubectlData(t *testing.T) {
-	tmpDir := t.TempDir()
-	hc := &HealthChecker{}
-
-	// No kubectl data initially
-	if hc.hasKubectlData(tmpDir) {
-		t.Error("Expected false with no kubectl data")
-	}
-
-	// Create RKE2 kubectl
-	os.MkdirAll(filepath.Join(tmpDir, "rke2", "kubectl"), 0755)
-	if !hc.hasKubectlData(tmpDir) {
-		t.Error("Expected true with RKE2 kubectl")
-	}
-
-	// Test with K3s kubectl
-	tmpDir2 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir2, "k3s", "kubectl"), 0755)
-	if !hc.hasKubectlData(tmpDir2) {
-		t.Error("Expected true with K3s kubectl")
-	}
-}
-
-func TestHealthChecker_hasPodLogs(t *testing.T) {
-	tmpDir := t.TempDir()
-	hc := &HealthChecker{}
-
-	// Create RKE2 podlogs
-	os.MkdirAll(filepath.Join(tmpDir, "rke2", "podlogs"), 0755)
-	if !hc.hasPodLogs(tmpDir) {
-		t.Error("Expected true with RKE2 podlogs")
-	}
-
-	// Test with K3s podlogs
-	tmpDir2 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir2, "k3s", "podlogs"), 0755)
-	if !hc.hasPodLogs(tmpDir2) {
-		t.Error("Expected true with K3s podlogs")
-	}
-}
-
-func TestHealthChecker_hasSystemLogs(t *testing.T) {
-	tmpDir := t.TempDir()
-	hc := &HealthChecker{}
-
-	// Create systemlogs
-	os.MkdirAll(filepath.Join(tmpDir, "systemlogs"), 0755)
-	if !hc.hasSystemLogs(tmpDir) {
-		t.Error("Expected true with systemlogs")
-	}
-
-	// Test with agent-logs (RKE2)
-	tmpDir2 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir2, "rke2", "agent-logs"), 0755)
-	if !hc.hasSystemLogs(tmpDir2) {
-		t.Error("Expected true with agent-logs")
-	}
-}
-
-func TestHealthChecker_detectFormat(t *testing.T) {
-	hc := &HealthChecker{}
-
-	// Test RKE2
-	tmpDir1 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir1, "rke2"), 0755)
-	if hc.detectFormat(tmpDir1) != FormatRKE2 {
-		t.Error("Expected FormatRKE2")
-	}
-
-	// Test K3s
-	tmpDir2 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir2, "k3s"), 0755)
-	if hc.detectFormat(tmpDir2) != FormatK3s {
-		t.Error("Expected FormatK3s")
-	}
-
-	// Test kubectl-only
-	tmpDir3 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir3, "kubectl"), 0755)
-	if hc.detectFormat(tmpDir3) != FormatKubectl {
-		t.Error("Expected FormatKubectl")
-	}
-
-	// Test unknown
-	tmpDir4 := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir4, "random"), 0755)
-	if hc.detectFormat(tmpDir4) != FormatUnknown {
-		t.Error("Expected FormatUnknown")
-	}
-}
-
-func TestBundleHealth_IsCriticalMissing(t *testing.T) {
 	tests := []struct {
-		name     string
-		health   BundleHealth
-		expected bool
+		name           string
+		setup          func() string
+		wantValid      bool
+		wantComplete   float64
+		wantBundleType string
+		wantErr        bool
 	}{
 		{
-			name:     "Excellent - not critical",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 10},
-			expected: false,
+			name: "empty directory",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "empty")
+				os.MkdirAll(path, 0755)
+				return path
+			},
+			wantValid:      false,
+			wantComplete:   0,
+			wantBundleType: "unknown",
+			wantErr:        false,
 		},
 		{
-			name:     "Good - not critical",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 8},
-			expected: false,
+			name: "complete RKE2 bundle",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "complete")
+				os.MkdirAll(filepath.Join(path, "rke2/kubectl"), 0755)
+				os.MkdirAll(filepath.Join(path, "rke2/etcd"), 0755)
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/nodes"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "rke2/etcd/endpoint_status"), []byte("test"), 0644)
+				return path
+			},
+			wantValid:      true,
+			wantComplete:   23.0, // 3/13 files - exact match
+			wantBundleType: "RKE2",
+			wantErr:        false,
 		},
 		{
-			name:     "Fair - critical",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 5},
-			expected: true,
+			name: "missing critical files",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "missing-critical")
+				os.MkdirAll(filepath.Join(path, "rke2/kubectl"), 0755)
+				// Only create nodes, missing pods
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/nodes"), []byte("test"), 0644)
+				return path
+			},
+			wantValid:      false,
+			wantComplete:   7.7, // 1/13 but missing critical pods - RKE2 detected
+			wantBundleType: "RKE2",
+			wantErr:        false,
 		},
 		{
-			name:     "Poor - critical",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 3},
-			expected: true,
+			name: "K3s bundle",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "k3s")
+				os.MkdirAll(filepath.Join(path, "k3s"), 0755)
+				os.WriteFile(filepath.Join(path, "k3s/pods"), []byte("test"), 0644)
+				return path
+			},
+			wantValid:      false,
+			wantComplete:   0,
+			wantBundleType: "K3s",
+			wantErr:        false,
 		},
 		{
-			name:     "Empty - not critical (100%)",
-			health:   BundleHealth{TotalFiles: 0, FoundFiles: 0},
-			expected: false,
+			name: "non-existent path",
+			setup: func() string {
+				return filepath.Join(tmpDir, "does-not-exist")
+			},
+			wantValid: false,
+			wantErr:   true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.health.IsCriticalMissing()
-			if result != tt.expected {
-				t.Errorf("IsCriticalMissing() = %v, want %v", result, tt.expected)
+			path := tt.setup()
+			health, err := CheckHealth(path)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("CheckHealth() expected error, got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("CheckHealth() unexpected error: %v", err)
+				return
+			}
+
+			if health.IsValid != tt.wantValid {
+				t.Errorf("IsValid = %v, want %v", health.IsValid, tt.wantValid)
+			}
+
+			if health.BundleType != tt.wantBundleType {
+				t.Errorf("BundleType = %s, want %s", health.BundleType, tt.wantBundleType)
+			}
+
+			// Check completeness is roughly correct (allow for expected file count changes)
+			if tt.wantComplete > 0 {
+				// Use tolerance for float comparison
+				diff := health.Completeness - tt.wantComplete
+				if diff < 0 {
+					diff = -diff
+				}
+				if diff > 1.0 { // Allow 1% difference
+					t.Errorf("Completeness = %.1f, want %.1f (diff: %.1f)", health.Completeness, tt.wantComplete, diff)
+				}
 			}
 		})
 	}
 }
 
-func TestBundleHealth_Summary(t *testing.T) {
+func TestHealthCheck_Summary(t *testing.T) {
 	tests := []struct {
-		name     string
-		health   BundleHealth
-		expected string
+		name   string
+		health *HealthCheck
+		want   string
 	}{
 		{
-			name:     "Excellent",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 10},
-			expected: "Excellent (100%)",
+			name: "complete bundle",
+			health: &HealthCheck{
+				Completeness: 100,
+				IsValid:      true,
+			},
+			want: "Bundle Health: 100% ✅ Complete",
 		},
 		{
-			name:     "Good",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 8},
-			expected: "Good (80%)",
+			name: "mostly complete",
+			health: &HealthCheck{
+				Completeness: 75,
+				IsValid:      true,
+			},
+			want: "Bundle Health: 75% ⚠️  Mostly complete",
 		},
 		{
-			name:     "Fair",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 6},
-			expected: "Fair (60%) — Some data may be incomplete",
+			name: "partial bundle",
+			health: &HealthCheck{
+				Completeness: 30,
+				IsValid:      true,
+			},
+			want: "Bundle Health: 30% ⚠️  Partial bundle",
 		},
 		{
-			name:     "Poor",
-			health:   BundleHealth{TotalFiles: 10, FoundFiles: 3},
-			expected: "Poor (30%) — Critical data missing",
+			name: "invalid bundle",
+			health: &HealthCheck{
+				Completeness: 10,
+				IsValid:      false,
+			},
+			want: "Bundle Health: 10% 🔴 CRITICAL - missing required files",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.health.Summary()
-			if result != tt.expected {
-				t.Errorf("Summary() = %q, want %q", result, tt.expected)
+			got := tt.health.Summary()
+			if got != tt.want {
+				t.Errorf("Summary() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestCriticalFiles_NotEmpty(t *testing.T) {
-	if len(CriticalFiles) == 0 {
-		t.Error("CriticalFiles should not be empty")
+func TestMissingFile_Impact(t *testing.T) {
+	tests := []struct {
+		importance FileImportance
+		category   string
+		want       string
+	}{
+		{
+			importance: ImportanceCritical,
+			category:   "pods",
+			want:       "Bundle analysis severely limited without pods data",
+		},
+		{
+			importance: ImportanceHigh,
+			category:   "events",
+			want:       "Major events analysis features unavailable",
+		},
+		{
+			importance: ImportanceMedium,
+			category:   "logs",
+			want:       "Minor logs features may be limited",
+		},
+		{
+			importance: ImportanceLow,
+			category:   "system",
+			want:       "Optional system data unavailable",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want[:20], func(t *testing.T) {
+			got := impactDescription(tt.importance, tt.category)
+			if got != tt.want {
+				t.Errorf("impactDescription() = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestOptionalFiles_NotEmpty(t *testing.T) {
-	if len(OptionalFiles) == 0 {
-		t.Error("OptionalFiles should not be empty")
+func TestExpectedFiles(t *testing.T) {
+	files := ExpectedFiles()
+	if len(files) == 0 {
+		t.Error("ExpectedFiles() returned empty slice")
+	}
+
+	// Check for critical files
+	hasPods := false
+	hasNodes := false
+	for _, f := range files {
+		if f.Path == "rke2/kubectl/pods" && f.Importance == ImportanceCritical {
+			hasPods = true
+		}
+		if f.Path == "rke2/kubectl/nodes" && f.Importance == ImportanceCritical {
+			hasNodes = true
+		}
+	}
+
+	if !hasPods {
+		t.Error("ExpectedFiles() missing critical pods file")
+	}
+	if !hasNodes {
+		t.Error("ExpectedFiles() missing critical nodes file")
 	}
 }
