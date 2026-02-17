@@ -1,0 +1,13 @@
+# ImagePullBackOff Pattern
+# Sprint 8: Detects image pull failures in Kubernetes
+id: imagepullbackoff
+name: ImagePullBackOff
+category: Image
+severity: warning
+keywords:
+  - imagepullbackoff
+  - pull access denied
+  - failed to pull image
+  - image not found
+description: Cannot pull container image from registry
+suggestion: Check image name, registry credentials, and network connectivity

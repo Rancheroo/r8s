@@ -1,0 +1,13 @@
+# OOMKill Pattern
+# Sprint 8: Detects Out of Memory kills in Kubernetes
+id: oomkill
+name: OOMKill Detected
+category: OOM
+severity: critical
+keywords:
+  - out of memory
+  - oomkill
+  - oom_kill_process
+  - killed process
+description: Container was killed due to memory limits
+suggestion: Increase memory limit or optimize application memory usage

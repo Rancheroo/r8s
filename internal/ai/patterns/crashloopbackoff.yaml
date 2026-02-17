@@ -1,0 +1,12 @@
+# CrashLoopBackOff Pattern
+# Sprint 8: Detects container crash loops in Kubernetes
+id: crashloopbackoff
+name: CrashLoopBackOff
+category: Crash
+severity: critical
+keywords:
+  - crashloopbackoff
+  - back-off restarting
+  - crash loop
+description: Container repeatedly crashing and restarting
+suggestion: Check container logs for application errors and exit codes
