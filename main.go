@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	version = "0.7.1" // Version number
+	version = "0.7.2-dev" // Version number
 	commit  = "dev"   // Git commit (set via ldflags)
 	date    = "now"   // Build date (set via ldflags)
 )

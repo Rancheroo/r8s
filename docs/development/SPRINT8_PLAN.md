@@ -1,9 +1,10 @@
-# Sprint 8 Plan: Bundle Health v2 + AI Groundwork
+# Sprint 8 Plan: Bundle Health v2 + AI Groundwork (v0.7.2)
 
-**Sprint Goal:** Deliver **management showcase-ready** features: enhanced bundle health for partial bundles + AI pattern detection foundation. Apply 80/20 ruthlessly — maximum demo impact, minimal scope.
+**Sprint Goal:** Deliver **management showcase-ready** features on v0.7.x branch: enhanced bundle health + AI pattern detection + coverage increase. Apply 80/20 ruthlessly.
 
 **Duration:** 2 weeks  
-**Target Release:** v0.8.x series  
+**Target Release:** v0.7.2  
+**Base Branch:** `release/v0.7.x` (branched from v0.7.1 tag)  
 **Strategic Rationale:** 
 - **RKE1 = EOL** — zero value, skip entirely
 - **Management showcase** — needs visible AI, not infrastructure
@@ -129,8 +130,24 @@ Deliverables:
 | Bundle Health v2 | Partial bundles show health indicator + still work |
 | AI Patterns | 3 patterns (OOM, ImagePull, CrashLoop) detect correctly |
 | TUI Polish | Keyboard nav works, colors accessible, clean demo |
-| Coverage | Maintain 36.8%+ |
+| **Coverage** | **Increase to 45%+ (from 36.8%)** |
 | Showcase Ready | 3-min demo script, clean build, no debug noise |
+
+### 🎯 Coverage Strategy (80/20)
+
+**Focus on untested, high-impact code:**
+
+| Package | Current | Target | Focus |
+|---------|---------|--------|-------|
+| `internal/bundle` | ~60% | **75%** | Health checker tests |
+| `internal/ai` | 0% | **70%** | Pattern registry + matchers |
+| `internal/tui` | ~14% | **20%** | AI panel integration tests |
+| **Total Repo** | **36.8%** | **45%+** | New code + untested bundles |
+
+**Skip (low ROI):**
+- ❌ Complex TUI render tests (hard to test, low value)
+- ❌ `cmd/` package (mostly boilerplate)
+- ❌ `pkg/rancher/` (deprecated)
 
 **NOT Required:**
 - ❌ 10 patterns
@@ -145,14 +162,14 @@ Deliverables:
 
 | Day | Focus | Milestone |
 |-----|-------|-----------|
-| 1-2 | Bundle health core | `bundle.Health()` returns missing files + score |
-| 3-4 | Health TUI integration | Health shows in bundle panel / status bar |
-| 5-6 | Pattern engine | Interface + registry + YAML loader |
-| 7-8 | 3 patterns working | OOM, ImagePull, CrashLoop detect correctly |
+| 1-2 | Bundle health core + tests | `bundle.Health()` returns missing files + 80% coverage |
+| 3-4 | Health TUI integration + AI engine | Health visible, pattern interface ready |
+| 5-6 | Pattern registry + tests | YAML loader working, registry 70% coverage |
+| 7-8 | 3 patterns + tests | OOM, ImagePull, CrashLoop detect correctly |
 | **8** | **🎉 DEMO MILESTONE** | AI panel shows patterns live |
 | 9-10 | UX Engineer: TUI polish | Accessibility, keyboard flow, visual polish |
-| 11-12 | UX Engineer: Demo prep | Script, recording, clean build |
-| 13-14 | Buffer + release | Bug fixes, release v0.8.x |
+| 11-12 | Coverage push + demo prep | Reach 45% total, demo script ready |
+| 13-14 | Buffer + release | Bug fixes, tag v0.7.2 |
 
 ---
 
