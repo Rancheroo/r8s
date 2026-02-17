@@ -236,3 +236,119 @@ func TestExpectedFiles(t *testing.T) {
 		t.Error("ExpectedFiles() missing critical nodes file")
 	}
 }
+
+func TestHealthCheck_GetHighImpactMissing(t *testing.T) {
+	tests := []struct {
+		name     string
+		missing  []MissingFile
+		expected int
+	}{
+		{
+			name: "only high impact",
+			missing: []MissingFile{
+				{Path: "file1", Importance: ImportanceHigh},
+				{Path: "file2", Importance: ImportanceHigh},
+			},
+			expected: 2,
+		},
+		{
+			name: "critical and high",
+			missing: []MissingFile{
+				{Path: "file1", Importance: ImportanceCritical},
+				{Path: "file2", Importance: ImportanceHigh},
+				{Path: "file3", Importance: ImportanceMedium},
+			},
+			expected: 2, // Only critical + high
+		},
+		{
+			name: "mixed importance",
+			missing: []MissingFile{
+				{Path: "file1", Importance: ImportanceCritical},
+				{Path: "file2", Importance: ImportanceHigh},
+				{Path: "file3", Importance: ImportanceMedium},
+				{Path: "file4", Importance: ImportanceLow},
+			},
+			expected: 2, // Only critical + high
+		},
+		{
+			name:     "no missing files",
+			missing:  []MissingFile{},
+			expected: 0,
+		},
+		{
+			name: "only low and medium",
+			missing: []MissingFile{
+				{Path: "file1", Importance: ImportanceMedium},
+				{Path: "file2", Importance: ImportanceLow},
+			},
+			expected: 0, // Should be empty
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &HealthCheck{MissingFiles: tt.missing}
+			got := h.GetHighImpactMissing()
+			if len(got) != tt.expected {
+				t.Errorf("GetHighImpactMissing() returned %d files, want %d", len(got), tt.expected)
+			}
+		})
+	}
+}
+
+func TestDetectBundleType(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name     string
+		setup    func() string
+		expected string
+	}{
+		{
+			name: "RKE2 bundle",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "rke2-bundle")
+				os.MkdirAll(filepath.Join(path, "rke2"), 0755)
+				return path
+			},
+			expected: "RKE2",
+		},
+		{
+			name: "K3s bundle",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "k3s-bundle")
+				os.MkdirAll(filepath.Join(path, "k3s"), 0755)
+				return path
+			},
+			expected: "K3s",
+		},
+		{
+			name: "kubectl bundle",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "kubectl-bundle")
+				os.MkdirAll(filepath.Join(path, "kubectl"), 0755)
+				return path
+			},
+			expected: "kubectl",
+		},
+		{
+			name: "unknown bundle",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "unknown-bundle")
+				os.MkdirAll(path, 0755)
+				return path
+			},
+			expected: "unknown",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := tt.setup()
+			got := detectBundleType(path)
+			if got != tt.expected {
+				t.Errorf("detectBundleType() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}

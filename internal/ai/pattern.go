@@ -1,299 +1,192 @@
-// Package ai provides intelligent pattern detection for log analysis.
-// It uses simple keyword matching (80/20 rule) to detect common Kubernetes issues.
+// Package ai provides pattern matching for Kubernetes issues.
+// Sprint 8: AI Pattern Engine - YAML-driven pattern detection.
 package ai
 
 import (
+	"fmt"
 	"strings"
-	"time"
 )
 
-// Pattern represents a detectable issue pattern in logs or events
+// Pattern represents a detection pattern for a specific Kubernetes issue
 type Pattern struct {
-	// ID is the unique identifier for this pattern (e.g., "oom-kill")
-	ID string `json:"id" yaml:"id"`
-
-	// Name is the human-readable name (e.g., "Out of Memory Kill")
-	Name string `json:"name" yaml:"name"`
-
-	// Description explains what this pattern detects
-	Description string `json:"description" yaml:"description"`
-
-	// Severity indicates the impact level: critical, high, medium, low
-	Severity string `json:"severity" yaml:"severity"`
-
-	// Category groups related patterns (e.g., "resource", "image", "crash")
-	Category string `json:"category" yaml:"category"`
-
-	// Keywords are the search terms that trigger this pattern (case-insensitive)
-	Keywords []string `json:"keywords" yaml:"keywords"`
-
-	// Suggestion provides remediation advice
-	Suggestion string `json:"suggestion" yaml:"suggestion"`
-
-	// DocumentationURL links to more information
-	DocumentationURL string `json:"documentation_url,omitempty" yaml:"documentation_url,omitempty"`
+	ID          string   `yaml:"id"`          // Unique identifier
+	Name        string   `yaml:"name"`        // Human-readable name
+	Category    string   `yaml:"category"`    // e.g., "OOM", "ImagePull", "CrashLoop"
+	Severity    Severity `yaml:"severity"`    // Critical, Warning, Info
+	Keywords    []string `yaml:"keywords"`    // Strings to match (all must match)
+	Description string   `yaml:"description"` // What this pattern detects
+	Suggestion  string   `yaml:"suggestion"`  // Recommended fix
 }
 
-// Finding represents a detected pattern instance
-type Finding struct {
-	// PatternID references the matched pattern
-	PatternID string `json:"pattern_id"`
+// Severity represents issue severity
+type Severity string
 
-	// PatternName is the human-readable name
-	PatternName string `json:"pattern_name"`
+const (
+	SeverityCritical Severity = "critical"
+	SeverityWarning  Severity = "warning"
+	SeverityInfo     Severity = "info"
+)
 
-	// Severity of the finding (copied from pattern)
-	Severity string `json:"severity"`
-
-	// Category of the finding (copied from pattern)
-	Category string `json:"category"`
-
-	// Message describes what was found
-	Message string `json:"message"`
-
-	// Source indicates where the finding came from (e.g., "dmesg", "pod-logs", "events")
-	Source string `json:"source"`
-
-	// Context contains relevant surrounding information
-	Context FindingContext `json:"context"`
-
-	// Timestamp when the finding was detected
-	Timestamp time.Time `json:"timestamp"`
-
-	// Suggestion provides remediation advice (copied from pattern)
-	Suggestion string `json:"suggestion"`
-
-	// Confidence is a simple score: 1.0 = certain, 0.5 = possible
-	Confidence float64 `json:"confidence"`
-}
-
-// FindingContext provides context about where a pattern was found
-type FindingContext struct {
-	// PodName identifies the affected pod
-	PodName string `json:"pod_name,omitempty"`
-
-	// Namespace of the affected pod
-	Namespace string `json:"namespace,omitempty"`
-
-	// ContainerName identifies the specific container
-	ContainerName string `json:"container_name,omitempty"`
-
-	// NodeName where the issue occurred
-	NodeName string `json:"node_name,omitempty"`
-
-	// ResourceInfo contains resource-related context (limits, requests)
-	ResourceInfo map[string]string `json:"resource_info,omitempty"`
-
-	// RawSnippet shows the raw log/event that triggered the match
-	RawSnippet string `json:"raw_snippet,omitempty"`
-}
-
-// MatchResult contains the outcome of a pattern match attempt
+// MatchResult represents the outcome of pattern matching
 type MatchResult struct {
-	// Matched indicates if the pattern was detected
-	Matched bool
-
-	// Confidence score (1.0 = high confidence, 0.5 = possible)
-	Confidence float64
-
-	// Message describing what was found (if Matched)
-	Message string
-
-	// Context contains additional matching details
-	Context FindingContext
+	Matched     bool
+	PatternID   string
+	PatternName string
+	Severity    Severity
+	Message     string
+	Confidence  float64 // 0.0 to 1.0
 }
 
-// Matcher is the interface for pattern matching implementations
-type Matcher interface {
-	// Match attempts to detect the pattern in the given content
-	Match(content string, metadata MatchMetadata) MatchResult
+// Matcher provides pattern matching functionality
+type Matcher struct {
+	pattern Pattern
 }
 
-// MatchMetadata provides context for pattern matching
-type MatchMetadata struct {
-	// SourceType indicates the type of content ("logs", "events", "dmesg")
-	SourceType string
-
-	// PodName if the content is pod-specific
-	PodName string
-
-	// Namespace of the pod
-	Namespace string
-
-	// ContainerName if container-specific
-	ContainerName string
-
-	// NodeName where the content originated
-	NodeName string
+// NewMatcher creates a new pattern matcher
+func NewMatcher(p Pattern) *Matcher {
+	return &Matcher{pattern: p}
 }
 
-// KeywordMatcher implements simple keyword-based pattern matching
-type KeywordMatcher struct {
-	Pattern Pattern
-}
-
-// Match implements the Matcher interface using keyword matching
-func (km *KeywordMatcher) Match(content string, metadata MatchMetadata) MatchResult {
-	contentLower := strings.ToLower(content)
-	matchCount := 0
-	matchedKeywords := []string{}
-
-	for _, keyword := range km.Pattern.Keywords {
-		keywordLower := strings.ToLower(keyword)
-		if strings.Contains(contentLower, keywordLower) {
-			matchCount++
-			matchedKeywords = append(matchedKeywords, keyword)
+// Match checks if the content matches the pattern
+// Sprint 8: Simple keyword matching (80/20) - no regex for now
+func (m *Matcher) Match(content string) MatchResult {
+	content = strings.ToLower(content)
+	
+	// Count how many keywords matched
+	matches := 0
+	for _, keyword := range m.pattern.Keywords {
+		if strings.Contains(content, strings.ToLower(keyword)) {
+			matches++
 		}
 	}
-
-	if matchCount == 0 {
+	
+	// All keywords must match
+	if matches < len(m.pattern.Keywords) {
 		return MatchResult{Matched: false}
 	}
-
-	// Calculate confidence based on keyword matches
-	// All keywords = 1.0, half = 0.7, single = 0.5
-	confidence := 0.5
-	if matchCount >= len(km.Pattern.Keywords) {
-		confidence = 1.0
-	} else if matchCount >= len(km.Pattern.Keywords)/2 {
-		confidence = 0.7
+	
+	// Calculate simple confidence based on match quality
+	confidence := 1.0
+	if len(content) > 1000 {
+		confidence = 0.9 // Lower confidence for very long content
 	}
-
-	// Build context from the matched content
-	context := FindingContext{
-		PodName:       metadata.PodName,
-		Namespace:     metadata.Namespace,
-		ContainerName: metadata.ContainerName,
-		NodeName:      metadata.NodeName,
-		RawSnippet:    extractSnippet(content, matchedKeywords),
-	}
-
+	
 	return MatchResult{
-		Matched:    true,
-		Confidence: confidence,
-		Message:    buildMessage(km.Pattern, content, matchedKeywords),
-		Context:    context,
+		Matched:     true,
+		PatternID:   m.pattern.ID,
+		PatternName: m.pattern.Name,
+		Severity:    m.pattern.Severity,
+		Message:     m.detectedMessage(),
+		Confidence:  confidence,
 	}
 }
 
-// extractSnippet pulls a relevant portion of the content around matched keywords
-func extractSnippet(content string, keywords []string) string {
-	// Simple extraction: first 200 chars or around first keyword
-	if len(content) <= 200 {
-		return content
-	}
-
-	// Find first keyword occurrence and extract context around it
-	contentLower := strings.ToLower(content)
-	for _, keyword := range keywords {
-		idx := strings.Index(contentLower, strings.ToLower(keyword))
-		if idx != -1 {
-			start := idx - 50
-			if start < 0 {
-				start = 0
-			}
-			end := idx + 150
-			if end > len(content) {
-				end = len(content)
-			}
-			return content[start:end]
-		}
-	}
-
-	// Fallback: first 200 characters
-	return content[:200]
+// detectedMessage returns a human-readable detection message
+func (m *Matcher) detectedMessage() string {
+	return fmt.Sprintf("[%s] %s: %s", 
+		strings.ToUpper(string(m.pattern.Severity)),
+		m.pattern.Name,
+		m.pattern.Description)
 }
 
-// buildMessage creates a human-readable finding message
-func buildMessage(pattern Pattern, content string, matchedKeywords []string) string {
-	// Use pattern name as base message
-	message := pattern.Name
-
-	// Add specificity based on pattern type
-	switch pattern.ID {
-	case "oom-kill":
-		if strings.Contains(strings.ToLower(content), "invoked oom-killer") {
-			message = "Node-level OOM killer invoked"
-		} else if strings.Contains(strings.ToLower(content), "killed process") {
-			message = "Process killed due to memory exhaustion"
-		}
-	case "image-pull-backoff":
-		if strings.Contains(strings.ToLower(content), "imagepullbackoff") ||
-			strings.Contains(strings.ToLower(content), "errimagepull") {
-			message = "Container image pull failed"
-		}
-	case "crash-loop-backoff":
-		if strings.Contains(strings.ToLower(content), "crashloopbackoff") {
-			message = "Container in crash loop"
-		}
-	}
-
-	return message
-}
-
-// NewKeywordMatcher creates a keyword matcher for a pattern
-func NewKeywordMatcher(pattern Pattern) *KeywordMatcher {
-	return &KeywordMatcher{Pattern: pattern}
-}
-
-// Built-in patterns for common Kubernetes issues
+// BuiltinPatterns contains the built-in pattern definitions
+// Sprint 8: 3 patterns only (80/20) - OOMKill, ImagePullBackOff, CrashLoop
 var BuiltinPatterns = []Pattern{
 	{
-		ID:          "oom-kill",
-		Name:        "Out of Memory Kill",
-		Description: "Process terminated due to memory exhaustion",
-		Severity:    "critical",
-		Category:    "resource",
-		Keywords:    []string{"oom-killer", "killed process", "out of memory", "oom kill"},
-		Suggestion:  "Increase memory limit or optimize application memory usage. Check for memory leaks.",
+		ID:          "oomkill",
+		Name:        "OOMKill Detected",
+		Category:    "OOM",
+		Severity:    SeverityCritical,
+		Keywords:    []string{"out of memory", "oomkill", "oom_kill_process", "killed process"},
+		Description: "Container was killed due to memory limits",
+		Suggestion:  "Increase memory limit or optimize application memory usage",
 	},
 	{
-		ID:          "image-pull-backoff",
-		Name:        "Image Pull Failure",
-		Description: "Container image cannot be pulled from registry",
-		Severity:    "high",
-		Category:    "image",
-		Keywords:    []string{"imagepullbackoff", "errimagepull", "failed to pull image", "image pull"},
-		Suggestion:  "Verify image name/tag, check registry credentials, and ensure network connectivity to registry.",
+		ID:          "imagepullbackoff",
+		Name:        "ImagePullBackOff",
+		Category:    "Image",
+		Severity:    SeverityWarning,
+		Keywords:    []string{"imagepullbackoff", "pull access denied", "failed to pull image", "image not found"},
+		Description: "Cannot pull container image from registry",
+		Suggestion:  "Check image name, registry credentials, and network connectivity",
 	},
 	{
-		ID:          "crash-loop-backoff",
-		Name:        "Crash Loop Backoff",
-		Description: "Container repeatedly crashes and restarts",
-		Severity:    "high",
-		Category:    "crash",
-		Keywords:    []string{"crashloopbackoff", "back-off restarting", "restarting failed container"},
-		Suggestion:  "Check container logs for application errors. Verify startup commands and dependencies.",
-	},
-	{
-		ID:          "pod-evicted",
-		Name:        "Pod Evicted",
-		Description: "Pod was evicted from node due to resource pressure",
-		Severity:    "high",
-		Category:    "resource",
-		Keywords:    []string{"evicted", "pod was evicted", "the node had condition"},
-		Suggestion:  "Check node resource pressure. Free disk space or memory on the node.",
-	},
-	{
-		ID:          "disk-pressure",
-		Name:        "Disk Pressure",
-		Description: "Node is experiencing disk pressure",
-		Severity:    "medium",
-		Category:    "resource",
-		Keywords:    []string{"disk pressure", "diskpressure", "no space left"},
-		Suggestion:  "Free up disk space on the node. Clean up unused images and logs.",
+		ID:          "crashloopbackoff",
+		Name:        "CrashLoopBackOff",
+		Category:    "Crash",
+		Severity:    SeverityCritical,
+		Keywords:    []string{"crashloopbackoff", "back-off restarting", "crash loop"},
+		Description: "Container repeatedly crashing and restarting",
+		Suggestion:  "Check container logs for application errors and exit codes",
 	},
 }
 
-// SeverityOrder defines the priority order for severities
-var SeverityOrder = map[string]int{
-	"critical": 4,
-	"high":     3,
-	"medium":   2,
-	"low":      1,
+// PatternRegistry manages pattern definitions
+type PatternRegistry struct {
+	patterns []Pattern
 }
 
-// IsHigherSeverity returns true if severity a is higher priority than b
-func IsHigherSeverity(a, b string) bool {
-	return SeverityOrder[a] > SeverityOrder[b]
+// NewRegistry creates a new pattern registry with built-in patterns
+func NewRegistry() *PatternRegistry {
+	return &PatternRegistry{
+		patterns: BuiltinPatterns,
+	}
+}
+
+// Register adds a new pattern to the registry
+func (r *PatternRegistry) Register(p Pattern) error {
+	// Validate pattern
+	if p.ID == "" {
+		return fmt.Errorf("pattern ID is required")
+	}
+	if p.Name == "" {
+		return fmt.Errorf("pattern name is required")
+	}
+	if len(p.Keywords) == 0 {
+		return fmt.Errorf("at least one keyword is required")
+	}
+	
+	r.patterns = append(r.patterns, p)
+	return nil
+}
+
+// GetByID retrieves a pattern by ID
+func (r *PatternRegistry) GetByID(id string) (Pattern, bool) {
+	for _, p := range r.patterns {
+		if p.ID == id {
+			return p, true
+		}
+	}
+	return Pattern{}, false
+}
+
+// GetByCategory retrieves all patterns in a category
+func (r *PatternRegistry) GetByCategory(category string) []Pattern {
+	var result []Pattern
+	for _, p := range r.patterns {
+		if p.Category == category {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+// GetAll returns all patterns
+func (r *PatternRegistry) GetAll() []Pattern {
+	return r.patterns
+}
+
+// Analyze scans content against all patterns and returns matches
+func (r *PatternRegistry) Analyze(content string) []MatchResult {
+	var matches []MatchResult
+	
+	for _, pattern := range r.patterns {
+		matcher := NewMatcher(pattern)
+		result := matcher.Match(content)
+		if result.Matched {
+			matches = append(matches, result)
+		}
+	}
+	
+	return matches
 }

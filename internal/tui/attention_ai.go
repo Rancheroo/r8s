@@ -180,10 +180,10 @@ func aiFindingToItem(f ai.Finding) AttentionItem {
 		Emoji:         emoji,
 		Title:         f.PatternName,
 		Description:   description,
-		Namespace:     f.Context.Namespace,
+		Namespace:     f.Namespace,
 		ResourceType:  "ai-detected",
-		PodName:       f.Context.PodName,
-		ContainerName: f.Context.ContainerName,
+		PodName:       f.PodName,
+		ContainerName: f.ContainerName,
 		Count:         1,
 		Timestamp:     f.Timestamp,
 	}

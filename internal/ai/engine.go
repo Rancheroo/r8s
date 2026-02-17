@@ -1,3 +1,6 @@
+// Package ai provides pattern matching for Kubernetes issues.
+// Sprint 8: AI Pattern Engine - YAML-driven pattern detection.
+// This file replaces the previous engine.go with a simpler implementation.
 package ai
 
 import (
@@ -5,6 +8,48 @@ import (
 	"sync"
 	"time"
 )
+
+// MatchMetadata provides context about the content being analyzed
+type MatchMetadata struct {
+	SourceType    string    // e.g., "log", "event", "dmesg"
+	SourceName    string    // e.g., pod name, file name
+	Timestamp     time.Time
+	NodeName      string    // Optional: for node-level sources
+	PodName       string    // Optional: for pod-level sources
+	Namespace     string    // Optional: Kubernetes namespace
+	ContainerName string    // Optional: container name
+}
+
+// Finding represents a detected issue
+type Finding struct {
+	PatternID     string    `json:"pattern_id"`
+	PatternName   string    `json:"pattern_name"`
+	Severity      Severity  `json:"severity"`
+	Category      string    `json:"category"`
+	Message       string    `json:"message"`
+	Source        string    `json:"source"`
+	Namespace     string    `json:"namespace"`
+	PodName       string    `json:"pod_name"`
+	ContainerName string    `json:"container_name"`
+	Timestamp     time.Time `json:"timestamp"`
+	Suggestion    string    `json:"suggestion"`
+	Confidence    float64   `json:"confidence"`
+}
+
+// KeywordMatcher wraps a Pattern for matching
+type KeywordMatcher struct {
+	pattern Pattern
+}
+
+// NewKeywordMatcher creates a new keyword matcher for a pattern
+func NewKeywordMatcher(p Pattern) *KeywordMatcher {
+	return &KeywordMatcher{pattern: p}
+}
+
+// Match checks if content matches the pattern using metadata
+func (km *KeywordMatcher) Match(content string, metadata MatchMetadata) MatchResult {
+	return NewMatcher(km.pattern).Match(content)
+}
 
 // Engine orchestrates log analysis and pattern detection
 type Engine struct {
@@ -33,16 +78,18 @@ func (e *Engine) Analyze(content string, metadata MatchMetadata) []Finding {
 		
 		if result.Matched {
 			finding := Finding{
-				PatternID:   p.ID,
-				PatternName: p.Name,
-				Severity:    p.Severity,
-				Category:    p.Category,
-				Message:     result.Message,
-				Source:      metadata.SourceType,
-				Context:     result.Context,
-				Timestamp:   time.Now(),
-				Suggestion:  p.Suggestion,
-				Confidence:  result.Confidence,
+				PatternID:     p.ID,
+				PatternName:   p.Name,
+				Severity:      p.Severity,
+				Category:      p.Category,
+				Message:       result.Message,
+				Source:        metadata.SourceType,
+				Namespace:     metadata.Namespace,
+				PodName:       metadata.PodName,
+				ContainerName: metadata.ContainerName,
+				Timestamp:     time.Now(),
+				Suggestion:    p.Suggestion,
+				Confidence:    result.Confidence,
 			}
 			findings = append(findings, finding)
 		}
@@ -74,6 +121,16 @@ func (e *Engine) GetPatterns() []Pattern {
 	return p
 }
 
+// IsHigherSeverity returns true if s1 is higher severity than s2
+func IsHigherSeverity(s1, s2 Severity) bool {
+	severityOrder := map[Severity]int{
+		SeverityCritical: 3,
+		SeverityWarning:  2,
+		SeverityInfo:     1,
+	}
+	return severityOrder[s1] > severityOrder[s2]
+}
+
 // AnalysisSummary provides a high-level view of findings
 type AnalysisSummary struct {
 	TotalFindings int            `json:"total_findings"`
@@ -94,7 +151,7 @@ func GetSummary(findings []Finding) AnalysisSummary {
 
 	summary.TopFinding = &findings[0]
 	for _, f := range findings {
-		summary.SeverityCount[f.Severity]++
+		summary.SeverityCount[string(f.Severity)]++
 	}
 
 	return summary
