@@ -27,9 +27,11 @@ type OOMAnalysis struct {
 // Robust against partial bundles - returns what data is available
 func AnalyzeOOMEvents(extractPath string) ([]OOMAnalysis, error) {
 	bundleRoot := getBundleRoot(extractPath)
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
 
 	// Parse events first to find OOM kill messages
-	eventsPath := filepath.Join(bundleRoot, "rke2/kubectl/events")
+	eventsPath := filepath.Join(resolver.GetKubectlDir(), "events")
 	eventsContent, err := os.ReadFile(eventsPath)
 	if err != nil {
 		// Events file might not exist - gracefully return empty
@@ -44,7 +46,7 @@ func AnalyzeOOMEvents(extractPath string) ([]OOMAnalysis, error) {
 
 	// Try to enrich with pod resource specs from multiple sources
 	// Source 1: kubectl pods output
-	podsPath := filepath.Join(bundleRoot, "rke2/kubectl/pods")
+	podsPath := filepath.Join(resolver.GetKubectlDir(), "pods")
 	podsContent, err := os.ReadFile(podsPath)
 	if err == nil && len(podsContent) > 0 {
 		// Enrich with resource information
@@ -220,7 +222,9 @@ func isHashLike(s string) bool {
 // Falls back gracefully if manifests are not available
 // S3-MEDIUM-2: Parse pod manifests to extract QoS class
 func enrichWithQoSClass(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	manifestsPath := filepath.Join(bundleRoot, "rke2/pod-manifests")
+	format := DetectFormat(bundleRoot)
+	resolver := NewPathResolver(bundleRoot, format)
+	manifestsPath := resolver.GetPodManifestsDir()
 
 	if _, err := os.Stat(manifestsPath); os.IsNotExist(err) {
 		return oomEvents
@@ -395,7 +399,9 @@ func calculatePodQoSClass(containers []interface{}) string {
 // Falls back gracefully if node data is not available
 // S3-MEDIUM-3: Parse node describe output to correlate OOM events with node memory pressure
 func enrichWithNodeMemory(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	nodesDescribePath := filepath.Join(bundleRoot, "rke2/kubectl/nodesdescribe")
+	format := DetectFormat(bundleRoot)
+	resolver := NewPathResolver(bundleRoot, format)
+	nodesDescribePath := filepath.Join(resolver.GetKubectlDir(), "nodesdescribe")
 	if _, err := os.Stat(nodesDescribePath); os.IsNotExist(err) {
 		return oomEvents
 	}
@@ -435,7 +441,9 @@ func enrichWithNodeMemory(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnaly
 // enrichWithNodeNames extracts node names from pod manifests for OOM events
 // S3-MEDIUM-3: Track which node the OOM'd pod was running on
 func enrichWithNodeNames(oomEvents []OOMAnalysis, bundleRoot string) []OOMAnalysis {
-	manifestsPath := filepath.Join(bundleRoot, "rke2/pod-manifests")
+	format := DetectFormat(bundleRoot)
+	resolver := NewPathResolver(bundleRoot, format)
+	manifestsPath := resolver.GetPodManifestsDir()
 	if _, err := os.Stat(manifestsPath); os.IsNotExist(err) {
 		return oomEvents
 	}

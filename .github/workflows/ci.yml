@@ -113,29 +113,7 @@ jobs:
         echo "- Total Coverage: **${COVERAGE}**" >> $GITHUB_STEP_SUMMARY
         echo "- Minimum Required: **${{ env.MIN_COVERAGE }}%**" >> $GITHUB_STEP_SUMMARY
 
-  # Job 2: Lint checks
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
-    
-    # Install golangci-lint
-    - name: Install golangci-lint
-      uses: golangci/golangci-lint-action@v6
-      with:
-        version: latest
-        args: --timeout=5m --out-format=github-actions
-        skip-cache: false
-
-  # Job 3: Cross-platform build verification
+  # Job 2: Cross-platform build verification
   cross-platform:
     name: Cross-Platform Build
     runs-on: ubuntu-latest

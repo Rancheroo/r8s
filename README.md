@@ -7,7 +7,12 @@
 
 r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
 
-**Latest: v0.7.0.1** (February 2026)
+**Latest: v0.7.1** (February 2026) — K3s Support
+- **Multi-Distro**: K3s bundle support (in addition to RKE2)
+- **Path Abstraction**: Clean separation of distro-specific paths
+- **Test Coverage**: 36.8% total repo, 66%+ core packages
+
+**Previous: v0.7.0.1** (February 2026)
 - **CI Stability**: Quality gates restored, realistic coverage thresholds
 - **Test Coverage**: 33% total repo, 61.4% internal/bundle package
 - **Quality**: golangci-lint warnings addressed, all critical checks passing
@@ -26,6 +31,20 @@ r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. Th
 ---
 
 ## 🚀 What's New
+
+### v0.7.1 "K3s Support" (February 2026) ✅ RELEASED
+**For Support Teams**: Analyze K3s bundles with the same ease as RKE2
+
+**Multi-Distro Support**:
+- **🎯 K3s Bundles**: Full support for K3s log collector output
+- **🔄 RKE2 Compatible**: Existing RKE2 bundles work unchanged
+- **🔧 Path Abstraction**: Clean separation of distro-specific paths via `PathResolver`
+- **📁 Automatic Detection**: Automatically detects bundle format (RKE2/K3s/kubectl)
+
+**Technical Improvements**:
+- **📊 Coverage Increase**: 33% → 36.8% total repo coverage
+- **🧪 Test Expansion**: 50+ new tests for config and datasource packages
+- **🏗️ Architecture**: `PathResolver` interface enables future distro support (RKE1, etc.)
 
 ### v0.7.0.1 "CI Stability Patch" (February 2026) ✅ RELEASED
 **For Developers**: Quality gates restored with realistic thresholds

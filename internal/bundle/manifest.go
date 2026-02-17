@@ -32,10 +32,14 @@ func ParseManifest(extractPath string) (*BundleManifest, error) {
 	manifest.FileCount = fileCount
 	manifest.TotalSize = totalSize
 
-	// Parse RKE2 version if available
-	if format == FormatRKE2 {
+	// Parse version info based on format
+	switch format {
+	case FormatRKE2:
 		manifest.RKE2Version = parseRKE2Version(extractPath)
 		manifest.K8sVersion = parseK8sVersion(extractPath)
+	case FormatK3s:
+		manifest.RKE2Version = parseK3sVersion(extractPath)
+		manifest.K8sVersion = parseK3sK8sVersion(extractPath)
 	}
 
 	return manifest, nil
@@ -49,14 +53,26 @@ func DetectFormat(extractPath string) BundleFormat {
 		return FormatRKE2
 	}
 
+	// Check for K3s support bundle structure (direct)
+	k3sDir := filepath.Join(extractPath, "k3s")
+	if stat, err := os.Stat(k3sDir); err == nil && stat.IsDir() {
+		return FormatK3s
+	}
+
 	// Check for RKE2 with wrapper directory (common in tar.gz bundles)
 	entries, err := os.ReadDir(extractPath)
 	if err == nil && len(entries) == 1 && entries[0].IsDir() {
 		// Single top-level directory - check inside it
 		wrapperDir := filepath.Join(extractPath, entries[0].Name())
+
 		rke2Dir = filepath.Join(wrapperDir, "rke2")
 		if stat, err := os.Stat(rke2Dir); err == nil && stat.IsDir() {
 			return FormatRKE2
+		}
+
+		k3sDir = filepath.Join(wrapperDir, "k3s")
+		if stat, err := os.Stat(k3sDir); err == nil && stat.IsDir() {
+			return FormatK3s
 		}
 	}
 
@@ -150,6 +166,40 @@ func parseK8sVersion(extractPath string) string {
 	return "unknown"
 }
 
+// parseK3sVersion attempts to read the K3s version from the bundle.
+func parseK3sVersion(extractPath string) string {
+	bundleRoot := getBundleRoot(extractPath)
+	versionFile := filepath.Join(bundleRoot, "k3s", "version")
+	if data, err := os.ReadFile(versionFile); err == nil {
+		return strings.TrimSpace(string(data))
+	}
+	return "unknown"
+}
+
+// parseK3sK8sVersion attempts to read the Kubernetes version from a K3s bundle.
+func parseK3sK8sVersion(extractPath string) string {
+	bundleRoot := getBundleRoot(extractPath)
+	// Try kubectl version file
+	versionFile := filepath.Join(bundleRoot, "k3s", "kubectl", "version")
+	if data, err := os.ReadFile(versionFile); err == nil {
+		version := strings.TrimSpace(string(data))
+		if strings.Contains(version, "GitVersion") {
+			lines := strings.Split(version, "\n")
+			for _, line := range lines {
+				if strings.Contains(line, "GitVersion") {
+					parts := strings.Split(line, ":")
+					if len(parts) >= 2 {
+						ver := strings.Trim(parts[1], `", `)
+						return ver
+					}
+				}
+			}
+		}
+		return version
+	}
+	return "unknown"
+}
+
 // calculateBundleStats walks the directory tree and counts files/sizes.
 func calculateBundleStats(extractPath string) (fileCount int, totalSize int64, err error) {
 	err = filepath.Walk(extractPath, func(path string, info os.FileInfo, err error) error {
@@ -169,11 +219,11 @@ func calculateBundleStats(extractPath string) (fileCount int, totalSize int64, e
 func InventoryPods(extractPath string) ([]PodInfo, error) {
 	var pods []PodInfo
 	bundleRoot := getBundleRoot(extractPath)
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
 
-
-
-	// Look for pod logs in rke2/podlogs/
-	podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
+	// Look for pod logs using PathResolver
+	podlogsDir := resolver.GetPodLogsDir()
 	if _, err := os.Stat(podlogsDir); os.IsNotExist(err) {
 		return pods, nil // No pod logs directory
 	}
@@ -231,17 +281,16 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 
 	// Also parse pod manifests to get container names
 	// This handles cases where log filenames don't include container names
-	manifestsDir := filepath.Join(bundleRoot, "rke2", "pod-manifests")
+	manifestsDir := resolver.GetPodManifestsDir()
 	if _, err := os.Stat(manifestsDir); err == nil {
 		parsePodManifestsForContainers(manifestsDir, podMap)
 	}
 
 	// Also parse poddescribe output (PR #418) for container names
-	poddescribeDir := filepath.Join(bundleRoot, "rke2", "kubectl", "poddescribe")
+	poddescribeDir := resolver.GetPodDescribeDir()
 	if _, err := os.Stat(poddescribeDir); err == nil {
 		parsePodDescribeForContainers(poddescribeDir, podMap)
 	}
-
 
 	// Convert map to slice
 	for _, pod := range podMap {
@@ -506,9 +555,11 @@ func parsePodDescribeForContainers(poddescribeDir string, podMap map[string]*Pod
 func InventoryLogFiles(extractPath string) ([]LogFileInfo, error) {
 	var logFiles []LogFileInfo
 	bundleRoot := getBundleRoot(extractPath)
+	format := DetectFormat(extractPath)
+	resolver := NewPathResolver(bundleRoot, format)
 
-	// Scan pod logs
-	podlogsDir := filepath.Join(bundleRoot, "rke2", "podlogs")
+	// Scan pod logs using PathResolver
+	podlogsDir := resolver.GetPodLogsDir()
 	if stat, err := os.Stat(podlogsDir); err == nil && stat.IsDir() {
 		err := filepath.Walk(podlogsDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {
