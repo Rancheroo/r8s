@@ -473,6 +473,15 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// AI Prompt Export (v0.7.2)
 			if a.currentView.viewType == ViewAttention && len(a.attentionItems) > 0 {
 				pg := NewPromptGenerator(nil, a.attentionItems, a.bundlePath)
+				// Default to terminal prompt (more actionable for devs)
+				prompt := pg.GenerateTerminalPrompt()
+				a.promptView.Show(prompt, "terminal")
+				return a, nil
+			}
+		case "a":
+			// AI Chatbot Prompt Export (v0.7.2)
+			if a.currentView.viewType == ViewAttention && len(a.attentionItems) > 0 {
+				pg := NewPromptGenerator(nil, a.attentionItems, a.bundlePath)
 				prompt := pg.GenerateSupportPrompt()
 				a.promptView.Show(prompt, "support")
 				return a, nil

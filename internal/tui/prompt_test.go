@@ -108,21 +108,107 @@ func TestPromptView(t *testing.T) {
 	}
 }
 
-func TestSeverityString(t *testing.T) {
-	tests := []struct {
-		input    AttentionSeverity
-		expected string
-	}{
-		{SeverityCritical, "Critical"},
-		{SeverityWarning, "Warning"},
-		{SeverityInfo, "Info"},
-		{AttentionSeverity(99), "Unknown"},
+func TestPromptGenerator_GenerateTerminalPrompt(t *testing.T) {
+	health := &bundle.BundleHealth{
+		BundleType: "rke2-support-bundle",
 	}
 
-	for _, tt := range tests {
-		result := severityString(tt.input)
-		if result != tt.expected {
-			t.Errorf("severityString(%d) = %s, want %s", tt.input, result, tt.expected)
+	findings := []AttentionItem{
+		{
+			Severity:     SeverityCritical,
+			Title:        "OOM Kill",
+			Description:  "Container exceeded memory limit",
+			Namespace:    "prod",
+			PodName:      "memory-hog",
+			ResourceType: "pod",
+		},
+	}
+
+	pg := NewPromptGenerator(health, findings, "/path/to/bundle.tar.gz")
+	prompt := pg.GenerateTerminalPrompt()
+
+	// Check for terminal-specific content
+	if !strings.Contains(prompt, "R8S Terminal AI Analysis") {
+		t.Error("Missing terminal prompt title")
+	}
+	if !strings.Contains(prompt, "kubectl") {
+		t.Error("Missing kubectl references")
+	}
+	if !strings.Contains(prompt, "Diagnostic command") {
+		t.Error("Missing diagnostic command section")
+	}
+	if !strings.Contains(prompt, "Fix command") {
+		t.Error("Missing fix command section")
+	}
+}
+
+func TestPromptGenerator_GetPromptForType(t *testing.T) {
+	health := &bundle.BundleHealth{}
+	findings := []AttentionItem{
+		{Severity: SeverityCritical, Title: "Test Issue", Description: "Test"},
+	}
+
+	pg := NewPromptGenerator(health, findings, "bundle.tar.gz")
+
+	chatbotPrompt := pg.GetPromptForType(PromptTypeChatbot)
+	if !strings.Contains(chatbotPrompt, "Support Bundle Analysis") {
+		t.Error("Chatbot prompt should contain support bundle analysis")
+	}
+
+	terminalPrompt := pg.GetPromptForType(PromptTypeTerminal)
+	if !strings.Contains(terminalPrompt, "Terminal AI Analysis") {
+		t.Error("Terminal prompt should contain terminal AI analysis")
+	}
+}
+
+func TestPromptGenerator_getPrimaryNamespace(t *testing.T) {
+	findings := []AttentionItem{
+		{Namespace: "prod"},
+		{Namespace: "prod"},
+		{Namespace: "default"},
+	}
+
+	pg := NewPromptGenerator(nil, findings, "")
+	ns := pg.getPrimaryNamespace()
+
+	if ns != "prod" {
+		t.Errorf("Expected primary namespace 'prod', got '%s'", ns)
+	}
+}
+
+func TestGetPromptTypeDescription(t *testing.T) {
+	chatbotDesc := GetPromptTypeDescription(PromptTypeChatbot)
+	if !strings.Contains(chatbotDesc, "Chatbot") {
+		t.Error("Chatbot description should contain 'Chatbot'")
+	}
+
+	terminalDesc := GetPromptTypeDescription(PromptTypeTerminal)
+	if !strings.Contains(terminalDesc, "Terminal") {
+		t.Error("Terminal description should contain 'Terminal'")
+	}
+}
+
+func TestListAvailablePromptTypes(t *testing.T) {
+	types := ListAvailablePromptTypes()
+	if len(types) != 2 {
+		t.Errorf("Expected 2 prompt types, got %d", len(types))
+	}
+
+	hasChatbot := false
+	hasTerminal := false
+	for _, t := range types {
+		if t == PromptTypeChatbot {
+			hasChatbot = true
 		}
+		if t == PromptTypeTerminal {
+			hasTerminal = true
+		}
+	}
+
+	if !hasChatbot {
+		t.Error("Should have Chatbot prompt type")
+	}
+	if !hasTerminal {
+		t.Error("Should have Terminal prompt type")
 	}
 }

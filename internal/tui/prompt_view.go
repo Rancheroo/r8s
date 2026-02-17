@@ -86,8 +86,10 @@ func (pv *PromptView) Render() string {
 
 	var title string
 	switch pv.promptType {
-	case "support":
-		title = "🤖 AI Support Prompt - Full Analysis"
+	case "support", "chatbot":
+		title = "🤖 AI Chatbot Prompt - Analysis & Explanation"
+	case "terminal":
+		title = "⌨️  Terminal AI Prompt - Commands & Scripts"
 	case "finding":
 		title = "🤖 AI Prompt - Single Issue"
 	case "comparison":
@@ -122,7 +124,13 @@ func (pv *PromptView) Render() string {
 		Padding(0, 2).
 		Width(pv.width)
 
-	footer := "[↑/↓] Scroll | [c] Copy to clipboard | [q/Esc] Close"
+	var footer string
+	switch pv.promptType {
+	case "terminal":
+		footer = "[↑/↓] Scroll | [c] Copy | [q] Close | Use with: Claude Code, Warp, GitHub Copilot CLI"
+	default:
+		footer = "[↑/↓] Scroll | [c] Copy | [q] Close | Use with: Grok, ChatGPT, Claude"
+	}
 
 	// Assemble view
 	var b strings.Builder
