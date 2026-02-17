@@ -1,125 +1,217 @@
-# Sprint 8 Plan: AI Analysis Engine v1 (Pattern Matching)
+# Sprint 8 Plan: Bundle Health v2 + AI Groundwork
 
-**Sprint Goal:** Deliver foundational AI features — pattern matching engine and knowledge base for intelligent issue grouping.
+**Sprint Goal:** Deliver **management showcase-ready** features: enhanced bundle health for partial bundles + AI pattern detection foundation. Apply 80/20 ruthlessly — maximum demo impact, minimal scope.
 
-**Duration:** 2 weeks (March 3 - March 14, 2026)  
-**Target Release:** v0.8.0 (March 15, 2026)  
-**Strategic Rationale:** RKE1 is EOL; AI features deliver more user value than legacy distro support.
-
----
-
-## 📋 Scope (MVP per Strategic Brief)
-
-### P0: Pattern Matching Engine (Days 1-5)
-- Design pattern matcher interface
-- Implement regex + keyword matching
-- Create issue grouper (groups related errors)
-- Smoke tests with sample bundles
-
-### P1: Knowledge Base v1 (Days 6-8)
-- Define pattern schema (JSON/YAML)
-- Create 10 core patterns:
-  - etcd leader election issues
-  - OOMKill patterns
-  - ImagePullBackOff
-  - CrashLoopBackOff
-  - Node pressure (memory/disk/PID)
-  - Certificate expiry
-  - API server connectivity
-  - DNS resolution failures
-  - PersistentVolume mount issues
-  - Network policy blocks
-- Knowledge base loader
-- Unit tests for all patterns
-
-### P2: Integration with TUI (Days 9-10)
-- Show pattern matches in diagnostic panel
-- Group related issues in Attention Dashboard
-- Basic severity scoring (info/warning/critical)
-
-### P3: Documentation + Polish (Days 11-14)
-- Pattern authoring guide
-- Update README with AI features
-- CodeRabbit review items
-- Final integration testing
+**Duration:** 2 weeks  
+**Target Release:** v0.8.x series  
+**Strategic Rationale:** 
+- **RKE1 = EOL** — zero value, skip entirely
+- **Management showcase** — needs visible AI, not infrastructure
+- **Bundle health v2** — immediate user value, quick win
+- **AI groundwork** — pattern engine + 3-5 demo patterns, not 100
 
 ---
 
-## 🤖 Smart Work Distribution
+## 🎯 Musk's 5 Laws Applied
+
+| Law | Application |
+|-----|-------------|
+| **1. Question** | Do we need 10 AI patterns or 3 good ones? → **3** |
+| **2. Delete** | Remove RKE1, remove complex pattern schemas → **YAML simplicity** |
+| **3. Simplify** | Bundle health = missing files list + impact score. No complex scoring. |
+| **4. Accelerate** | Demo-ready Day 8, polish Day 12-14 |
+| **5. Automate** | CI validates patterns work; UX engineer validates polish |
+
+---
+
+## 📋 80/20 Scope (High Impact, Low Effort)
+
+### P0: Bundle Health v2 — Partial Bundle Support (Days 1-4)
+**Impact: HIGH | Effort: MEDIUM | Demo Value: 🔥🔥🔥**
+
+What it does:
+- Detects missing bundle files automatically
+- Shows "Missing: podlogs/" with 🔴 impact score
+- Gracefully degrades — partial bundles still work
+
+Implementation:
+```
+internal/bundle/health.go            // Health checker
+internal/bundle/health_test.go       // Unit tests
+cmd/flags.go                         // --health flag?
+```
+
+Success metric: Load partial bundle → see clear health indicator → still works.
+
+---
+
+### P1: AI Pattern Engine — Foundation (Days 5-8)
+**Impact: MEDIUM | Effort: MEDIUM | Demo Value: 🔥🔥🔥**
+
+80/20 scope (management demo-ready):
+```
+internal/ai/
+├── pattern.go        // Interface: Match(log string) -> MatchResult
+├── registry.go       // Pattern registry
+├── registry_test.go  
+└── patterns/         // YAML pattern definitions
+    ├── oomkill.yaml      // Simple: "Out of memory" + kill + oom_kill_process
+    ├── imagepull.yaml    // "ImagePullBackOff" + errImagePull
+    └── crashloop.yaml    // "Back-off restarting" + CrashLoopBackOff
+```
+
+Demo scenario: Load demo bundle → AI panel shows:
+```
+🔴 Critical: OOMKill detected in rancher/rancher pod
+🟡 Warning: ImagePullBackOff for nginx:latest
+🟢 Info: CrashLoopBackOff resolved after 3 restarts
+```
+
+**Out of scope (v0.8.1+):**
+- ❌ 10 patterns → **3 patterns**
+- ❌ Complex regex → **Keyword matching**
+- ❌ Root cause hints → **Just detection**
+- ❌ Anomaly detection → **Pattern matching only**
+- ❌ Semantic analysis → **String contains**
+
+---
+
+### P2: TUI Integration — Demo Polish (Days 9-10)
+**Impact: MEDIUM | Effort: MEDIUM | Demo Value: 🔥🔥🔥**
+
+What makes it showcase-ready:
+- **Tab: AI Analysis** — Shows pattern matches with icons
+- **Tab: Bundle Health** — Missing files + completeness %
+- **Severity colors:** 🔴 🟡 🟢 (visual, immediate understanding)
+- **Hotkey: `a`** — Jump to AI panel
+
+UX Engineer focus:
+- Icon alignment
+- Color accessibility
+- Keyboard flow (Enter/Esc/Tab)
+- Empty states ("No patterns matched" → friendly message)
+
+---
+
+### P3: Documentation + Showcase Prep (Days 11-14)
+**Impact: MEDIUM | Effort: LOW | Demo Value: 🔥🔥**
+
+Deliverables:
+1. **Demo script** (3 min walkthrough)
+2. **Pattern authoring guide** (YAML format)
+3. **README update** (AI features section)
+4. **Recording-ready build** (clean terminal, no debug output)
+
+---
+
+## 🤝 Team Composition
 
 | Role | Allocation | Focus |
 |------|------------|-------|
-| RancherSRE | 70% | Pattern engine, knowledge base, integration |
-| CodeRabbit | Continuous | Review all PRs, catch regressions |
-| Documentation | Days 12-14 | Pattern authoring guide, README updates |
+| **RancherSRE** | 60% | Health checker, pattern engine, integration |
+| **CodeRabbit** | Continuous | Review all PRs |
+| **🎨 UX Engineer** | Days 9-14 **NEW** | TUI polish, accessibility, demo flow |
+| **Management** | Demo Day | See AI features in action |
+
+**UX Engineer Scope:** Days 9-14 (TUI polish + showcase readiness)
+- Review TUI panels for consistency
+- Ensure keyboard navigation (Enter/Esc/Tab)
+- Accessibility: color contrast, clear labels
+- Demo polish: clean output, no debug noise
+- Recording-preview: terminal size, font, colors
 
 ---
 
-## 📊 Success Criteria
+## 📊 Success Criteria (Binary)
 
-| Metric | Target |
-|--------|--------|
-| Pattern Matcher | Interface + 2 implementations (regex, keyword) |
-| Knowledge Base | 10 patterns with 80%+ accuracy on test bundles |
-| Coverage | Maintain 36.8%+ (focus on new code) |
-| CI | All checks green (no flaky jobs) |
+| Criterion | Target |
+|-----------|--------|
+| Bundle Health v2 | Partial bundles show health indicator + still work |
+| AI Patterns | 3 patterns (OOM, ImagePull, CrashLoop) detect correctly |
+| TUI Polish | Keyboard nav works, colors accessible, clean demo |
+| Coverage | Maintain 36.8%+ |
+| Showcase Ready | 3-min demo script, clean build, no debug noise |
 
----
-
-## 🗓 Timeline
-
-| Week | Focus | Key Milestone |
-|------|-------|---------------|
-| **Week 1** | Engine + KB | Pattern matcher working, 5 patterns defined |
-| Mon-Tue | Pattern interface | Matcher design, regex implementation |
-| Wed-Fri | Knowledge base | 10 patterns, loader, tests |
-| **Week 2** | Integration + Docs | AI features visible in TUI |
-| Mon-Tue | TUI integration | Diagnostic panel shows pattern matches |
-| Wed-Thu | Documentation | Pattern authoring guide complete |
-| Fri | Polish + Release | v0.8.0 tagged |
+**NOT Required:**
+- ❌ 10 patterns
+- ❌ Root cause hints
+- ❌ Pattern confidence scores
+- ❌ Anomaly detection
+- ❌ Natural language queries
 
 ---
 
-## ⚠️ Risks & Mitigations
+## 🗓 Timeline (Demo-First)
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Pattern accuracy low | High | Start with high-confidence patterns (OOM, ImagePull) |
-| Performance impact | Medium | Compile patterns once, cache results |
-| False positives | Medium | Severity scoring, user feedback loop |
+| Day | Focus | Milestone |
+|-----|-------|-----------|
+| 1-2 | Bundle health core | `bundle.Health()` returns missing files + score |
+| 3-4 | Health TUI integration | Health shows in bundle panel / status bar |
+| 5-6 | Pattern engine | Interface + registry + YAML loader |
+| 7-8 | 3 patterns working | OOM, ImagePull, CrashLoop detect correctly |
+| **8** | **🎉 DEMO MILESTONE** | AI panel shows patterns live |
+| 9-10 | UX Engineer: TUI polish | Accessibility, keyboard flow, visual polish |
+| 11-12 | UX Engineer: Demo prep | Script, recording, clean build |
+| 13-14 | Buffer + release | Bug fixes, release v0.8.x |
 
 ---
 
-## 🚫 Out of Scope (v0.8.1+)
+## ⚠️ Risks & 80/20 Cuts
 
-- Root cause hints (needs more pattern validation)
-- Anomaly detection (needs baseline data)
-- Natural language queries
-- ML/semantic matching
+| Risk | 80/20 Mitigation |
+|------|------------------|
+| Pattern accuracy low | **Only 3 patterns, high-confidence keywords** |
+| UX polish takes too long | **UX Engineer starts Day 9, dedicated** |
+| Demo fails | **Record backup Day 12, don't do live demo** |
+| Health calculation complex | **Simple "files present / total files" % only** |
+
+---
+
+## 🚫 Out of Scope (v0.9+)
+
+**Cut to hit demo date:**
+- ❌ Pattern #4-10 (keep it at 3)
+- ❌ Semantic analysis (use simple strings)
+- ❌ Root cause explanations (just "detected")
+- ❌ Confidence scores (binary match/no match)
+- ❌ Anomaly detection (needs baselines)
+- ❌ Natural language queries
+- ❌ Pattern self-learning
+- ❌ Complex health scoring (just % complete)
 
 ---
 
 ## ✅ Definition of Done
 
-- [ ] Pattern matcher interface implemented
-- [ ] 10 patterns in knowledge base
-- [ ] Pattern matches display in TUI
+- [ ] Bundle health v2: Partial bundles show health indicator
+- [ ] AI engine: Pattern interface + registry
+- [ ] 3 patterns: OOMKill, ImagePullBackOff, CrashLoopBackOff
+- [ ] TUI: AI Analysis tab with 🔴🟡🟢 severity
+- [ ] TUI: Bundle Health visible in status
+- [ ] UX Engineer polish: Accessibility + keyboard flow
+- [ ] Demo script: 3-minute walkthrough written
+- [ ] Showcase recording: Backup ready
 - [ ] Coverage ≥ 36.8%
-- [ ] All CI checks passing
-- [ ] Pattern authoring guide published
-- [ ] README updated with AI features
-- [ ] v0.8.0 tagged and released
+- [ ] CI: All green, no flaky jobs
 
 ---
 
-## Why AI Over RKE1?
+## Why This Scope?
 
-**RKE1 Status:** End-of-Life, declining user base  
-**AI Value:** Immediate productivity gains for ALL users (RKE2 + K3s)  
-**Strategic:** Positions r8s as intelligent diagnostic tool, not just log viewer
+**Management Showcase = Needs to LOOK smart, not BE smart.**
 
-**Musk's Law #3 (Simplify):** 10 patterns that work > 100 patterns that don't.
+80/20 truth:
+- 3 patterns that work = demo success
+- 10 patterns that fail = demo disaster
+- Simple health check = user value
+- Complex scoring = engineering time sink
+- UX polish = credibility
+- More features = confusion
+
+**Musk's Law #2 (Delete):** If it doesn't demo well, delete it.
 
 ---
 
-*Plan approved? Pick it up after Sprint 7 release.*
+*Team: RancherSRE + CodeRabbit + 🎨 UX Engineer  
+Demo target: Management showcase  
+Success: "That's impressive — when can we show customers?"*
