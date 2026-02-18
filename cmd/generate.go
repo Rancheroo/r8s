@@ -191,10 +191,11 @@ func generateTerminalPrompt(bundlePath string, health *bundle.HealthCheck) strin
 	if len(highImpact) > 0 {
 		prompt += "## Issues Found\n\n"
 		for i, missing := range highImpact {
-			prompt += fmt.Sprintf("%d. [%s] %s: %s\n", 
-				i+1, 
-				string(missing.Importance),
-				missing.Path, 
+			importanceStr := importanceToString(missing.Importance)
+			prompt += fmt.Sprintf("%d. [%s] %s: %s\n",
+				i+1,
+				importanceStr,
+				missing.Path,
 				missing.Impact)
 		}
 		prompt += "\n"
@@ -253,4 +254,20 @@ func generateScriptPrompt(bundlePath string, health *bundle.HealthCheck) string 
 	prompt += "- End with verification that issues are resolved\n"
 
 	return prompt
+}
+
+// importanceToString converts FileImportance to human-readable string
+func importanceToString(imp bundle.FileImportance) string {
+	switch imp {
+	case bundle.ImportanceCritical:
+		return "critical"
+	case bundle.ImportanceHigh:
+		return "high"
+	case bundle.ImportanceMedium:
+		return "medium"
+	case bundle.ImportanceLow:
+		return "low"
+	default:
+		return "unknown"
+	}
 }

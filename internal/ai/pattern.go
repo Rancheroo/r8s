@@ -51,7 +51,7 @@ func NewMatcher(p Pattern) *Matcher {
 // Sprint 8: Simple keyword matching (80/20) - no regex for now
 func (m *Matcher) Match(content string) MatchResult {
 	content = strings.ToLower(content)
-	
+
 	// Count how many keywords matched
 	matches := 0
 	for _, keyword := range m.pattern.Keywords {
@@ -59,9 +59,9 @@ func (m *Matcher) Match(content string) MatchResult {
 			matches++
 		}
 	}
-	
-	// All keywords must match
-	if matches < len(m.pattern.Keywords) {
+
+	// At least one keyword must match (OR logic)
+	if matches == 0 {
 		return MatchResult{Matched: false}
 	}
 	
