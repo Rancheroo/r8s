@@ -129,7 +129,7 @@ type PatternRegistry struct {
 // NewRegistry creates a new pattern registry with built-in patterns
 func NewRegistry() *PatternRegistry {
 	return &PatternRegistry{
-		patterns: BuiltinPatterns,
+		patterns: append([]Pattern{}, BuiltinPatterns...),
 	}
 }
 
@@ -146,6 +146,11 @@ func (r *PatternRegistry) Register(p Pattern) error {
 		return fmt.Errorf("at least one keyword is required")
 	}
 	
+	// Check for duplicate ID
+	if _, exists := r.GetByID(p.ID); exists {
+		return fmt.Errorf("pattern ID already registered: %s", p.ID)
+	}
+
 	r.patterns = append(r.patterns, p)
 	return nil
 }
@@ -173,7 +178,7 @@ func (r *PatternRegistry) GetByCategory(category string) []Pattern {
 
 // GetAll returns all patterns
 func (r *PatternRegistry) GetAll() []Pattern {
-	return r.patterns
+	return append([]Pattern{}, r.patterns...)
 }
 
 // Analyze scans content against all patterns and returns matches
