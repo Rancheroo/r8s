@@ -69,13 +69,13 @@ func TestHarness_RunSuite(t *testing.T) {
 }
 
 func TestIsHigherSeverity(t *testing.T) {
-	if !IsHigherSeverity("critical", "high") {
-		t.Error("critical should be higher than high")
+	if !IsHigherSeverity("critical", "warning") {
+		t.Error("critical should be higher than warning")
 	}
-	if IsHigherSeverity("low", "medium") {
-		t.Error("low should not be higher than medium")
+	if IsHigherSeverity("info", "warning") {
+		t.Error("info should not be higher than warning")
 	}
-	if IsHigherSeverity("medium", "medium") {
-		t.Error("medium should not be higher than medium")
+	if IsHigherSeverity("warning", "warning") {
+		t.Error("warning should not be higher than warning")
 	}
 }

@@ -130,7 +130,7 @@ func GetDefaultTestCases() []TestCase {
 				ContainerName: "nginx",
 			},
 			ExpectedPatterns: []string{"imagepullbackoff"},
-			ExpectedSeverity: "high",
+			ExpectedSeverity: "warning",
 		},
 		{
 			Name:    "CrashLoopBackOff in Pod Logs",
@@ -142,7 +142,7 @@ func GetDefaultTestCases() []TestCase {
 				ContainerName: "app",
 			},
 			ExpectedPatterns: []string{"crashloopbackoff"},
-			ExpectedSeverity: "high",
+			ExpectedSeverity: "warning",
 		},
 	}
 }
