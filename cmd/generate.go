@@ -111,7 +111,7 @@ func runGeneratePrompt(cmd *cobra.Command, args []string) error {
 
 	// Output
 	if promptOutput != "" {
-		if err := os.WriteFile(promptOutput, []byte(prompt), 0644); err != nil {
+		if err := os.WriteFile(promptOutput, []byte(prompt), 0600); err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
 		fmt.Fprintf(os.Stderr, "✓ Prompt saved to %s\n", promptOutput)

@@ -198,6 +198,20 @@ func outputPodDescribe(pod *bundle.PodInfo, b *bundle.Bundle) error {
 // ============================================
 
 func describeNode(b *bundle.Bundle) error {
+	// Guard against nil manifest
+	if b.Manifest == nil {
+		fmt.Println("Name:          (unknown - no manifest)")
+		fmt.Println()
+		fmt.Println("Available Resources:")
+		fmt.Printf("  Pods:          %d\n", len(b.Pods))
+		fmt.Printf("  Log Files:     %d\n", len(b.LogFiles))
+		fmt.Printf("  Namespaces:    %d\n", len(b.Namespaces))
+		fmt.Printf("  Deployments:   %d\n", len(b.Deployments))
+		fmt.Printf("  Services:      %d\n", len(b.Services))
+		fmt.Println()
+		return nil
+	}
+
 	// Bundle only has one node (the one collected from)
 	fmt.Println("Name:         ", b.Manifest.NodeName)
 	fmt.Println()

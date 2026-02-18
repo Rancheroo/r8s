@@ -45,7 +45,7 @@ var (
 func init() {
 	rootCmd.AddCommand(analyzeCmd)
 
-	analyzeCmd.Flags().StringVarP(&analyzeFormat, "format", "f", "table", "Output format: table, json, yaml")
+	analyzeCmd.Flags().StringVarP(&analyzeFormat, "format", "f", "table", "Output format: table, json")
 }
 
 // AnalysisResult represents the output of bundle analysis
@@ -75,17 +75,13 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: cannot access bundle path: %v\n", err)
-		os.Exit(2)
-		return err
+		return fmt.Errorf("cannot access bundle path: %w", err)
 	}
 
 	// Check bundle health
 	health, err := bundle.CheckHealth(bundlePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: failed to analyze bundle: %v\n", err)
-		os.Exit(2)
-		return err
+		return fmt.Errorf("failed to analyze bundle: %w", err)
 	}
 
 	// Build analysis result
@@ -212,7 +208,6 @@ func outputAnalyzeTable(result AnalysisResult) error {
 	if result.Critical > 0 {
 		fmt.Printf("Result: %s (%d critical, %d warning)\n", 
 			color.RedString("ISSUES FOUND"), result.Critical, result.Warning)
-		os.Exit(1)
 	} else if result.Warning > 0 {
 		fmt.Printf("Result: %s (%d warning)\n", 
 			color.YellowString("WARNINGS"), result.Warning)
@@ -220,6 +215,11 @@ func outputAnalyzeTable(result AnalysisResult) error {
 		fmt.Printf("Result: %s\n", color.GreenString("HEALTHY"))
 	}
 	fmt.Println()
+
+	// Return error if critical issues found (for proper exit code handling)
+	if result.Critical > 0 {
+		return fmt.Errorf("analysis found %d critical issues", result.Critical)
+	}
 
 	return nil
 }
@@ -229,13 +229,5 @@ func outputAnalyzeJSON(result AnalysisResult) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	
-	if err := encoder.Encode(result); err != nil {
-		return fmt.Errorf("failed to encode JSON: %w", err)
-	}
-
-	// Exit with appropriate code
-	if result.Critical > 0 {
-		os.Exit(1)
-	}
-	return nil
+	return encoder.Encode(result)
 }
