@@ -195,7 +195,7 @@ func outputAnalyzeTable(result AnalysisResult) error {
 		}
 
 		// Print info (condensed)
-		if len(infoIssues) > 0 && analyzeSeverity == "all" {
+		if len(infoIssues) > 0 {
 			fmt.Println(color.CyanString("ℹ️  INFO"))
 			for _, issue := range infoIssues {
 				fmt.Printf("   • %s: %s\n", issue.Type, issue.Resource)
