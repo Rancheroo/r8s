@@ -1,4 +1,4 @@
-.PHONY: build install test clean run fmt vet tidy coverage help lint ci dev
+.PHONY: build install test clean run fmt vet tidy coverage help lint ci dev sync check-sync
 
 # Build variables
 BINARY_NAME=r8s
@@ -11,7 +11,24 @@ LDFLAGS=-ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.da
 help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-build: ## Build the r8s binary
+check-sync: ## Check if local branch is behind origin
+	@git fetch origin --quiet 2>/dev/null || true
+	@if [ -n "$(shell git log HEAD..origin/$(shell git branch --show-current) --oneline 2>/dev/null)" ]; then \
+		echo "\033[31m✗ ERROR: Local branch is behind origin\033[0m"; \
+		echo "Run: git reset --hard origin/$(shell git branch --show-current)"; \
+		echo "Or:  make sync"; \
+		exit 1; \
+	fi
+
+sync: ## Reset local branch to match origin (use with caution)
+	@echo "Fetching origin..."
+	@git fetch origin
+	@echo "Resetting to origin/$(shell git branch --show-current)..."
+	@git reset --hard origin/$(shell git branch --show-current)
+	@echo "\033[32m✓ Synced with origin\033[0m"
+	@echo "Run 'make build' to rebuild"
+
+build: check-sync ## Build the r8s binary
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BUILD_DIR)
 	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) main.go

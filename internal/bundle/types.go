@@ -192,6 +192,9 @@ type BundleHealth struct {
 
 	// Warnings lists load-time warnings
 	Warnings []string
+
+	// BundleType identifies the detected bundle format
+	BundleType string
 }
 
 // Percentage returns the bundle health as a percentage (0-100)

@@ -6,6 +6,8 @@
 **Repository:** https://github.com/rancherlabs/support-tools  
 **Path:** `collection/rancher/v2.x/logs-collector/rancher2_logs_collector.sh`
 
+⚠️ **DOCUMENTATION CROSS-REFERENCE:** This doc analyzes the collector script. For the **authoritative bundle format specification**, see `docs/BUNDLE-FORMAT.md`. Keep both documents in sync.
+
 ---
 
 ## Executive Summary
@@ -56,31 +58,60 @@ elif [ -d /opt/rke ]
 
 ### Standard RKE2 Bundle Layout
 
+⚠️ **CRITICAL:** Files are at ROOT level, NOT all under `rke2/`. Bundle format varies by collector version.
+
 ```
 ${TMPDIR}/${LOGNAME}/
-├── rke2/
+├── etcd/                       # ⚠️ ROOT LEVEL - etcd cluster health
+│   ├── alarmlist
+│   ├── endpointhealth          # etcdctl endpoint health
+│   ├── endpointstatus          # etcdctl endpoint status
+│   ├── memberlist              # etcdctl member list
+│   └── etcd-metrics-*.txt
+├── journald/                   # ⚠️ ROOT LEVEL - systemd journal logs
+│   ├── cloud-init
+│   ├── rancher-system-agent
+│   └── rke2-server
+├── networking/                 # ⚠️ ROOT LEVEL - network diagnostics
+│   ├── cni/
+│   ├── iptables*, ip6tables*
+│   ├── ipaddrshow, iproute
+│   └── ss*
+├── rke2/                       # RKE2-specific data
 │   ├── kubectl/
-│   │   ├── pods              # kubectl get pods -o wide
-│   │   ├── events            # kubectl get events
-│   │   ├── nodes             # kubectl get nodes
-│   │   ├── deployments       # kubectl get deployments
+│   │   ├── pods                # kubectl get pods -o wide
+│   │   ├── events              # kubectl get events
+│   │   ├── nodes               # kubectl get nodes
+│   │   ├── deployments         # kubectl get deployments
 │   │   ├── [all K8S_OBJECTS_NAMESPACED]
-│   │   └── poddescribe/      # ⚠️ NEW in PR #418
+│   │   └── poddescribe/        # ⚠️ NEW in PR #418
 │   │       └── poddescribe-${NAMESPACE}
-│   ├── podlogs/              # Container log files
+│   ├── podlogs/                # Container log files
 │   │   └── ${NAMESPACE}-${POD_NAME}  # Plain text, no container suffix!
-│   ├── pod-manifests/        # Static pod YAMLs (if present)
-│   ├── crictl/
+│   ├── pod-manifests/          # Static pod YAMLs
 │   ├── agent-logs/
-│   └── [cert dirs]
-├── systeminfo/
+│   │   └── kubelet.log
+│   ├── crictl/
+│   ├── directories/
+│   └── version
+├── systeminfo/                 # ⚠️ ROOT LEVEL - OS diagnostics
 │   ├── cpuinfo, meminfo, dfh
-│   ├── dmesg                 # Kernel messages (OOM clues)
+│   ├── dmesg                   # Kernel messages (OOM clues)
+│   ├── hostname, uptime
+│   ├── packages-dpkg
 │   └── ps, top, lsof
-├── systemlogs/
-│   └── syslog, messages
-└── metadata.json
+├── systemlogs/                 # ⚠️ ROOT LEVEL - system logs
+│   ├── syslog, messages
+│   └── kern.log
+└── collector-output.log
 ```
+
+**Note on File Locations:**
+- `etcd/`, `journald/`, `networking/`, `systeminfo/`, `systemlogs/` are at **ROOT level**
+- Only `rke2/kubectl/`, `rke2/podlogs/`, `rke2/pod-manifests/` are under `rke2/`
+- Collector version differences may cause variations
+
+**Authoritative Reference:** See `docs/BUNDLE-FORMAT.md` for complete format specification.
 
 ### Critical File Formats for R8s
 
@@ -333,6 +364,44 @@ From script comments and structure:
 4. **Distro abstraction** - Same structure for RKE2/K3s/RKE
 
 These align perfectly with R8s Principles #11 (Empty is Valid) and resilience goals.
+
+---
+
+## Collector Version Variations
+
+**⚠️ CRITICAL:** Bundle structure varies by `rancher2_logs_collector.sh` version.
+
+### Known Variations
+
+| Element | Newer Bundles | Older Bundles | R8s Handling |
+|---------|--------------|---------------|--------------|
+| `etcd/` | Root level | Root level | ✅ Consistent |
+| `journald/` | Root level | Root level | ✅ Consistent |
+| `dmesg` | `systeminfo/dmesg` | Root or `systemlogs/` | Check multiple paths |
+| `sysstat/` | Root level | May be missing | Optional |
+| `podlogs/` | `${NS}-${POD}` flat | Same | ✅ Consistent |
+
+### R8s Path Resolution Strategy
+
+The `internal/bundle/health.go` uses `AltPaths` to check multiple locations:
+
+```go
+ExpectedFile{
+    Path: "rke2/etcd/endpointstatus",          // Primary path
+    AltPaths: []string{"etcd/endpointstatus"}, // Alternative paths
+    Importance: ImportanceHigh,
+    Category: "etcd",
+}
+```
+
+**Key Rule:** Always check both primary and alternative paths. Bundle format is NOT guaranteed to be consistent across versions.
+
+### When Adding New Parsers
+
+1. Check actual bundles from multiple sources
+2. Use `AltPaths` for any file that might move
+3. Test with both old and new bundle formats
+4. Reference `docs/BUNDLE-FORMAT.md` as authoritative source
 
 ---
 
