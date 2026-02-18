@@ -2,11 +2,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
+	"gopkg.in/yaml.v3"
 )
 
 // findPodInBundle finds a pod by name with partial matching support
@@ -40,4 +42,18 @@ func findPodInBundle(b *bundle.Bundle, name string) (*bundle.PodInfo, error) {
 	}
 
 	return nil, fmt.Errorf("pod '%s' not found in bundle", name)
+}
+
+// outputJSON outputs data as indented JSON
+func outputEncodeJSON(data interface{}) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(data)
+}
+
+// outputYAML outputs data as YAML
+func outputEncodeYAML(data interface{}) error {
+	encoder := yaml.NewEncoder(os.Stdout)
+	defer encoder.Close()
+	return encoder.Encode(data)
 }

@@ -3,14 +3,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"text/tabwriter"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
@@ -393,15 +391,11 @@ func getEvents(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 // ============================================
 
 func outputGetJSON(data interface{}) error {
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(data)
+	return outputEncodeJSON(data)
 }
 
 func outputGetYAML(data interface{}) error {
-	// Simple YAML output using json intermediate
-	fmt.Println("# YAML output - using JSON for now")
-	return outputGetJSON(data)
+	return outputEncodeYAML(data)
 }
 
 func outputNames(data interface{}) error {
@@ -424,8 +418,3 @@ func outputNames(data interface{}) error {
 	return nil
 }
 
-func outputTableHeader(title string) {
-	header := color.New(color.Bold, color.FgCyan)
-	header.Printf("\n%s\n", title)
-	header.Println(strings.Repeat("═", 60))
-}

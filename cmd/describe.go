@@ -3,13 +3,10 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
 )
@@ -322,13 +319,9 @@ func describeEventsResource(b *bundle.Bundle) error {
 // ============================================
 
 func outputDescribeJSON(data interface{}) error {
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(data)
+	return outputEncodeJSON(data)
 }
 
 func outputDescribeYAML(data interface{}) error {
-	encoder := yaml.NewEncoder(os.Stdout)
-	defer encoder.Close()
-	return encoder.Encode(data)
+	return outputEncodeYAML(data)
 }
