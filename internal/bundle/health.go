@@ -76,7 +76,7 @@ func ExpectedFiles() []ExpectedFile {
 		// Low importance (nice to have)
 		{Path: "rke2/kubectl/crds", Importance: ImportanceLow, Category: "crds"},
 		{Path: "rke2/kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
-		{Path: "rke2/sysstat/", AltPaths: []string{"sysstat/"}, Importance: ImportanceLow, Category: "system"},
+		{Path: "rke2/sysstat/", AltPaths: []string{"sysstat/", "systemlogs/sysstat-data/"}, Importance: ImportanceLow, Category: "system"},
 		{Path: "rke2/podlogs/", Importance: ImportanceLow, Category: "logs"},
 	}
 }
