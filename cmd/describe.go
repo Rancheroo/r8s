@@ -130,10 +130,8 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 
 func describePod(b *bundle.Bundle, name string) error {
 	// Find matching pod
-	matchedPod, err := findPodForDescribe(b, name)
+	matchedPod, err := findPodInBundle(b, name)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
 		return err
 	}
 
@@ -148,37 +146,6 @@ func describePod(b *bundle.Bundle, name string) error {
 	}
 }
 
-func findPodForDescribe(b *bundle.Bundle, name string) (*bundle.PodInfo, error) {
-	var matches []bundle.PodInfo
-
-	for _, pod := range b.Pods {
-		// Exact match
-		if pod.Name == name {
-			return &pod, nil
-		}
-		// Partial match
-		if strings.Contains(pod.Name, name) {
-			matches = append(matches, pod)
-		}
-	}
-
-	// If no exact match but one partial match, use it
-	if len(matches) == 1 {
-		return &matches[0], nil
-	}
-
-	// Multiple partial matches
-	if len(matches) > 1 {
-		fmt.Fprintf(os.Stderr, "Multiple pods match '%s':\n", name)
-		for _, pod := range matches {
-			fmt.Fprintf(os.Stderr, "  - %s (namespace: %s)\n", pod.Name, pod.Namespace)
-		}
-		return nil, fmt.Errorf("ambiguous pod name '%s' - use full name", name)
-	}
-
-	return nil, fmt.Errorf("pod '%s' not found in bundle", name)
-}
-
 func outputPodDescribe(pod *bundle.PodInfo, b *bundle.Bundle) error {
 	fmt.Printf("Name:         %s\n", pod.Name)
 	fmt.Printf("Namespace:    %s\n", pod.Namespace)
@@ -186,12 +153,8 @@ func outputPodDescribe(pod *bundle.PodInfo, b *bundle.Bundle) error {
 
 	// Pod info
 	fmt.Println("Status:")
-	status := "Unknown"
-	if pod.HasCurrentLogs {
-		status = "Running"
-	}
-	fmt.Printf("  Phase:      %s\n", status)
-	fmt.Printf("  Ready:      %t\n", pod.HasCurrentLogs)
+	fmt.Printf("  LogStatus:  %s\n", map[bool]string{true: "HasLogs", false: "NoLogs"}[pod.HasCurrentLogs])
+	fmt.Printf("  PrevLogs:   %t\n", pod.HasPreviousLogs)
 	fmt.Println()
 
 	// Containers

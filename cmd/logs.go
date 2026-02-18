@@ -113,10 +113,8 @@ func runLogs(cmd *cobra.Command, args []string) error {
 	defer b.Close()
 
 	// Find matching pod
-	matchedPod, err := findPod(b, podName)
+	matchedPod, err := findPodInBundle(b, podName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
 		return err
 	}
 
@@ -131,45 +129,11 @@ func runLogs(cmd *cobra.Command, args []string) error {
 	// Find log file
 	logFile, err := findLogFile(b, matchedPod, containerName, logsPrevious)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(2)
 		return err
 	}
 
 	// Read and output logs
 	return outputLogs(logFile, matchedPod, containerName)
-}
-
-// findPod finds a pod by name (supports partial matching)
-func findPod(b *bundle.Bundle, name string) (*bundle.PodInfo, error) {
-	var matches []bundle.PodInfo
-
-	for _, pod := range b.Pods {
-		// Exact match
-		if pod.Name == name {
-			return &pod, nil
-		}
-		// Partial match
-		if strings.Contains(pod.Name, name) {
-			matches = append(matches, pod)
-		}
-	}
-
-	// If no exact match but one partial match, use it
-	if len(matches) == 1 {
-		return &matches[0], nil
-	}
-
-	// Multiple partial matches
-	if len(matches) > 1 {
-		fmt.Fprintf(os.Stderr, "Multiple pods match '%s':\n", name)
-		for _, pod := range matches {
-			fmt.Fprintf(os.Stderr, "  - %s (namespace: %s)\n", pod.Name, pod.Namespace)
-		}
-		return nil, fmt.Errorf("ambiguous pod name '%s' - use full name", name)
-	}
-
-	return nil, fmt.Errorf("pod '%s' not found in bundle", name)
 }
 
 // findLogFile finds the log file for a pod/container

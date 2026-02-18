@@ -30,12 +30,6 @@ EXAMPLES:
   # Analyze with JSON output for piping
   r8s analyze ./bundle/ --format=json | jq '.critical'
 
-  # Show only critical issues
-  r8s analyze ./bundle/ --severity=critical
-
-  # Include AI pattern matching
-  r8s analyze ./bundle/ --patterns
-
 EXIT CODES:
   0 - No issues found or analyzed successfully
   1 - Issues detected (warnings or critical)
@@ -45,20 +39,16 @@ EXIT CODES:
 }
 
 var (
-	analyzeFormat   string // Output format: table, json, yaml
-	analyzeSeverity string // Filter by severity: all, critical, warning, info
-	analyzePatterns bool   // Enable AI pattern detection
+	analyzeFormat string // Output format: table, json, yaml
 )
 
 func init() {
 	rootCmd.AddCommand(analyzeCmd)
 
-	analyzeCmd.Flags().StringVarP(&analyzeFormat, "format", "f", "table", "Output format: table, json")
-	analyzeCmd.Flags().StringVarP(&analyzeSeverity, "severity", "s", "all", "Filter by severity: all, critical, warning, info")
-	analyzeCmd.Flags().BoolVarP(&analyzePatterns, "patterns", "p", false, "Enable AI pattern detection")
+	analyzeCmd.Flags().StringVarP(&analyzeFormat, "format", "f", "table", "Output format: table, json, yaml")
 }
 
-// runAnalyze executes the analyze command
+// AnalysisResult represents the output of bundle analysis
 type AnalysisResult struct {
 	BundlePath   string           `json:"bundle_path"`
 	BundleType   string           `json:"bundle_type"`
@@ -70,6 +60,7 @@ type AnalysisResult struct {
 	Health       *bundle.HealthCheck `json:"health,omitempty"`
 }
 
+// Issue represents a single detected issue
 type Issue struct {
 	Severity    string `json:"severity"`
 	Type        string `json:"type"`
@@ -78,6 +69,7 @@ type Issue struct {
 	Suggestion  string `json:"suggestion,omitempty"`
 }
 
+// runAnalyze executes the analyze command
 func runAnalyze(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
 
