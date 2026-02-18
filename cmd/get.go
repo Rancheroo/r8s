@@ -72,6 +72,12 @@ func init() {
 func runGet(cmd *cobra.Command, args []string) error {
 	resource := strings.ToLower(args[0])
 	
+	// Validate output format
+	validFormats := map[string]bool{"table": true, "json": true, "yaml": true, "wide": true, "name": true}
+	if !validFormats[getOutput] {
+		return fmt.Errorf("invalid output format: %q (supported: table, json, yaml, wide, name)", getOutput)
+	}
+	
 	// Determine bundle path
 	var bundlePath string
 	if len(args) > 1 {

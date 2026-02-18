@@ -92,6 +92,10 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 		MissingFiles: []MissingFile{},
 	}
 
+	// Detect bundle type first for type-specific checks
+	bundleType := detectBundleType(bundlePath)
+	health.BundleType = bundleType
+
 	// Check each expected file
 	for _, file := range expected {
 		fullPath := filepath.Join(bundlePath, file.Path)
@@ -108,6 +112,27 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 				}
 			} else {
 				found = true
+			}
+		}
+
+		// Special handling for podlogs directory - check if it actually contains log files
+		if file.Path == "rke2/podlogs/" || file.Path == "k3s/podlogs/" || file.Path == "podlogs/" {
+			podlogsPath := filepath.Join(bundlePath, file.Path)
+			if info, err := os.Stat(podlogsPath); err == nil && info.IsDir() {
+				// Count actual log files
+				entries, err := os.ReadDir(podlogsPath)
+				if err == nil {
+					logFileCount := 0
+					for _, entry := range entries {
+						if !entry.IsDir() {
+							logFileCount++
+						}
+					}
+					// Consider podlogs present if it has at least 5 log files
+					if logFileCount >= 5 {
+						found = true
+					}
+				}
 			}
 		}
 
@@ -141,9 +166,6 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 
 	// Determine if bundle is valid (critical files must be present)
 	health.IsValid = health.hasCriticalFiles()
-
-	// Detect bundle type
-	health.BundleType = detectBundleType(bundlePath)
 
 	return health, nil
 }

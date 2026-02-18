@@ -121,14 +121,12 @@ func runLogs(cmd *cobra.Command, args []string) error {
 	}
 
 	// Determine which container to show
+	// For RKE2 bundles with flat log filenames, container name may not be needed
 	containerName := logsContainer
 	if containerName == "" && len(matchedPod.Containers) > 0 {
 		containerName = matchedPod.Containers[0]
 	}
-
-	if containerName == "" {
-		return fmt.Errorf("no containers found for pod %s", matchedPod.Name)
-	}
+	// Note: containerName may remain empty for flat bundle structures - this is OK
 
 	// Find log file
 	logFile, err := findLogFile(b, matchedPod, containerName, logsPrevious)
@@ -176,24 +174,24 @@ func findPod(b *bundle.Bundle, name string) (*bundle.PodInfo, error) {
 
 // findLogFile finds the log file for a pod/container
 func findLogFile(b *bundle.Bundle, pod *bundle.PodInfo, container string, previous bool) (string, error) {
-	// Build expected log file patterns
-	// RKE2 bundles typically have: podlogs/<namespace>/<pod>/<container>.log
-	// or podlogs/<namespace>/<pod>/<container>-previous.log
+	// RKE2 bundles have two possible structures:
+	// 1. Flat: podlogs/<namespace>-<podname> (no container name)
+	// 2. Nested: podlogs/<namespace>/<pod>/<container>.log
 
-	logFileName := container + ".log"
+	// Build the base filename pattern for flat structure
+	flatBase := fmt.Sprintf("%s-%s", pod.Namespace, pod.Name)
 	if previous {
-		logFileName = container + "-previous.log"
+		flatBase = flatBase + "-previous"
 	}
 
-	// Search through LogFiles
+	// Search through LogFiles for flat structure first (RKE2 default)
 	for _, logFile := range b.LogFiles {
-		// Check if this log file matches our pod/container
 		if logFile.Type == bundle.LogTypePod {
-			if logFile.Namespace == pod.Namespace &&
-				logFile.PodName == pod.Name &&
-				logFile.ContainerName == container {
-				// Check if it's previous/current based on path
-				isPreviousLog := strings.Contains(logFile.Path, "-previous")
+			// Match by namespace and pod name
+			if logFile.Namespace == pod.Namespace && logFile.PodName == pod.Name {
+				// Check if this is the right version (current vs previous)
+				isPreviousLog := strings.HasSuffix(logFile.Path, "-previous") ||
+					strings.Contains(filepath.Base(logFile.Path), "-previous")
 				if previous == isPreviousLog {
 					return logFile.Path, nil
 				}
@@ -201,7 +199,22 @@ func findLogFile(b *bundle.Bundle, pod *bundle.PodInfo, container string, previo
 		}
 	}
 
-	// Try to construct path from bundle structure
+	// Try flat path patterns directly
+	resolver := b.PathResolver
+	if resolver != nil {
+		podlogsDir := resolver.GetPodLogsDir()
+		flatPath := filepath.Join(podlogsDir, flatBase)
+		if _, err := os.Stat(flatPath); err == nil {
+			return flatPath, nil
+		}
+	}
+
+	// Fall back to nested structure (container-based)
+	logFileName := container + ".log"
+	if previous {
+		logFileName = container + "-previous.log"
+	}
+
 	possiblePaths := []string{
 		filepath.Join(b.ExtractPath, "podlogs", pod.Namespace, pod.Name, logFileName),
 		filepath.Join(b.ExtractPath, "podlogs", pod.Namespace, pod.Name, container, "current.log"),
@@ -215,12 +228,10 @@ func findLogFile(b *bundle.Bundle, pod *bundle.PodInfo, container string, previo
 	}
 
 	if previous {
-		return "", fmt.Errorf("previous logs not found for %s/%s (container: %s)",
-			pod.Namespace, pod.Name, container)
+		return "", fmt.Errorf("previous logs not found for %s/%s", pod.Namespace, pod.Name)
 	}
 
-	return "", fmt.Errorf("logs not found for %s/%s (container: %s). Available containers: %v",
-		pod.Namespace, pod.Name, container, pod.Containers)
+	return "", fmt.Errorf("logs not found for %s/%s", pod.Namespace, pod.Name)
 }
 
 // outputLogs reads and outputs log file
