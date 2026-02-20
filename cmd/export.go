@@ -60,7 +60,7 @@ var (
 func init() {
 	rootCmd.AddCommand(exportCmd)
 
-	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "Output format: json, yaml")
+	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", FormatHelp())
 	exportCmd.Flags().StringVarP(&exportSeverity, "severity", "s", "all", "Filter by severity: critical, warning, all")
 	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", "Output file (default: stdout)")
 	exportCmd.Flags().StringVar(&exportPattern, "pattern", "", "Filter by pattern ID (e.g., oomkill)")
@@ -130,11 +130,13 @@ func runExport(cmd *cobra.Command, args []string) error {
 	// Update summary after filtering
 	report.Summary = calculateSummary(report)
 
-	// Output
+	// Standardize format and output
+	format := StandardizeFormat(exportFormat)
+
 	var output []byte
 	var marshalErr error
 
-	switch exportFormat {
+	switch format {
 	case "yaml":
 		output, marshalErr = yaml.Marshal(report)
 	default:
@@ -142,18 +144,27 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	if marshalErr != nil {
-		return fmt.Errorf("failed to marshal output: %w", marshalErr)
+		fmt.Fprintf(os.Stderr, "Error: failed to marshal output: %v\n", marshalErr)
+		os.Exit(ExitError)
+		return nil
 	}
 
 	if exportOutput != "" {
 		if err := os.WriteFile(exportOutput, output, 0644); err != nil {
-			return fmt.Errorf("failed to write output file: %w", err)
+			fmt.Fprintf(os.Stderr, "Error: failed to write output file: %v\n", err)
+			os.Exit(ExitError)
+			return nil
 		}
 		fmt.Fprintf(os.Stderr, "✓ Report exported to %s\n", exportOutput)
 	} else {
 		fmt.Println(string(output))
 	}
 
+	// Exit with appropriate code
+	if !report.Summary.IsValid {
+		os.Exit(ExitIssuesFound)
+	}
+	os.Exit(ExitSuccess)
 	return nil
 }
 

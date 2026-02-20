@@ -100,6 +100,7 @@ func runLogs(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(os.Stderr, " for pod '%s'", podFilter)
 		}
 		fmt.Fprintln(os.Stderr)
+		os.Exit(ExitIssuesFound)
 		return nil
 	}
 

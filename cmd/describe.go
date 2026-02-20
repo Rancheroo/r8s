@@ -54,7 +54,7 @@ func init() {
 	rootCmd.AddCommand(describeCmd)
 
 	describeCmd.Flags().StringVarP(&describeNamespace, "namespace", "n", "", "Filter by namespace")
-	describeCmd.Flags().StringVarP(&describeOutput, "output", "o", "human", "Output format: human, json, yaml, wide")
+	describeCmd.Flags().StringVarP(&describeOutput, "output", "o", "human", FormatHelp())
 	describeCmd.Flags().StringVarP(&describeSelector, "selector", "l", "", "Label selector (e.g. app=rancher)")
 }
 
@@ -88,8 +88,10 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Output based on format
-	switch describeOutput {
+	// Standardize format and output
+	format := StandardizeFormat(describeOutput)
+
+	switch format {
 	case "json":
 		return outputDescribeJSON(resources)
 	case "yaml":
