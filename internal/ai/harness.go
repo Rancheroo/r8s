@@ -117,7 +117,7 @@ func GetDefaultTestCases() []TestCase {
 				SourceType: "dmesg",
 				NodeName:   "node-1",
 			},
-			ExpectedPatterns: []string{"oomkill"},
+			ExpectedPatterns: []string{"oom-kill"},
 			ExpectedSeverity: "critical",
 		},
 		{
@@ -129,8 +129,8 @@ func GetDefaultTestCases() []TestCase {
 				Namespace:     "default",
 				ContainerName: "nginx",
 			},
-			ExpectedPatterns: []string{"imagepullbackoff"},
-			ExpectedSeverity: "warning",
+			ExpectedPatterns: []string{"image-pull-backoff"},
+			ExpectedSeverity: "high",
 		},
 		{
 			Name:    "CrashLoopBackOff in Pod Logs",
@@ -141,8 +141,8 @@ func GetDefaultTestCases() []TestCase {
 				Namespace:     "prod",
 				ContainerName: "app",
 			},
-			ExpectedPatterns: []string{"crashloopbackoff"},
-			ExpectedSeverity: "warning",
+			ExpectedPatterns: []string{"crash-loop-backoff"},
+			ExpectedSeverity: "high",
 		},
 	}
 }

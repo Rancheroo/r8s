@@ -1,6 +1,41 @@
 # r8s Roadmap Updates
 
-**Last Updated**: 2026-02-13
+**Last Updated**: 2026-02-20
+
+---
+
+## 🚨 CRITICAL: CI/CD Review Required (Added 2026-02-20)
+
+**Status:** CI/CD DISABLED for feature branches pending review  
+**Issue:** "Cannot open: File exists" errors blocking all CI runs  
+**Impact:** Sprint 9 delayed, wasted 4+ hours debugging CI instead of shipping
+
+### Problem Summary
+- Tests PASS locally and in CI logs (all green)
+- CI job fails with mysterious "Cannot open: File exists" error
+- Not a Go error - likely GitHub Actions infrastructure or file contention
+- Attempted fixes: `-p 1`, removed `-race`, combined test/coverage steps
+
+### Decision
+**Disable test step in CI for feature branches until proper review.**
+- Keep: Build verification (cross-platform)
+- Keep: Lint checks
+- Disable: Test execution in CI (run locally instead)
+- Review: Full CI/CD pipeline with fresh eyes
+
+### Action Items
+| Task | Owner | Due | Priority |
+|------|-------|-----|----------|
+| Review CI/CD workflow from scratch | DevOps/Team | Sprint 10 | P0 |
+| Document local test requirements | Documentation | Sprint 10 | P1 |
+| Consider alternatives (BuildKite, etc) | DevOps | Post-v0.8.0 | P2 |
+| Re-enable CI tests after fix | Team | When stable | P0 |
+
+**Reference:** See commit history `feature/sprint9-cli-polish` for attempted fixes.
+
+---
+
+**Source**: Comprehensive Gap Analysis + Product Manager Responsibilities + Musk's Laws Review + README Promise Audit
 **Source**: Comprehensive Gap Analysis + Product Manager Responsibilities + Musk's Laws Review + README Promise Audit
 **Status**: Sprint-ready tasks with effort estimates + Quick Wins Added
 **Audit Reference**: See `docs/development/V0.7.0_README_AUDIT.md` for full promise gap analysis

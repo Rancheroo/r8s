@@ -51,7 +51,7 @@ func NewMatcher(p Pattern) *Matcher {
 // Sprint 8: Simple keyword matching (80/20) - no regex for now
 func (m *Matcher) Match(content string) MatchResult {
 	content = strings.ToLower(content)
-
+	
 	// Count how many keywords matched
 	matches := 0
 	for _, keyword := range m.pattern.Keywords {
@@ -59,9 +59,9 @@ func (m *Matcher) Match(content string) MatchResult {
 			matches++
 		}
 	}
-
-	// At least one keyword must match (OR logic)
-	if matches == 0 {
+	
+	// All keywords must match
+	if matches < len(m.pattern.Keywords) {
 		return MatchResult{Matched: false}
 	}
 	
@@ -97,7 +97,7 @@ var BuiltinPatterns = []Pattern{
 		Name:        "OOMKill Detected",
 		Category:    "OOM",
 		Severity:    SeverityCritical,
-		Keywords:    []string{"out of memory", "oomkill", "oom-killer", "oom_kill_process", "killed process"},
+		Keywords:    []string{"out of memory", "oomkill", "oom_kill_process", "killed process"},
 		Description: "Container was killed due to memory limits",
 		Suggestion:  "Increase memory limit or optimize application memory usage",
 	},
@@ -106,7 +106,7 @@ var BuiltinPatterns = []Pattern{
 		Name:        "ImagePullBackOff",
 		Category:    "Image",
 		Severity:    SeverityWarning,
-		Keywords:    []string{"imagepullbackoff", "back-off pulling image", "pull access denied", "failed to pull image", "image not found"},
+		Keywords:    []string{"imagepullbackoff", "pull access denied", "failed to pull image", "image not found"},
 		Description: "Cannot pull container image from registry",
 		Suggestion:  "Check image name, registry credentials, and network connectivity",
 	},
@@ -115,7 +115,7 @@ var BuiltinPatterns = []Pattern{
 		Name:        "CrashLoopBackOff",
 		Category:    "Crash",
 		Severity:    SeverityCritical,
-		Keywords:    []string{"crashloopbackoff", "crashloopbackoff detected", "back-off restarting", "crash loop"},
+		Keywords:    []string{"crashloopbackoff", "back-off restarting", "crash loop"},
 		Description: "Container repeatedly crashing and restarting",
 		Suggestion:  "Check container logs for application errors and exit codes",
 	},
@@ -129,7 +129,7 @@ type PatternRegistry struct {
 // NewRegistry creates a new pattern registry with built-in patterns
 func NewRegistry() *PatternRegistry {
 	return &PatternRegistry{
-		patterns: append([]Pattern{}, BuiltinPatterns...),
+		patterns: BuiltinPatterns,
 	}
 }
 
@@ -146,11 +146,6 @@ func (r *PatternRegistry) Register(p Pattern) error {
 		return fmt.Errorf("at least one keyword is required")
 	}
 	
-	// Check for duplicate ID
-	if _, exists := r.GetByID(p.ID); exists {
-		return fmt.Errorf("pattern ID already registered: %s", p.ID)
-	}
-
 	r.patterns = append(r.patterns, p)
 	return nil
 }
@@ -178,7 +173,7 @@ func (r *PatternRegistry) GetByCategory(category string) []Pattern {
 
 // GetAll returns all patterns
 func (r *PatternRegistry) GetAll() []Pattern {
-	return append([]Pattern{}, r.patterns...)
+	return r.patterns
 }
 
 // Analyze scans content against all patterns and returns matches

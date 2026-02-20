@@ -52,7 +52,7 @@ var (
 func init() {
 	rootCmd.AddCommand(validateCmd)
 
-	validateCmd.Flags().StringVarP(&validateFormat, "format", "f", "table", "Output format: table, json, summary")
+	validateCmd.Flags().StringVarP(&validateFormat, "format", "f", "table", FormatHelp())
 	validateCmd.Flags().BoolVar(&validateSummary, "summary", false, "Show only summary line")
 }
 
@@ -68,8 +68,11 @@ func runValidate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Standardize format
+	format := StandardizeFormat(validateFormat)
+
 	// Output based on format
-	switch validateFormat {
+	switch format {
 	case "json":
 		outputValidateJSON(health)
 	case "summary":
@@ -78,12 +81,13 @@ func runValidate(cmd *cobra.Command, args []string) error {
 		outputValidateTable(health)
 	}
 
-	// Exit with appropriate code
+	// Exit with standardized codes
 	if !health.IsValid {
-		os.Exit(2)
+		os.Exit(ExitError)         // 2 - Bundle invalid (critical files missing)
 	} else if health.Completeness < 100 {
-		os.Exit(1)
+		os.Exit(ExitIssuesFound)   // 1 - Bundle incomplete but usable
 	}
+	os.Exit(ExitSuccess)           // 0 - Bundle valid and complete
 	return nil
 }
 

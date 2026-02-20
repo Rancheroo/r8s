@@ -1,5 +1,5 @@
 // Package cmd implements the CLI commands for r8s.
-// v0.8.0: r8s logs - Stream pod logs from bundle (kubectl-style)
+// Sprint 9 Day 2: r8s logs - Stream pod logs from bundles
 package cmd
 
 import (
@@ -8,262 +8,360 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-
-	"github.com/Rancheroo/r8s/internal/bundle"
 )
 
 // logsCmd represents the logs command
 var logsCmd = &cobra.Command{
 	Use:   "logs [bundle-path] [pod-name]",
-	Short: "Print pod logs from bundle (kubectl-style)",
-	Long: `Print logs for a pod from a Rancher support bundle.
+	Short: "Stream pod logs from a bundle",
+	Long: `Stream logs from pods in a support bundle.
 
 Similar to 'kubectl logs', but works offline with bundle data.
 
 EXAMPLES:
-  # Print logs for a pod
-  r8s logs ./bundle/ nginx-pod
+  # Stream all logs from all pods
+  r8s logs ./bundle/
 
-  # Print logs for specific container
-  r8s logs ./bundle/ nginx-pod -c container-name
+  # Stream logs from specific pod
+  r8s logs ./bundle/ rancher-7c4c7b8f5-x2v9p
 
-  # Follow/stream logs (simulated from bundle)
-  r8s logs ./bundle/ nginx-pod -f
+  # Stream logs from namespace
+  r8s logs ./bundle/ -n cattle-system
 
-  # Print previous container logs (crashed pod)
-  r8s logs ./bundle/ nginx-pod -p
+  # Stream logs and follow (like tail -f)
+  r8s logs ./bundle/ rancher-xyz -f
+
+  # Stream with timestamps
+  r8s logs ./bundle/ --timestamps
 
   # Show last N lines
-  r8s logs ./bundle/ nginx-pod --tail=100
-
-  # Show logs since timestamp
-  r8s logs ./bundle/ nginx-pod --since=2024-01-01T00:00:00Z
-
-  # Filter to errors only
-  r8s logs ./bundle/ nginx-pod | grep -i error
-
-POD NAME MATCHING:
-  Pod names are matched against bundle inventory.
-  Partial matching supported: "nginx" matches "nginx-7d8c9f4b2-x1z9q"
-
-CONTAINER SELECTION:
-  If pod has multiple containers and -c not specified:
-  - First container is used (default)
-  - Use -c to specify container name
-
-EXIT CODES:
-  0 - Logs displayed successfully
-  1 - Pod not found in bundle
-  2 - Log file not found or unreadable`,
+  r8s logs ./bundle/ --tail=100`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: runLogs,
 }
 
 var (
-	logsContainer  string // Container name (-c)
-	logsPrevious   bool   // Previous container logs (-p)
-	logsFollow     bool   // Follow/stream mode (-f)
-	logsTail       int    // Show last N lines (--tail)
-	logsSince      string // Show logs since timestamp (--since)
-	logsTimestamps bool   // Show timestamps (-t)
-	logsPrefix     bool   // Prefix each line with pod name
+	logsNamespace  string
+	logsFollow     bool
+	logsTimestamps bool
+	logsTail       int
+	logsContainer  string
 )
 
 func init() {
 	rootCmd.AddCommand(logsCmd)
 
-	logsCmd.Flags().StringVarP(&logsContainer, "container", "c", "", "Container name (default: first container)")
-	logsCmd.Flags().BoolVarP(&logsPrevious, "previous", "p", false, "Print previous container logs (crashed pod)")
-	logsCmd.Flags().BoolVarP(&logsFollow, "follow", "f", false, "Stream logs (simulated from bundle)")
-	logsCmd.Flags().IntVar(&logsTail, "tail", 0, "Show last N lines (0 = all)")
-	logsCmd.Flags().StringVar(&logsSince, "since", "", "Show logs since timestamp (RFC3339)")
+	logsCmd.Flags().StringVarP(&logsNamespace, "namespace", "n", "", "Filter by namespace")
+	logsCmd.Flags().BoolVarP(&logsFollow, "follow", "f", false, "Follow log output (stream in real-time)")
 	logsCmd.Flags().BoolVarP(&logsTimestamps, "timestamps", "t", false, "Show timestamps")
-	logsCmd.Flags().BoolVar(&logsPrefix, "prefix", false, "Prefix each line with pod name")
+	logsCmd.Flags().IntVar(&logsTail, "tail", 0, "Show last N lines (0 = all)")
+	logsCmd.Flags().StringVarP(&logsContainer, "container", "c", "", "Specific container (for multi-container pods)")
 }
 
-// runLogs executes the logs command
+// LogEntry represents a single log line with metadata
+type LogEntry struct {
+	Timestamp   time.Time
+	PodName     string
+	Namespace   string
+	Container   string
+	Message     string
+	HasError    bool
+	HasWarning  bool
+}
+
 func runLogs(cmd *cobra.Command, args []string) error {
-	// Parse arguments
-	var bundlePath, podName string
+	bundlePath := args[0]
+	podFilter := ""
+	if len(args) > 1 {
+		podFilter = args[1]
+	}
 
-	if len(args) == 1 {
-		// Only pod name provided, use tuiBundlePath from root
-		bundlePath = tuiBundlePath
-		podName = args[0]
-		if bundlePath == "" {
-			return fmt.Errorf("bundle path required: r8s logs [bundle-path] [pod-name]")
+	// Validate bundle exists
+	if _, err := os.Stat(bundlePath); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: bundle path not found: %v\n", err)
+		os.Exit(ExitError)
+		return nil
+	}
+
+	// Find log files
+	logFiles, err := findLogFiles(bundlePath, logsNamespace, podFilter)
+	if err != nil {
+		return fmt.Errorf("failed to find logs: %w", err)
+	}
+
+	if len(logFiles) == 0 {
+		fmt.Fprintf(os.Stderr, "No logs found")
+		if logsNamespace != "" {
+			fmt.Fprintf(os.Stderr, " in namespace '%s'", logsNamespace)
 		}
-	} else {
-		bundlePath = args[0]
-		podName = args[1]
+		if podFilter != "" {
+			fmt.Fprintf(os.Stderr, " for pod '%s'", podFilter)
+		}
+		fmt.Fprintln(os.Stderr)
+		os.Exit(ExitIssuesFound)
+		return nil
 	}
 
-	// Load bundle
-	importOpts := bundle.ImportOptions{
-		Path:    bundlePath,
-		Verbose: verbose,
+	// Stream logs
+	if logsFollow {
+		return streamLogsFollow(logFiles)
 	}
 
-	b, err := bundle.Load(importOpts)
-	if err != nil {
-		return fmt.Errorf("failed to load bundle: %w", err)
-	}
-	defer b.Close()
-
-	// Find matching pod
-	matchedPod, err := findPodInBundle(b, podName)
-	if err != nil {
-		return err
-	}
-
-	// Determine which container to show
-	// For RKE2 bundles with flat log filenames, container name may not be needed
-	containerName := logsContainer
-	if containerName == "" && len(matchedPod.Containers) > 0 {
-		containerName = matchedPod.Containers[0]
-	}
-	// Note: containerName may remain empty for flat bundle structures - this is OK
-
-	// Find log file
-	logFile, err := findLogFile(b, matchedPod, containerName, logsPrevious)
-	if err != nil {
-		return err
-	}
-
-	// Read and output logs
-	return outputLogs(logFile, matchedPod, containerName)
+	return streamLogsOnce(logFiles)
 }
 
-// findLogFile finds the log file for a pod/container
-func findLogFile(b *bundle.Bundle, pod *bundle.PodInfo, container string, previous bool) (string, error) {
-	// RKE2 bundles have two possible structures:
-	// 1. Flat: podlogs/<namespace>-<podname> (no container name)
-	// 2. Nested: podlogs/<namespace>/<pod>/<container>.log
+// findLogFiles discovers log files in the bundle
+func findLogFiles(bundlePath, namespaceFilter, podFilter string) ([]string, error) {
+	var files []string
 
-	// Build the base filename pattern for flat structure
-	flatBase := fmt.Sprintf("%s-%s", pod.Namespace, pod.Name)
-	if previous {
-		flatBase = flatBase + "-previous"
+	// Check for podlogs directory
+	podlogsDir := filepath.Join(bundlePath, "rke2", "podlogs")
+	if _, err := os.Stat(podlogsDir); err != nil {
+		// Try alternative paths
+		podlogsDir = filepath.Join(bundlePath, "podlogs")
+		if _, err := os.Stat(podlogsDir); err != nil {
+			return files, nil // No logs directory
+		}
 	}
 
-	// Search through LogFiles for flat structure first (RKE2 default)
-	for _, logFile := range b.LogFiles {
-		if logFile.Type == bundle.LogTypePod {
-			// Match by namespace and pod name
-			if logFile.Namespace == pod.Namespace && logFile.PodName == pod.Name {
-				// Check if this is the right version (current vs previous)
-				isPreviousLog := strings.HasSuffix(logFile.Path, "-previous") ||
-					strings.Contains(filepath.Base(logFile.Path), "-previous")
-				if previous == isPreviousLog {
-					return logFile.Path, nil
-				}
+	// Walk podlogs directory
+	err := filepath.Walk(podlogsDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip errors
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		// Parse filename: handles multiple formats
+		// Format 1: namespace_podname_container.log (underscore)
+		// Format 2: namespace-podname-container.log (hyphen)
+		// Format 3: podname.log (simple)
+		filename := info.Name()
+		ext := filepath.Ext(filename)
+		base := strings.TrimSuffix(filename, ext)
+		
+		// Extract namespace and pod from path structure if possible
+		relPath, _ := filepath.Rel(podlogsDir, path)
+		dirParts := strings.Split(relPath, string(filepath.Separator))
+		
+		var ns, pod string
+		
+		if len(dirParts) >= 2 {
+			// Path structure: namespace/podname.log
+			ns = dirParts[0]
+			pod = strings.TrimSuffix(dirParts[1], ext)
+		} else {
+			// Flat structure: try to parse from filename
+			// Try underscore first, then hyphen
+			parts := strings.Split(base, "_")
+			if len(parts) < 2 {
+				parts = strings.Split(base, "-")
+			}
+			
+			if len(parts) >= 2 {
+				ns = parts[0]
+				pod = strings.Join(parts[1:], "-")
+			} else {
+				// Can't parse, use defaults
+				ns = "default"
+				pod = base
 			}
 		}
-	}
 
-	// Try flat path patterns directly
-	resolver := b.PathResolver
-	if resolver != nil {
-		podlogsDir := resolver.GetPodLogsDir()
-		flatPath := filepath.Join(podlogsDir, flatBase)
-		if _, err := os.Stat(flatPath); err == nil {
-			return flatPath, nil
+		// Apply filters
+		if namespaceFilter != "" && ns != namespaceFilter {
+			return nil
 		}
-	}
-
-	// Fall back to nested structure (container-based)
-	logFileName := container + ".log"
-	if previous {
-		logFileName = container + "-previous.log"
-	}
-
-	possiblePaths := []string{
-		filepath.Join(b.ExtractPath, "podlogs", pod.Namespace, pod.Name, logFileName),
-		filepath.Join(b.ExtractPath, "podlogs", pod.Namespace, pod.Name, container, "current.log"),
-		filepath.Join(b.ExtractPath, "podlogs", pod.Namespace, pod.Name, container, "previous.log"),
-	}
-
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			return path, nil
+		if podFilter != "" && !strings.Contains(pod, podFilter) {
+			return nil
 		}
-	}
 
-	if previous {
-		return "", fmt.Errorf("previous logs not found for %s/%s", pod.Namespace, pod.Name)
-	}
+		files = append(files, path)
+		return nil
+	})
 
-	return "", fmt.Errorf("logs not found for %s/%s", pod.Namespace, pod.Name)
+	return files, err
 }
 
-// outputLogs reads and outputs log file
-func outputLogs(logPath string, pod *bundle.PodInfo, container string) error {
-	file, err := os.Open(logPath)
+// streamLogsOnce outputs logs once (non-following)
+func streamLogsOnce(files []string) error {
+	for _, file := range files {
+		if err := outputLogFile(file, false); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+		}
+	}
+	return nil
+}
+
+// streamLogsFollow implements tail -f behavior
+func streamLogsFollow(files []string) error {
+	fmt.Println(color.YellowString("Following logs (Ctrl+C to stop)..."))
+	fmt.Println()
+
+	// Track file positions
+	positions := make(map[string]int64)
+
+	for {
+		newData := false
+		for _, file := range files {
+			pos := positions[file]
+			newPos, hasNew, err := tailFile(file, pos)
+			if err != nil {
+				continue
+			}
+			positions[file] = newPos
+			if hasNew {
+				newData = true
+			}
+		}
+
+		if !newData {
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+}
+
+// outputLogFile outputs a single log file
+func outputLogFile(path string, isFollowing bool) error {
+	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
+		return err
 	}
 	defer file.Close()
 
-	// Get file info for size
-	stat, err := file.Stat()
-	if err != nil {
-		return fmt.Errorf("failed to stat log file: %w", err)
+	// Get metadata from filename using same logic as findLogFiles
+	filename := filepath.Base(path)
+	ext := filepath.Ext(filename)
+	base := strings.TrimSuffix(filename, ext)
+	
+	// Try to extract from directory structure first
+	dir := filepath.Dir(path)
+	parentDir := filepath.Base(dir)
+	grandparentDir := filepath.Base(filepath.Dir(dir))
+	
+	var namespace, pod, container string
+	
+	// Check if path has namespace/pod structure
+	if grandparentDir == "podlogs" || parentDir == "podlogs" {
+		// Try to parse from filename
+		parts := strings.Split(base, "_")
+		if len(parts) < 2 {
+			parts = strings.Split(base, "-")
+		}
+		
+		if len(parts) >= 3 {
+			// Assume format: namespace-pod-container
+			namespace = parts[0]
+			pod = strings.Join(parts[1:len(parts)-1], "-")
+			container = parts[len(parts)-1]
+		} else if len(parts) == 2 {
+			namespace = parts[0]
+			pod = parts[1]
+			container = "default"
+		} else {
+			namespace = "default"
+			pod = base
+			container = "default"
+		}
+	} else {
+		// Use directory structure
+		namespace = parentDir
+		pod = base
+		container = "default"
 	}
 
-	// Show header
-	if verbose {
-		fmt.Fprintf(os.Stderr, "# Logs for %s/%s (container: %s)\n", 
-			pod.Namespace, pod.Name, container)
-		fmt.Fprintf(os.Stderr, "# File: %s (%d bytes)\n", logPath, stat.Size())
-		fmt.Fprintln(os.Stderr, "# ---")
+	// Print header if not following
+	if !isFollowing {
+		fmt.Printf("\n%s %s/%s [%s]\n",
+			color.CyanString("==>"),
+			color.YellowString(namespace),
+			color.GreenString(pod),
+			color.MagentaString(container),
+		)
+		fmt.Println(color.CyanString(strings.Repeat("-", 60)))
 	}
 
-	// Scan and output
 	scanner := bufio.NewScanner(file)
-	lineNum := 0
-	lines := []string{}
+	lineCount := 0
+	maxLines := logsTail
 
-	// Read all lines (for tail support)
+	// If tail mode, read all lines first
+	var lines []string
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
 
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("error reading log file: %w", err)
-	}
-
 	// Apply tail filter
-	startLine := 0
-	if logsTail > 0 && len(lines) > logsTail {
-		startLine = len(lines) - logsTail
+	startIdx := 0
+	if maxLines > 0 && len(lines) > maxLines {
+		startIdx = len(lines) - maxLines
 	}
 
 	// Output lines
-	prefix := ""
-	if logsPrefix {
-		prefix = fmt.Sprintf("[%s/%s] ", pod.Namespace, pod.Name)
-	}
-
-	for i := startLine; i < len(lines); i++ {
+	for i := startIdx; i < len(lines); i++ {
 		line := lines[i]
-		lineNum++
+		lineCount++
 
-		// Apply timestamp formatting if requested
-		// Note: This is simplified - real implementation would parse log timestamps
-		if logsTimestamps {
-			// Would add timestamp extraction here
-			fmt.Printf("%s%d %s\n", prefix, lineNum, line)
-		} else {
-			fmt.Printf("%s%s\n", prefix, line)
-		}
+		// Colorize errors/warnings
+		formattedLine := formatLogLine(line)
+		fmt.Println(formattedLine)
 	}
 
-	// Simulate follow mode (just show message)
-	if logsFollow {
-		fmt.Fprintln(os.Stderr, "# (Bundle mode - end of logs reached)")
+	return scanner.Err()
+}
+
+// tailFile reads new content from a file position
+func tailFile(path string, startPos int64) (int64, bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return startPos, false, err
+	}
+	defer file.Close()
+
+	// Seek to start position
+	_, err = file.Seek(startPos, 0)
+	if err != nil {
+		return startPos, false, err
 	}
 
-	return nil
+	// Read new content
+	scanner := bufio.NewScanner(file)
+	hasNew := false
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(formatLogLine(line))
+		hasNew = true
+	}
+
+	// Get current position
+	pos, _ := file.Seek(0, 1)
+	return pos, hasNew, scanner.Err()
+}
+
+// formatLogLine applies formatting to log lines
+func formatLogLine(line string) string {
+	upper := strings.ToUpper(line)
+
+	// Error highlighting
+	if strings.Contains(upper, "ERROR") || strings.Contains(upper, "FATAL") ||
+		strings.Contains(upper, "PANIC") || strings.Contains(upper, "EXCEPTION") {
+		return color.RedString(line)
+	}
+
+	// Warning highlighting
+	if strings.Contains(upper, "WARN") || strings.Contains(upper, "WARNING") {
+		return color.YellowString(line)
+	}
+
+	// Info highlighting
+	if strings.Contains(upper, "INFO") {
+		return color.CyanString(line)
+	}
+
+	return line
 }

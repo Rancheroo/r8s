@@ -111,7 +111,7 @@ func runGeneratePrompt(cmd *cobra.Command, args []string) error {
 
 	// Output
 	if promptOutput != "" {
-		if err := os.WriteFile(promptOutput, []byte(prompt), 0600); err != nil {
+		if err := os.WriteFile(promptOutput, []byte(prompt), 0644); err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
 		fmt.Fprintf(os.Stderr, "✓ Prompt saved to %s\n", promptOutput)
@@ -191,11 +191,10 @@ func generateTerminalPrompt(bundlePath string, health *bundle.HealthCheck) strin
 	if len(highImpact) > 0 {
 		prompt += "## Issues Found\n\n"
 		for i, missing := range highImpact {
-			importanceStr := importanceToString(missing.Importance)
-			prompt += fmt.Sprintf("%d. [%s] %s: %s\n",
-				i+1,
-				importanceStr,
-				missing.Path,
+			prompt += fmt.Sprintf("%d. [%s] %s: %s\n", 
+				i+1, 
+				missing.Importance.String(),
+				missing.Path, 
 				missing.Impact)
 		}
 		prompt += "\n"
@@ -254,20 +253,4 @@ func generateScriptPrompt(bundlePath string, health *bundle.HealthCheck) string 
 	prompt += "- End with verification that issues are resolved\n"
 
 	return prompt
-}
-
-// importanceToString converts FileImportance to human-readable string
-func importanceToString(imp bundle.FileImportance) string {
-	switch imp {
-	case bundle.ImportanceCritical:
-		return "critical"
-	case bundle.ImportanceHigh:
-		return "high"
-	case bundle.ImportanceMedium:
-		return "medium"
-	case bundle.ImportanceLow:
-		return "low"
-	default:
-		return "unknown"
-	}
 }

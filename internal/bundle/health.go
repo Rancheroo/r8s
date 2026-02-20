@@ -18,10 +18,25 @@ const (
 	ImportanceLow                            // Cosmetic only
 )
 
+// String returns the string representation of FileImportance
+func (fi FileImportance) String() string {
+	switch fi {
+	case ImportanceCritical:
+		return "Critical"
+	case ImportanceHigh:
+		return "High"
+	case ImportanceMedium:
+		return "Medium"
+	case ImportanceLow:
+		return "Low"
+	default:
+		return "Unknown"
+	}
+}
+
 // ExpectedFile represents a file that should be present in a bundle
 type ExpectedFile struct {
 	Path       string
-	AltPaths   []string // Alternative paths to check (for bundle format variations)
 	Importance FileImportance
 	Category   string // e.g., "pods", "nodes", "logs", "system"
 }
@@ -55,7 +70,6 @@ type CategoryHealth struct {
 
 // ExpectedFiles returns the list of files we expect in a bundle
 // Sprint 8: RKE2 only for now, K3s to be added
-// NOTE: Bundle format varies by collector version - some files are at root, some under rke2/
 func ExpectedFiles() []ExpectedFile {
 	return []ExpectedFile{
 		// Critical files
@@ -65,18 +79,18 @@ func ExpectedFiles() []ExpectedFile {
 		// High importance
 		{Path: "rke2/kubectl/events", Importance: ImportanceHigh, Category: "events"},
 		{Path: "rke2/kubectl/deployments", Importance: ImportanceHigh, Category: "workloads"},
-		{Path: "rke2/etcd/endpointstatus", AltPaths: []string{"etcd/endpointstatus"}, Importance: ImportanceHigh, Category: "etcd"},
+		{Path: "rke2/etcd/endpoint_status", Importance: ImportanceHigh, Category: "etcd"},
 
 		// Medium importance
 		{Path: "rke2/kubectl/services", Importance: ImportanceMedium, Category: "networking"},
 		{Path: "rke2/kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
-		{Path: "rke2/dmesg", AltPaths: []string{"systeminfo/dmesg", "systemlogs/dmesg"}, Importance: ImportanceMedium, Category: "system"},
-		{Path: "rke2/logs/journald.log", AltPaths: []string{"journald/", "systemlogs/journald.log"}, Importance: ImportanceMedium, Category: "logs"},
+		{Path: "rke2/dmesg", Importance: ImportanceMedium, Category: "system"},
+		{Path: "rke2/logs/journald.log", Importance: ImportanceMedium, Category: "logs"},
 
 		// Low importance (nice to have)
 		{Path: "rke2/kubectl/crds", Importance: ImportanceLow, Category: "crds"},
 		{Path: "rke2/kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
-		{Path: "rke2/sysstat/", AltPaths: []string{"sysstat/", "systemlogs/sysstat-data/"}, Importance: ImportanceLow, Category: "system"},
+		{Path: "rke2/sysstat/", Importance: ImportanceLow, Category: "system"},
 		{Path: "rke2/podlogs/", Importance: ImportanceLow, Category: "logs"},
 	}
 }
@@ -94,52 +108,22 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 		MissingFiles: []MissingFile{},
 	}
 
-	// Detect bundle type first for type-specific checks
-	bundleType := detectBundleType(bundlePath)
-	health.BundleType = bundleType
-
 	// Check each expected file
 	for _, file := range expected {
+		fullPath := filepath.Join(bundlePath, file.Path)
 		found := false
 
-		// Check primary path and all alternative paths
-		pathsToCheck := append([]string{file.Path}, file.AltPaths...)
-		for _, p := range pathsToCheck {
-			fullPath := filepath.Join(bundlePath, p)
-			info, err := os.Stat(fullPath)
-			if err == nil {
-				// For directories, check if they have contents
-				if info.IsDir() {
-					entries, err := os.ReadDir(fullPath)
-					if err == nil && len(entries) > 0 {
-						found = true
-						break
-					}
-				} else {
+		// Check if file or directory exists
+		info, err := os.Stat(fullPath)
+		if err == nil {
+			// For directories, check if they have contents
+			if info.IsDir() {
+				entries, err := os.ReadDir(fullPath)
+				if err == nil && len(entries) > 0 {
 					found = true
-					break
 				}
-			}
-		}
-
-		// Special handling for podlogs directory - check if it actually contains log files
-		if file.Path == "rke2/podlogs/" || file.Path == "k3s/podlogs/" || file.Path == "podlogs/" {
-			podlogsPath := filepath.Join(bundlePath, file.Path)
-			if info, err := os.Stat(podlogsPath); err == nil && info.IsDir() {
-				// Count actual log files
-				entries, err := os.ReadDir(podlogsPath)
-				if err == nil {
-					logFileCount := 0
-					for _, entry := range entries {
-						if !entry.IsDir() {
-							logFileCount++
-						}
-					}
-					// Consider podlogs present if it has at least 5 log files
-					if logFileCount >= 5 {
-						found = true
-					}
-				}
+			} else {
+				found = true
 			}
 		}
 
@@ -173,6 +157,9 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 
 	// Determine if bundle is valid (critical files must be present)
 	health.IsValid = health.hasCriticalFiles()
+
+	// Detect bundle type
+	health.BundleType = detectBundleType(bundlePath)
 
 	return health, nil
 }

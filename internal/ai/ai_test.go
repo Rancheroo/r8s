@@ -17,19 +17,19 @@ func TestEngine_Analyze(t *testing.T) {
 			name:    "OOM Match",
 			content: "Memory cgroup out of memory: Killed process 1234 (java)",
 			metadata: MatchMetadata{SourceType: "dmesg"},
-			expected: "oomkill",
+			expected: "oom-kill",
 		},
 		{
 			name:    "Image Pull Match",
 			content: "Failed to pull image: rpc error: code = Unknown desc = Error response from daemon",
 			metadata: MatchMetadata{SourceType: "events"},
-			expected: "imagepullbackoff",
+			expected: "image-pull-backoff",
 		},
 		{
 			name:    "Crash Loop Match",
 			content: "Back-off restarting failed container",
 			metadata: MatchMetadata{SourceType: "logs"},
-			expected: "crashloopbackoff",
+			expected: "crash-loop-backoff",
 		},
 	}
 
@@ -69,13 +69,13 @@ func TestHarness_RunSuite(t *testing.T) {
 }
 
 func TestIsHigherSeverity(t *testing.T) {
-	if !IsHigherSeverity("critical", "warning") {
-		t.Error("critical should be higher than warning")
+	if !IsHigherSeverity("critical", "high") {
+		t.Error("critical should be higher than high")
 	}
-	if IsHigherSeverity("info", "warning") {
-		t.Error("info should not be higher than warning")
+	if IsHigherSeverity("low", "medium") {
+		t.Error("low should not be higher than medium")
 	}
-	if IsHigherSeverity("warning", "warning") {
-		t.Error("warning should not be higher than warning")
+	if IsHigherSeverity("medium", "medium") {
+		t.Error("medium should not be higher than medium")
 	}
 }

@@ -1,327 +1,321 @@
 // Package cmd implements the CLI commands for r8s.
-// v0.8.0: r8s describe - Show resource details (kubectl-style)
+// Sprint 9 Day 3: r8s describe - kubectl-style resource description
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-
-	"github.com/Rancheroo/r8s/internal/bundle"
+	"gopkg.in/yaml.v3"
 )
 
 // describeCmd represents the describe command
 var describeCmd = &cobra.Command{
-	Use:   "describe [resource] [bundle-path] [name]",
-	Short: "Show details of a resource (kubectl-style)",
-	Long: `Show detailed information about a resource from a bundle.
+	Use:   "describe [kind] [bundle-path] [name]",
+	Short: "Show detailed resource information from bundle",
+	Long: `Show detailed information about Kubernetes resources from a bundle.
 
 Similar to 'kubectl describe', but works offline with bundle data.
 
-SUPPORTED RESOURCES:
-  pod, pods, po          - Describe a pod
-  node, nodes, no        - Describe a node
-  deployment, deploy     - Describe a deployment
-  service, svc           - Describe a service
-  namespace, ns          - Describe a namespace
-  event, events, ev      - Describe events
-
 EXAMPLES:
-  # Describe a pod
-  r8s describe pod ./bundle/ nginx-pod
-
-  # Describe pod (shorthand)
-  r8s describe po ./bundle/ nginx-pod
+  # Describe a specific pod (3-arg form: kind, bundle, name)
+  r8s describe pod ./bundle/ rancher-7c4c7b8f5-x2v9p
 
   # Describe a node
-  r8s describe node ./bundle/ my-node
+  r8s describe node ./bundle/ node-1
 
-  # Describe with JSON output
-  r8s describe pod ./bundle/ nginx-pod -o json
+  # Describe with YAML output
+  r8s describe pod ./bundle/ rancher-xyz -o yaml
 
-  # Show events only
-  r8s describe pod ./bundle/ nginx-pod --events
+  # Auto-detect resource type from name (2-arg form: bundle, name)
+  r8s describe ./bundle/ rancher-xyz
 
-POD NAME MATCHING:
-  Pod names support partial matching like 'r8s logs'.
-  If multiple pods match, you'll be prompted to specify.
+  # Filter by namespace
+  r8s describe pod ./bundle/ -n cattle-system
 
-OUTPUT FORMATS:
-  text   - Human-readable description (default)
-  json   - Full JSON resource definition
-  yaml   - Full YAML resource definition`,
+Supported kinds: pod, pods, node, nodes, deployment, deployments, 
+service, services, configmap, configmaps, event, events`,
 	Args: cobra.RangeArgs(2, 3),
 	RunE: runDescribe,
 }
 
 var (
-	describeOutput string // Output format: text, json, yaml
-	describeEvents bool   // Show only events
-	describeWide   bool   // Show wide output
+	describeNamespace string
+	describeOutput    string
+	describeSelector  string
 )
 
 func init() {
 	rootCmd.AddCommand(describeCmd)
 
-	describeCmd.Flags().StringVarP(&describeOutput, "output", "o", "text", "Output format: text, json, yaml")
-	describeCmd.Flags().BoolVar(&describeEvents, "events", false, "Show only events")
-	describeCmd.Flags().BoolVar(&describeWide, "wide", false, "Show wide output (more details)")
+	describeCmd.Flags().StringVarP(&describeNamespace, "namespace", "n", "", "Filter by namespace")
+	describeCmd.Flags().StringVarP(&describeOutput, "output", "o", "human", FormatHelp())
+	describeCmd.Flags().StringVarP(&describeSelector, "selector", "l", "", "Label selector (e.g. app=rancher)")
 }
 
-// runDescribe executes the describe command
 func runDescribe(cmd *cobra.Command, args []string) error {
-	// Parse arguments: describe [resource] [bundle] [name]
-	// OR: describe [resource] [name] (if bundle path from root)
-	resource := strings.ToLower(args[0])
-	
-	var bundlePath, resourceName string
-	
-	if len(args) == 3 {
-		// Full form: describe resource bundle name
-		bundlePath = args[1]
-		resourceName = args[2]
-	} else {
-		// Short form: describe resource name (use default bundle)
-		bundlePath = tuiBundlePath
-		resourceName = args[1]
-		if bundlePath == "" {
-			return fmt.Errorf("bundle path required: r8s describe %s [bundle-path] [name]", resource)
+	// Parse arguments
+	kind, bundlePath, name := parseDescribeArgs(args)
+
+	// Validate bundle
+	if _, err := os.Stat(bundlePath); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: bundle path not found: %v\n", err)
+		os.Exit(ExitError)
+		return nil
+	}
+
+	// Find and describe resources
+	resources, err := findResources(bundlePath, kind, name, describeNamespace, describeSelector)
+	if err != nil {
+		return fmt.Errorf("failed to find resources: %w", err)
+	}
+
+	if len(resources) == 0 {
+		fmt.Fprintf(os.Stderr, "No resources found")
+		if kind != "" {
+			fmt.Fprintf(os.Stderr, " of kind '%s'", kind)
 		}
+		if name != "" {
+			fmt.Fprintf(os.Stderr, " with name '%s'", name)
+		}
+		if describeNamespace != "" {
+			fmt.Fprintf(os.Stderr, " in namespace '%s'", describeNamespace)
+		}
+		fmt.Fprintln(os.Stderr)
+		os.Exit(ExitIssuesFound)
+		return nil
 	}
 
-	// Load bundle
-	importOpts := bundle.ImportOptions{
-		Path:    bundlePath,
-		Verbose: verbose,
-	}
+	// Standardize format and output
+	format := StandardizeFormat(describeOutput)
 
-	b, err := bundle.Load(importOpts)
-	if err != nil {
-		return fmt.Errorf("failed to load bundle: %w", err)
-	}
-	defer b.Close()
-
-	// Route to appropriate handler
-	switch resource {
-	case "pod", "pods", "po":
-		return describePod(b, resourceName)
-	case "node", "nodes", "no":
-		return describeNode(b)
-	case "deployment", "deploy":
-		return describeDeployment(b, resourceName)
-	case "service", "svc":
-		return describeService(b, resourceName)
-	case "namespace", "ns":
-		return describeNamespace(b, resourceName)
-	case "event", "events", "ev":
-		return describeEventsResource(b)
-	default:
-		return fmt.Errorf("unknown resource type: %s (supported: pod, node, deploy, svc, ns, events)", resource)
-	}
-}
-
-// ============================================
-// DESCRIBE POD
-// ============================================
-
-func describePod(b *bundle.Bundle, name string) error {
-	// Find matching pod
-	matchedPod, err := findPodInBundle(b, name)
-	if err != nil {
-		return err
-	}
-
-	// Output based on format
-	switch describeOutput {
+	switch format {
 	case "json":
-		return outputDescribeJSON(matchedPod)
+		return outputDescribeJSON(resources)
 	case "yaml":
-		return outputDescribeYAML(matchedPod)
+		return outputDescribeYAML(resources)
+	case "wide":
+		return outputDescribeWide(resources)
 	default:
-		return outputPodDescribe(matchedPod, b)
+		return outputDescribeHuman(resources)
 	}
 }
 
-func outputPodDescribe(pod *bundle.PodInfo, b *bundle.Bundle) error {
-	fmt.Printf("Name:         %s\n", pod.Name)
-	fmt.Printf("Namespace:    %s\n", pod.Namespace)
-	fmt.Println()
-
-	// Pod info
-	fmt.Println("Status:")
-	fmt.Printf("  LogStatus:  %s\n", map[bool]string{true: "HasLogs", false: "NoLogs"}[pod.HasCurrentLogs])
-	fmt.Printf("  PrevLogs:   %t\n", pod.HasPreviousLogs)
-	fmt.Println()
-
-	// Containers
-	fmt.Println("Containers:")
-	for _, container := range pod.Containers {
-		fmt.Printf("  %s:\n", container)
-		fmt.Printf("    Current Logs:  %t\n", pod.HasCurrentLogs)
-		fmt.Printf("    Previous Logs: %t\n", pod.HasPreviousLogs)
+// parseDescribeArgs handles flexible argument order
+func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
+	if len(args) == 2 {
+		// Format: describe ./bundle/ name (auto-detect kind)
+		bundlePath = args[0]
+		name = args[1]
+	} else {
+		// Format: describe kind ./bundle/ name
+		kind = strings.ToLower(args[0])
+		bundlePath = args[1]
+		name = args[2]
 	}
-	fmt.Println()
 
-	// Log availability
-	fmt.Println("Log Files:")
-	foundLogs := false
-	for _, logFile := range b.LogFiles {
-		if logFile.Type == bundle.LogTypePod &&
-			logFile.Namespace == pod.Namespace &&
-			logFile.PodName == pod.Name {
-			fmt.Printf("  %s\n", logFile.Path)
-			foundLogs = true
+	// Normalize kind aliases
+	switch kind {
+	case "pods":
+		kind = "pod"
+	case "nodes":
+		kind = "node"
+	case "deployments":
+		kind = "deployment"
+	case "services":
+		kind = "service"
+	case "configmaps":
+		kind = "configmap"
+	case "events":
+		kind = "event"
+	}
+
+	return
+}
+
+// ResourceInfo holds parsed resource data
+type ResourceInfo struct {
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Name       string                 `json:"name" yaml:"name"`
+	Namespace  string                 `json:"namespace" yaml:"namespace"`
+	Labels     map[string]string      `json:"labels" yaml:"labels"`
+	Status     string                 `json:"status" yaml:"status"`
+	Details    map[string]interface{} `json:"details" yaml:"details"`
+	SourceFile string                 `json:"-" yaml:"-"`
+}
+
+// findResources discovers resources in bundle
+func findResources(bundlePath, kind, name, namespace, selector string) ([]ResourceInfo, error) {
+	var resources []ResourceInfo
+
+	// Map of kind to file patterns (kubectl describe output)
+	// Note: describe files have "describe" suffix (e.g., podsdescribe, nodesdescribe)
+	kindPatterns := map[string][]string{
+		"pod":        {"rke2/kubectl/podsdescribe", "kubectl/podsdescribe", "rke2/kubectl/pods", "kubectl/pods"},
+		"node":       {"rke2/kubectl/nodesdescribe", "kubectl/nodesdescribe", "rke2/kubectl/nodes", "kubectl/nodes"},
+		"deployment": {"rke2/kubectl/deploymentsdescribe", "kubectl/deploymentsdescribe", "rke2/kubectl/deployments", "kubectl/deployments"},
+		"service":    {"rke2/kubectl/servicesdescribe", "kubectl/servicesdescribe", "rke2/kubectl/services", "kubectl/services"},
+		"configmap":  {"rke2/kubectl/configmapsdescribe", "kubectl/configmapsdescribe", "rke2/kubectl/configmaps", "kubectl/configmaps"},
+		"event":      {"rke2/kubectl/eventsdescribe", "kubectl/eventsdescribe", "rke2/kubectl/events", "kubectl/events"},
+	}
+
+	// If specific kind requested, search only that
+	if kind != "" {
+		patterns := kindPatterns[kind]
+		for _, pattern := range patterns {
+			file := filepath.Join(bundlePath, pattern)
+			if _, err := os.Stat(file); err == nil {
+				rs, err := parseResourceFile(file, kind, name, namespace, selector)
+				if err == nil {
+					resources = append(resources, rs...)
+				}
+			}
 		}
-	}
-	if !foundLogs {
-		fmt.Println("  (no log files found)")
-	}
-	fmt.Println()
-
-	// Commands
-	fmt.Println("Commands:")
-	fmt.Printf("  View logs:  r8s logs %s %s\n", b.Path, pod.Name)
-	if pod.HasPreviousLogs {
-		fmt.Printf("  Prev logs:  r8s logs %s %s -p\n", b.Path, pod.Name)
-	}
-	fmt.Println()
-
-	return nil
-}
-
-// ============================================
-// DESCRIBE NODE
-// ============================================
-
-func describeNode(b *bundle.Bundle) error {
-	// Guard against nil manifest
-	if b.Manifest == nil {
-		fmt.Println("Name:          (unknown - no manifest)")
-		fmt.Println()
-		fmt.Println("Available Resources:")
-		fmt.Printf("  Pods:          %d\n", len(b.Pods))
-		fmt.Printf("  Log Files:     %d\n", len(b.LogFiles))
-		fmt.Printf("  Namespaces:    %d\n", len(b.Namespaces))
-		fmt.Printf("  Deployments:   %d\n", len(b.Deployments))
-		fmt.Printf("  Services:      %d\n", len(b.Services))
-		fmt.Println()
-		return nil
-	}
-
-	// Bundle only has one node (the one collected from)
-	fmt.Println("Name:         ", b.Manifest.NodeName)
-	fmt.Println()
-
-	fmt.Println("System Info:")
-	fmt.Printf("  RKE2 Version:  %s\n", b.Manifest.RKE2Version)
-	fmt.Printf("  K8s Version:   %s\n", b.Manifest.K8sVersion)
-	fmt.Println()
-
-	fmt.Println("Bundle Info:")
-	fmt.Printf("  Collected At:  %s\n", b.Manifest.CollectedAt)
-	fmt.Printf("  Bundle Type:   %s\n", b.Manifest.BundleType)
-	fmt.Printf("  File Count:    %d\n", b.Manifest.FileCount)
-	fmt.Println()
-
-	fmt.Println("Available Resources:")
-	fmt.Printf("  Pods:          %d\n", len(b.Pods))
-	fmt.Printf("  Log Files:     %d\n", len(b.LogFiles))
-	fmt.Printf("  Namespaces:    %d\n", len(b.Namespaces))
-	fmt.Printf("  Deployments:   %d\n", len(b.Deployments))
-	fmt.Printf("  Services:      %d\n", len(b.Services))
-	fmt.Println()
-
-	return nil
-}
-
-// ============================================
-// DESCRIBE DEPLOYMENT
-// ============================================
-
-func describeDeployment(b *bundle.Bundle, name string) error {
-	// Stub - would need to search through b.Deployments
-	if len(b.Deployments) == 0 {
-		fmt.Println("No deployments found in bundle")
-		return nil
-	}
-
-	fmt.Printf("Deployment:    %s\n", name)
-	fmt.Println()
-	fmt.Printf("(Found %d deployments in bundle - detailed view not yet implemented)\n", len(b.Deployments))
-	fmt.Println("Use 'r8s get deploy ./bundle/' to list all deployments")
-	return nil
-}
-
-// ============================================
-// DESCRIBE SERVICE
-// ============================================
-
-func describeService(b *bundle.Bundle, name string) error {
-	// Stub - would need to search through b.Services
-	if len(b.Services) == 0 {
-		fmt.Println("No services found in bundle")
-		return nil
-	}
-
-	fmt.Printf("Service:       %s\n", name)
-	fmt.Println()
-	fmt.Printf("(Found %d services in bundle - detailed view not yet implemented)\n", len(b.Services))
-	fmt.Println("Use 'r8s get svc ./bundle/' to list all services")
-	return nil
-}
-
-// ============================================
-// DESCRIBE NAMESPACE
-// ============================================
-
-func describeNamespace(b *bundle.Bundle, name string) error {
-	// Collect pods in this namespace
-	podCount := 0
-	for _, pod := range b.Pods {
-		if pod.Namespace == name {
-			podCount++
+	} else {
+		// Auto-detect: search all kinds
+		for k := range kindPatterns {
+			rs, _ := findResources(bundlePath, k, name, namespace, selector)
+			resources = append(resources, rs...)
 		}
 	}
 
-	fmt.Printf("Name:          %s\n", name)
-	fmt.Println()
-
-	fmt.Println("Status:")
-	fmt.Printf("  Phase:       Active\n")
-	fmt.Println()
-
-	fmt.Println("Resources:")
-	fmt.Printf("  Pods:        %d\n", podCount)
-	fmt.Println()
-
-	return nil
+	return resources, nil
 }
 
-// ============================================
-// DESCRIBE EVENTS
-// ============================================
-
-func describeEventsResource(b *bundle.Bundle) error {
-	if len(b.Events) == 0 {
-		fmt.Println("No events found in bundle")
-		return nil
+// parseResourceFile extracts resources from kubectl output files
+func parseResourceFile(path, kind, nameFilter, namespaceFilter, selector string) ([]ResourceInfo, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Printf("Events (%d total):\n", len(b.Events))
-	fmt.Println()
-	fmt.Println("(Event details not yet implemented - showing count only)")
+	content := string(data)
+	var resources []ResourceInfo
+
+	// Simple parsing: split by resource separators
+	// kubectl describe output uses "Name:" as separator
+	sections := strings.Split(content, "Name:")
+
+	for _, section := range sections {
+		if strings.TrimSpace(section) == "" {
+			continue
+		}
+
+		res := ResourceInfo{
+			Kind:       kind,
+			SourceFile: path,
+			Labels:     make(map[string]string),
+			Details:    make(map[string]interface{}),
+		}
+
+		// Parse name (first line)
+		lines := strings.Split(section, "\n")
+		if len(lines) > 0 {
+			res.Name = strings.TrimSpace(lines[0])
+		}
+
+		// Parse namespace
+		for _, line := range lines {
+			if strings.HasPrefix(line, "Namespace:") {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 {
+					res.Namespace = strings.TrimSpace(parts[1])
+				}
+			}
+			if strings.HasPrefix(line, "Status:") || strings.HasPrefix(line, "Phase:") {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 {
+					res.Status = strings.TrimSpace(parts[1])
+				}
+			}
+		}
+
+		// Apply filters
+		if nameFilter != "" && !strings.Contains(res.Name, nameFilter) {
+			continue
+		}
+		if namespaceFilter != "" && res.Namespace != namespaceFilter {
+			continue
+		}
+
+		resources = append(resources, res)
+	}
+
+	return resources, nil
+}
+
+// outputDescribeHuman outputs human-readable format
+func outputDescribeHuman(resources []ResourceInfo) error {
+	for i, res := range resources {
+		if i > 0 {
+			fmt.Println()
+			fmt.Println(strings.Repeat("-", 60))
+			fmt.Println()
+		}
+
+		fmt.Printf("%s %s/%s\n",
+			color.CyanString("==>"),
+			color.YellowString(strings.Title(res.Kind)),
+			color.GreenString(res.Name),
+		)
+
+		if res.Namespace != "" {
+			fmt.Printf("Namespace:  %s\n", res.Namespace)
+		}
+		if res.Status != "" {
+			statusColor := color.GreenString
+			if res.Status == "Error" || res.Status == "Failed" {
+				statusColor = color.RedString
+			} else if res.Status == "Pending" || res.Status == "Unknown" {
+				statusColor = color.YellowString
+			}
+			fmt.Printf("Status:     %s\n", statusColor(res.Status))
+		}
+		if len(res.Labels) > 0 {
+			fmt.Println("Labels:")
+			for k, v := range res.Labels {
+				fmt.Printf("  %s=%s\n", k, v)
+			}
+		}
+		fmt.Printf("Source:     %s\n", res.SourceFile)
+	}
+
 	return nil
 }
 
-// ============================================
-// OUTPUT HELPERS
-// ============================================
-
-func outputDescribeJSON(data interface{}) error {
-	return outputEncodeJSON(data)
+// outputDescribeJSON outputs JSON format
+func outputDescribeJSON(resources []ResourceInfo) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(resources)
 }
 
-func outputDescribeYAML(data interface{}) error {
-	return outputEncodeYAML(data)
+// outputDescribeYAML outputs YAML format
+func outputDescribeYAML(resources []ResourceInfo) error {
+	encoder := yaml.NewEncoder(os.Stdout)
+	defer encoder.Close()
+	return encoder.Encode(resources)
+}
+
+// outputDescribeWide outputs wide table format
+func outputDescribeWide(resources []ResourceInfo) error {
+	// Header
+	fmt.Printf("%-15s %-30s %-20s %-15s\n", "KIND", "NAME", "NAMESPACE", "STATUS")
+	fmt.Println(strings.Repeat("-", 80))
+
+	for _, res := range resources {
+		fmt.Printf("%-15s %-30s %-20s %-15s\n",
+			res.Kind,
+			res.Name,
+			res.Namespace,
+			res.Status,
+		)
+	}
+
+	return nil
 }
