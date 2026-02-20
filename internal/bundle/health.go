@@ -18,6 +18,22 @@ const (
 	ImportanceLow                            // Cosmetic only
 )
 
+// String returns the string representation of FileImportance
+func (fi FileImportance) String() string {
+	switch fi {
+	case ImportanceCritical:
+		return "Critical"
+	case ImportanceHigh:
+		return "High"
+	case ImportanceMedium:
+		return "Medium"
+	case ImportanceLow:
+		return "Low"
+	default:
+		return "Unknown"
+	}
+}
+
 // ExpectedFile represents a file that should be present in a bundle
 type ExpectedFile struct {
 	Path       string

@@ -193,7 +193,7 @@ func generateTerminalPrompt(bundlePath string, health *bundle.HealthCheck) strin
 		for i, missing := range highImpact {
 			prompt += fmt.Sprintf("%d. [%s] %s: %s\n", 
 				i+1, 
-				string(missing.Importance),
+				missing.Importance.String(),
 				missing.Path, 
 				missing.Impact)
 		}
