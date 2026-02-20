@@ -110,13 +110,17 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	// Validate bundle
 	if _, err := os.Stat(bundlePath); err != nil {
-		return fmt.Errorf("bundle path not found: %w", err)
+		fmt.Fprintf(os.Stderr, "Error: bundle path not found: %v\n", err)
+		os.Exit(ExitError)
+		return nil
 	}
 
 	// Generate report
 	report, err := generateExportReport(bundlePath)
 	if err != nil {
-		return fmt.Errorf("failed to generate report: %w", err)
+		fmt.Fprintf(os.Stderr, "Error: failed to generate report: %v\n", err)
+		os.Exit(ExitError)
+		return nil
 	}
 
 	// Apply filters

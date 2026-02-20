@@ -82,7 +82,9 @@ func runLogs(cmd *cobra.Command, args []string) error {
 
 	// Validate bundle exists
 	if _, err := os.Stat(bundlePath); err != nil {
-		return fmt.Errorf("bundle path not found: %w", err)
+		fmt.Fprintf(os.Stderr, "Error: bundle path not found: %v\n", err)
+		os.Exit(ExitError)
+		return nil
 	}
 
 	// Find log files

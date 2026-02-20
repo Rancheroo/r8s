@@ -64,7 +64,9 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 
 	// Validate bundle
 	if _, err := os.Stat(bundlePath); err != nil {
-		return fmt.Errorf("bundle path not found: %w", err)
+		fmt.Fprintf(os.Stderr, "Error: bundle path not found: %v\n", err)
+		os.Exit(ExitError)
+		return nil
 	}
 
 	// Find and describe resources
@@ -85,6 +87,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(os.Stderr, " in namespace '%s'", describeNamespace)
 		}
 		fmt.Fprintln(os.Stderr)
+		os.Exit(ExitIssuesFound)
 		return nil
 	}
 
