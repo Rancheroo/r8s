@@ -231,12 +231,46 @@ func outputLogFile(path string, isFollowing bool) error {
 	}
 	defer file.Close()
 
-	// Get metadata from filename
+	// Get metadata from filename using same logic as findLogFiles
 	filename := filepath.Base(path)
-	parts := strings.Split(filename, "_")
-	namespace := parts[0]
-	pod := strings.Join(parts[1:len(parts)-1], "_")
-	container := strings.TrimSuffix(parts[len(parts)-1], ".log")
+	ext := filepath.Ext(filename)
+	base := strings.TrimSuffix(filename, ext)
+	
+	// Try to extract from directory structure first
+	dir := filepath.Dir(path)
+	parentDir := filepath.Base(dir)
+	grandparentDir := filepath.Base(filepath.Dir(dir))
+	
+	var namespace, pod, container string
+	
+	// Check if path has namespace/pod structure
+	if grandparentDir == "podlogs" || parentDir == "podlogs" {
+		// Try to parse from filename
+		parts := strings.Split(base, "_")
+		if len(parts) < 2 {
+			parts = strings.Split(base, "-")
+		}
+		
+		if len(parts) >= 3 {
+			// Assume format: namespace-pod-container
+			namespace = parts[0]
+			pod = strings.Join(parts[1:len(parts)-1], "-")
+			container = parts[len(parts)-1]
+		} else if len(parts) == 2 {
+			namespace = parts[0]
+			pod = parts[1]
+			container = "default"
+		} else {
+			namespace = "default"
+			pod = base
+			container = "default"
+		}
+	} else {
+		// Use directory structure
+		namespace = parentDir
+		pod = base
+		container = "default"
+	}
 
 	// Print header if not following
 	if !isFollowing {
