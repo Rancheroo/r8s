@@ -77,12 +77,8 @@ jobs:
         ls -lh bin/r8s
         ./bin/r8s version
     
-    # Run tests with race detection
-    - name: Run tests
-      run: make test
-    
-    # Generate coverage report
-    - name: Generate coverage report
+    # Run tests with coverage (combines both steps)
+    - name: Run tests and generate coverage
       run: make coverage
     
     # Check minimum coverage threshold
