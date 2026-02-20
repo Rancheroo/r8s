@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Rancheroo/r8s/internal/bundle"
 	"github.com/Rancheroo/r8s/internal/tui"
 )
 
