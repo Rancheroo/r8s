@@ -1,11 +1,13 @@
 # r8s
 
-> **r8s v0.6.9 "Principle Compliance Sprint" — the fastest way to understand a broken Kubernetes cluster from a log bundle**
+> **r8s v0.8.0-alpha "CLI-First Architecture" — kubectl-style commands for analyzing Kubernetes support bundles**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-r8s (pronounced "rates") is a terminal UI for analyzing RKE2 support bundles. The **Attention Dashboard** instantly highlights critical issues the moment you open a bundle — no configuration needed.
+r8s (pronounced "rates") is a CLI tool for analyzing RKE2/K3s support bundles with kubectl-style commands. **No configuration needed** — point it at a bundle and start diagnosing.
+
+**v0.8.0-alpha is CLI-first**: Powerful commands for automation, plus a minimal dashboard for exploration.
 
 **Latest: v0.7.1** (February 2026) — K3s Support
 - **Multi-Distro**: K3s bundle support (in addition to RKE2)
@@ -115,27 +117,39 @@ See [docs/development/ROADMAP_V0.6-V0.8.md](docs/development/ROADMAP_V0.6-V0.8.m
 git clone https://github.com/Rancheroo/r8s.git && cd r8s
 make build
 
-# 2. Try the demo
-./bin/r8s  # Instantly loads embedded demo bundle
+# 2. Analyze your bundle (CLI commands)
+./bin/r8s validate ./bundle/          # Check bundle health
+./bin/r8s logs ./bundle/ -f           # Stream logs with follow
+./bin/r8s describe ./bundle/ node-1   # Describe any resource
+./bin/r8s export ./bundle/            # Export findings to JSON
 
-# 3. Analyze your bundle
-tar -xzf support-bundle.tar.gz
-./bin/r8s ./extracted-bundle/
+# 3. Or use the minimal dashboard
+./bin/r8s dashboard ./bundle/         # Interactive dashboard
 ```
 
 **That's it.** No configuration, no API keys, no clusters needed.
 
 ---
 
+## CLI Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `r8s validate` | Check bundle health & completeness | `r8s validate ./bundle/` |
+| `r8s logs` | Stream logs with filtering | `r8s logs ./bundle/ -f` |
+| `r8s describe` | Describe any resource (JSON/YAML) | `r8s describe ./bundle/ node-1` |
+| `r8s export` | Export findings to JSON/YAML | `r8s export ./bundle/ -o json` |
+| `r8s generate prompt` | Generate AI prompts for analysis | `r8s generate prompt ./bundle/` |
+| `r8s dashboard` | Minimal interactive dashboard | `r8s dashboard ./bundle/` |
+
 ## Features
 
-✅ **Attention Dashboard** - See all cluster issues ranked by severity  
+✅ **CLI-First** - kubectl-style commands for automation  
 ✅ **Bundle Analysis** - Works offline, no API required  
-✅ **Demo Mode** - Embedded demo bundle (zero setup)  
 ✅ **Smart Log Analysis** - Detects crashes, OOM kills, connection failures  
-✅ **Log Viewer** - Search, filter (ERROR/WARN), color-coded, word wrap  
-✅ **Resource Views** - Pods, Deployments, Services, CRDs  
-✅ **Describe** - Full JSON details for any resource  
+✅ **Multi-Distro** - RKE2 and K3s support  
+✅ **Exit Codes** - Script-friendly (0=success, 1=issues, 2=error)  
+✅ **Dashboard** - Minimal TUI for exploration  
 
 ---
 
