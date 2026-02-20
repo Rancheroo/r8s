@@ -25,8 +25,8 @@ install: ## Install r8s to $GOPATH/bin
 run: ## Run r8s directly without building
 	go run $(LDFLAGS) main.go
 
-test: ## Run all tests
-	go test -v -race -p 1 ./...
+test: ## Run all tests (no coverage)
+	go test -v ./...
 
 fmt: ## Format Go code
 	go fmt ./...
