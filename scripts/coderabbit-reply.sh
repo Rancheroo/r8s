@@ -12,7 +12,7 @@ REPO="Rancheroo/r8s"
 
 if [ -z "$COMMENT_ID" ] || [ -z "$MESSAGE" ]; then
     echo "Usage: $0 <comment_id> <message> [pr_number]"
-    echo "Example: $0 2831504030 '@coderabbit Fixed in commit abc123'"
+    echo "Example: $0 2831504030 '@CodeRabbitAI Fixed in commit abc123'"
     exit 1
 fi
 

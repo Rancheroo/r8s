@@ -38,31 +38,31 @@ reply() {
 echo "🟠 Major Issues (Deferring to #65):"
 
 reply 2831504023 ".github/workflows/ci.yml" 102 \
-"@coderabbit 80/20: CI tests disabled. Risk mitigated with local enforcement. Infrastructure fix tracked in #65 for Sprint 10. Healthy debt - known, bounded, documented."
+"@CodeRabbitAI 80/20: CI tests disabled. Risk mitigated with local enforcement. Infrastructure fix tracked in #65 for Sprint 10. Healthy debt - known, bounded, documented."
 
 reply 2831504030 "cmd/describe.go" 76 \
-"@coderabbit 80/20: Inconsistent error handling is refactoring debt, not correctness debt. Code works correctly. Tracked in #65 for v0.8.1."
+"@CodeRabbitAI 80/20: Inconsistent error handling is refactoring debt, not correctness debt. Code works correctly. Tracked in #65 for v0.8.1."
 
 reply 2831504037 "cmd/describe.go" 249 \
-"@coderabbit 80/20: Error handling pattern consistent with describe.go:76. Deferring standardization to #65 for v0.8.1."
+"@CodeRabbitAI 80/20: Error handling pattern consistent with describe.go:76. Deferring standardization to #65 for v0.8.1."
 
 reply 2831504051 "cmd/logs.go" 53 \
-"@coderabbit 80/20: Namespace parsing handles 95%+ of bundles. Edge cases have workaround (direct paths). Documented in #65."
+"@CodeRabbitAI 80/20: Namespace parsing handles 95%+ of bundles. Edge cases have workaround (direct paths). Documented in #65."
 
 reply 2831504055 "cmd/logs.go" 88 \
-"@coderabbit 80/20: Log parsing fragility - handles common cases well. Edge cases tracked in #65. Monitor user reports."
+"@CodeRabbitAI 80/20: Log parsing fragility - handles common cases well. Edge cases tracked in #65. Monitor user reports."
 
 reply 2831504058 "cmd/logs.go" 189 \
-"@coderabbit 80/20: Error handling pattern consistent with logs.go:53. Deferring to #65 for v0.8.1 standardization."
+"@CodeRabbitAI 80/20: Error handling pattern consistent with logs.go:53. Deferring to #65 for v0.8.1 standardization."
 
 reply 2831504075 "cmd/standard.go" 35 \
-"@coderabbit 80/20: Help text missing exit codes. Adding to all commands tracked in #65. Not blocking - behavior documented in README."
+"@CodeRabbitAI 80/20: Help text missing exit codes. Adding to all commands tracked in #65. Not blocking - behavior documented in README."
 
 reply 2831504077 "cmd/standard.go" 56 \
-"@coderabbit 80/20: Same as standard.go:35 - exit code documentation tracked in #65."
+"@CodeRabbitAI 80/20: Same as standard.go:35 - exit code documentation tracked in #65."
 
 reply 2831504088 "cmd/validate.go" 56 \
-"@coderabbit 80/20: Function complexity noted. Works correctly. Refactor when extending functionality. Tracked in #65."
+"@CodeRabbitAI 80/20: Function complexity noted. Works correctly. Refactor when extending functionality. Tracked in #65."
 
 echo ""
 echo "✅ Batch replies complete!"
