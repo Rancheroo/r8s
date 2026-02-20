@@ -28,30 +28,36 @@ var rootCmd = &cobra.Command{
 	Use:   "r8s [bundle-path]",
 	Args:  cobra.MaximumNArgs(1), // Allow 0 or 1 positional argument (bundle path)
 	Short: "r8s - The fastest way to understand a broken Kubernetes cluster from a log bundle",
-	Long: `r8s — the fastest way to understand a broken Kubernetes cluster from a log bundle.
+	Long: `r8s — kubectl for Rancher bundles. Analyze clusters offline, script support workflows.
 
 FEATURES:
-  • Attention Dashboard - Instantly see all cluster issues ranked by severity
-  • Interactive TUI for browsing pods, deployments, services, and CRDs
-  • Color-coded log viewing with search and filtering (errors/warnings highlighted)
-  • Smart log analysis - detects crashes, OOM kills, connection failures
-  • Bundle-first design - works offline, no API required
+  • kubectl-compatible commands (get, logs, describe, analyze)
+  • Analyze bundles offline with smart pattern detection
+  • Export findings for AI-assisted troubleshooting
+  • Bundle-first design - works without cluster access
+  • CI/CD ready with JSON output and proper exit codes
 
 QUICKSTART:
   1. Extract your RKE2 support bundle
-  2. Run: r8s /path/to/extracted-bundle
-  3. Navigate the Attention Dashboard to find issues
-  4. Press Enter on any issue to view pod logs
+  2. Run: r8s analyze /path/to/extracted-bundle
+  3. Pipe to jq for filtering: r8s analyze ./bundle --format=json | jq '.critical'
+  4. Generate AI prompts: r8s generate prompt ./bundle
 
 EXAMPLES:
-  # Analyze an extracted bundle (instant dashboard)
-  r8s ./extracted-bundle-folder/
+  # Analyze an extracted bundle
+  r8s analyze ./extracted-bundle-folder/
 
-  # Launch with embedded demo bundle
-  r8s
+  # Get pods like kubectl
+  r8s get pods ./bundle/
 
-  # Enable verbose error output for debugging
-  r8s -v ./bundle/`,
+  # Stream logs for a pod
+  r8s logs ./bundle/ nginx-pod
+
+  # Validate bundle health
+  r8s validate ./bundle/
+
+  # Enable verbose error output
+  r8s -v analyze ./bundle/`,
 	RunE: runRoot,
 }
 
@@ -108,13 +114,16 @@ func SetVersionInfo(version, commit, date string) {
 
 // runRoot handles execution of the root command with optional bundle path argument
 func runRoot(cmd *cobra.Command, args []string) error {
-	// Check if a positional argument was provided (bundle path)
-	if len(args) > 0 {
-		bundlePath := args[0]
-		// Auto-detect bundle and launch TUI directly
-		tuiBundlePath = bundlePath
+	// v0.8.0: CLI-first - show help if no subcommand
+	if len(args) == 0 {
+		return cmd.Help()
 	}
 
-	// Delegate to TUI command
-	return runTUI(cmd, args)
+	// If bundle path provided without subcommand, default to analyze
+	bundlePath := args[0]
+	// Store for analyze command
+	tuiBundlePath = bundlePath
+	
+	// Call analyze directly (v0.8.0 CLI-first)
+	return runAnalyze(cmd, args)
 }

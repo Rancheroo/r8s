@@ -324,7 +324,7 @@ func (ds *syntheticDataSource) GetDiagnosticContext(namespace, podName string) (
 // GetBundleHealth returns bundle health
 func (ds *syntheticDataSource) GetBundleHealth() *BundleHealth {
 	return &BundleHealth{
-		HasEtcd:       false,
+		HasEtcd:       true,
 		HasNodes:      true,
 		HasSystemInfo: true,
 		HasEvents:     true,
