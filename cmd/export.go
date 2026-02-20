@@ -132,17 +132,17 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	// Output
 	var output []byte
-	var err error
+	var marshalErr error
 
 	switch exportFormat {
 	case "yaml":
-		output, err = yaml.Marshal(report)
+		output, marshalErr = yaml.Marshal(report)
 	default:
-		output, err = json.MarshalIndent(report, "", "  ")
+		output, marshalErr = json.MarshalIndent(report, "", "  ")
 	}
 
-	if err != nil {
-		return fmt.Errorf("failed to marshal output: %w", err)
+	if marshalErr != nil {
+		return fmt.Errorf("failed to marshal output: %w", marshalErr)
 	}
 
 	if exportOutput != "" {
