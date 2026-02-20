@@ -40,7 +40,7 @@ PowerShell:
   $ r8s completion powershell > r8s.ps1
   # and source this file from your PowerShell profile.
 `,
-	Args:      cobra.ExactArgs(1),
+	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	RunE:      runCompletion,
 }
