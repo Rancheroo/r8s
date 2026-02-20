@@ -23,7 +23,7 @@ var describeCmd = &cobra.Command{
 Similar to 'kubectl describe', but works offline with bundle data.
 
 EXAMPLES:
-  # Describe a specific pod
+  # Describe a specific pod (3-arg form: kind, bundle, name)
   r8s describe pod ./bundle/ rancher-7c4c7b8f5-x2v9p
 
   # Describe a node
@@ -32,11 +32,11 @@ EXAMPLES:
   # Describe with YAML output
   r8s describe pod ./bundle/ rancher-xyz -o yaml
 
-  # Describe all pods in a namespace
-  r8s describe pods ./bundle/ -n cattle-system
-
-  # Auto-detect resource type from name
+  # Auto-detect resource type from name (2-arg form: bundle, name)
   r8s describe ./bundle/ rancher-xyz
+
+  # Filter by namespace
+  r8s describe pod ./bundle/ -n cattle-system
 
 Supported kinds: pod, pods, node, nodes, deployment, deployments, 
 service, services, configmap, configmaps, event, events`,
