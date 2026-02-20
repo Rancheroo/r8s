@@ -148,14 +148,15 @@ type ResourceInfo struct {
 func findResources(bundlePath, kind, name, namespace, selector string) ([]ResourceInfo, error) {
 	var resources []ResourceInfo
 
-	// Map of kind to file patterns
+	// Map of kind to file patterns (kubectl describe output)
+	// Note: describe files have "describe" suffix (e.g., podsdescribe, nodesdescribe)
 	kindPatterns := map[string][]string{
-		"pod":        {"rke2/kubectl/pods", "kubectl/pods"},
-		"node":       {"rke2/kubectl/nodes", "kubectl/nodes"},
-		"deployment": {"rke2/kubectl/deployments", "kubectl/deployments"},
-		"service":    {"rke2/kubectl/services", "kubectl/services"},
-		"configmap":  {"rke2/kubectl/configmaps", "kubectl/configmaps"},
-		"event":      {"rke2/kubectl/events", "kubectl/events"},
+		"pod":        {"rke2/kubectl/podsdescribe", "kubectl/podsdescribe", "rke2/kubectl/pods", "kubectl/pods"},
+		"node":       {"rke2/kubectl/nodesdescribe", "kubectl/nodesdescribe", "rke2/kubectl/nodes", "kubectl/nodes"},
+		"deployment": {"rke2/kubectl/deploymentsdescribe", "kubectl/deploymentsdescribe", "rke2/kubectl/deployments", "kubectl/deployments"},
+		"service":    {"rke2/kubectl/servicesdescribe", "kubectl/servicesdescribe", "rke2/kubectl/services", "kubectl/services"},
+		"configmap":  {"rke2/kubectl/configmapsdescribe", "kubectl/configmapsdescribe", "rke2/kubectl/configmaps", "kubectl/configmaps"},
+		"event":      {"rke2/kubectl/eventsdescribe", "kubectl/eventsdescribe", "rke2/kubectl/events", "kubectl/events"},
 	}
 
 	// If specific kind requested, search only that
@@ -193,7 +194,7 @@ func parseResourceFile(path, kind, nameFilter, namespaceFilter, selector string)
 
 	// Simple parsing: split by resource separators
 	// kubectl describe output uses "Name:" as separator
-	sections := strings.Split(content, "Name:\s+")
+	sections := strings.Split(content, "Name:")
 
 	for _, section := range sections {
 		if strings.TrimSpace(section) == "" {
