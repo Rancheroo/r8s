@@ -4,19 +4,14 @@ package tui
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/fatih/color"
-
-	"github.com/Rancheroo/r8s/internal/bundle"
 )
 
 // Dashboard represents the minimal TUI dashboard
 type Dashboard struct {
 	bundlePath string
-	bundle     *bundle.Bundle
 	width      int
 	height     int
 	items      []DashboardItem
@@ -39,47 +34,14 @@ func NewDashboard(bundlePath string) (*Dashboard, error) {
 		items:      []DashboardItem{},
 	}
 
-	// Load bundle if provided
-	if bundlePath != "" {
-		b, err := bundle.Load(bundlePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load bundle: %w", err)
-		}
-		d.bundle = b
-		d.loadItems()
-	} else {
-		// Demo mode
-		d.items = []DashboardItem{
-			{Severity: "critical", Title: "Demo: OOMKill Detected", Description: "Container killed due to memory limits", Resource: "pod/app-123"},
-			{Severity: "warning", Title: "Demo: High Memory Usage", Description: "Memory usage above 80%", Resource: "pod/app-456"},
-			{Severity: "info", Title: "Demo: Pod Restarted", Description: "Pod restarted 3 times", Resource: "pod/app-789"},
-		}
+	// Demo items for now
+	d.items = []DashboardItem{
+		{Severity: "critical", Title: "Demo: OOMKill Detected", Description: "Container killed due to memory limits", Resource: "pod/app-123"},
+		{Severity: "warning", Title: "Demo: High Memory Usage", Description: "Memory usage above 80%", Resource: "pod/app-456"},
+		{Severity: "info", Title: "Demo: Pod Restarted", Description: "Pod restarted 3 times", Resource: "pod/app-789"},
 	}
 
 	return d, nil
-}
-
-// loadItems loads dashboard items from bundle
-func (d *Dashboard) loadItems() {
-	// Get health check
-	if d.bundle != nil {
-		health, _ := bundle.CheckHealth(d.bundlePath)
-		if health != nil && !health.IsValid {
-			d.items = append(d.items, DashboardItem{
-				Severity:    "critical",
-				Title:       "Bundle Incomplete",
-				Description: fmt.Sprintf("Bundle is %.0f%% complete", health.Completeness),
-				Resource:    "bundle",
-			})
-		}
-	}
-
-	// Add demo items if no real items
-	if len(d.items) == 0 {
-		d.items = []DashboardItem{
-			{Severity: "info", Title: "No Issues Found", Description: "Bundle appears healthy", Resource: "bundle"},
-		}
-	}
 }
 
 // Run starts the dashboard TUI
