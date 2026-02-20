@@ -26,7 +26,7 @@ run: ## Run r8s directly without building
 	go run $(LDFLAGS) main.go
 
 test: ## Run all tests
-	go test -v -race ./...
+	go test -v -race -p 1 ./...
 
 fmt: ## Format Go code
 	go fmt ./...
@@ -59,5 +59,23 @@ ci: lint test coverage ## Run full CI pipeline locally (Sprint 6)
 
 dev: tidy fmt vet lint ## Run development checks (tidy, fmt, vet, lint)
 	@echo "Development checks complete"
+
+check-sync: ## Check if local branch is behind origin
+	@git fetch origin --quiet 2>/dev/null || true
+	@if [ -n "$(shell git log HEAD..origin/$(shell git branch --show-current) --oneline 2>/dev/null)" ]; then \
+		echo "\033[31m✗ ERROR: Local branch is behind origin\033[0m"; \
+		echo "Run: git reset --hard origin/$(shell git branch --show-current)"; \
+		echo "Or:  make sync"; \
+		exit 1; \
+	else \
+		echo "\033[32m✓ Branch is up to date with origin\033[0m"; \
+	fi
+
+sync: ## Reset local branch to match origin (use with caution)
+	@echo "Fetching origin..."
+	@git fetch origin
+	@echo "Resetting to origin/$(shell git branch --show-current)..."
+	@git reset --hard origin/$(shell git branch --show-current)
+	@echo "\033[32m✓ Synced with origin\033[0m"
 
 .DEFAULT_GOAL := help
