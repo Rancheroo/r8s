@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
@@ -99,17 +100,24 @@ func TestCompletionCommand_Integration(t *testing.T) {
 }
 
 func TestCompletion_InvalidShell(t *testing.T) {
-	// Test with invalid shell argument - should not error, just show usage
 	buf := new(bytes.Buffer)
 	cmd := &cobra.Command{}
 	cmd.SetOut(buf)
 	cmd.SetErr(buf)
-	
+
 	err := runCompletion(cmd, []string{"invalid-shell"})
 
-	// Currently returns nil (shows usage), not an error - this is acceptable behavior
-	// Just verify it doesn't panic
-	if err != nil {
-		t.Logf("Got error for invalid shell (may be expected): %v", err)
+	// Invalid shell must return ExitError (exit code 2) per r8s exit code contract
+	if err == nil {
+		t.Fatal("runCompletion() with invalid shell should return an error")
+	}
+
+	var exitErr *ExitCodeError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("expected ExitCodeError, got %T: %v", err, err)
+	}
+
+	if exitErr.Code != ExitError {
+		t.Errorf("expected exit code %d, got %d", ExitError, exitErr.Code)
 	}
 }

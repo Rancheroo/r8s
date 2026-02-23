@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -300,7 +301,5 @@ func calculateSummary(report *ExportReport) ExportSummary {
 
 // containsSubstring checks if str contains substr
 func containsSubstring(str, substr string) bool {
-	return len(substr) <= len(str) && (str == substr || len(substr) == 0 ||
-		(len(str) > len(substr) && (str[:len(substr)] == substr ||
-			str[len(str)-len(substr):] == substr)))
+	return strings.Contains(str, substr)
 }
