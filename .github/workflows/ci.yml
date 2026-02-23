@@ -54,14 +54,16 @@ jobs:
         go version
         which go
     
-    # Cache Go modules
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+    # FIXME: Sprint 10 - Cache disabled due to 'Cannot open: File exists' error
+    # GitHub Actions cache restoration fails when tar tries to overwrite existing files
+    # Re-enable after cache key is updated or cache is cleared
+    # - name: Cache Go modules
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ~/go/pkg/mod
+    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-go-
     
     # Download dependencies
     - name: Download dependencies
