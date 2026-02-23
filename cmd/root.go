@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -25,9 +26,11 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "r8s [bundle-path]",
-	Args:  cobra.MaximumNArgs(1), // Allow 0 or 1 positional argument (bundle path)
-	Short: "r8s - The fastest way to understand a broken Kubernetes cluster from a log bundle",
+	Use:           "r8s [bundle-path]",
+	Args:          cobra.MaximumNArgs(1), // Allow 0 or 1 positional argument (bundle path)
+	Short:         "r8s - The fastest way to understand a broken Kubernetes cluster from a log bundle",
+	SilenceErrors: true,                  // We handle error output ourselves
+	SilenceUsage:  true,                  // Don't dump usage on every error
 	Long: `r8s — kubectl for Rancher bundles. Analyze clusters offline, script support workflows.
 
 FEATURES:
@@ -62,8 +65,15 @@ EXAMPLES:
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-func Execute() error {
-	return rootCmd.Execute()
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		// Check for exit code error
+		if exitCode := GetExitCode(err); exitCode != ExitSuccess {
+			os.Exit(exitCode)
+		}
+		// Regular error
+		os.Exit(ExitError)
+	}
 }
 
 func init() {

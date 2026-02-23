@@ -5,7 +5,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
 	"github.com/fatih/color"
@@ -58,56 +58,60 @@ func init() {
 
 // runValidate executes the validate command
 func runValidate(cmd *cobra.Command, args []string) error {
+	// Validate args length to prevent panic
+	if len(args) == 0 {
+		return NewExitError(ExitError, "bundle path argument required")
+	}
+
 	bundlePath := args[0]
 
 	// Perform health check
 	health, err := bundle.CheckHealth(bundlePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(2)
-		return err
+		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: %v", err))
+		return NewExitError(ExitError, err.Error())
 	}
 
 	// Standardize format
 	format := StandardizeFormat(validateFormat)
 
 	// Output based on format
+	out := cmd.OutOrStdout()
 	switch format {
 	case "json":
-		outputValidateJSON(health)
+		outputValidateJSON(out, health)
 	case "summary":
-		fmt.Println(health.Summary())
+		fmt.Fprintln(out, health.Summary())
 	default:
-		outputValidateTable(health)
+		outputValidateTable(out, health)
 	}
 
-	// Exit with standardized codes
+	// Return appropriate exit code via error
 	if !health.IsValid {
-		os.Exit(ExitError)         // 2 - Bundle invalid (critical files missing)
+		return NewExitError(ExitError, "bundle invalid") // 2 - Bundle invalid
 	} else if health.Completeness < 100 {
-		os.Exit(ExitIssuesFound)   // 1 - Bundle incomplete but usable
+		return NewExitError(ExitIssuesFound, "bundle incomplete") // 1 - Bundle incomplete
 	}
-	os.Exit(ExitSuccess)           // 0 - Bundle valid and complete
-	return nil
+	return nil // 0 - Bundle valid
 }
 
 // outputValidateTable prints health check results in table format
-func outputValidateTable(health *bundle.HealthCheck) {
-	fmt.Println()
-	fmt.Println(color.New(color.Bold).Sprint("R8S Bundle Health Check"))
-	fmt.Println(strings.Repeat("=", 60))
-	fmt.Println()
+func outputValidateTable(w io.Writer, health *bundle.HealthCheck) {
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, color.New(color.Bold).Sprint("R8S Bundle Health Check"))
+	fmt.Fprintln(w, strings.Repeat("=", 60))
+	fmt.Fprintln(w)
 
 	// Summary
-	fmt.Println(health.Summary())
-	fmt.Printf("Bundle Type: %s\n", health.BundleType)
-	fmt.Printf("Files: %d/%d present (%.0f%%)\n", health.FoundFiles, health.TotalFiles, health.Completeness)
-	fmt.Println()
+	fmt.Fprintln(w, health.Summary())
+	fmt.Fprintf(w, "Bundle Type: %s\n", health.BundleType)
+	fmt.Fprintf(w, "Files: %d/%d present (%.0f%%)\n", health.FoundFiles, health.TotalFiles, health.Completeness)
+	fmt.Fprintln(w)
 
 	// Missing files by importance
 	if len(health.MissingFiles) > 0 {
-		fmt.Println(color.New(color.Bold).Sprint("Missing Files:"))
-		fmt.Println()
+		fmt.Fprintln(w, color.New(color.Bold).Sprint("Missing Files:"))
+		fmt.Fprintln(w)
 
 		// Group by importance
 		critical := []bundle.MissingFile{}
@@ -130,49 +134,49 @@ func outputValidateTable(health *bundle.HealthCheck) {
 
 		// Print critical
 		if len(critical) > 0 {
-			fmt.Println(color.RedString("🔴 Critical (Bundle unusable without these):"))
+			fmt.Fprintln(w, color.RedString("🔴 Critical (Bundle unusable without these):"))
 			for _, m := range critical {
-				fmt.Printf("  • %s\n", m.Path)
-				fmt.Printf("    %s\n", m.Impact)
+				fmt.Fprintf(w, "  • %s\n", m.Path)
+				fmt.Fprintf(w, "    %s\n", m.Impact)
 			}
-			fmt.Println()
+			fmt.Fprintln(w)
 		}
 
 		// Print high
 		if len(high) > 0 {
-			fmt.Println(color.YellowString("⚠️  High Impact (Major features affected):"))
+			fmt.Fprintln(w, color.YellowString("⚠️  High Impact (Major features affected):"))
 			for _, m := range high {
-				fmt.Printf("  • %s\n", m.Path)
-				fmt.Printf("    %s\n", m.Impact)
+				fmt.Fprintf(w, "  • %s\n", m.Path)
+				fmt.Fprintf(w, "    %s\n", m.Impact)
 			}
-			fmt.Println()
+			fmt.Fprintln(w)
 		}
 
 		// Print medium
 		if len(medium) > 0 {
-			fmt.Println(color.CyanString("ℹ️  Medium Impact:"))
+			fmt.Fprintln(w, color.CyanString("ℹ️  Medium Impact:"))
 			for _, m := range medium {
-				fmt.Printf("  • %s\n", m.Path)
+				fmt.Fprintf(w, "  • %s\n", m.Path)
 			}
-			fmt.Println()
+			fmt.Fprintln(w)
 		}
 
 		// Print low (condensed)
 		if len(low) > 0 {
-			fmt.Println("📝 Low Impact (Optional data):")
+			fmt.Fprintln(w, "📝 Low Impact (Optional data):")
 			for _, m := range low {
-				fmt.Printf("  • %s\n", m.Path)
+				fmt.Fprintf(w, "  • %s\n", m.Path)
 			}
-			fmt.Println()
+			fmt.Fprintln(w)
 		}
 	} else {
-		fmt.Println(color.GreenString("✓ All expected files present"))
-		fmt.Println()
+		fmt.Fprintln(w, color.GreenString("✓ All expected files present"))
+		fmt.Fprintln(w)
 	}
 
 	// Category summary
 	if len(health.Categories) > 0 {
-		fmt.Println(color.New(color.Bold).Sprint("By Category:"))
+		fmt.Fprintln(w, color.New(color.Bold).Sprint("By Category:"))
 		for cat, stats := range health.Categories {
 			status := "✓"
 			if stats.Missing > 0 {
@@ -182,17 +186,17 @@ func outputValidateTable(health *bundle.HealthCheck) {
 					status = "~"
 				}
 			}
-			fmt.Printf("  %s %s: %d/%d files\n", status, cat, stats.Found, stats.Total)
+			fmt.Fprintf(w, "  %s %s: %d/%d files\n", status, cat, stats.Found, stats.Total)
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
 
-	fmt.Println(strings.Repeat("-", 60))
+	fmt.Fprintln(w, strings.Repeat("-", 60))
 }
 
 // outputValidateJSON prints health check results as JSON
-func outputValidateJSON(health *bundle.HealthCheck) {
-	encoder := json.NewEncoder(os.Stdout)
+func outputValidateJSON(w io.Writer, health *bundle.HealthCheck) {
+	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	encoder.Encode(health)
 }

@@ -3,7 +3,7 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -50,18 +50,23 @@ func init() {
 }
 
 func runCompletion(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return NewExitError(ExitError, "shell argument required")
+	}
+
 	shell := args[0]
+	out := cmd.OutOrStdout()
 
 	switch shell {
 	case "bash":
-		return rootCmd.GenBashCompletion(os.Stdout)
+		return rootCmd.GenBashCompletion(out)
 	case "zsh":
-		return rootCmd.GenZshCompletion(os.Stdout)
+		return rootCmd.GenZshCompletion(out)
 	case "fish":
-		return rootCmd.GenFishCompletion(os.Stdout, true)
+		return rootCmd.GenFishCompletion(out, true)
 	case "powershell":
-		return rootCmd.GenPowerShellCompletionWithDesc(os.Stdout)
+		return rootCmd.GenPowerShellCompletionWithDesc(out)
 	default:
-		return cmd.Usage()
+		return NewExitError(ExitError, fmt.Sprintf("invalid shell: %s (valid: bash, zsh, fish, powershell)", shell))
 	}
 }

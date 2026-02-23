@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -68,59 +69,62 @@ func init() {
 
 // ExportReport represents the full export structure
 type ExportReport struct {
-	Meta       ExportMeta            `json:"meta" yaml:"meta"`
-	Health     *bundle.HealthCheck   `json:"health" yaml:"health"`
-	Findings   []ExportFinding       `json:"findings" yaml:"findings"`
-	Summary    ExportSummary         `json:"summary" yaml:"summary"`
+	Meta     ExportMeta          `json:"meta" yaml:"meta"`
+	Health   *bundle.HealthCheck `json:"health" yaml:"health"`
+	Findings []ExportFinding     `json:"findings" yaml:"findings"`
+	Summary  ExportSummary       `json:"summary" yaml:"summary"`
 }
 
 // ExportMeta contains report metadata
 type ExportMeta struct {
-	GeneratedAt   string `json:"generated_at" yaml:"generated_at"`
-	BundlePath    string `json:"bundle_path" yaml:"bundle_path"`
-	BundleType    string `json:"bundle_type" yaml:"bundle_type"`
-	R8SVersion    string `json:"r8s_version" yaml:"r8s_version"`
+	GeneratedAt string `json:"generated_at" yaml:"generated_at"`
+	BundlePath  string `json:"bundle_path" yaml:"bundle_path"`
+	BundleType  string `json:"bundle_type" yaml:"bundle_type"`
+	R8SVersion  string `json:"r8s_version" yaml:"r8s_version"`
 }
 
 // ExportFinding represents a single finding
 type ExportFinding struct {
-	ID          string            `json:"id" yaml:"id"`
-	Severity    string            `json:"severity" yaml:"severity"`
-	Category    string            `json:"category" yaml:"category"`
-	Title       string            `json:"title" yaml:"title"`
-	Description string            `json:"description" yaml:"description"`
-	Namespace   string            `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-	Resource    string            `json:"resource,omitempty" yaml:"resource,omitempty"`
-	Suggestion  string            `json:"suggestion,omitempty" yaml:"suggestion,omitempty"`
+	ID          string                 `json:"id" yaml:"id"`
+	Severity    string                 `json:"severity" yaml:"severity"`
+	Category    string                 `json:"category" yaml:"category"`
+	Title       string                 `json:"title" yaml:"title"`
+	Description string                 `json:"description" yaml:"description"`
+	Namespace   string                 `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Resource    string                 `json:"resource,omitempty" yaml:"resource,omitempty"`
+	Suggestion  string                 `json:"suggestion,omitempty" yaml:"suggestion,omitempty"`
 	Raw         map[string]interface{} `json:"raw,omitempty" yaml:"raw,omitempty"`
 }
 
 // ExportSummary contains high-level stats
 type ExportSummary struct {
-	TotalFindings    int            `json:"total_findings" yaml:"total_findings"`
-	CriticalCount    int            `json:"critical_count" yaml:"critical_count"`
-	WarningCount     int            `json:"warning_count" yaml:"warning_count"`
-	InfoCount        int            `json:"info_count" yaml:"info_count"`
-	HealthPercentage float64        `json:"health_percentage" yaml:"health_percentage"`
-	IsValid          bool           `json:"is_valid" yaml:"is_valid"`
+	TotalFindings    int     `json:"total_findings" yaml:"total_findings"`
+	CriticalCount    int     `json:"critical_count" yaml:"critical_count"`
+	WarningCount     int     `json:"warning_count" yaml:"warning_count"`
+	InfoCount        int     `json:"info_count" yaml:"info_count"`
+	HealthPercentage float64 `json:"health_percentage" yaml:"health_percentage"`
+	IsValid          bool    `json:"is_valid" yaml:"is_valid"`
 }
 
 func runExport(cmd *cobra.Command, args []string) error {
+	// Validate args length to prevent panic
+	if len(args) == 0 {
+		return NewExitError(ExitError, "bundle path argument required")
+	}
+
 	bundlePath := args[0]
 
 	// Validate bundle
 	if _, err := os.Stat(bundlePath); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: bundle path not found: %v\n", err)
-		os.Exit(ExitError)
-		return nil
+		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: bundle path not found: %v", err))
+		return NewExitError(ExitError, fmt.Sprintf("bundle path not found: %v", err))
 	}
 
 	// Generate report
 	report, err := generateExportReport(bundlePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: failed to generate report: %v\n", err)
-		os.Exit(ExitError)
-		return nil
+		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: failed to generate report: %v", err))
+		return NewExitError(ExitError, fmt.Sprintf("failed to generate report: %v", err))
 	}
 
 	// Apply filters
@@ -148,27 +152,24 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	if marshalErr != nil {
-		fmt.Fprintf(os.Stderr, "Error: failed to marshal output: %v\n", marshalErr)
-		os.Exit(ExitError)
-		return nil
+		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: failed to marshal output: %v", marshalErr))
+		return NewExitError(ExitError, fmt.Sprintf("failed to marshal output: %v", marshalErr))
 	}
 
 	if exportOutput != "" {
 		if err := os.WriteFile(exportOutput, output, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: failed to write output file: %v\n", err)
-			os.Exit(ExitError)
-			return nil
+			fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: failed to write output file: %v", err))
+			return NewExitError(ExitError, fmt.Sprintf("failed to write output file: %v", err))
 		}
-		fmt.Fprintf(os.Stderr, "✓ Report exported to %s\n", exportOutput)
+		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("✓ Report exported to %s", exportOutput))
 	} else {
-		fmt.Println(string(output))
+		fmt.Fprintln(cmd.OutOrStdout(), string(output))
 	}
 
-	// Exit with appropriate code
+	// Return appropriate exit code via error
 	if !report.Summary.IsValid {
-		os.Exit(ExitIssuesFound)
+		return NewExitError(ExitIssuesFound, "bundle has issues")
 	}
-	os.Exit(ExitSuccess)
 	return nil
 }
 
@@ -177,8 +178,8 @@ func generateExportReport(bundlePath string) (*ExportReport, error) {
 	report := &ExportReport{
 		Meta: ExportMeta{
 			GeneratedAt: time.Now().Format(time.RFC3339),
-			BundlePath:    bundlePath,
-			R8SVersion:    "v0.8.0-alpha",
+			BundlePath:  bundlePath,
+			R8SVersion:  "v0.8.0-alpha",
 		},
 	}
 
@@ -300,7 +301,5 @@ func calculateSummary(report *ExportReport) ExportSummary {
 
 // containsSubstring checks if str contains substr
 func containsSubstring(str, substr string) bool {
-	return len(substr) <= len(str) && (str == substr || len(substr) == 0 || 
-		(len(str) > len(substr) && (str[:len(substr)] == substr || 
-		str[len(str)-len(substr):] == substr)))
+	return strings.Contains(str, substr)
 }

@@ -6,49 +6,6 @@ import (
 	"github.com/Rancheroo/r8s/internal/bundle"
 )
 
-func TestOutputValidateJSON(t *testing.T) {
-	health := &bundle.HealthCheck{
-		IsValid:      true,
-		Completeness: 85.5,
-		BundleType:   "rke2",
-		MissingFiles: []bundle.MissingFile{{Path: "optional/file.txt", Category: "test"}},
-	}
-
-	// Should not panic
-	// Note: This test captures the output via stdout redirection in real tests
-	// For now, we just verify the function runs without error
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("outputValidateJSON panicked: %v", r)
-		}
-	}()
-
-	// We can't easily test stdout in unit tests without restructuring,
-	// but we can verify the structure is valid
-	if health == nil {
-		t.Error("health check should not be nil")
-	}
-}
-
-func TestOutputValidateTable(t *testing.T) {
-	health := &bundle.HealthCheck{
-		IsValid:      true,
-		Completeness: 75.0,
-		BundleType:   "k3s",
-	}
-
-	// Should not panic
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("outputValidateTable panicked: %v", r)
-		}
-	}()
-
-	if health.BundleType != "k3s" {
-		t.Errorf("unexpected bundle type: %s", health.BundleType)
-	}
-}
-
 func TestValidateFlags(t *testing.T) {
 	// Test that flags are properly initialized
 	if validateCmd == nil {

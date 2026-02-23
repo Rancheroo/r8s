@@ -55,6 +55,34 @@ func HandleExit(code int, format string, err error) {
 	os.Exit(code)
 }
 
+// ExitCodeError is an error that carries a specific exit code.
+// Used to communicate exit codes from RunE functions without calling os.Exit.
+type ExitCodeError struct {
+	Code    int
+	Message string
+}
+
+func (e *ExitCodeError) Error() string {
+	return e.Message
+}
+
+// NewExitError creates an error with a specific exit code
+func NewExitError(code int, message string) error {
+	return &ExitCodeError{Code: code, Message: message}
+}
+
+// GetExitCode extracts the exit code from an error.
+// Returns ExitError (2) for regular errors, or the custom code for ExitCodeError.
+func GetExitCode(err error) int {
+	if err == nil {
+		return ExitSuccess
+	}
+	if exitErr, ok := err.(*ExitCodeError); ok {
+		return exitErr.Code
+	}
+	return ExitError
+}
+
 // FormatHelp generates standardized help text for format flag
 func FormatHelp() string {
 	return fmt.Sprintf("Output format: %s", strings.Join(ValidFormats(), ", "))
@@ -80,6 +108,8 @@ func StandardizeFormat(format string) string {
 		return "table"
 	case "wide", "long":
 		return "wide"
+	case "summary":
+		return "summary"
 	case "human", "pretty", "default":
 		return "human"
 	default:
