@@ -11,7 +11,7 @@ func TestOutputValidateJSON(t *testing.T) {
 		IsValid:      true,
 		Completeness: 85.5,
 		BundleType:   "rke2",
-		MissingFiles: []bundle.MissingFile{{Path: "optional/file.txt", Required: false}},
+		MissingFiles: []bundle.MissingFile{{Path: "optional/file.txt", Category: "test"}},
 	}
 
 	// Should not panic
