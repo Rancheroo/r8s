@@ -112,7 +112,7 @@ func GetDefaultTestCases() []TestCase {
 	return []TestCase{
 		{
 			Name:    "OOM Kill in dmesg",
-			Content: " [123.456] oom-killer: ginkgo invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0",
+			Content: " [123.456] Memory cgroup out of memory: Killed process 12345 (java)",
 			Metadata: MatchMetadata{
 				SourceType: "dmesg",
 				NodeName:   "node-1",
