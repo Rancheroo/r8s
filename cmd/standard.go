@@ -108,6 +108,8 @@ func StandardizeFormat(format string) string {
 		return "table"
 	case "wide", "long":
 		return "wide"
+	case "summary":
+		return "summary"
 	case "human", "pretty", "default":
 		return "human"
 	default:
