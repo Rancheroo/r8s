@@ -1,16 +1,19 @@
 // Package cmd implements the CLI commands for r8s.
 // Sprint 9: r8s analyze - Main CLI entry point for bundle analysis (v0.8.0 CLI-First)
+// Sprint 11: AI pattern detection integrated
 package cmd
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
+	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
 )
 
@@ -39,34 +42,36 @@ EXIT CODES:
 }
 
 var (
-	analyzeFormat string // Output format: table, json, yaml
+	analyzeFormat   string // Output format: table, json, yaml
+	analyzeSeverity string // Filter by severity: critical, warning, info, all
 )
 
 func init() {
 	rootCmd.AddCommand(analyzeCmd)
 
 	analyzeCmd.Flags().StringVarP(&analyzeFormat, "format", "f", "table", "Output format: table, json")
+	analyzeCmd.Flags().StringVarP(&analyzeSeverity, "severity", "s", "all", "Filter by severity: critical, warning, info, all")
 }
 
 // AnalysisResult represents the output of bundle analysis
 type AnalysisResult struct {
-	BundlePath   string           `json:"bundle_path"`
-	BundleType   string           `json:"bundle_type"`
-	Completeness float64          `json:"completeness"`
-	Issues       []Issue          `json:"issues"`
-	Critical     int              `json:"critical_count"`
-	Warning      int              `json:"warning_count"`
-	Info         int              `json:"info_count"`
+	BundlePath   string              `json:"bundle_path"`
+	BundleType   string              `json:"bundle_type"`
+	Completeness float64             `json:"completeness"`
+	Issues       []Issue             `json:"issues"`
+	Critical     int                 `json:"critical_count"`
+	Warning      int                 `json:"warning_count"`
+	Info         int                 `json:"info_count"`
 	Health       *bundle.HealthCheck `json:"health,omitempty"`
 }
 
 // Issue represents a single detected issue
 type Issue struct {
-	Severity    string `json:"severity"`
-	Type        string `json:"type"`
-	Resource    string `json:"resource"`
-	Message     string `json:"message"`
-	Suggestion  string `json:"suggestion,omitempty"`
+	Severity   string `json:"severity"`
+	Type       string `json:"type"`
+	Resource   string `json:"resource"`
+	Message    string `json:"message"`
+	Suggestion string `json:"suggestion,omitempty"`
 }
 
 // runAnalyze executes the analyze command
@@ -107,7 +112,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 			default:
 				result.Info++
 			}
-			
+
 			result.Issues = append(result.Issues, Issue{
 				Severity:   severity,
 				Type:       "missing_file",
@@ -118,12 +123,95 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Sprint 11: Run AI pattern analysis
+	aiIssues := analyzeBundlePatterns(bundlePath)
+	for _, issue := range aiIssues {
+		result.Issues = append(result.Issues, issue)
+		switch issue.Severity {
+		case "critical":
+			result.Critical++
+		case "warning":
+			result.Warning++
+		default:
+			result.Info++
+		}
+	}
+
 	// Output based on format
 	switch analyzeFormat {
 	case "json":
 		return outputAnalyzeJSON(result)
 	default:
 		return outputAnalyzeTable(result)
+	}
+}
+
+// analyzeBundlePatterns scans bundle content for Sprint 11 AI patterns
+func analyzeBundlePatterns(bundlePath string) []Issue {
+	var issues []Issue
+	analyzer := ai.NewAnalyzer()
+
+	// Determine minimum severity from flag
+	minSeverity := ai.SeverityInfo
+	switch analyzeSeverity {
+	case "critical":
+		minSeverity = ai.SeverityCritical
+	case "warning":
+		minSeverity = ai.SeverityWarning
+	}
+
+	opts := ai.AnalysisOptions{
+		MinSeverity: minSeverity,
+	}
+
+	// Scan key log files based on bundle type
+	logFiles := []string{
+		"pod-logs/*.log",
+		"journald/rke2-server.log",
+		"journald/k3s-agent.log",
+		"journald/k3s.log",
+		"cluster/events.json",
+	}
+
+	for _, pattern := range logFiles {
+		matches, _ := filepath.Glob(filepath.Join(bundlePath, pattern))
+		for _, file := range matches {
+			content, err := os.ReadFile(file)
+			if err != nil {
+				continue
+			}
+
+			result, err := analyzer.FilteredAnalyze(string(content), opts)
+			if err != nil {
+				continue
+			}
+
+			// Convert AI hints to Issues
+			for _, hint := range result.Hints {
+				issue := hintToIssue(hint, filepath.Base(file))
+				if issue.Severity != "" {
+					issues = append(issues, issue)
+				}
+			}
+		}
+	}
+
+	return issues
+}
+
+// hintToIssue converts an AI hint to an Issue for CLI output
+func hintToIssue(hint *ai.Hint, source string) Issue {
+	severity := string(hint.Severity)
+	if severity == "" {
+		severity = "warning"
+	}
+
+	return Issue{
+		Severity:   severity,
+		Type:       hint.PatternID,
+		Resource:   source,
+		Message:    hint.Summary,
+		Suggestion: hint.Suggestion,
 	}
 }
 
@@ -138,7 +226,7 @@ func outputAnalyzeTable(result AnalysisResult) error {
 	// Bundle summary
 	fmt.Printf("Bundle: %s\n", result.BundlePath)
 	fmt.Printf("Type:   %s\n", result.BundleType)
-	
+
 	// Completeness indicator
 	completenessColor := color.GreenString
 	if result.Completeness < 70 {
@@ -206,10 +294,10 @@ func outputAnalyzeTable(result AnalysisResult) error {
 	// Summary line
 	fmt.Println(strings.Repeat("─", 60))
 	if result.Critical > 0 {
-		fmt.Printf("Result: %s (%d critical, %d warning)\n", 
+		fmt.Printf("Result: %s (%d critical, %d warning)\n",
 			color.RedString("ISSUES FOUND"), result.Critical, result.Warning)
 	} else if result.Warning > 0 {
-		fmt.Printf("Result: %s (%d warning)\n", 
+		fmt.Printf("Result: %s (%d warning)\n",
 			color.YellowString("WARNINGS"), result.Warning)
 	} else {
 		fmt.Printf("Result: %s\n", color.GreenString("HEALTHY"))
@@ -228,6 +316,6 @@ func outputAnalyzeTable(result AnalysisResult) error {
 func outputAnalyzeJSON(result AnalysisResult) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
-	
+
 	return encoder.Encode(result)
 }
