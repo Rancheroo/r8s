@@ -79,16 +79,21 @@ func TestCompletionCommand_Integration(t *testing.T) {
 		t.Errorf("unexpected Use: %s", completionCmd.Use)
 	}
 
-	// Verify valid args
+	// Verify valid args (order may change due to Cobra sorting)
 	validArgs := completionCmd.ValidArgs
 	expectedArgs := []string{"bash", "zsh", "fish", "powershell"}
 	if len(validArgs) != len(expectedArgs) {
 		t.Errorf("expected %d valid args, got %d", len(expectedArgs), len(validArgs))
 	}
 
-	for i, arg := range expectedArgs {
-		if i >= len(validArgs) || validArgs[i] != arg {
-			t.Errorf("expected valid arg %q at position %d", arg, i)
+	// Check all expected args exist (regardless of order)
+	argMap := make(map[string]bool)
+	for _, arg := range validArgs {
+		argMap[arg] = true
+	}
+	for _, expected := range expectedArgs {
+		if !argMap[expected] {
+			t.Errorf("expected valid arg %q not found in %v", expected, validArgs)
 		}
 	}
 }
