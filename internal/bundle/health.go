@@ -70,28 +70,41 @@ type CategoryHealth struct {
 
 // ExpectedFiles returns the list of files we expect in a bundle
 // Sprint 8: RKE2 only for now, K3s to be added
-func ExpectedFiles() []ExpectedFile {
+// Sprint 10.1: Fixed to detect bundle structure and adapt paths
+func ExpectedFiles(bundlePath string) []ExpectedFile {
+	// Detect if bundle has rke2 subdirectory
+	hasRKE2 := false
+	if _, err := os.Stat(filepath.Join(bundlePath, "rke2")); err == nil {
+		hasRKE2 = true
+	}
+
+	// Build paths based on detected structure
+	prefix := ""
+	if hasRKE2 {
+		prefix = "rke2/"
+	}
+
 	return []ExpectedFile{
 		// Critical files
-		{Path: "rke2/kubectl/pods", Importance: ImportanceCritical, Category: "pods"},
-		{Path: "rke2/kubectl/nodes", Importance: ImportanceCritical, Category: "nodes"},
+		{Path: prefix + "kubectl/pods", Importance: ImportanceCritical, Category: "pods"},
+		{Path: prefix + "kubectl/nodes", Importance: ImportanceCritical, Category: "nodes"},
 
 		// High importance
-		{Path: "rke2/kubectl/events", Importance: ImportanceHigh, Category: "events"},
-		{Path: "rke2/kubectl/deployments", Importance: ImportanceHigh, Category: "workloads"},
-		{Path: "rke2/etcd/endpoint_status", Importance: ImportanceHigh, Category: "etcd"},
+		{Path: prefix + "kubectl/events", Importance: ImportanceHigh, Category: "events"},
+		{Path: prefix + "kubectl/deployments", Importance: ImportanceHigh, Category: "workloads"},
+		{Path: prefix + "etcd/endpoint_status", Importance: ImportanceHigh, Category: "etcd"},
 
 		// Medium importance
-		{Path: "rke2/kubectl/services", Importance: ImportanceMedium, Category: "networking"},
-		{Path: "rke2/kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
-		{Path: "rke2/dmesg", Importance: ImportanceMedium, Category: "system"},
-		{Path: "rke2/logs/journald.log", Importance: ImportanceMedium, Category: "logs"},
+		{Path: prefix + "kubectl/services", Importance: ImportanceMedium, Category: "networking"},
+		{Path: prefix + "kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
+		{Path: prefix + "dmesg", Importance: ImportanceMedium, Category: "system"},
+		{Path: prefix + "logs/journald.log", Importance: ImportanceMedium, Category: "logs"},
 
 		// Low importance (nice to have)
-		{Path: "rke2/kubectl/crds", Importance: ImportanceLow, Category: "crds"},
-		{Path: "rke2/kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
-		{Path: "rke2/sysstat/", Importance: ImportanceLow, Category: "system"},
-		{Path: "rke2/podlogs/", Importance: ImportanceLow, Category: "logs"},
+		{Path: prefix + "kubectl/crds", Importance: ImportanceLow, Category: "crds"},
+		{Path: prefix + "kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
+		{Path: prefix + "sysstat/", Importance: ImportanceLow, Category: "system"},
+		{Path: prefix + "podlogs/", Importance: ImportanceLow, Category: "logs"},
 	}
 }
 
@@ -101,7 +114,7 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 		return nil, fmt.Errorf("cannot access bundle path: %w", err)
 	}
 
-	expected := ExpectedFiles()
+	expected := ExpectedFiles(bundlePath)
 	health := &HealthCheck{
 		TotalFiles:   len(expected),
 		Categories:   make(map[string]CategoryHealth),
