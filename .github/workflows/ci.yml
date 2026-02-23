@@ -158,16 +158,15 @@ jobs:
     - name: Build r8s
       run: make build
     
-    - name: Test CLI help
+    - name: Smoke tests
       run: |
-        ./bin/r8s --help
+        echo "=== Smoke Testing r8s CLI ==="
         ./bin/r8s version
-        ./bin/r8s test-cluster --help || true  # May fail without bundle, that's ok
-    
-    - name: Test with demo bundle
-      run: |
-        # Run with embedded demo bundle (no args)
-        timeout 5 ./bin/r8s --help || true
+        ./bin/r8s --help
+        ./bin/r8s completion bash | head -3
+        ./bin/r8s completion zsh | head -3
+        ./bin/r8s completion fish | head -3
+        echo "✓ CLI smoke tests passed"
 
   # Job 5: Documentation check
   docs:
