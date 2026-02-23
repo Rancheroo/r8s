@@ -117,7 +117,7 @@ func GetDefaultTestCases() []TestCase {
 				SourceType: "dmesg",
 				NodeName:   "node-1",
 			},
-			ExpectedPatterns: []string{"oom-kill"},
+			ExpectedPatterns: []string{"oomkill"},
 			ExpectedSeverity: "critical",
 		},
 		{
@@ -129,7 +129,7 @@ func GetDefaultTestCases() []TestCase {
 				Namespace:     "default",
 				ContainerName: "nginx",
 			},
-			ExpectedPatterns: []string{"image-pull-backoff"},
+			ExpectedPatterns: []string{"imagepullbackoff"},
 			ExpectedSeverity: "high",
 		},
 		{
@@ -141,7 +141,7 @@ func GetDefaultTestCases() []TestCase {
 				Namespace:     "prod",
 				ContainerName: "app",
 			},
-			ExpectedPatterns: []string{"crash-loop-backoff"},
+			ExpectedPatterns: []string{"crashloopbackoff"},
 			ExpectedSeverity: "high",
 		},
 	}

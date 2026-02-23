@@ -17,19 +17,19 @@ func TestEngine_Analyze(t *testing.T) {
 			name:    "OOM Match",
 			content: "Memory cgroup out of memory: Killed process 1234 (java)",
 			metadata: MatchMetadata{SourceType: "dmesg"},
-			expected: "oom-kill",
+			expected: "oomkill",
 		},
 		{
 			name:    "Image Pull Match",
 			content: "Failed to pull image: rpc error: code = Unknown desc = Error response from daemon",
 			metadata: MatchMetadata{SourceType: "events"},
-			expected: "image-pull-backoff",
+			expected: "imagepullbackoff",
 		},
 		{
 			name:    "Crash Loop Match",
 			content: "Back-off restarting failed container",
 			metadata: MatchMetadata{SourceType: "logs"},
-			expected: "crash-loop-backoff",
+			expected: "crashloopbackoff",
 		},
 	}
 
