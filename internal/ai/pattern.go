@@ -60,8 +60,8 @@ func (m *Matcher) Match(content string) MatchResult {
 		}
 	}
 	
-	// All keywords must match
-	if matches < len(m.pattern.Keywords) {
+	// At least one keyword must match (80/20: simple beats perfect)
+	if matches == 0 {
 		return MatchResult{Matched: false}
 	}
 	
