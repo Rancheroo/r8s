@@ -3,9 +3,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/Rancheroo/r8s/cmd"
 )
 
