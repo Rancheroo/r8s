@@ -73,8 +73,8 @@ func TestExportSummary(t *testing.T) {
 		CriticalCount:    2,
 		WarningCount:     2,
 		InfoCount:        1,
-		Categories:       map[string]int{"OOM": 2, "ImagePull": 1},
-		Namespaces:       map[string]int{"default": 3, "kube-system": 2},
+		HealthPercentage: 75.5,
+		IsValid:          true,
 	}
 
 	// Test JSON marshaling
