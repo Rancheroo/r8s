@@ -156,7 +156,7 @@ func TestStandardizeFormat(t *testing.T) {
 		{"table", "table"},
 		{"wide", "wide"},
 		{"human", "human"},
-		{"invalid", "table"}, // Default fallback
+		{"invalid", "human"}, // Default fallback
 	}
 
 	for _, tt := range tests {
