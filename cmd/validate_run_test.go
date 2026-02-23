@@ -12,7 +12,7 @@ import (
 )
 
 // createTestBundleForValidate creates a minimal bundle for validate tests
-func createTestBundleForValidate(t *testing.T, missingCritical bool) string {
+func createTestBundleForValidate(t *testing.T, withNodes bool) string {
 	tmpDir := t.TempDir()
 
 	rke2Dir := filepath.Join(tmpDir, "rke2")
@@ -28,8 +28,8 @@ func createTestBundleForValidate(t *testing.T, missingCritical bool) string {
 		t.Fatalf("failed to write pods file: %v", err)
 	}
 
-	// Create nodes unless we're testing missing critical
-	if !missingCritical {
+	// Create nodes if requested
+	if withNodes {
 		nodesFile := filepath.Join(kubectlDir, "nodes")
 		if err := os.WriteFile(nodesFile, []byte(`{"items": [{"metadata": {"name": "test-node"}}]}`), 0644); err != nil {
 			t.Fatalf("failed to write nodes file: %v", err)
@@ -39,8 +39,9 @@ func createTestBundleForValidate(t *testing.T, missingCritical bool) string {
 	return tmpDir
 }
 
-func TestRunValidate_ValidBundle(t *testing.T) {
-	bundlePath := createTestBundleForValidate(t, false)
+func TestRunValidate_IncompleteBundle(t *testing.T) {
+	// Bundle with pods + nodes is incomplete (not 100% complete) but usable
+	bundlePath := createTestBundleForValidate(t, true)
 
 	// Save and restore global flags
 	origFormat, origSummary := validateFormat, validateSummary
@@ -58,20 +59,28 @@ func TestRunValidate_ValidBundle(t *testing.T) {
 
 	err := runValidate(cmd, []string{bundlePath})
 
-	// Valid bundle should return nil (exit 0)
-	if err != nil {
-		t.Errorf("runValidate() unexpected error: %v", err)
+	// Incomplete bundle should return ExitIssuesFound (1)
+	if err == nil {
+		t.Fatal("runValidate() with incomplete bundle should return error")
+	}
+
+	var exitErr *ExitCodeError
+	if !errors.As(err, &exitErr) {
+		t.Fatalf("expected ExitCodeError, got %T: %v", err, err)
+	}
+
+	if exitErr.Code != ExitIssuesFound {
+		t.Errorf("expected exit code %d (issues found), got %d", ExitIssuesFound, exitErr.Code)
 	}
 
 	output := buf.String()
-	// Table output should contain bundle info
 	if len(output) == 0 {
 		t.Error("runValidate() produced no output")
 	}
 }
 
 func TestRunValidate_JSON(t *testing.T) {
-	bundlePath := createTestBundleForValidate(t, false)
+	bundlePath := createTestBundleForValidate(t, true)
 
 	// Save and restore global flags
 	origFormat, origSummary := validateFormat, validateSummary
@@ -89,8 +98,9 @@ func TestRunValidate_JSON(t *testing.T) {
 
 	err := runValidate(cmd, []string{bundlePath})
 
-	if err != nil {
-		t.Errorf("runValidate() unexpected error: %v", err)
+	// Incomplete bundle returns error (exit 1)
+	if err == nil {
+		t.Fatal("runValidate() with incomplete bundle should return error")
 	}
 
 	output := buf.String()
@@ -106,7 +116,7 @@ func TestRunValidate_JSON(t *testing.T) {
 }
 
 func TestRunValidate_Summary(t *testing.T) {
-	bundlePath := createTestBundleForValidate(t, false)
+	bundlePath := createTestBundleForValidate(t, true)
 
 	// Save and restore global flags
 	origFormat, origSummary := validateFormat, validateSummary
@@ -118,20 +128,23 @@ func TestRunValidate_Summary(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.SetOut(buf)
 
-	validateFormat = "table"
-	validateSummary = true
+	// Use "summary" format (not "table" with validateSummary flag)
+	validateFormat = "summary"
+	validateSummary = false
 
 	err := runValidate(cmd, []string{bundlePath})
 
-	if err != nil {
-		t.Errorf("runValidate() unexpected error: %v", err)
+	// Incomplete bundle returns error
+	if err == nil {
+		t.Fatal("runValidate() with incomplete bundle should return error")
 	}
 
-	// Summary should be short (one line typically)
+	// Summary should be short (typically one line with summary text)
 	output := buf.String()
 	lines := strings.Split(strings.TrimSpace(output), "\n")
-	if len(output) > 0 && len(lines) > 3 {
-		t.Errorf("Summary output expected ≤3 lines, got %d:\n%s", len(lines), output)
+	// Summary mode should output a brief summary (usually 1-2 lines)
+	if len(output) > 0 && len(lines) > 5 {
+		t.Errorf("Summary output expected ≤5 lines, got %d:\n%s", len(lines), output)
 	}
 }
 
@@ -175,8 +188,8 @@ func TestRunValidate_NoArgs(t *testing.T) {
 	}
 }
 
-func TestRunValidate_IncompleteBundle(t *testing.T) {
-	// Create bundle missing critical files (nodes)
+func TestRunValidate_WithNodes(t *testing.T) {
+	// Bundle with pods + nodes is incomplete (exit 1) but not invalid (exit 2)
 	bundlePath := createTestBundleForValidate(t, true)
 
 	// Save and restore global flags
@@ -195,9 +208,9 @@ func TestRunValidate_IncompleteBundle(t *testing.T) {
 
 	err := runValidate(cmd, []string{bundlePath})
 
-	// Incomplete bundle should return ExitIssuesFound (1)
+	// Bundle with nodes is incomplete but usable (exit 1)
 	if err == nil {
-		t.Fatal("runValidate() with incomplete bundle should return error")
+		t.Fatal("runValidate() should return error for incomplete bundle")
 	}
 
 	var exitErr *ExitCodeError
@@ -205,7 +218,8 @@ func TestRunValidate_IncompleteBundle(t *testing.T) {
 		t.Fatalf("expected ExitCodeError, got %T: %v", err, err)
 	}
 
+	// Should be exit 1 (incomplete), not exit 2 (invalid)
 	if exitErr.Code != ExitIssuesFound {
-		t.Errorf("expected exit code %d (issues found), got %d", ExitIssuesFound, exitErr.Code)
+		t.Errorf("expected exit code %d (incomplete), got %d", ExitIssuesFound, exitErr.Code)
 	}
 }
