@@ -77,11 +77,16 @@ jobs:
         ls -lh bin/r8s
         ./bin/r8s version
 
-    # FIX: Sprint 10 - Re-enabled with -p 1 flag to prevent "Cannot open: File exists" error
-    # The -p 1 flag forces sequential test execution, avoiding race conditions when
-    # multiple packages try to write to the same coverage.out file
-    - name: Run tests and generate coverage
-      run: go test -p 1 -v -race -coverprofile=coverage.out ./...
+    # FIX: Sprint 10 - Decouple race detection from coverage generation
+    # Step 1: Run tests with race detection (no coverage file to avoid conflicts)
+    - name: Run tests with race detection
+      run: go test -p 1 -race ./...
+
+    # Step 2: Run tests for coverage (no race detector to avoid file locking issues)
+    - name: Generate coverage report
+      run: |
+        rm -f coverage.out coverage.html
+        go test -p 1 -coverprofile=coverage.out ./...
 
     - name: Check coverage threshold
       run: |
