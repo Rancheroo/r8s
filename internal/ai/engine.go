@@ -131,28 +131,6 @@ func IsHigherSeverity(s1, s2 Severity) bool {
 	return severityOrder[s1] > severityOrder[s2]
 }
 
-// AnalysisSummary provides a high-level view of findings
-type AnalysisSummary struct {
-	TotalFindings int            `json:"total_findings"`
-	SeverityCount map[string]int `json:"severity_count"`
-	TopFinding    *Finding       `json:"top_finding,omitempty"`
-}
-
-// GetSummary generates a summary from a list of findings
-func GetSummary(findings []Finding) AnalysisSummary {
-	summary := AnalysisSummary{
-		TotalFindings: len(findings),
-		SeverityCount: make(map[string]int),
-	}
-
-	if len(findings) == 0 {
-		return summary
-	}
-
-	summary.TopFinding = &findings[0]
-	for _, f := range findings {
-		summary.SeverityCount[string(f.Severity)]++
-	}
-
-	return summary
-}
+// Note: AnalysisSummary moved to analyzer.go (Sprint 11)
+// This file retains legacy Engine for backward compatibility
+// Use Analyzer from analyzer.go for new code

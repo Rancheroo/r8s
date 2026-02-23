@@ -939,4 +939,9 @@ func TestPatternCount(t *testing.T) {
 	}
 
 	for _, id := range expectedPatterns {
-		_,
+		_, found := registry.GetByID(id)
+		if !found {
+			t.Errorf("Expected to find pattern: %s", id)
+		}
+	}
+}

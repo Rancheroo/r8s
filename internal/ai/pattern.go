@@ -106,19 +106,21 @@ type Resource struct {
 	Namespace string // Namespace (if applicable)
 }
 
-// Matcher provides pattern matching functionality (v1 legacy)
-type Matcher struct {
+// PatternMatcher provides pattern matching functionality (v1 legacy)
+// Deprecated: Use MatcherV2 for new patterns
+type PatternMatcher struct {
 	pattern Pattern
 }
 
-// NewMatcher creates a new pattern matcher
-func NewMatcher(p Pattern) *Matcher {
-	return &Matcher{pattern: p}
+// NewMatcher creates a new pattern matcher (v1 legacy)
+// Deprecated: Use NewMatcherV2 for new patterns
+func NewMatcher(p Pattern) *PatternMatcher {
+	return &PatternMatcher{pattern: p}
 }
 
 // Match checks if the content matches the pattern
 // Sprint 8: Simple keyword matching (80/20) - no regex for now
-func (m *Matcher) Match(content string) MatchResult {
+func (m *PatternMatcher) Match(content string) MatchResult {
 	content = strings.ToLower(content)
 
 	// Count how many keywords matched
@@ -151,7 +153,7 @@ func (m *Matcher) Match(content string) MatchResult {
 }
 
 // detectedMessage returns a human-readable detection message
-func (m *Matcher) detectedMessage() string {
+func (m *PatternMatcher) detectedMessage() string {
 	return fmt.Sprintf("[%s] %s: %s",
 		strings.ToUpper(string(m.pattern.Severity)),
 		m.pattern.Name,
