@@ -70,7 +70,7 @@ type CategoryHealth struct {
 
 // ExpectedFiles returns the list of files we expect in a bundle
 // Sprint 8: RKE2 only for now, K3s to be added
-// Sprint 10.1: Fixed to detect bundle structure and adapt paths
+// Sprint 10.1: Fixed to use actual collector script paths
 func ExpectedFiles(bundlePath string) []ExpectedFile {
 	// Detect if bundle has rke2 subdirectory
 	hasRKE2 := false
@@ -78,33 +78,39 @@ func ExpectedFiles(bundlePath string) []ExpectedFile {
 		hasRKE2 = true
 	}
 
-	// Build paths based on detected structure
-	prefix := ""
+	// Build kubectl paths based on detected structure
+	kubectlPrefix := ""
 	if hasRKE2 {
-		prefix = "rke2/"
+		kubectlPrefix = "rke2/"
 	}
 
 	return []ExpectedFile{
-		// Critical files
-		{Path: prefix + "kubectl/pods", Importance: ImportanceCritical, Category: "pods"},
-		{Path: prefix + "kubectl/nodes", Importance: ImportanceCritical, Category: "nodes"},
+		// Critical files (in rke2/kubectl/ if exists)
+		{Path: kubectlPrefix + "kubectl/pods", Importance: ImportanceCritical, Category: "pods"},
+		{Path: kubectlPrefix + "kubectl/nodes", Importance: ImportanceCritical, Category: "nodes"},
 
-		// High importance
-		{Path: prefix + "kubectl/events", Importance: ImportanceHigh, Category: "events"},
-		{Path: prefix + "kubectl/deployments", Importance: ImportanceHigh, Category: "workloads"},
-		{Path: prefix + "etcd/endpoint_status", Importance: ImportanceHigh, Category: "etcd"},
+		// High importance (in rke2/kubectl/ if exists)
+		{Path: kubectlPrefix + "kubectl/events", Importance: ImportanceHigh, Category: "events"},
+		{Path: kubectlPrefix + "kubectl/deployments", Importance: ImportanceHigh, Category: "workloads"},
+		// etcd is at ROOT level, not under rke2/
+		{Path: "etcd/endpointstatus", Importance: ImportanceHigh, Category: "etcd"},
 
 		// Medium importance
-		{Path: prefix + "kubectl/services", Importance: ImportanceMedium, Category: "networking"},
-		{Path: prefix + "kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
-		{Path: prefix + "dmesg", Importance: ImportanceMedium, Category: "system"},
-		{Path: prefix + "logs/journald.log", Importance: ImportanceMedium, Category: "logs"},
+		{Path: kubectlPrefix + "kubectl/services", Importance: ImportanceMedium, Category: "networking"},
+		{Path: kubectlPrefix + "kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
+		// dmesg is in systemlogs/ or systeminfo/ at root
+		{Path: "systemlogs/dmesg", Importance: ImportanceMedium, Category: "system"},
+		{Path: "systeminfo/dmesg", Importance: ImportanceMedium, Category: "system"},
+		// journald logs are in journald/ at root
+		{Path: "journald/rke2-server", Importance: ImportanceMedium, Category: "logs"},
 
 		// Low importance (nice to have)
-		{Path: prefix + "kubectl/crds", Importance: ImportanceLow, Category: "crds"},
-		{Path: prefix + "kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
-		{Path: prefix + "sysstat/", Importance: ImportanceLow, Category: "system"},
-		{Path: prefix + "podlogs/", Importance: ImportanceLow, Category: "logs"},
+		{Path: kubectlPrefix + "kubectl/crds", Importance: ImportanceLow, Category: "crds"},
+		{Path: kubectlPrefix + "kubectl/pvc", Importance: ImportanceLow, Category: "storage"},
+		// sysstat is in systemlogs/sysstat-data/
+		{Path: "systemlogs/sysstat-data/", Importance: ImportanceLow, Category: "system"},
+		// podlogs are in rke2/podlogs/ if rke2 exists
+		{Path: kubectlPrefix + "podlogs/", Importance: ImportanceLow, Category: "logs"},
 	}
 }
 
