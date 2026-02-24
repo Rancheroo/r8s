@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -146,7 +147,64 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	}
 }
 
-// analyzeBundlePatterns scans bundle content for Sprint 11 AI patterns
+// analyzeBundlePatternsParallel scans bundle content using parallel analyzer (Day 12)
+func analyzeBundlePatternsParallel(bundlePath string, verbose bool) []Issue {
+	var issues []Issue
+	
+	// Use parallel analyzer
+	analyzer := ai.NewParallelAnalyzer()
+	
+	// Determine minimum severity from flag
+	minSeverity := ai.SeverityInfo
+	switch analyzeSeverity {
+	case "critical":
+		minSeverity = ai.SeverityCritical
+	case "warning":
+		minSeverity = ai.SeverityWarning
+	}
+	
+	opts := ai.AnalysisOptions{
+		MinSeverity: minSeverity,
+	}
+	
+	// Collect bundle content
+	bundleContent, err := collectBundleContent(bundlePath, "")
+	if err != nil {
+		return issues
+	}
+	
+	// Run parallel analysis with progress
+	ctx := context.Background()
+	
+	var result *ai.AnalysisResult
+	if verbose {
+		// Show progress
+		fmt.Fprintln(os.Stderr, "Analyzing bundle...")
+		result, err = analyzer.AnalyzeParallelWithProgress(ctx, bundleContent, opts, func(completed, total int, currentFile string) {
+			percent := float64(completed) * 100 / float64(total)
+			fmt.Fprintf(os.Stderr, "\r  %d/%d (%.0f%%) - %s", completed, total, percent, filepath.Base(currentFile))
+		})
+		fmt.Fprintln(os.Stderr) // New line after progress
+	} else {
+		result, err = analyzer.AnalyzeParallel(ctx, bundleContent, opts)
+	}
+	
+	if err != nil {
+		return issues
+	}
+	
+	// Convert hints to issues
+	for _, hint := range result.Hints {
+		issue := hintToIssue(hint, hint.PatternID)
+		if issue.Severity != "" {
+			issues = append(issues, issue)
+		}
+	}
+	
+	return issues
+}
+
+// analyzeBundlePatternsLegacy scans bundle content using legacy analyzer
 func analyzeBundlePatterns(bundlePath string) []Issue {
 	var issues []Issue
 	analyzer := ai.NewAnalyzer()
