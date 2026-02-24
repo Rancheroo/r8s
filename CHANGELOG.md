@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-02-25
+
+### Fixed
+- **Critical Bug**: Pattern detection was not finding issues in bundles
+  - Root cause: `collectBundleContent()` used incorrect file path patterns
+  - Empty `bundleType` created invalid paths like `/kubectl/pods` (leading slash)
+  - Fixed paths: `agent-logs/*` (was `agent/logs/*.log`), added `systemlogs/journald-*`
+  - Issue #84: https://github.com/Rancheroo/r8s/issues/84
+
+### Changed
+- Default `bundleType` to `rke2` when not specified
+- Updated path patterns to match actual RKE2 bundle structure
+
+**Note:** All v1.0.0 users should upgrade to v1.0.1 immediately.
+
 ## [1.0.0] - 2026-02-24
 
 ### Added
