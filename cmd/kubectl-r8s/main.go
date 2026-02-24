@@ -48,7 +48,7 @@ func main() {
 	r8sArgs := []string{"r8s"}
 	bundleInserted := false
 
-	for i, arg := range args {
+	for _, arg := range args {
 		if strings.HasPrefix(arg, "-") && !bundleInserted {
 			// Found first flag, insert bundle before it
 			r8sArgs = append(r8sArgs, bundlePath)
@@ -62,8 +62,15 @@ func main() {
 		r8sArgs = append(r8sArgs, bundlePath)
 	}
 
+	// Find r8s binary
+	r8sBinary := findR8SBinary()
+	if r8sBinary == "" {
+		fmt.Fprintln(os.Stderr, "Error: Cannot find r8s binary. Make sure r8s is installed and in PATH.")
+		os.Exit(1)
+	}
+
 	// Execute r8s
-	cmd := exec.Command("r8s", r8sArgs[1:]...)
+	cmd := exec.Command(r8sBinary, r8sArgs[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -75,6 +82,33 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+// findR8SBinary looks for the r8s binary in common locations
+func findR8SBinary() string {
+	// Check if R8S_BINARY env var is set
+	if envPath := os.Getenv("R8S_BINARY"); envPath != "" {
+		if _, err := os.Stat(envPath); err == nil {
+			return envPath
+		}
+	}
+
+	// Look in same directory as kubectl-r8s
+	execPath, err := os.Executable()
+	if err == nil {
+		execDir := filepath.Dir(execPath)
+		r8sPath := filepath.Join(execDir, "r8s")
+		if _, err := os.Stat(r8sPath); err == nil {
+			return r8sPath
+		}
+	}
+
+	// Try PATH
+	if path, err := exec.LookPath("r8s"); err == nil {
+		return path
+	}
+
+	return ""
 }
 
 // findBundle looks for bundle files in current directory
