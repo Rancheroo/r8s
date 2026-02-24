@@ -12,14 +12,15 @@ import (
 // Hint represents a generated root cause hint
 // Sprint 11: Human-readable explanation with remediation steps
 type Hint struct {
-	PatternID    string   // Pattern that triggered this hint
-	Severity     Severity // Issue severity
-	Confidence   Confidence // Detection confidence
-	Summary      string   // Short description
-	Explanation  string   // Detailed explanation
-	Suggestion   string   // How to fix
-	Command      string   // kubectl command to run
-	References   []string // Links to docs
+	PatternID    string            // Pattern that triggered this hint
+	Severity     Severity          // Issue severity
+	Confidence   Confidence        // Detection confidence
+	Summary      string            // Short description
+	Explanation  string            // Detailed explanation
+	Suggestion   string            // How to fix
+	Command      string            // kubectl command to run
+	References   []string          // Links to docs
+	Metadata     map[string]string // Additional context from pattern match
 }
 
 // HintGenerator produces root cause hints from pattern matches
@@ -73,6 +74,7 @@ func (hg *HintGeneratorV2) Generate(match MatchResultV2, pattern PatternV2) (*Hi
 		Suggestion:  suggestion,
 		Command:     command,
 		References:  references,
+		Metadata:    match.Metadata,
 	}, nil
 }
 
