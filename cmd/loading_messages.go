@@ -115,12 +115,18 @@ func NewLoadingDisplay(showProgress bool) *LoadingDisplay {
 
 // ShowRandomLoadingMessage prints a random fun loading message
 func (ld *LoadingDisplay) ShowRandomLoadingMessage() {
+	if len(LoadingMessages) == 0 {
+		return
+	}
 	msg := LoadingMessages[rand.Intn(len(LoadingMessages))]
 	showFunMessage(msg)
 }
 
 // ShowSpecificLoadingMessage shows a specific loading message by index
 func (ld *LoadingDisplay) ShowSpecificLoadingMessage(index int) {
+	if len(LoadingMessages) == 0 {
+		return
+	}
 	if index >= 0 && index < len(LoadingMessages) {
 		showFunMessage(LoadingMessages[index])
 	}
@@ -142,6 +148,9 @@ func (ld *LoadingDisplay) ShowFact() {
 	if time.Since(ld.lastFactShown) < 5*time.Second {
 		return
 	}
+	if len(R8sFacts) == 0 {
+		return
+	}
 
 	fact := R8sFacts[rand.Intn(len(R8sFacts))]
 	c := color.New(color.Italic, color.FgHiBlack)
@@ -151,6 +160,9 @@ func (ld *LoadingDisplay) ShowFact() {
 
 // ShowFactAlways always shows a random fact
 func (ld *LoadingDisplay) ShowFactAlways() {
+	if len(R8sFacts) == 0 {
+		return
+	}
 	fact := R8sFacts[rand.Intn(len(R8sFacts))]
 	c := color.New(color.Italic, color.FgHiBlack)
 	c.Fprintln(os.Stderr, "   💡 "+fact)
@@ -211,6 +223,9 @@ func formatDuration(d time.Duration) string {
 
 // ShowFileProgress shows progress for a specific file
 func ShowFileProgress(fileName string, current, total int) {
+	if total <= 0 {
+		return
+	}
 	percent := float64(current) * 100 / float64(total)
 	barWidth := 30
 	filled := int(percent / 100 * float64(barWidth))
@@ -234,20 +249,32 @@ func ShowFileProgress(fileName string, current, total int) {
 
 // GetRandomLoadingMessage returns a random loading message
 func GetRandomLoadingMessage() string {
+	if len(LoadingMessages) == 0 {
+		return ""
+	}
 	return LoadingMessages[rand.Intn(len(LoadingMessages))]
 }
 
 // GetRandomR8sFact returns a random r8s fact
 func GetRandomR8sFact() string {
+	if len(R8sFacts) == 0 {
+		return ""
+	}
 	return R8sFacts[rand.Intn(len(R8sFacts))]
 }
 
 // GetRandomSRETip returns a random SRE tip
 func GetRandomSRETip() string {
+	if len(SRETips) == 0 {
+		return ""
+	}
 	return SRETips[rand.Intn(len(SRETips))]
 }
 
 // GetRandomRancherFact returns a random Rancher fact
 func GetRandomRancherFact() string {
+	if len(RancherFacts) == 0 {
+		return ""
+	}
 	return RancherFacts[rand.Intn(len(RancherFacts))]
 }
