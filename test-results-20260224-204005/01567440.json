@@ -1,0 +1,269 @@
+{
+  "bundle_path": "/home/bradmin/Downloads/01567440",
+  "bundle_type": "unknown",
+  "completeness": 0,
+  "issues": [
+    {
+      "severity": "critical",
+      "type": "missing_file",
+      "resource": "kubectl/pods",
+      "message": "Missing kubectl/pods file",
+      "suggestion": "Bundle analysis severely limited without pods data"
+    },
+    {
+      "severity": "critical",
+      "type": "missing_file",
+      "resource": "kubectl/nodes",
+      "message": "Missing kubectl/nodes file",
+      "suggestion": "Bundle analysis severely limited without nodes data"
+    },
+    {
+      "severity": "warning",
+      "type": "missing_file",
+      "resource": "kubectl/events",
+      "message": "Missing kubectl/events file",
+      "suggestion": "Major events analysis features unavailable"
+    },
+    {
+      "severity": "warning",
+      "type": "missing_file",
+      "resource": "kubectl/deployments",
+      "message": "Missing kubectl/deployments file",
+      "suggestion": "Major workloads analysis features unavailable"
+    },
+    {
+      "severity": "warning",
+      "type": "missing_file",
+      "resource": "etcd/endpointstatus",
+      "message": "Missing etcd/endpointstatus file",
+      "suggestion": "Major etcd analysis features unavailable"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "kubectl/services",
+      "message": "Missing kubectl/services file",
+      "suggestion": "Minor networking features may be limited"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "kubectl/configmaps",
+      "message": "Missing kubectl/configmaps file",
+      "suggestion": "Minor config features may be limited"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "systemlogs/dmesg",
+      "message": "Missing systemlogs/dmesg file",
+      "suggestion": "Minor system features may be limited"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "systeminfo/dmesg",
+      "message": "Missing systeminfo/dmesg file",
+      "suggestion": "Minor system features may be limited"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "journald/rke2-server",
+      "message": "Missing journald/rke2-server file",
+      "suggestion": "Minor logs features may be limited"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "kubectl/crds",
+      "message": "Missing kubectl/crds file",
+      "suggestion": "Optional crds data unavailable"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "kubectl/pvc",
+      "message": "Missing kubectl/pvc file",
+      "suggestion": "Optional storage data unavailable"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "systemlogs/sysstat-data/",
+      "message": "Missing systemlogs/sysstat-data/ file",
+      "suggestion": "Optional system data unavailable"
+    },
+    {
+      "severity": "info",
+      "type": "missing_file",
+      "resource": "podlogs/",
+      "message": "Missing podlogs/ file",
+      "suggestion": "Optional logs data unavailable"
+    }
+  ],
+  "critical_count": 2,
+  "warning_count": 3,
+  "info_count": 9,
+  "health": {
+    "TotalFiles": 14,
+    "FoundFiles": 0,
+    "MissingFiles": [
+      {
+        "Path": "kubectl/pods",
+        "Importance": 0,
+        "Category": "pods",
+        "Impact": "Bundle analysis severely limited without pods data"
+      },
+      {
+        "Path": "kubectl/nodes",
+        "Importance": 0,
+        "Category": "nodes",
+        "Impact": "Bundle analysis severely limited without nodes data"
+      },
+      {
+        "Path": "kubectl/events",
+        "Importance": 1,
+        "Category": "events",
+        "Impact": "Major events analysis features unavailable"
+      },
+      {
+        "Path": "kubectl/deployments",
+        "Importance": 1,
+        "Category": "workloads",
+        "Impact": "Major workloads analysis features unavailable"
+      },
+      {
+        "Path": "etcd/endpointstatus",
+        "Importance": 1,
+        "Category": "etcd",
+        "Impact": "Major etcd analysis features unavailable"
+      },
+      {
+        "Path": "kubectl/services",
+        "Importance": 2,
+        "Category": "networking",
+        "Impact": "Minor networking features may be limited"
+      },
+      {
+        "Path": "kubectl/configmaps",
+        "Importance": 2,
+        "Category": "config",
+        "Impact": "Minor config features may be limited"
+      },
+      {
+        "Path": "systemlogs/dmesg",
+        "Importance": 2,
+        "Category": "system",
+        "Impact": "Minor system features may be limited"
+      },
+      {
+        "Path": "systeminfo/dmesg",
+        "Importance": 2,
+        "Category": "system",
+        "Impact": "Minor system features may be limited"
+      },
+      {
+        "Path": "journald/rke2-server",
+        "Importance": 2,
+        "Category": "logs",
+        "Impact": "Minor logs features may be limited"
+      },
+      {
+        "Path": "kubectl/crds",
+        "Importance": 3,
+        "Category": "crds",
+        "Impact": "Optional crds data unavailable"
+      },
+      {
+        "Path": "kubectl/pvc",
+        "Importance": 3,
+        "Category": "storage",
+        "Impact": "Optional storage data unavailable"
+      },
+      {
+        "Path": "systemlogs/sysstat-data/",
+        "Importance": 3,
+        "Category": "system",
+        "Impact": "Optional system data unavailable"
+      },
+      {
+        "Path": "podlogs/",
+        "Importance": 3,
+        "Category": "logs",
+        "Impact": "Optional logs data unavailable"
+      }
+    ],
+    "Completeness": 0,
+    "IsValid": false,
+    "BundleType": "unknown",
+    "Categories": {
+      "config": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "crds": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "etcd": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "events": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "logs": {
+        "Total": 2,
+        "Found": 0,
+        "Missing": 2,
+        "Complete": false
+      },
+      "networking": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "nodes": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "pods": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "storage": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      },
+      "system": {
+        "Total": 3,
+        "Found": 0,
+        "Missing": 3,
+        "Complete": false
+      },
+      "workloads": {
+        "Total": 1,
+        "Found": 0,
+        "Missing": 1,
+        "Complete": false
+      }
+    }
+  }
+}

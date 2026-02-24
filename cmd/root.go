@@ -5,17 +5,14 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	cfgFile       string
-	contextName   string
-	namespace     string
-	tuiBundlePath string // Path to bundle for TUI offline mode
-	verbose       bool   // Enable verbose error output
-	scanDepth     int    // Number of log lines to scan for error/warning detection (default: 200)
+	namespace string // Default namespace for kubectl-style commands
+	verbose   bool   // Enable verbose error output
 
 	versionInfo struct {
 		Version string
@@ -31,62 +28,110 @@ var rootCmd = &cobra.Command{
 	Short:         "r8s - The fastest way to understand a broken Kubernetes cluster from a log bundle",
 	SilenceErrors: true,                  // We handle error output ourselves
 	SilenceUsage:  true,                  // Don't dump usage on every error
-	Long: `r8s — kubectl for Rancher bundles. Analyze clusters offline, script support workflows.
+	Long: `r8s — kubectl for Rancher bundles. Analyze clusters offline.
 
-FEATURES:
-  • kubectl-compatible commands (get, logs, describe, analyze)
-  • Analyze bundles offline with smart pattern detection
-  • Export findings for AI-assisted troubleshooting
-  • Bundle-first design - works without cluster access
-  • CI/CD ready with JSON output and proper exit codes
-
-QUICKSTART:
-  1. Extract your RKE2 support bundle
-  2. Run: r8s analyze /path/to/extracted-bundle
-  3. Pipe to jq for filtering: r8s analyze ./bundle --format=json | jq '.critical'
-  4. Generate AI prompts: r8s generate prompt ./bundle
+USAGE:
+  r8s analyze ./bundle/          # Detect issues
+  r8s get pods ./bundle/         # List pods
+  r8s logs ./bundle/ <pod>       # Stream logs
+  r8s export ./bundle/           # Export findings
 
 EXAMPLES:
-  # Analyze an extracted bundle
-  r8s analyze ./extracted-bundle-folder/
+  # Quick analysis
+  r8s analyze ./bundle/
 
-  # Get pods like kubectl
-  r8s get pods ./bundle/
+  # Filter critical issues
+  r8s analyze ./bundle/ --format=json | jq '.critical'
 
-  # Stream logs for a pod
+  # kubectl-compatible commands
+  r8s get pods ./bundle/ -n cattle-system
   r8s logs ./bundle/ nginx-pod
 
-  # Validate bundle health
-  r8s validate ./bundle/
-
-  # Enable verbose error output
-  r8s -v analyze ./bundle/`,
+For more: https://github.com/Rancheroo/r8s`,
 	RunE: runRoot,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() {
+	// Set up custom error handling
+	SetUnknownCommandHandler(rootCmd)
+	
+	// Check for unknown commands before executing
+	if len(os.Args) > 1 {
+		firstArg := os.Args[1]
+		// Skip flags and special commands
+		if !strings.HasPrefix(firstArg, "-") && firstArg != "help" && firstArg != "--help" && firstArg != "-h" {
+			// Check if it's a known subcommand
+			if !isKnownCommand(firstArg) {
+				// Check if it's a typo we can suggest
+				if suggestion, found := CommandSuggestions[strings.ToLower(firstArg)]; found {
+					ShowUnknownCommandError(firstArg)
+					// Offer to run the correct command
+					fmt.Fprintf(os.Stderr, "Run 'r8s %s' instead? (y/n): ", suggestion.Command)
+					os.Exit(ExitError)
+				} else if !isValidBundlePath(firstArg) {
+					// Could be a bundle path, which is handled by runRoot
+					// But if it doesn't exist as a path either, show unknown command
+					if _, err := os.Stat(firstArg); os.IsNotExist(err) {
+						ShowUnknownCommandError(firstArg)
+						os.Exit(ExitError)
+					}
+				}
+			}
+		}
+	}
+	
 	if err := rootCmd.Execute(); err != nil {
 		// Check for exit code error
 		if exitCode := GetExitCode(err); exitCode != ExitSuccess {
 			os.Exit(exitCode)
 		}
-		// Regular error
+		// Regular error - show friendly version
+		ShowFriendlyError(err)
 		os.Exit(ExitError)
 	}
 }
 
+// isKnownCommand checks if a command is known
+func isKnownCommand(cmd string) bool {
+	knownCommands := []string{
+		"analyze", "analyse", "analize",
+		"ask",
+		"describe", "desc",
+		"export",
+		"generate", "gen",
+		"get",
+		"logs", "log",
+		"validate", "val", "check",
+		"version", "ver", "v",
+		"help", "h",
+	}
+	
+	cmd = strings.ToLower(cmd)
+	for _, known := range knownCommands {
+		if cmd == known {
+			return true
+		}
+	}
+	return false
+}
+
+// isValidBundlePath checks if the argument looks like a bundle path
+func isValidBundlePath(path string) bool {
+	// Check if it looks like a path
+	if strings.Contains(path, "/") || strings.Contains(path, ".") {
+		return true
+	}
+	return false
+}
+
 func init() {
-	// Global flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.r8s/config.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose error output for debugging")
-	rootCmd.PersistentFlags().StringVar(&contextName, "context", "", "cluster context to start in")
-	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace to start in")
-	rootCmd.PersistentFlags().IntVar(&scanDepth, "scan", 200, "number of log lines to scan for error/warning detection")
+	// Global flags (Law 3: Simplify - removed cfgFile, contextName, scanDepth)
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "namespace filter")
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(configCmd)
 }
 
 var versionCmd = &cobra.Command{
@@ -98,20 +143,6 @@ var versionCmd = &cobra.Command{
 			versionInfo.Commit,
 			versionInfo.Date,
 		)
-	},
-}
-
-var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Manage r8s configuration",
-	Long:  "Initialize, view, or edit r8s configuration file",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Config management commands:")
-		fmt.Println("  init   - Initialize a new config file")
-		fmt.Println("  view   - View current configuration")
-		fmt.Println("  edit   - Edit configuration in $EDITOR")
-		fmt.Println("")
-		fmt.Println("Run 'r8s config <command> --help' for more information")
 	},
 }
 
@@ -130,10 +161,6 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	}
 
 	// If bundle path provided without subcommand, default to analyze
-	bundlePath := args[0]
-	// Store for analyze command
-	tuiBundlePath = bundlePath
-	
 	// Call analyze directly (v0.8.0 CLI-first)
 	return runAnalyze(cmd, args)
 }

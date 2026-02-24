@@ -103,9 +103,11 @@ if [ -d "$TEST_BUNDLE" ]; then
         FAILED=1
     fi
     
-    # Check exit code
+    # Check exit code (capture before || true resets it)
+    set +e
     $R8S_BIN analyze "$TEST_BUNDLE" >/dev/null 2>&1
     EXIT_CODE=$?
+    set -e
     if [ "$EXIT_CODE" -eq 1 ]; then
         echo -e "${GREEN}  ✅ Exit code 1 for critical issues${NC}"
     else

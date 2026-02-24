@@ -1,15 +1,18 @@
 // Package cmd implements the CLI commands for r8s.
 // Sprint 9: r8s analyze - Main CLI entry point for bundle analysis (v0.8.0 CLI-First)
 // Sprint 11: AI pattern detection integrated
+// Sprint 12: Loading UX with personality and progress indicators
 package cmd
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -75,19 +78,45 @@ type Issue struct {
 	Suggestion string `json:"suggestion,omitempty"`
 }
 
-// runAnalyze executes the analyze command
+// runAnalyze executes the analyze command with personality and progress
 func runAnalyze(cmd *cobra.Command, args []string) error {
 	bundlePath := args[0]
+	startTime := time.Now()
 
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
-		return fmt.Errorf("cannot access bundle path: %w", err)
+		ShowFriendlyError(fmt.Errorf("cannot access bundle path: %w", err))
+		return err
+	}
+
+	// Initialize loading display for non-JSON output
+	var loader *LoadingDisplay
+	if analyzeFormat != "json" {
+		loader = NewLoadingDisplay(verbose)
+		loader.ShowStartMessage(bundlePath)
+		loader.ShowRandomLoadingMessage()
+		loader.ShowFactAlways()
+		fmt.Fprintln(os.Stderr)
+	}
+
+	// Show step 1: Checking bundle health
+	if loader != nil {
+		ShowStep(1, 3, "Checking bundle health...")
 	}
 
 	// Check bundle health
 	health, err := bundle.CheckHealth(bundlePath)
 	if err != nil {
-		return fmt.Errorf("failed to analyze bundle: %w", err)
+		if loader != nil {
+			ShowError("Failed to analyze bundle health")
+		}
+		ShowFriendlyError(fmt.Errorf("failed to analyze bundle: %w", err))
+		return err
+	}
+
+	if loader != nil {
+		ShowSuccess(fmt.Sprintf("Bundle validated (%s, %.0f%% complete)", health.BundleType, health.Completeness))
+		fmt.Fprintln(os.Stderr)
 	}
 
 	// Build analysis result
@@ -124,8 +153,15 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Sprint 11: Run AI pattern analysis
-	aiIssues := analyzeBundlePatterns(bundlePath)
+	// Show step 2: Running AI pattern analysis
+	if loader != nil {
+		ShowStep(2, 3, "Scanning for issues with AI pattern detection...")
+		// Show another random loading message
+		loader.ShowRandomLoadingMessage()
+	}
+
+	// Sprint 12: Run AI pattern analysis with progress
+	aiIssues := analyzeBundlePatternsWithProgress(bundlePath, loader)
 	for _, issue := range aiIssues {
 		result.Issues = append(result.Issues, issue)
 		switch issue.Severity {
@@ -138,6 +174,19 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Show step 3: Complete
+	if loader != nil {
+		fmt.Fprintln(os.Stderr)
+		ShowStep(3, 3, "Analysis complete!")
+		loader.ShowCompletionMessage()
+		loader.ShowElapsedTime()
+		fmt.Fprintln(os.Stderr)
+	}
+
+	// Record total analysis time in result for JSON output
+	analysisDuration := time.Since(startTime)
+	_ = analysisDuration // Available for future use in JSON output
+
 	// Output based on format
 	switch analyzeFormat {
 	case "json":
@@ -147,8 +196,8 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	}
 }
 
-// analyzeBundlePatternsParallel scans bundle content using parallel analyzer (Day 12)
-func analyzeBundlePatternsParallel(bundlePath string, verbose bool) []Issue {
+// analyzeBundlePatternsWithProgress scans bundle content with progress indication
+func analyzeBundlePatternsWithProgress(bundlePath string, loader *LoadingDisplay) []Issue {
 	var issues []Issue
 	
 	// Use parallel analyzer
@@ -170,27 +219,73 @@ func analyzeBundlePatternsParallel(bundlePath string, verbose bool) []Issue {
 	// Collect bundle content
 	bundleContent, err := collectBundleContent(bundlePath, "")
 	if err != nil {
+		if loader != nil {
+			ShowWarning("Failed to collect some bundle content")
+		}
 		return issues
+	}
+	
+	// Show content stats
+	if loader != nil && verbose {
+		ShowInfo(fmt.Sprintf("Found %d files to analyze", len(bundleContent)))
 	}
 	
 	// Run parallel analysis with progress
 	ctx := context.Background()
 	
 	var result *ai.AnalysisResult
-	if verbose {
-		// Show progress
-		fmt.Fprintln(os.Stderr, "Analyzing bundle...")
+	
+	if loader != nil {
+		// Show progress with personality
+		spinner := NewRancherSpinner("Herding logs into formation...")
+		spinner.Start()
+		
 		result, err = analyzer.AnalyzeParallelWithProgress(ctx, bundleContent, opts, func(completed, total int, currentFile string) {
-			percent := float64(completed) * 100 / float64(total)
-			fmt.Fprintf(os.Stderr, "\r  %d/%d (%.0f%%) - %s", completed, total, percent, filepath.Base(currentFile))
+			// Update spinner message occasionally
+			if completed%10 == 0 {
+				messages := []string{
+					"Moo-ving through your bundle...",
+					"Rancher wrangling those logs...",
+					"Herding log entries into formation...",
+					"Scanning for CrashLoops...",
+					"Checking etcd health...",
+				}
+				spinner.UpdateMessage(messages[rand.Intn(len(messages))])
+			}
+			
+			// Show progress bar for verbose mode
+			if verbose && completed%5 == 0 {
+				spinner.Stop()
+				ShowFileProgress(filepath.Base(currentFile), completed, total)
+				spinner.Start()
+			}
 		})
-		fmt.Fprintln(os.Stderr) // New line after progress
+		
+		spinner.Stop()
+		ClearLine()
+		
+		if err != nil {
+			ShowWarning("Analysis encountered some issues")
+		}
+		
+		// Show fact during analysis
+		loader.ShowFact()
+		
 	} else {
+		// No loader - just run analysis silently
 		result, err = analyzer.AnalyzeParallel(ctx, bundleContent, opts)
 	}
 	
 	if err != nil {
 		return issues
+	}
+	
+	// Show summary of what was found
+	if loader != nil && result.Summary.MatchesFound > 0 {
+		ShowSuccess(fmt.Sprintf("Found %d pattern matches (%d critical, %d warning)",
+			result.Summary.MatchesFound,
+			result.Summary.CriticalIssues,
+			result.Summary.WarningIssues))
 	}
 	
 	// Convert hints to issues
@@ -205,63 +300,9 @@ func analyzeBundlePatternsParallel(bundlePath string, verbose bool) []Issue {
 }
 
 // analyzeBundlePatternsLegacy scans bundle content using legacy analyzer
+// Kept for backward compatibility
 func analyzeBundlePatterns(bundlePath string) []Issue {
-	var issues []Issue
-	analyzer := ai.NewAnalyzer()
-
-	// Determine minimum severity from flag
-	minSeverity := ai.SeverityInfo
-	switch analyzeSeverity {
-	case "critical":
-		minSeverity = ai.SeverityCritical
-	case "warning":
-		minSeverity = ai.SeverityWarning
-	}
-
-	opts := ai.AnalysisOptions{
-		MinSeverity: minSeverity,
-	}
-
-	// Scan key files based on bundle type (RKE2, K3s, RKE1)
-	logFiles := []string{
-		// RKE2 paths
-		"rke2/kubectl/pods",
-		"rke2/podlogs/*",
-		"rke2/agent/logs/*.log",
-		// K3s paths
-		"k3s/kubectl/pods",
-		"k3s/podlogs/*",
-		// Generic paths
-		"kubectl/pods",
-		"pod-logs/*.log",
-		"journald/*.log",
-		"cluster/events.json",
-	}
-
-	for _, pattern := range logFiles {
-		matches, _ := filepath.Glob(filepath.Join(bundlePath, pattern))
-		for _, file := range matches {
-			content, err := os.ReadFile(file)
-			if err != nil {
-				continue
-			}
-
-			result, err := analyzer.FilteredAnalyze(string(content), opts)
-			if err != nil {
-				continue
-			}
-
-			// Convert AI hints to Issues
-			for _, hint := range result.Hints {
-				issue := hintToIssue(hint, filepath.Base(file))
-				if issue.Severity != "" {
-					issues = append(issues, issue)
-				}
-			}
-		}
-	}
-
-	return issues
+	return analyzeBundlePatternsWithProgress(bundlePath, nil)
 }
 
 // hintToIssue converts an AI hint to an Issue for CLI output
@@ -369,6 +410,14 @@ func outputAnalyzeTable(result AnalysisResult) error {
 	}
 	fmt.Println()
 
+	// Show random tip at the end
+	if rand.Intn(3) == 0 { // 1/3 chance to show tip
+		tip := R8sFacts[rand.Intn(len(R8sFacts))]
+		tipColor := color.New(color.Italic, color.FgHiBlack)
+		tipColor.Fprintln(os.Stderr, "💡 "+tip)
+		fmt.Println()
+	}
+
 	// Return proper exit code for CI/CD integration
 	// Sprint 11: Fix DEFECT #1 - Exit code 1 for issues, not 2
 	if result.Critical > 0 {
@@ -384,4 +433,9 @@ func outputAnalyzeJSON(result AnalysisResult) error {
 	encoder.SetIndent("", "  ")
 
 	return encoder.Encode(result)
+}
+
+// init seeds the random number generator
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }

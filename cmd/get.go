@@ -81,11 +81,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	if len(args) > 1 {
 		bundlePath = args[1]
 	} else {
-		// Check if bundle path is in tuiBundlePath from root
-		bundlePath = tuiBundlePath
-		if bundlePath == "" {
-			return fmt.Errorf("bundle path required: r8s get %s [bundle-path]", resource)
-		}
+		return fmt.Errorf("bundle path required: r8s get %s [bundle-path]", resource)
 	}
 
 	// Load bundle
