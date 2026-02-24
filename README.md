@@ -1,22 +1,19 @@
 # r8s
 
-> **r8s v0.8.0 — kubectl for Rancher bundles. Analyze clusters offline, script support workflows.**
+> **r8s v0.9.0 — AI-Powered kubectl for Rancher bundles.**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-r8s (pronounced "rates") is a CLI tool for analyzing Rancher support bundles. No TUI, no menus — just fast, scriptable commands that feel like kubectl.
+r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher support bundles. It combines kubectl-like navigation with AI pattern detection to find root causes instantly.
 
-**Latest: v0.8.0** (February 2026) — Pure CLI
+**Latest: v0.9.0** (March 2026) — AI Intelligence
 
-- **kubectl-compatible**: `get`, `logs`, `describe`, `validate` — familiar commands
-- **100% Scriptable**: JSON output, proper exit codes, pipe to jq
-- **Bundle-First**: Works offline, no cluster access needed
-- **CI/CD Ready**: Automate bundle validation in pipelines
-
-**Previous Highlights:**
-- v0.7.0: Bundle completeness, storage parsers, dmesg analysis
-- v0.6.x: TUI dashboard (deprecated — see v0.8.0)
+- **AI Analysis**: Detects 19+ issue patterns (CrashLoop, OOM, etcd, certs)
+- **Natural Language Queries**: Ask `r8s ask "why is nginx crashing?"`
+- **Root Cause Hints**: Explains *why* something broke and *how* to fix it
+- **CI/CD Integration**: Export findings to SARIF, JUnit, Markdown
+- **kubectl-compatible**: `get`, `logs`, `describe` work offline
 
 ---
 
@@ -27,20 +24,54 @@ r8s (pronounced "rates") is a CLI tool for analyzing Rancher support bundles. No
 git clone https://github.com/Rancheroo/r8s.git && cd r8s
 make build
 
-# 2. Validate a bundle
-./bin/r8s validate ./support-bundle/
+# 2. Analyze Bundle (AI Powered)
+./bin/r8s analyze ./support-bundle/
+# 🔴 Found: CrashLoopBackOff (Container nginx has crashed 5 times...)
 
-# 3. Get pods (like kubectl)
+# 3. Ask Questions (Natural Language)
+./bin/r8s ask ./support-bundle/ "why is nginx crashing?"
+
+# 4. Export for GitHub Security
+./bin/r8s export ./support-bundle/ --format=sarif --output=results.sarif
+
+# 5. Traditional kubectl commands
 ./bin/r8s get pods ./support-bundle/
-
-# 4. Stream logs
 ./bin/r8s logs ./support-bundle/ nginx-pod
-
-# 5. Export for AI analysis
-./bin/r8s export ./support-bundle/ --format=json | jq '.critical'
 ```
 
-**That's it.** No configuration, no API keys, works offline.
+---
+
+## ✨ New AI Features (v0.9.0)
+
+### 🧠 Pattern Detection
+Automatically detects 19+ common Kubernetes issues:
+- **CrashLoopBackOff / OOMKilled**
+- **ImagePullBackOff / ErrImagePull**
+- **etcd corruption / latency / quorum loss**
+- **Certificate expiration / invalid CA**
+- **CNI plugin errors / DNS failures**
+- **PVC binding failures / Storage pressure**
+- **Node NotReady / DiskPressure**
+
+### 🗣️ Natural Language Queries
+Troubleshoot like a human:
+```bash
+r8s ask ./bundle/ "why is etcd slow?"
+r8s ask ./bundle/ "show me all certificate issues"
+r8s ask ./bundle/ "which pods are pending?"
+```
+
+### 📤 Export Formats
+Integrate with your ecosystem:
+- **SARIF**: GitHub Advanced Security
+- **JUnit**: Jenkins / GitHub Actions / GitLab CI
+- **Markdown**: Human-readable reports
+- **JSON**: Custom automation
+
+```bash
+r8s export ./bundle/ --format=sarif > results.sarif
+r8s export ./bundle/ --format=junit > test-results.xml
+```
 
 ---
 
