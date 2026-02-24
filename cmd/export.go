@@ -63,6 +63,9 @@ func init() {
 
 // runExport executes the export command
 func runExport(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("bundle path is required")
+	}
 	bundlePath := args[0]
 
 	// Validate bundle path
@@ -78,9 +81,16 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	// Run Sprint 11 AI pattern analysis
 	analyzer := ai.NewAnalyzer()
+
+	// Validate and normalize min-severity
+	minSev := strings.ToLower(exportMinSev)
+	if minSev != "critical" && minSev != "warning" && minSev != "info" {
+		return fmt.Errorf("invalid --min-severity: %s (use: critical, warning, info)", exportMinSev)
+	}
+
 	opts := ai.AnalysisOptions{
-		MinSeverity:  parseSeverity(exportMinSev),
-		IncludeInfo:  exportMinSev == "info",
+		MinSeverity:  parseSeverity(minSev),
+		IncludeInfo:  minSev == "info",
 		MaxHints:     0, // No limit
 	}
 
