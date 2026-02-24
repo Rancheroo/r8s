@@ -164,12 +164,19 @@ func analyzeBundlePatterns(bundlePath string) []Issue {
 		MinSeverity: minSeverity,
 	}
 
-	// Scan key log files based on bundle type
+	// Scan key files based on bundle type (RKE2, K3s, RKE1)
 	logFiles := []string{
+		// RKE2 paths
+		"rke2/kubectl/pods",
+		"rke2/podlogs/*",
+		"rke2/agent/logs/*.log",
+		// K3s paths
+		"k3s/kubectl/pods",
+		"k3s/podlogs/*",
+		// Generic paths
+		"kubectl/pods",
 		"pod-logs/*.log",
-		"journald/rke2-server.log",
-		"journald/k3s-agent.log",
-		"journald/k3s.log",
+		"journald/*.log",
 		"cluster/events.json",
 	}
 

@@ -496,7 +496,9 @@ var BuiltinPatternsV2 = []PatternV2{
 			{Type: "keyword", Pattern: "lookup failed", Weight: 0.9},
 			{Type: "keyword", Pattern: "could not resolve", Weight: 0.9},
 			{Type: "keyword", Pattern: "name not known", Weight: 0.9},
-			{Type: "keyword", Pattern: "coredns", Weight: 0.6},
+			{Type: "keyword", Pattern: "failed to resolve dns", Weight: 1.0},
+			{Type: "keyword", Pattern: "nxdomain", Weight: 0.9},
+			// Note: Removed "coredns" - matches pod names, not DNS errors
 		},
 		Correlations: []Correlation{
 			{PatternID: "cni-error", Message: "DNS failures may be caused by CNI connectivity issues"},
@@ -519,10 +521,9 @@ var BuiltinPatternsV2 = []PatternV2{
 			{Type: "keyword", Pattern: "cni plugin failed", Weight: 1.0},
 			{Type: "keyword", Pattern: "failed to set up sandbox", Weight: 1.0},
 			{Type: "keyword", Pattern: "networkplugin cni", Weight: 1.0},
-			{Type: "keyword", Pattern: "calico", Weight: 0.7},
-			{Type: "keyword", Pattern: "flannel", Weight: 0.7},
-			{Type: "keyword", Pattern: "cilium", Weight: 0.7},
-			{Type: "keyword", Pattern: "canal", Weight: 0.7},
+			{Type: "keyword", Pattern: "cni setup error", Weight: 1.0},
+			{Type: "keyword", Pattern: "cni configuration error", Weight: 1.0},
+			// Note: Removed "calico", "flannel", "cilium" - they match pod names, not errors
 		},
 		Correlations: []Correlation{
 			{PatternID: "pod-stuck-pending", Message: "CNI errors prevent pods from starting"},
