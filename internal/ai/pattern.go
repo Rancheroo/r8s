@@ -357,6 +357,16 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityCritical,
 		Confidence:  ConfidenceCertain,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `TaskId: (?P<ContainerName>\S+) Error: OOM Killed`,
+				Weight:  1.0,
+			},
+			{
+				Type:    "regex",
+				Pattern: `Memory cgroup out of memory: Kill process \d+ \((?P<Process>\S+)\) score \d+ or sacrifice child`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "out of memory", Weight: 1.0},
 			{Type: "keyword", Pattern: "oomkill", Weight: 1.0},
 			{Type: "keyword", Pattern: "oom_kill_process", Weight: 1.0},
@@ -364,7 +374,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Container was killed due to memory limits",
 		HintGenerator: HintGenerator{
-			Template:   "Container {{.ContainerName}} in pod {{.PodName}} was killed due to out-of-memory. The container exceeded its {{.MemoryLimit}} memory limit.",
+			Template:   "Container {{.ContainerName}} was killed due to out-of-memory.",
 			Suggestion: "Increase memory limit in pod spec or optimize application memory usage",
 			Command:    "kubectl describe pod {{.PodName}} -n {{.Namespace}} | grep -A5 'Last State'",
 			References: []string{"https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"},
@@ -377,6 +387,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityWarning,
 		Confidence:  ConfidenceCertain,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `Failed to pull image "(?P<Image>[^"]+)": rpc error: code = (?P<Code>\S+) desc = (?P<PullError>.+)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "imagepullbackoff", Weight: 1.0},
 			{Type: "keyword", Pattern: "pull access denied", Weight: 1.0},
 			{Type: "keyword", Pattern: "failed to pull image", Weight: 1.0},
@@ -384,7 +399,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Cannot pull container image from registry",
 		HintGenerator: HintGenerator{
-			Template:   "Failed to pull image '{{.Image}}' for container {{.ContainerName}}. {{.PullError}}",
+			Template:   "Failed to pull image '{{.Image}}'. {{.PullError}}",
 			Suggestion: "Check image name/tag exists, registry credentials are configured, and network connectivity to registry",
 			Command:    "kubectl describe pod {{.PodName}} -n {{.Namespace}} | grep -A10 'Events'",
 			References: []string{"https://kubernetes.io/docs/concepts/containers/images/"},
@@ -427,6 +442,16 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityCritical,
 		Confidence:  ConfidenceCertain,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `etcdserver: (?P<ErrorType>mvcc: database space exceeded)`,
+				Weight:  1.0,
+			},
+			{
+				Type:    "regex",
+				Pattern: `(?P<ErrorType>etcd data corruption)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "etcdserver: mvcc: database space exceeded", Weight: 1.0},
 			{Type: "keyword", Pattern: "etcd data corruption", Weight: 1.0},
 			{Type: "keyword", Pattern: "etcdserver: corrupt", Weight: 1.0},
@@ -447,6 +472,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityWarning,
 		Confidence:  ConfidenceLikely,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `etcd: (?P<LatencyType>[\w\s]+) took (?P<Duration>[\d\.]+m?s)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "etcd: slow", Weight: 1.0},
 			{Type: "keyword", Pattern: "took too long", Weight: 0.9},
 			{Type: "keyword", Pattern: "etcd: read index took", Weight: 1.0},
@@ -475,7 +505,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "etcd cluster has lost quorum, control plane is down",
 		HintGenerator: HintGenerator{
-			Template:   "etcd quorum lost. Only {{.HealthyMembers}} of {{.TotalMembers}} etcd members are healthy.",
+			Template:   "etcd quorum lost. Cluster may be down.",
 			Suggestion: "Restore failed etcd nodes or restore cluster from snapshot. Check network connectivity between control plane nodes.",
 			Command:    "ETCDCTL_API=3 etcdctl member list && ETCDCTL_API=3 etcdctl endpoint health --cluster",
 			References: []string{"https://etcd.io/docs/v3.5/op-guide/recovery/", "https://docs.rke2.io/backup_restore/"},
@@ -498,7 +528,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Kubernetes certificate has expired",
 		HintGenerator: HintGenerator{
-			Template:   "Certificate {{.CertName}} expired {{.DaysAgo}} days ago (expired: {{.ExpiryDate}}).",
+			Template:   "Certificate expired.",
 			Suggestion: "Approve pending CSR to renew certificate: 'kubectl get csr', then 'kubectl certificate approve <csr-name>'",
 			Command:    "kubectl get csr && kubectl certificate approve $(kubectl get csr -o json | jq -r '.items[] | select(.status.conditions == null) | .metadata.name')",
 			References: []string{"https://kubernetes.io/docs/tasks/tls/certificate-issue/", "https://docs.rke2.io/security/certificates/"},
@@ -517,7 +547,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Kubernetes certificate is expiring soon",
 		HintGenerator: HintGenerator{
-			Template:   "Certificate {{.CertName}} expires in {{.DaysRemaining}} days ({{.ExpiryDate}}).",
+			Template:   "Certificate is expiring soon.",
 			Suggestion: "Plan certificate rotation. For automatic rotation, ensure node is running and can request new certificates from API server",
 			Command:    "openssl x509 -in /var/lib/rancher/rke2/server/tls/client-ca.crt -noout -dates",
 			References: []string{"https://docs.rke2.io/security/certificates/", "https://kubernetes.io/docs/tasks/tls/certificate-issue/"},
@@ -539,7 +569,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Certificate signed by unknown or untrusted CA",
 		HintGenerator: HintGenerator{
-			Template:   "Certificate authority mismatch for {{.Component}}. The certificate is not trusted.",
+			Template:   "Certificate authority mismatch. The certificate is not trusted.",
 			Suggestion: "Check CA certificates are consistent across cluster. If CA was rotated, ensure all nodes have updated CA bundle.",
 			Command:    "openssl s_client -connect localhost:6443 -CAfile /var/lib/rancher/rke2/server/tls/server-ca.crt 2>&1 | grep 'Verify return code'",
 			References: []string{"https://docs.rke2.io/security/certificates/", "https://kubernetes.io/docs/setup/best-practices/certificates/"},
@@ -553,20 +583,24 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityWarning,
 		Confidence:  ConfidenceLikely,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `lookup (?P<Hostname>[\w\.\-]+)( on \S+)?(:)? (?P<Error>no such host|i/o timeout|server misbehaving|nxdomain)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "dns resolution failed", Weight: 1.0},
 			{Type: "keyword", Pattern: "lookup failed", Weight: 0.9},
 			{Type: "keyword", Pattern: "could not resolve", Weight: 0.9},
 			{Type: "keyword", Pattern: "name not known", Weight: 0.9},
 			{Type: "keyword", Pattern: "failed to resolve dns", Weight: 1.0},
 			{Type: "keyword", Pattern: "nxdomain", Weight: 0.9},
-			// Note: Removed "coredns" - matches pod names, not DNS errors
 		},
 		Correlations: []Correlation{
 			{PatternID: "cni-error", Message: "DNS failures may be caused by CNI connectivity issues"},
 		},
 		Description: "DNS resolution failing for services or external hosts",
 		HintGenerator: HintGenerator{
-			Template:   "DNS resolution failed for {{.Hostname}}. Error: {{.Error}}",
+			Template:   "DNS resolution failed. Error: {{.Error}}",
 			Suggestion: "Check CoreDNS pods are running in kube-system. Verify DNS configuration and network policies allow DNS traffic.",
 			Command:    "kubectl get pods -n kube-system -l k8s-app=kube-dns && kubectl logs -n kube-system -l k8s-app=kube-dns --tail=50",
 			References: []string{"https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/", "https://coredns.io/manual/troubleshooting/"},
@@ -591,7 +625,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "CNI (Container Network Interface) plugin errors preventing pod networking",
 		HintGenerator: HintGenerator{
-			Template:   "CNI plugin error: {{.Error}}. Network plugin: {{.Plugin}}",
+			Template:   "CNI plugin error detected.",
 			Suggestion: "Check CNI daemonset pods and logs. Verify CNI configuration files in /etc/cni/net.d/",
 			Command:    "kubectl get pods -n kube-system | grep -E 'calico|flannel|cilium|canal' && kubectl logs -n kube-system -l k8s-app=calico-node --tail=100",
 			References: []string{"https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/", "https://projectcalico.docs.tigera.io/troubleshooting/"},
@@ -604,6 +638,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityWarning,
 		Confidence:  ConfidenceLikely,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `dial tcp (?P<Target>[\w\.\-:]+): i/o timeout`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "connection timed out", Weight: 1.0},
 			{Type: "keyword", Pattern: "timeout awaiting response", Weight: 1.0},
 			{Type: "keyword", Pattern: "i/o timeout", Weight: 1.0},
@@ -612,7 +651,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Network connections timing out, potential connectivity or firewall issues",
 		HintGenerator: HintGenerator{
-			Template:   "Connection timeout to {{.Target}} after {{.Duration}}. No response received.",
+			Template:   "Connection timeout to {{.Target}}. No response received.",
 			Suggestion: "Check network connectivity, firewall rules, and service endpoints. Verify target service is running and accessible.",
 			Command:    "kubectl get endpoints {{.Service}} -n {{.Namespace}} && kubectl get svc {{.Service}} -n {{.Namespace}}",
 			References: []string{"https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/", "https://kubernetes.io/docs/concepts/services-networking/"},
@@ -637,7 +676,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Persistent Volume Claim cannot bind to a storage volume",
 		HintGenerator: HintGenerator{
-			Template:   "PVC {{.PVCName}} binding failed: {{.Reason}}. Storage class: {{.StorageClass}}",
+			Template:   "PVC binding failed.",
 			Suggestion: "Check storage class exists and has provisioner running. Verify PVs available or dynamic provisioning configured.",
 			Command:    "kubectl get pvc {{.PVCName}} -n {{.Namespace}} && kubectl get storageclass && kubectl get pods -n kube-system | grep -E 'csi|provisioner'",
 			References: []string{"https://kubernetes.io/docs/concepts/storage/persistent-volumes/", "https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/"},
@@ -661,7 +700,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Node or container experiencing disk space pressure",
 		HintGenerator: HintGenerator{
-			Template:   "Storage pressure on {{.Node}}: {{.Condition}}. Disk usage: {{.DiskUsage}}. Inode usage: {{.InodeUsage}}",
+			Template:   "Storage pressure detected.",
 			Suggestion: "Free up disk space by cleaning images (crictl rmi), logs (truncate), or unused volumes. Check kubelet disk limits.",
 			Command:    "df -h && crictl ps -a | wc -l && crictl rmi --prune && journalctl --vacuum-time=24h",
 			References: []string{"https://kubernetes.io/docs/concepts/architecture/nodes/", "https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/"},
@@ -687,7 +726,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Node experiencing pressure conditions (disk, memory, or PID)",
 		HintGenerator: HintGenerator{
-			Template:   "Node {{.NodeName}} has pressure condition: {{.Condition}}. Reason: {{.Reason}}",
+			Template:   "Node has pressure condition.",
 			Suggestion: "For DiskPressure: free disk space. For MemoryPressure: stop non-critical pods or add nodes. For PIDPressure: check for PID leaks.",
 			Command:    "kubectl describe node {{.NodeName}} | grep -A20 'Conditions' && df -h /var/lib/rancher",
 			References: []string{"https://kubernetes.io/docs/concepts/architecture/nodes/", "https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/"},
@@ -713,7 +752,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Pod cannot be scheduled or initialized, stuck in Pending state",
 		HintGenerator: HintGenerator{
-			Template:   "Pod {{.PodName}} stuck Pending for {{.Duration}}. Reason: {{.Reason}}",
+			Template:   "Pod stuck Pending.",
 			Suggestion: "Check: 1) Resource limits fit node capacity, 2) PVCs are bound, 3) Image can be pulled, 4) CNI is working",
 			Command:    "kubectl describe pod {{.PodName}} -n {{.Namespace}} | grep -A20 'Events' && kubectl get nodes -o yaml | grep -A5 'allocatable'",
 			References: []string{"https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/", "https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/"},
@@ -726,6 +765,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityWarning,
 		Confidence:  ConfidenceLikely,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `(?P<Namespace>\S+)\s+(?P<PodName>\S+)\s+\S+\s+Terminating\s+\S+\s+(?P<Duration>\S+)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "pod status terminating", Weight: 1.0},
 			{Type: "keyword", Pattern: "terminating", Weight: 0.8},
 			{Type: "keyword", Pattern: "deletiontimestamp", Weight: 0.9},
@@ -733,7 +777,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Pod is stuck in Terminating state, cannot be deleted",
 		HintGenerator: HintGenerator{
-			Template:   "Pod {{.PodName}} stuck Terminating for {{.Duration}}. Finalizers: {{.Finalizers}}",
+			Template:   "Pod {{.PodName}} stuck Terminating for {{.Duration}}.",
 			Suggestion: "Common causes: 1) Stuck finalizers, 2) Node unreachable, 3) Volume unmount stuck. Force delete with --grace-period=0 --force as last resort.",
 			Command:    "kubectl describe pod {{.PodName}} -n {{.Namespace}} | grep -E 'Finalizers|Node' && kubectl delete pod {{.PodName}} -n {{.Namespace}} --grace-period=0 --force",
 			References: []string{"https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/", "https://kubernetes.io/docs/tasks/run-application/force-delete-stateful-set-pod/"},
@@ -758,7 +802,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Control plane component failing leader election (controller-manager, scheduler)",
 		HintGenerator: HintGenerator{
-			Template:   "Leader election failed for {{.Component}} on {{.Node}}. Error: {{.Error}}",
+			Template:   "Leader election failed.",
 			Suggestion: "Check: 1) etcd health and quorum, 2) Network connectivity to API server, 3) Lease objects exist in kube-system. May indicate split-brain or network partition.",
 			Command:    "kubectl get leases -n kube-system && ETCDCTL_API=3 etcdctl endpoint health --cluster && kubectl get endpoints kube-controller-manager -n kube-system",
 			References: []string{"https://kubernetes.io/docs/concepts/architecture/leases/", "https://docs.rke2.io/architecture/architecture/"},
@@ -782,7 +826,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Node is in NotReady state, not accepting pods",
 		HintGenerator: HintGenerator{
-			Template:   "Node {{.NodeName}} is NotReady. Last heartbeat: {{.LastHeartbeat}}. Reason: {{.Reason}}",
+			Template:   "Node is NotReady.",
 			Suggestion: "Check: 1) Kubelet status on node, 2) Certificate expiration, 3) Network connectivity to API server, 4) Disk/memory pressure on node",
 			Command:    "kubectl describe node {{.NodeName}} && systemctl status kubelet && journalctl -u kubelet -n 50",
 			References: []string{"https://kubernetes.io/docs/concepts/architecture/nodes/", "https://kubernetes.io/docs/tasks/debug/debug-cluster/"},

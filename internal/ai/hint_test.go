@@ -64,11 +64,9 @@ func TestHintGeneratorGenerate(t *testing.T) {
 	}
 
 	// Check template substitution worked
+	// Sprint 11: Template simplified - only ContainerName is used now
 	if !strings.Contains(hint.Summary, "nginx") {
 		t.Errorf("Expected Summary to contain 'nginx' from template, got: %s", hint.Summary)
-	}
-	if !strings.Contains(hint.Summary, "web-0") {
-		t.Errorf("Expected Summary to contain 'web-0' from template, got: %s", hint.Summary)
 	}
 }
 

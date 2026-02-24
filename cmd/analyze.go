@@ -369,9 +369,10 @@ func outputAnalyzeTable(result AnalysisResult) error {
 	}
 	fmt.Println()
 
-	// Return error if critical issues found (for proper exit code handling)
+	// Return proper exit code for CI/CD integration
+	// Sprint 11: Fix DEFECT #1 - Exit code 1 for issues, not 2
 	if result.Critical > 0 {
-		return fmt.Errorf("analysis found %d critical issues", result.Critical)
+		return NewExitError(ExitIssuesFound, fmt.Sprintf("analysis found %d critical issues", result.Critical))
 	}
 
 	return nil

@@ -100,7 +100,13 @@ func (hg *HintGeneratorV2) applyTemplate(tmpl string, data map[string]string) (s
 		return "", fmt.Errorf("template execute error: %w", err)
 	}
 
-	return buf.String(), nil
+	result := buf.String()
+	// Sprint 11: Detect missing template variables (prevents <no value> in output)
+	if strings.Contains(result, "<no value>") {
+		return "", fmt.Errorf("template contains unresolved variables: %s", result)
+	}
+
+	return result, nil
 }
 
 // buildExplanation creates a detailed explanation from match data
