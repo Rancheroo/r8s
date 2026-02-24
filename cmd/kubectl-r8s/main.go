@@ -65,7 +65,13 @@ func main() {
 	// Find r8s binary
 	r8sBinary := findR8SBinary()
 	if r8sBinary == "" {
-		fmt.Fprintln(os.Stderr, "Error: Cannot find r8s binary. Make sure r8s is installed and in PATH.")
+		fmt.Fprintln(os.Stderr, "Error: Cannot find r8s binary.")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Solutions:")
+		fmt.Fprintln(os.Stderr, "  1. Place r8s binary in same directory as kubectl-r8s")
+		fmt.Fprintln(os.Stderr, "  2. Run from directory containing ./r8s")
+		fmt.Fprintln(os.Stderr, "  3. Set R8S_BINARY=/path/to/r8s")
+		fmt.Fprintln(os.Stderr, "  4. Install r8s to PATH: cp r8s /usr/local/bin/")
 		os.Exit(1)
 	}
 
@@ -85,12 +91,18 @@ func main() {
 }
 
 // findR8SBinary looks for the r8s binary in common locations
+// Priority: 1) R8S_BINARY env, 2) ./r8s in current dir, 3) Same dir as kubectl-r8s, 4) PATH
 func findR8SBinary() string {
 	// Check if R8S_BINARY env var is set
 	if envPath := os.Getenv("R8S_BINARY"); envPath != "" {
 		if _, err := os.Stat(envPath); err == nil {
 			return envPath
 		}
+	}
+
+	// Check current directory first (./r8s)
+	if _, err := os.Stat("./r8s"); err == nil {
+		return "./r8s"
 	}
 
 	// Look in same directory as kubectl-r8s
@@ -103,7 +115,7 @@ func findR8SBinary() string {
 		}
 	}
 
-	// Try PATH
+	// Try PATH (last resort - may find old version)
 	if path, err := exec.LookPath("r8s"); err == nil {
 		return path
 	}
