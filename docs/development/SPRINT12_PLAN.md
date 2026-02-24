@@ -323,7 +323,111 @@ r8s analyze ./bundle --format=json
 
 ---
 
-### P2: Performance Hardening (Days 10-13)
+### P1: UX Polish — Loading Messages & Error Handling (Days 9-10)
+**Impact: HIGH | Effort: LOW | User Value: 🔥🔥🔥**
+
+**THE GAP:** Long analysis with no feedback frustrates users. Wrong commands give no help.
+
+**Loading Messages with Personality:**
+
+```go
+// internal/ui/loading.go
+var loadingMessages = []string{
+    "🐄 Analyzing bundle... Did you know? The 'R' in RKE2 stands for 'Rancher' (and 'Reliable')",
+    "🐮 Parsing logs... Fun fact: Rancher was originally called 'Project Longhorn'",
+    "🐄 Detecting patterns... Tip: Run 'r8s ask' for natural language queries",
+    "🐮 Scanning for issues... Fun fact: K3s is pronounced 'K3s' (like 'Kates'), not 'K-three-S'",
+    "🐄 Almost there... Tip: Use --output=json for CI/CD pipelines",
+    "🐮 Looking for CrashLoopBackOff... The first rule of Rancher: Don't panic (unless etcd is down)",
+    "🐄 Analyzing pod logs... Fun fact: r8s stands for 'Rancher8s' (and 'Great!')",
+    "🐮 Checking certificates... Tip: Expired certs are the #1 cause of kubelet failures",
+    "🐄 Pattern matching... Fun fact: A support bundle can contain 50,000+ log files",
+    "🐮 Finalizing results... Did you know? You can pipe r8s output to 'jq' for custom filtering",
+}
+
+func ShowLoadingSpinner(bundlePath string) {
+    spinner := NewSpinner("🐄 Analyzing your bundle...")
+    
+    // Show random fun fact every 2 seconds
+    ticker := time.NewTicker(2 * time.Second)
+    go func() {
+        i := 0
+        for range ticker.C {
+            if i < len(loadingMessages) {
+                spinner.UpdateMessage(loadingMessages[i])
+                i++
+            }
+        }
+    }()
+    
+    return spinner
+}
+```
+
+**Better Error Messages — Wrong Commands:**
+
+```go
+// cmd/root.go - Better error handling
+
+var suggestCommands = map[string][]string{
+    "analyse":   {"analyze"},  // British spelling
+    "logs":      {"logs", "descripe", "get"},
+    "describe":  {"describe", "get", "logs"},
+    "export":    {"export", "generate"},
+    "validate":  {"validate", "test-cluster"},
+}
+
+// When command not found:
+// ❌ Before: "unknown command 'analize'"
+// ✅ After: 
+Did you mean 'r8s analyze'?
+
+Usage:
+  r8s analyze [bundle-path] [flags]
+
+Examples:
+  r8s analyze ./support-bundle.tar.gz
+  r8s analyze ./bundle --output=json
+  r8s analyze ./bundle --severity=critical
+
+For more help: r8s analyze --help
+"},"Or try:
+  • r8s validate ./bundle - Quick health check
+  • r8s ask ./bundle \"why is nginx crashing?\" - Natural language query
+
+See all commands: r8s --help
+"
+  "unknown": "Unknown command '%s'",
+}
+
+func suggestCommand(wrong string) string {
+    wrongLower := strings.ToLower(wrong)
+    
+    // Check similar commands
+    if suggestions, exists := suggestCommands[wrongLower]; exists {
+        return fmt.Sprintf("Did you mean: r8s %s?", strings.Join(suggestions, " or "))
+    }
+    
+    // Levenshtein distance for typos
+    commands := []string{"analyze", "validate", "export", "generate", "logs", "describe", "ask", "get", "completion", "config"}
+    closest := findClosest(wrongLower, commands)
+    if closest != "" {
+        return fmt.Sprintf("Unknown command '%s'. Did you mean 'r8s %s'?\n\nRun 'r8s --help' for all commands.", wrong, closest)
+    }
+    
+    return fmt.Sprintf("Unknown command '%s'. Run 'r8s --help' for available commands.", wrong)
+}
+```
+
+**Success Criteria:**
+- Users see loading messages during analysis
+- Fun facts appear every 2-3 seconds during long operations
+- Wrong commands get helpful suggestions (not error dumps)
+- All error messages are actionable
+
+---
+
+### P2: Performance Hardening (Days 11-13)
 **Impact: MEDIUM | Effort: LOW | User Value: 🔥🔥**
 
 **Benchmarking:**

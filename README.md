@@ -39,6 +39,28 @@ make build
 ./bin/r8s logs ./support-bundle/ nginx-pod
 ```
 
+## 🔌 kubectl Plugin (Optional)
+
+Use r8s as a kubectl plugin for familiar UX:
+
+```bash
+# Install plugin
+cp kubectl-r8s ~/.local/bin/
+kubectl plugin list  # Verify kubectl-r8s appears
+
+# Use with kubectl
+export R8S_BUNDLE=./support-bundle/
+kubectl r8s get pods -n cattle-system
+kubectl r8s logs nginx-pod
+kubectl r8s analyze
+```
+
+**Note:** The r8s binary must be accessible. Options:
+1. Place `r8s` in same directory as `kubectl-r8s`
+2. Run from directory containing `./r8s`
+3. Set `R8S_BINARY=/path/to/r8s`
+4. Copy `r8s` to `/usr/local/bin/`
+
 ---
 
 ## ✨ New AI Features (v0.9.0)
