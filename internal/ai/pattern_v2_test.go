@@ -91,18 +91,28 @@ func TestPatternV2Matcher(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			matcher := NewMatcherV2(tt.pattern)
-			result := matcher.Match(tt.content)
-
-			if result.Matched != tt.wantMatch {
-				t.Errorf("Match() matched = %v, want %v", result.Matched, tt.wantMatch)
+			results := matcher.Match(tt.content)
+			
+			// Find first matched result
+			var matchedResult *MatchResultV2
+			for i := range results {
+				if results[i].Matched {
+					matchedResult = &results[i]
+					break
+				}
+			}
+			
+			gotMatch := matchedResult != nil
+			if gotMatch != tt.wantMatch {
+				t.Errorf("Match() matched = %v, want %v", gotMatch, tt.wantMatch)
 			}
 
-			if result.Matched && result.Confidence != tt.wantConfidence {
-				t.Errorf("Match() confidence = %v, want %v", result.Confidence, tt.wantConfidence)
+			if matchedResult != nil && matchedResult.Confidence != tt.wantConfidence {
+				t.Errorf("Match() confidence = %v, want %v", matchedResult.Confidence, tt.wantConfidence)
 			}
 
-			if result.Matched && result.PatternID != tt.pattern.ID {
-				t.Errorf("Match() PatternID = %v, want %v", result.PatternID, tt.pattern.ID)
+			if matchedResult != nil && matchedResult.PatternID != tt.pattern.ID {
+				t.Errorf("Match() PatternID = %v, want %v", matchedResult.PatternID, tt.pattern.ID)
 			}
 		})
 	}
@@ -478,7 +488,7 @@ func TestDNSFailurePattern(t *testing.T) {
 		{
 			name:      "CoreDNS mentioned",
 			content:   "coredns is having issues resolving names",
-			wantMatch: true,
+			wantMatch: false, // coredns keyword removed - matches pod names not errors
 		},
 		{
 			name:      "No match",
@@ -520,12 +530,12 @@ func TestCNIErrorPattern(t *testing.T) {
 		{
 			name:      "Calico error",
 			content:   "calico-node pod is in CrashLoopBackOff",
-			wantMatch: true,
+			wantMatch: false, // calico keyword removed - matches pod names not errors
 		},
 		{
 			name:      "Cilium error",
 			content:   "cilium agent failed to start",
-			wantMatch: true,
+			wantMatch: false, // cilium keyword removed - matches pod names not errors
 		},
 		{
 			name:      "Network plugin",

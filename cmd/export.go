@@ -1,305 +1,198 @@
 // Package cmd implements the CLI commands for r8s.
-// Sprint 9 Day 4: r8s export - JSON/YAML findings export for CI integration
+// Sprint 11 Day 8: Export Formats - SARIF, JUnit, Markdown
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
+	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
 )
 
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
 	Use:   "export [bundle-path]",
-	Short: "Export bundle findings as JSON/YAML",
-	Long: `Export health, patterns, and analysis findings for CI/CD integration.
+	Short: "Export bundle analysis to various formats",
+	Long: `Export bundle analysis results to SARIF, JUnit XML, or Markdown formats.
 
-Perfect for automated workflows, monitoring pipelines, or processing with jq.
+This command analyzes the bundle and exports findings for integration with
+CI/CD pipelines, security scanners, and documentation.
+
+FORMATS:
+  sarif     - Static Analysis Results Interchange Format (GitHub, Azure DevOps)
+  junit     - JUnit XML for test result reporting (Jenkins, GitHub Actions)
+  markdown  - Human-readable report for documentation
 
 EXAMPLES:
-  # Export as JSON (default)
-  r8s export ./bundle/
+  # Export to SARIF for GitHub Advanced Security
+  r8s export ./bundle/ --format=sarif --output=results.sarif
 
-  # Export as YAML
-  r8s export ./bundle/ --format=yaml
+  # Export to JUnit for CI/CD integration
+  r8s export ./bundle/ --format=junit --output=test-results.xml
+
+  # Export to Markdown for documentation
+  r8s export ./bundle/ --format=markdown --output=report.md
 
   # Export only critical issues
-  r8s export ./bundle/ --severity=critical
-
-  # Pipe to jq for filtering
-  r8s export ./bundle/ | jq '.health.completeness'
-
-  # Save to file
-  r8s export ./bundle/ --output=findings.json
-
-INTEGRATION:
-  # CI/CD pipeline
-  r8s export ./bundle/ --format=json | \
-    jq -e '.health.is_valid' || exit 1
-
-  # Monitoring integration
-  r8s export ./bundle/ --severity=critical | \
-    curl -X POST -d @- https://monitoring.example.com/alerts`,
+  r8s export ./bundle/ --format=sarif --min-severity=critical`,
 	Args: cobra.ExactArgs(1),
 	RunE: runExport,
 }
 
 var (
-	exportFormat   string // json, yaml
-	exportSeverity string // critical, warning, all
-	exportOutput   string // output file
-	exportPattern  string // pattern filter
+	exportFormat   string // Export format: sarif, junit, markdown
+	exportOutput   string // Output file (default: stdout)
+	exportMinSev   string // Minimum severity: critical, warning, info
+	exportWithLogs bool   // Include log snippets in output
 )
 
 func init() {
 	rootCmd.AddCommand(exportCmd)
 
-	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", FormatHelp())
-	exportCmd.Flags().StringVarP(&exportSeverity, "severity", "s", "all", "Filter by severity: critical, warning, all")
+	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "sarif", "Export format: sarif, junit, markdown")
 	exportCmd.Flags().StringVarP(&exportOutput, "output", "o", "", "Output file (default: stdout)")
-	exportCmd.Flags().StringVar(&exportPattern, "pattern", "", "Filter by pattern ID (e.g., oomkill)")
+	exportCmd.Flags().StringVar(&exportMinSev, "min-severity", "info", "Minimum severity to include")
+	exportCmd.Flags().BoolVar(&exportWithLogs, "with-logs", false, "Include log snippets in output")
 }
 
-// ExportReport represents the full export structure
-type ExportReport struct {
-	Meta     ExportMeta          `json:"meta" yaml:"meta"`
-	Health   *bundle.HealthCheck `json:"health" yaml:"health"`
-	Findings []ExportFinding     `json:"findings" yaml:"findings"`
-	Summary  ExportSummary       `json:"summary" yaml:"summary"`
-}
-
-// ExportMeta contains report metadata
-type ExportMeta struct {
-	GeneratedAt string `json:"generated_at" yaml:"generated_at"`
-	BundlePath  string `json:"bundle_path" yaml:"bundle_path"`
-	BundleType  string `json:"bundle_type" yaml:"bundle_type"`
-	R8SVersion  string `json:"r8s_version" yaml:"r8s_version"`
-}
-
-// ExportFinding represents a single finding
-type ExportFinding struct {
-	ID          string                 `json:"id" yaml:"id"`
-	Severity    string                 `json:"severity" yaml:"severity"`
-	Category    string                 `json:"category" yaml:"category"`
-	Title       string                 `json:"title" yaml:"title"`
-	Description string                 `json:"description" yaml:"description"`
-	Namespace   string                 `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-	Resource    string                 `json:"resource,omitempty" yaml:"resource,omitempty"`
-	Suggestion  string                 `json:"suggestion,omitempty" yaml:"suggestion,omitempty"`
-	Raw         map[string]interface{} `json:"raw,omitempty" yaml:"raw,omitempty"`
-}
-
-// ExportSummary contains high-level stats
-type ExportSummary struct {
-	TotalFindings    int     `json:"total_findings" yaml:"total_findings"`
-	CriticalCount    int     `json:"critical_count" yaml:"critical_count"`
-	WarningCount     int     `json:"warning_count" yaml:"warning_count"`
-	InfoCount        int     `json:"info_count" yaml:"info_count"`
-	HealthPercentage float64 `json:"health_percentage" yaml:"health_percentage"`
-	IsValid          bool    `json:"is_valid" yaml:"is_valid"`
-}
-
+// runExport executes the export command
 func runExport(cmd *cobra.Command, args []string) error {
-	// Validate args length to prevent panic
-	if len(args) == 0 {
-		return NewExitError(ExitError, "bundle path argument required")
-	}
-
 	bundlePath := args[0]
 
-	// Validate bundle
+	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
-		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: bundle path not found: %v", err))
-		return NewExitError(ExitError, fmt.Sprintf("bundle path not found: %v", err))
+		return fmt.Errorf("cannot access bundle path: %w", err)
 	}
 
-	// Generate report
-	report, err := generateExportReport(bundlePath)
+	// Check bundle health
+	health, err := bundle.CheckHealth(bundlePath)
 	if err != nil {
-		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: failed to generate report: %v", err))
-		return NewExitError(ExitError, fmt.Sprintf("failed to generate report: %v", err))
+		return fmt.Errorf("failed to analyze bundle: %w", err)
 	}
 
-	// Apply filters
-	if exportSeverity != "all" {
-		report.Findings = filterFindingsBySeverity(report.Findings, exportSeverity)
+	// Run Sprint 11 AI pattern analysis
+	analyzer := ai.NewAnalyzer()
+	opts := ai.AnalysisOptions{
+		MinSeverity:  parseSeverity(exportMinSev),
+		IncludeInfo:  exportMinSev == "info",
+		MaxHints:     0, // No limit
 	}
-	if exportPattern != "" {
-		report.Findings = filterFindingsByPattern(report.Findings, exportPattern)
+
+	// Scan bundle content
+	bundleContent, err := collectBundleContent(bundlePath, health.BundleType)
+	if err != nil {
+		return fmt.Errorf("failed to collect bundle content: %w", err)
 	}
 
-	// Update summary after filtering
-	report.Summary = calculateSummary(report)
+	// Analyze
+	results, err := analyzer.AnalyzeMultiple(bundleContent, opts)
+	if err != nil {
+		return fmt.Errorf("analysis failed: %w", err)
+	}
 
-	// Standardize format and output
-	format := StandardizeFormat(exportFormat)
+	// Merge all results
+	mergedHints := mergeAnalysisResults(results)
 
+	// Export based on format
 	var output []byte
-	var marshalErr error
-
-	switch format {
-	case "yaml":
-		output, marshalErr = yaml.Marshal(report)
+	switch exportFormat {
+	case "sarif":
+		output, err = exportSARIF(bundlePath, health, mergedHints)
+	case "junit":
+		output, err = exportJUnit(bundlePath, health, mergedHints)
+	case "markdown":
+		output, err = exportMarkdown(bundlePath, health, mergedHints)
 	default:
-		output, marshalErr = json.MarshalIndent(report, "", "  ")
+		return fmt.Errorf("unknown export format: %s (use: sarif, junit, markdown)", exportFormat)
 	}
 
-	if marshalErr != nil {
-		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: failed to marshal output: %v", marshalErr))
-		return NewExitError(ExitError, fmt.Sprintf("failed to marshal output: %v", marshalErr))
+	if err != nil {
+		return fmt.Errorf("export failed: %w", err)
 	}
 
+	// Output to file or stdout
 	if exportOutput != "" {
 		if err := os.WriteFile(exportOutput, output, 0644); err != nil {
-			fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("Error: failed to write output file: %v", err))
-			return NewExitError(ExitError, fmt.Sprintf("failed to write output file: %v", err))
+			return fmt.Errorf("failed to write output file: %w", err)
 		}
-		fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("✓ Report exported to %s", exportOutput))
+		fmt.Printf("Exported %d findings to %s\n", len(mergedHints), exportOutput)
 	} else {
-		fmt.Fprintln(cmd.OutOrStdout(), string(output))
+		fmt.Print(string(output))
 	}
 
-	// Return appropriate exit code via error
-	if !report.Summary.IsValid {
-		return NewExitError(ExitIssuesFound, "bundle has issues")
-	}
 	return nil
 }
 
-// generateExportReport creates the full export report
-func generateExportReport(bundlePath string) (*ExportReport, error) {
-	report := &ExportReport{
-		Meta: ExportMeta{
-			GeneratedAt: time.Now().Format(time.RFC3339),
-			BundlePath:  bundlePath,
-			R8SVersion:  "v0.8.0-alpha",
-		},
+// collectBundleContent gathers content from bundle files
+func collectBundleContent(bundlePath, bundleType string) (map[string]string, error) {
+	content := make(map[string]string)
+
+	// File patterns to scan based on bundle type
+	// Force lowercase for directory names (RKE2 -> rke2)
+	lowerType := strings.ToLower(bundleType)
+	
+	patterns := []string{
+		// Type-specific paths
+		fmt.Sprintf("%s/kubectl/pods", lowerType),
+		fmt.Sprintf("%s/podlogs/*", lowerType),
+		fmt.Sprintf("%s/agent/logs/*.log", lowerType),
+		
+		// Generic paths
+		"kubectl/pods",
+		"pod-logs/*.log",
+		"journald/*.log",
+		"cluster/events.json",
 	}
 
-	// Get health
-	health, err := bundle.CheckHealth(bundlePath)
-	if err != nil {
-		return nil, err
-	}
-	report.Health = health
-	report.Meta.BundleType = health.BundleType
-
-	// Generate findings from health and patterns
-	report.Findings = generateFindingsFromHealth(health)
-
-	// Calculate summary
-	report.Summary = calculateSummary(report)
-
-	return report, nil
-}
-
-// generateFindingsFromHealth creates findings from health check
-func generateFindingsFromHealth(health *bundle.HealthCheck) []ExportFinding {
-	var findings []ExportFinding
-
-	// Critical missing files
-	for _, missing := range health.MissingFiles {
-		severity := "warning"
-		if missing.Importance == bundle.ImportanceCritical {
-			severity = "critical"
-		} else if missing.Importance == bundle.ImportanceHigh {
-			severity = "warning"
+	for _, pattern := range patterns {
+		matches, err := filepath.Glob(filepath.Join(bundlePath, pattern))
+		if err != nil {
+			continue
 		}
 
-		finding := ExportFinding{
-			ID:          fmt.Sprintf("missing-%s", missing.Path),
-			Severity:    severity,
-			Category:    "completeness",
-			Title:       fmt.Sprintf("Missing %s", missing.Category),
-			Description: missing.Impact,
-			Resource:    missing.Path,
-			Suggestion:  fmt.Sprintf("Verify collector script ran correctly for %s", missing.Category),
-		}
-		findings = append(findings, finding)
-	}
-
-	// Health status finding
-	if !health.IsValid {
-		findings = append(findings, ExportFinding{
-			ID:          "bundle-invalid",
-			Severity:    "critical",
-			Category:    "health",
-			Title:       "Bundle Incomplete",
-			Description: fmt.Sprintf("Bundle is %.0f%% complete, missing critical files", health.Completeness),
-			Suggestion:  "Re-run log collector or obtain complete bundle",
-		})
-	}
-
-	return findings
-}
-
-// filterFindingsBySeverity filters findings by minimum severity
-func filterFindingsBySeverity(findings []ExportFinding, minSeverity string) []ExportFinding {
-	severityOrder := map[string]int{
-		"info":     0,
-		"warning":  1,
-		"critical": 2,
-	}
-
-	minLevel := severityOrder[minSeverity]
-	var filtered []ExportFinding
-
-	for _, f := range findings {
-		if severityOrder[f.Severity] >= minLevel {
-			filtered = append(filtered, f)
+		for _, match := range matches {
+			data, err := os.ReadFile(match)
+			if err != nil {
+				continue
+			}
+			content[match] = string(data)
 		}
 	}
 
-	return filtered
+	return content, nil
 }
 
-// filterFindingsByPattern filters findings by pattern ID
-func filterFindingsByPattern(findings []ExportFinding, patternID string) []ExportFinding {
-	var filtered []ExportFinding
+// mergeAnalysisResults combines hints from multiple files
+func mergeAnalysisResults(results map[string]*ai.AnalysisResult) []*ai.Hint {
+	var allHints []*ai.Hint
+	seen := make(map[string]bool)
 
-	for _, f := range findings {
-		if f.ID == patternID || containsSubstring(f.ID, patternID) {
-			filtered = append(filtered, f)
+	for _, result := range results {
+		for _, hint := range result.Hints {
+			key := hint.PatternID + hint.Summary
+			if !seen[key] {
+				allHints = append(allHints, hint)
+				seen[key] = true
+			}
 		}
 	}
 
-	return filtered
+	return allHints
 }
 
-// calculateSummary calculates the summary statistics
-func calculateSummary(report *ExportReport) ExportSummary {
-	summary := ExportSummary{
-		TotalFindings:    len(report.Findings),
-		IsValid:          report.Health != nil && report.Health.IsValid,
-		HealthPercentage: 0,
+// parseSeverity converts string to Severity type
+func parseSeverity(s string) ai.Severity {
+	switch s {
+	case "critical":
+		return ai.SeverityCritical
+	case "warning":
+		return ai.SeverityWarning
+	default:
+		return ai.SeverityInfo
 	}
-
-	if report.Health != nil {
-		summary.HealthPercentage = report.Health.Completeness
-	}
-
-	for _, f := range report.Findings {
-		switch f.Severity {
-		case "critical":
-			summary.CriticalCount++
-		case "warning":
-			summary.WarningCount++
-		default:
-			summary.InfoCount++
-		}
-	}
-
-	return summary
-}
-
-// containsSubstring checks if str contains substr
-func containsSubstring(str, substr string) bool {
-	return strings.Contains(str, substr)
 }

@@ -4,6 +4,7 @@ package ai
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -171,55 +172,109 @@ func NewMatcherV2(p PatternV2) *MatcherV2 {
 }
 
 // Match checks if content matches the v2 pattern
-// Sprint 11: Supports multiple matchers with weighted confidence
-func (m *MatcherV2) Match(content string) MatchResultV2 {
+// Sprint 11: Supports multiple matchers and multiple occurrences
+func (m *MatcherV2) Match(content string) []MatchResultV2 {
+	var results []MatchResultV2
 	contentLower := strings.ToLower(content)
-	totalWeight := 0.0
-	matchedWeight := 0.0
-	var evidence []string
+	hasRegexMatch := false
 
 	for _, matcher := range m.pattern.Matchers {
-		totalWeight += matcher.Weight
-		if m.matchSingle(matcher, contentLower) {
-			matchedWeight += matcher.Weight
-			evidence = append(evidence, m.extractEvidence(matcher, content))
+		if matcher.Type == "regex" {
+			// Regex handling: find all non-overlapping matches
+			re, err := regexp.Compile(matcher.Pattern)
+			if err != nil {
+				continue
+			}
+
+			matches := re.FindAllStringSubmatch(content, -1)
+			if matches == nil {
+				continue
+			}
+			
+			if len(matches) > 0 {
+				hasRegexMatch = true
+			}
+
+			for _, match := range matches {
+				metadata := make(map[string]string)
+				for i, name := range re.SubexpNames() {
+					if i != 0 && name != "" && i < len(match) {
+						metadata[name] = match[i]
+					}
+				}
+
+				// Create a result for each match
+				results = append(results, MatchResultV2{
+					Matched:     true,
+					PatternID:   m.pattern.ID,
+					PatternName: m.pattern.Name,
+					Severity:    m.pattern.Severity,
+					Confidence:  m.pattern.Confidence, // Regex match is high confidence
+					Message:     m.detectedMessageV2(),
+					Evidence:    []string{match[0]}, // Full match text
+					Metadata:    metadata,
+				})
+			}
+		} else {
+			// Keyword handling (legacy behavior: one match per file)
+			// Skip if regex already matched to avoid duplicates with less info
+			if hasRegexMatch {
+				continue
+			}
+
+			if strings.Contains(contentLower, strings.ToLower(matcher.Pattern)) {
+				// Only add if not already matched by regex to avoid duplicates
+				// For now, simple append
+				results = append(results, MatchResultV2{
+					Matched:     true,
+					PatternID:   m.pattern.ID,
+					PatternName: m.pattern.Name,
+					Severity:    m.pattern.Severity,
+					Confidence:  m.pattern.Confidence,
+					Message:     m.detectedMessageV2(),
+					Evidence:    []string{m.extractEvidence(matcher, content)},
+					Metadata:    make(map[string]string),
+				})
+				// Break after first keyword match to avoid flooding
+				break 
+			}
 		}
 	}
 
-	// No match if no weight accumulated
-	if totalWeight == 0 || matchedWeight == 0 {
-		return MatchResultV2{Matched: false}
+	// If no matches found, return empty (but we need to change return type from struct to slice)
+	if len(results) == 0 {
+		return []MatchResultV2{{Matched: false}}
 	}
 
-	// Calculate match ratio
-	ratio := matchedWeight / totalWeight
-
-	// Determine confidence based on ratio and pattern's base confidence
-	confidence := m.calculateConfidence(ratio)
-
-	return MatchResultV2{
-		Matched:     true,
-		PatternID:   m.pattern.ID,
-		PatternName: m.pattern.Name,
-		Severity:    m.pattern.Severity,
-		Confidence:  confidence,
-		Message:     m.detectedMessageV2(),
-		Evidence:    evidence,
-		Metadata:    make(map[string]string),
-	}
+	return results
 }
 
 // matchSingle checks a single matcher against content
-func (m *MatcherV2) matchSingle(matcher Matcher, content string) bool {
+func (m *MatcherV2) matchSingle(matcher Matcher, content string) (bool, map[string]string) {
 	switch matcher.Type {
 	case "keyword":
-		return strings.Contains(content, strings.ToLower(matcher.Pattern))
+		return strings.Contains(strings.ToLower(content), strings.ToLower(matcher.Pattern)), nil
 	case "regex":
-		// Sprint 11 Day 1: Regex deferred to Day 2-3
-		// Fall through to keyword for now
-		return strings.Contains(content, strings.ToLower(matcher.Pattern))
+		re, err := regexp.Compile(matcher.Pattern)
+		if err != nil {
+			return false, nil
+		}
+		
+		// Find match and extract named groups
+		match := re.FindStringSubmatch(content)
+		if match == nil {
+			return false, nil
+		}
+		
+		captures := make(map[string]string)
+		for i, name := range re.SubexpNames() {
+			if i != 0 && name != "" && i < len(match) {
+				captures[name] = match[i]
+			}
+		}
+		return true, captures
 	default:
-		return strings.Contains(content, strings.ToLower(matcher.Pattern))
+		return strings.Contains(strings.ToLower(content), strings.ToLower(matcher.Pattern)), nil
 	}
 }
 
@@ -342,6 +397,12 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:    SeverityCritical,
 		Confidence:  ConfidenceCertain,
 		Matchers: []Matcher{
+			// Regex to capture details from kubectl get pods output
+			{
+				Type:    "regex",
+				Pattern: `(?P<Namespace>\S+)\s+(?P<PodName>\S+)\s+\S+\s+CrashLoopBackOff\s+(?P<RestartCount>\d+)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "crashloopbackoff", Weight: 1.0},
 			{Type: "keyword", Pattern: "back-off restarting", Weight: 1.0},
 			{Type: "keyword", Pattern: "crash loop", Weight: 1.0},
@@ -352,7 +413,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Container repeatedly crashing and restarting",
 		HintGenerator: HintGenerator{
-			Template:   "Container {{.ContainerName}} has crashed {{.RestartCount}} times. Exit code: {{.ExitCode}}. Last error: {{.LastError}}",
+			Template:   "Pod {{.PodName}} in namespace {{.Namespace}} is in CrashLoopBackOff. Restarts: {{.RestartCount}}.",
 			Suggestion: "Check container logs for application errors. Common causes: missing env vars, config errors, dependency failures",
 			Command:    "kubectl logs {{.PodName}} -n {{.Namespace}} --previous",
 			References: []string{"https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/"},
@@ -862,10 +923,12 @@ func (r *PatternRegistryV2) AnalyzeV2(content string) []MatchResultV2 {
 	// First pass: collect all matches
 	for _, pattern := range r.patterns {
 		matcher := NewMatcherV2(pattern)
-		result := matcher.Match(content)
-		if result.Matched {
-			matches = append(matches, result)
-			matchedIDs[pattern.ID] = true
+		results := matcher.Match(content)
+		for _, result := range results {
+			if result.Matched {
+				matches = append(matches, result)
+				matchedIDs[pattern.ID] = true
+			}
 		}
 	}
 
