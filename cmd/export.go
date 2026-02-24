@@ -143,20 +143,22 @@ func runExport(cmd *cobra.Command, args []string) error {
 func collectBundleContent(bundlePath, bundleType string) (map[string]string, error) {
 	content := make(map[string]string)
 
-	// File patterns to scan based on bundle type
-	// Force lowercase for directory names (RKE2 -> rke2)
+	// Default to rke2 if bundle type not specified
 	lowerType := strings.ToLower(bundleType)
+	if lowerType == "" {
+		lowerType = "rke2"
+	}
 	
 	patterns := []string{
-		// Type-specific paths
+		// Type-specific paths (e.g., rke2/kubectl/pods)
 		fmt.Sprintf("%s/kubectl/pods", lowerType),
 		fmt.Sprintf("%s/podlogs/*", lowerType),
-		fmt.Sprintf("%s/agent/logs/*.log", lowerType),
+		fmt.Sprintf("%s/agent-logs/*", lowerType),
+		fmt.Sprintf("%s/kubectl/poddescribe/*", lowerType),
 		
-		// Generic paths
-		"kubectl/pods",
-		"pod-logs/*.log",
-		"journald/*.log",
+		// System logs
+		"systemlogs/journald-*",
+		"systemlogs/syslog",
 		"cluster/events.json",
 	}
 
