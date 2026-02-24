@@ -160,10 +160,10 @@ func TestAnalyzerBuildSummary(t *testing.T) {
 	analyzer := NewAnalyzer()
 
 	matches := []MatchResultV2{
-		{PatternID: "1", Severity: SeverityCritical},
-		{PatternID: "2", Severity: SeverityCritical},
-		{PatternID: "3", Severity: SeverityWarning},
-		{PatternID: "4", Severity: SeverityInfo},
+		{PatternID: "1", Severity: SeverityCritical, Matched: true},
+		{PatternID: "2", Severity: SeverityCritical, Matched: true},
+		{PatternID: "3", Severity: SeverityWarning, Matched: true},
+		{PatternID: "4", Severity: SeverityInfo, Matched: true},
 	}
 
 	correlations := []CorrelationMatch{
