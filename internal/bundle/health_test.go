@@ -42,7 +42,7 @@ func TestCheckHealth(t *testing.T) {
 				return path
 			},
 			wantValid:      true,
-			wantComplete:   23.0, // 3/13 files - exact match
+			wantComplete:   14.3, // 3/21 files - approximate
 			wantBundleType: "RKE2",
 			wantErr:        false,
 		},
@@ -56,7 +56,7 @@ func TestCheckHealth(t *testing.T) {
 				return path
 			},
 			wantValid:      false,
-			wantComplete:   7.7, // 1/13 but missing critical pods - RKE2 detected
+			wantComplete:   7.1, // 1/14 approx - missing critical pods - RKE2 detected
 			wantBundleType: "RKE2",
 			wantErr:        false,
 		},
@@ -212,12 +212,19 @@ func TestMissingFile_Impact(t *testing.T) {
 }
 
 func TestExpectedFiles(t *testing.T) {
-	files := ExpectedFiles()
+	// Create a temp bundle with rke2 structure
+	tmpDir := t.TempDir()
+	rke2Dir := filepath.Join(tmpDir, "rke2")
+	if err := os.MkdirAll(rke2Dir, 0755); err != nil {
+		t.Fatalf("failed to create rke2 dir: %v", err)
+	}
+
+	files := ExpectedFiles(tmpDir)
 	if len(files) == 0 {
 		t.Error("ExpectedFiles() returned empty slice")
 	}
 
-	// Check for critical files
+	// Check for critical files (with rke2 prefix since we created rke2 dir)
 	hasPods := false
 	hasNodes := false
 	for _, f := range files {
