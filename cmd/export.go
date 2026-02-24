@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -149,6 +150,8 @@ func collectBundleContent(bundlePath, bundleType string) (map[string]string, err
 		"cluster/events.json",
 	}
 
+	const maxFileSize = 2 * 1024 * 1024 // 2MB per file
+
 	for _, pattern := range patterns {
 		matches, err := filepath.Glob(filepath.Join(bundlePath, pattern))
 		if err != nil {
@@ -156,6 +159,15 @@ func collectBundleContent(bundlePath, bundleType string) (map[string]string, err
 		}
 
 		for _, match := range matches {
+			// Check file size before reading to avoid OOM
+			info, err := os.Stat(match)
+			if err != nil {
+				continue
+			}
+			if info.IsDir() || info.Size() > maxFileSize {
+				continue // Skip directories and large files
+			}
+
 			data, err := os.ReadFile(match)
 			if err != nil {
 				continue
@@ -181,6 +193,19 @@ func mergeAnalysisResults(results map[string]*ai.AnalysisResult) []*ai.Hint {
 			}
 		}
 	}
+
+	// Sort for deterministic output (by severity, then pattern ID)
+	sort.Slice(allHints, func(i, j int) bool {
+		severityOrder := map[ai.Severity]int{
+			ai.SeverityCritical: 0,
+			ai.SeverityWarning:  1,
+			ai.SeverityInfo:     2,
+		}
+		if severityOrder[allHints[i].Severity] != severityOrder[allHints[j].Severity] {
+			return severityOrder[allHints[i].Severity] < severityOrder[allHints[j].Severity]
+		}
+		return allHints[i].PatternID < allHints[j].PatternID
+	})
 
 	return allHints
 }

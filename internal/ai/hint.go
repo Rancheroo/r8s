@@ -4,6 +4,7 @@ package ai
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"text/template"
@@ -279,30 +280,12 @@ func (hf *HintFormatter) FormatMarkdown(hints []*Hint) string {
 
 // FormatJSON formats hints as JSON (for programmatic use)
 func (hf *HintFormatter) FormatJSON(hints []*Hint) string {
-	// Simple JSON formatting (production would use encoding/json)
-	var parts []string
-	parts = append(parts, "[")
-	
-	for i, hint := range hints {
-		parts = append(parts, "  {")
-		parts = append(parts, fmt.Sprintf(`    "pattern_id": %q,`, hint.PatternID))
-		parts = append(parts, fmt.Sprintf(`    "severity": %q,`, hint.Severity))
-		parts = append(parts, fmt.Sprintf(`    "confidence": %q,`, hint.Confidence))
-		parts = append(parts, fmt.Sprintf(`    "summary": %q,`, hint.Summary))
-		parts = append(parts, fmt.Sprintf(`    "explanation": %q,`, hint.Explanation))
-		parts = append(parts, fmt.Sprintf(`    "suggestion": %q,`, hint.Suggestion))
-		parts = append(parts, fmt.Sprintf(`    "command": %q,`, hint.Command))
-		parts = append(parts, fmt.Sprintf(`    "references": %q,`, strings.Join(hint.References, ", ")))
-		
-		if i < len(hints)-1 {
-			parts = append(parts, "  },")
-		} else {
-			parts = append(parts, "  }")
-		}
+	// Use encoding/json for proper JSON formatting
+	data, err := json.MarshalIndent(hints, "", "  ")
+	if err != nil {
+		return "[]"
 	}
-	
-	parts = append(parts, "]")
-	return strings.Join(parts, "\n")
+	return string(data)
 }
 
 // FilterHints filters hints by severity

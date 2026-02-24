@@ -252,7 +252,7 @@ func runPatternsShow(cmd *cobra.Command, args []string) error {
 
 	if showExamples {
 		fmt.Println("Examples:")
-		fmt.Println("  (Run 'r8s patterns test' to see example matches)")
+		fmt.Println("  (Use 'r8s analyze' on a bundle to see pattern matches)")
 		fmt.Println()
 	}
 

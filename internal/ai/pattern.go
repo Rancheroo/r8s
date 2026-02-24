@@ -543,7 +543,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "certificate will expire", Weight: 1.0},
 			{Type: "keyword", Pattern: "certificate expiring", Weight: 1.0},
-			{Type: "keyword", Pattern: "notafter.*202[0-5]", Weight: 0.8}, // Old dates in 2020-2025 range
+			{Type: "regex", Pattern: `(?i)notafter.*202[0-5]`, Weight: 0.8}, // Old dates in 2020-2025 range
 		},
 		Description: "Kubernetes certificate is expiring soon",
 		HintGenerator: HintGenerator{
@@ -912,8 +912,10 @@ type PatternRegistryV2 struct {
 
 // NewRegistryV2 creates a new v2 pattern registry with built-in patterns
 func NewRegistryV2() *PatternRegistryV2 {
+	patterns := make([]PatternV2, len(BuiltinPatternsV2))
+	copy(patterns, BuiltinPatternsV2)
 	return &PatternRegistryV2{
-		patterns: BuiltinPatternsV2,
+		patterns: patterns,
 	}
 }
 

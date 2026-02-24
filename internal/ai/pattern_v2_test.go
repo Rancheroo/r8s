@@ -34,7 +34,7 @@ func TestPatternV2Matcher(t *testing.T) {
 			wantConfidence: ConfidenceCertain,
 		},
 		{
-			name: "ImagePull detection - likely",
+			name: "ImagePull detection - certain",
 			pattern: PatternV2{
 				ID:          "test-image",
 				Name:        "Test Image Pull",
@@ -405,16 +405,7 @@ func TestCertificateExpiredPattern(t *testing.T) {
 			if r.Confidence != ConfidenceCertain {
 				t.Errorf("Expected Certain confidence, got %v", r.Confidence)
 			}
-			// Check for correlation to node-not-ready
-			hasNodeCorrelation := false
-			for _, corr := range r.Correlated {
-				if corr == "node-not-ready" {
-					hasNodeCorrelation = true
-					break
-				}
-			}
-			// Note: node-not-ready not in patterns yet, so correlation won't exist
-			_ = hasNodeCorrelation
+			// TODO: Re-enable correlation check when node-not-ready pattern is added
 			break
 		}
 	}

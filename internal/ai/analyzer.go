@@ -217,11 +217,15 @@ func (a *Analyzer) detectCorrelations(matches []MatchResultV2) []CorrelationMatc
 func (a *Analyzer) buildSummary(matches []MatchResultV2, correlations []CorrelationMatch) AnalysisSummary {
 	summary := AnalysisSummary{
 		TotalPatterns: len(a.registry.GetAll()),
-		MatchesFound:  len(matches),
+		MatchesFound:  0,
 		Correlations:  len(correlations),
 	}
 
 	for _, match := range matches {
+		if !match.Matched {
+			continue
+		}
+		summary.MatchesFound++
 		switch match.Severity {
 		case SeverityCritical:
 			summary.CriticalIssues++
@@ -326,6 +330,7 @@ type PatternStats struct {
 // GetPatternStats returns usage statistics for all patterns
 func (a *Analyzer) GetPatternStats(results []*AnalysisResult) []PatternStats {
 	stats := make(map[string]*PatternStats)
+	confidenceSum := make(map[string]int) // Track confidence sums for averaging
 
 	// Initialize stats for all patterns
 	for _, pattern := range a.registry.GetAll() {
@@ -341,6 +346,8 @@ func (a *Analyzer) GetPatternStats(results []*AnalysisResult) []PatternStats {
 		for _, match := range result.Patterns {
 			if stat, found := stats[match.PatternID]; found {
 				stat.MatchCount++
+				// Accumulate confidence for averaging
+				confidenceSum[match.PatternID] += confidenceValue(match.Confidence)
 			}
 		}
 		for _, hint := range result.Hints {
@@ -350,10 +357,42 @@ func (a *Analyzer) GetPatternStats(results []*AnalysisResult) []PatternStats {
 		}
 	}
 
-	// Convert to slice
+	// Convert to slice and compute averages
 	var result []PatternStats
 	for _, stat := range stats {
+		if stat.MatchCount > 0 {
+			avg := confidenceSum[stat.PatternID] / stat.MatchCount
+			stat.AvgConfidence = confidenceFromValue(avg)
+		}
 		result = append(result, *stat)
 	}
 	return result
+}
+
+// confidenceValue converts Confidence to numeric value for averaging
+func confidenceValue(c Confidence) int {
+	switch c {
+	case ConfidenceCertain:
+		return 3
+	case ConfidenceLikely:
+		return 2
+	case ConfidencePossible:
+		return 1
+	default:
+		return 0
+	}
+}
+
+// confidenceFromValue converts numeric value back to Confidence
+func confidenceFromValue(v int) Confidence {
+	switch {
+	case v >= 3:
+		return ConfidenceCertain
+	case v >= 2:
+		return ConfidenceLikely
+	case v >= 1:
+		return ConfidencePossible
+	default:
+		return ""
+	}
 }
