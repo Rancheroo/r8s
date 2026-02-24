@@ -1,13 +1,13 @@
 # r8s
 
-> **r8s v0.9.0 — AI-Powered kubectl for Rancher bundles.**
+> **r8s v1.0.0 — AI-Powered kubectl for Rancher bundles.**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher support bundles. It combines kubectl-like navigation with AI pattern detection to find root causes instantly.
 
-**Latest: v0.9.0** (March 2026) — AI Intelligence
+**Latest: v1.0.0** (February 2026) — kubectl Plugin + UX Improvements
 
 - **AI Analysis**: Detects 19+ issue patterns (CrashLoop, OOM, etcd, certs)
 - **Natural Language Queries**: Ask `r8s ask "why is nginx crashing?"`
@@ -19,24 +19,52 @@ r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher suppor
 
 ## 🚀 Quick Start
 
+### Download Pre-built Binaries
+
+**Linux:**
 ```bash
-# 1. Install
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.0.0/r8s-v1.0.0-linux-amd64
+chmod +x r8s
+sudo mv r8s /usr/local/bin/
+```
+
+**macOS (Intel):**
+```bash
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.0.0/r8s-v1.0.0-darwin-amd64
+chmod +x r8s
+sudo mv r8s /usr/local/bin/
+```
+
+**macOS (Apple Silicon M1/M2/M3):**
+```bash
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.0.0/r8s-v1.0.0-darwin-arm64
+chmod +x r8s
+sudo mv r8s /usr/local/bin/
+```
+
+### Or Build from Source
+
+```bash
 git clone https://github.com/Rancheroo/r8s.git && cd r8s
 make build
+```
 
-# 2. Analyze Bundle (AI Powered)
-./bin/r8s analyze ./support-bundle/
+### Usage Examples
+
+```bash
+# Analyze Bundle (AI Powered)
+r8s analyze ./support-bundle/
 # 🔴 Found: CrashLoopBackOff (Container nginx has crashed 5 times...)
 
-# 3. Ask Questions (Natural Language)
-./bin/r8s ask ./support-bundle/ "why is nginx crashing?"
+# Ask Questions (Natural Language)
+r8s ask ./support-bundle/ "why is nginx crashing?"
 
-# 4. Export for GitHub Security
-./bin/r8s export ./support-bundle/ --format=sarif --output=results.sarif
+# Export for GitHub Security
+r8s export ./support-bundle/ --format=sarif --output=results.sarif
 
-# 5. Traditional kubectl commands
-./bin/r8s get pods ./support-bundle/
-./bin/r8s logs ./support-bundle/ nginx-pod
+# Traditional kubectl commands
+r8s get pods ./support-bundle/
+r8s logs ./support-bundle/ nginx-pod
 ```
 
 ## 🔌 kubectl Plugin (Optional)
