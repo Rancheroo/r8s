@@ -249,35 +249,6 @@ func (m *MatcherV2) Match(content string) []MatchResultV2 {
 	return results
 }
 
-// matchSingle checks a single matcher against content
-func (m *MatcherV2) matchSingle(matcher Matcher, content string) (bool, map[string]string) {
-	switch matcher.Type {
-	case "keyword":
-		return strings.Contains(strings.ToLower(content), strings.ToLower(matcher.Pattern)), nil
-	case "regex":
-		re, err := regexp.Compile(matcher.Pattern)
-		if err != nil {
-			return false, nil
-		}
-		
-		// Find match and extract named groups
-		match := re.FindStringSubmatch(content)
-		if match == nil {
-			return false, nil
-		}
-		
-		captures := make(map[string]string)
-		for i, name := range re.SubexpNames() {
-			if i != 0 && name != "" && i < len(match) {
-				captures[name] = match[i]
-			}
-		}
-		return true, captures
-	default:
-		return strings.Contains(strings.ToLower(content), strings.ToLower(matcher.Pattern)), nil
-	}
-}
-
 // extractEvidence extracts matching evidence from content
 func (m *MatcherV2) extractEvidence(matcher Matcher, content string) string {
 	// Find the line containing the match
@@ -294,17 +265,6 @@ func (m *MatcherV2) extractEvidence(matcher Matcher, content string) string {
 		}
 	}
 	return matcher.Pattern
-}
-
-// calculateConfidence determines confidence based on match ratio and pattern base
-func (m *MatcherV2) calculateConfidence(ratio float64) Confidence {
-	// High ratio = higher confidence
-	if ratio >= 0.8 {
-		return ConfidenceCertain
-	} else if ratio >= 0.5 {
-		return ConfidenceLikely
-	}
-	return ConfidencePossible
 }
 
 // detectedMessageV2 returns a human-readable detection message

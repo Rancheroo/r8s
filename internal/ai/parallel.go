@@ -269,8 +269,15 @@ func (pa *ParallelAnalyzer) AnalyzeParallelWithProgress(
 	
 	startTime := time.Now()
 	
-	// Calculate total tasks
-	totalTasks := len(pa.registry.GetAll()) * len(content)
+	// Calculate total tasks (accounting for severity filter)
+	totalTasks := 0
+	for range content {
+		for _, pattern := range pa.registry.GetAll() {
+			if pa.shouldAnalyzePattern(pattern, opts) {
+				totalTasks++
+			}
+		}
+	}
 	completedTasks := 0
 	var progressMu sync.Mutex
 	
