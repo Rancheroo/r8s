@@ -24,32 +24,47 @@ import (
 )
 
 func main() {
-	// Get bundle path from environment or auto-detect
-	bundlePath := os.Getenv("R8S_BUNDLE")
-	if bundlePath == "" {
-		bundlePath = findBundle()
-	}
-
-	if bundlePath == "" {
-		fmt.Fprintln(os.Stderr, "Error: No bundle found. Set R8S_BUNDLE or run in directory with bundle.")
-		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Examples:")
-		fmt.Fprintln(os.Stderr, "  export R8S_BUNDLE=./support-bundle.tar.gz")
-		fmt.Fprintln(os.Stderr, "  kubectl r8s get pods")
-		os.Exit(1)
-	}
-
 	// Build r8s command
 	// kubectl passes: [kubectl-r8s, get, pods, -n, namespace]
 	// We need: r8s get pods ./bundle -n namespace
 	args := os.Args[1:] // Skip program name
 
-	// Insert bundle path before flags
+	// Detect subcommand (first non-flag token)
+	subcommand := ""
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "-") {
+			subcommand = arg
+			break
+		}
+	}
+
+	// Check if this command needs a bundle
+	needsBundle := commandsNeedingBundle()[subcommand]
+
+	var bundlePath string
+	if needsBundle {
+		// Get bundle path from environment or auto-detect
+		bundlePath = os.Getenv("R8S_BUNDLE")
+		if bundlePath == "" {
+			bundlePath = findBundle()
+		}
+
+		if bundlePath == "" {
+			fmt.Fprintln(os.Stderr, "Error: No bundle found. Set R8S_BUNDLE or run in directory with bundle.")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, "Examples:")
+			fmt.Fprintln(os.Stderr, "  export R8S_BUNDLE=./support-bundle.tar.gz")
+			fmt.Fprintln(os.Stderr, "  kubectl r8s get pods")
+			os.Exit(1)
+		}
+	}
+
+	// Build r8s args
 	r8sArgs := []string{"r8s"}
 	bundleInserted := false
 
 	for _, arg := range args {
-		if strings.HasPrefix(arg, "-") && !bundleInserted {
+		if needsBundle && strings.HasPrefix(arg, "-") && !bundleInserted {
 			// Found first flag, insert bundle before it
 			r8sArgs = append(r8sArgs, bundlePath)
 			bundleInserted = true
@@ -58,7 +73,7 @@ func main() {
 	}
 
 	// If no flags found, append bundle at end
-	if !bundleInserted {
+	if needsBundle && !bundleInserted {
 		r8sArgs = append(r8sArgs, bundlePath)
 	}
 
@@ -121,6 +136,20 @@ func findR8SBinary() string {
 	}
 
 	return ""
+}
+
+// commandsNeedingBundle returns the set of commands that require a bundle path
+func commandsNeedingBundle() map[string]bool {
+	return map[string]bool{
+		"analyze":      true,
+		"ask":          true,
+		"describe":     true,
+		"export":       true,
+		"get":          true,
+		"logs":         true,
+		"validate":     true,
+		"test-cluster": true,
+	}
 }
 
 // findBundle looks for bundle files in current directory

@@ -55,6 +55,9 @@ func (s *Spinner) Start() {
 		s.mu.Unlock()
 		return
 	}
+	// Initialize fresh channels for restart
+	s.stopChan = make(chan struct{})
+	s.stoppedChan = make(chan struct{})
 	s.running = true
 	s.mu.Unlock()
 
@@ -68,6 +71,7 @@ func (s *Spinner) Stop() {
 		s.mu.Unlock()
 		return
 	}
+	s.running = false
 	s.mu.Unlock()
 
 	close(s.stopChan)
