@@ -97,16 +97,19 @@ func isKnownCommand(cmd string) bool {
 	knownCommands := []string{
 		"analyze", "analyse", "analize",
 		"ask",
+		"completion",
 		"describe", "desc",
 		"export",
 		"generate", "gen",
 		"get",
 		"logs", "log",
+		"patterns", "pattern",
+		"test-cluster", "testcluster",
 		"validate", "val", "check",
 		"version", "ver", "v",
 		"help", "h",
 	}
-	
+
 	cmd = strings.ToLower(cmd)
 	for _, known := range knownCommands {
 		if cmd == known {
