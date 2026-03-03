@@ -11,6 +11,7 @@ import (
 type SystemHealthInfo struct {
 	MemoryUsedPercent float64
 	DiskUsedPercent   float64
+	VirtType          string // Virtualization type from systemd-detect-virt (e.g., kvm, vmware, docker, lxc, wsl, none)
 }
 
 // ParseSystemHealth parses system info files from bundle
@@ -58,6 +59,23 @@ func ParseSystemHealth(extractPath string) (*SystemHealthInfo, error) {
 						break
 					}
 				}
+			}
+		}
+	}
+
+	// Parse virtualization type from systemd-detect-virt file
+	// Output is a single line: "kvm", "vmware", "docker", "lxc", "wsl", "none", or error
+	virtPath := filepath.Join(systeminfoDir, "systemd-detect-virt")
+	if content, err := os.ReadFile(virtPath); err == nil {
+		virtType := strings.TrimSpace(string(content))
+		// Clean up any error messages - only take first line if multiple
+		lines := strings.Split(virtType, "\n")
+		if len(lines) > 0 {
+			// Only accept valid virt types (alphanumeric/hyphen), ignore errors
+			firstLine := strings.ToLower(strings.TrimSpace(lines[0]))
+			// Check if it looks like a valid virt type (no spaces, reasonable length)
+			if len(firstLine) > 0 && len(firstLine) < 50 && !strings.Contains(firstLine, " ") {
+				health.VirtType = firstLine
 			}
 		}
 	}
