@@ -21,24 +21,11 @@ func ParseSystemHealth(extractPath string) (*SystemHealthInfo, error) {
 
 	health := &SystemHealthInfo{}
 
-	// Parse memory usage from freem file
-	// Format: "Mem:      total    used    free   shared  buff/cache   available"
-	freemPath := filepath.Join(systeminfoDir, "freem")
-	if content, err := os.ReadFile(freemPath); err == nil {
-		lines := strings.Split(string(content), "\n")
-		for _, line := range lines {
-			if strings.HasPrefix(line, "Mem:") {
-				fields := strings.Fields(line)
-				if len(fields) >= 3 {
-					total, _ := strconv.ParseFloat(fields[1], 64)
-					used, _ := strconv.ParseFloat(fields[2], 64)
-					if total > 0 {
-						health.MemoryUsedPercent = (used / total) * 100
-					}
-				}
-				break
-			}
-		}
+	// Parse memory usage from memory or freem file
+	// New format uses "memory" file, old format uses "freem"
+	// Try "memory" first, fall back to "freem" for backward compatibility
+	if err := parseMemoryFile(systeminfoDir, health); err == nil {
+		// Successfully parsed memory info
 	}
 
 	// Parse disk usage from dfh file
@@ -81,4 +68,39 @@ func ParseSystemHealth(extractPath string) (*SystemHealthInfo, error) {
 	}
 
 	return health, nil
+}
+
+// parseMemoryFile attempts to parse memory info from either "memory" (new format) or "freem" (old format)
+func parseMemoryFile(systeminfoDir string, health *SystemHealthInfo) error {
+	// Try "memory" file first (new v1.1+ format), then fall back to "freem" (old format)
+	memoryPaths := []string{
+		filepath.Join(systeminfoDir, "memory"),
+		filepath.Join(systeminfoDir, "freem"),
+	}
+
+	for _, memPath := range memoryPaths {
+		content, err := os.ReadFile(memPath)
+		if err != nil {
+			continue // Try next path
+		}
+
+		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "Mem:") {
+				fields := strings.Fields(line)
+				if len(fields) >= 3 {
+					total, _ := strconv.ParseFloat(fields[1], 64)
+					used, _ := strconv.ParseFloat(fields[2], 64)
+					if total > 0 {
+						health.MemoryUsedPercent = (used / total) * 100
+					}
+				}
+				return nil // Successfully parsed
+			}
+		}
+		// File exists but no Mem: line found - this is still a successful read
+		return nil
+	}
+
+	return os.ErrNotExist
 }
