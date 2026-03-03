@@ -89,8 +89,8 @@ func parseMemoryFile(systeminfoDir string, health *SystemHealthInfo) error {
 			if strings.HasPrefix(line, "Mem:") {
 				fields := strings.Fields(line)
 				if len(fields) >= 3 {
-					total, _ := strconv.ParseFloat(fields[1], 64)
-					used, _ := strconv.ParseFloat(fields[2], 64)
+					total := parseMemoryValue(fields[1])
+					used := parseMemoryValue(fields[2])
 					if total > 0 {
 						health.MemoryUsedPercent = (used / total) * 100
 					}
@@ -103,4 +103,32 @@ func parseMemoryFile(systeminfoDir string, health *SystemHealthInfo) error {
 	}
 
 	return os.ErrNotExist
+}
+
+// parseMemoryValue parses a memory value that may have units (e.g., "3.8Gi", "3915", "2.0Gi")
+func parseMemoryValue(s string) float64 {
+	s = strings.TrimSpace(s)
+
+	// Handle unit suffixes
+	multiplier := 1.0
+	if strings.HasSuffix(s, "Gi") {
+		multiplier = 1.0 // Gi is our base unit
+		s = strings.TrimSuffix(s, "Gi")
+	} else if strings.HasSuffix(s, "Mi") {
+		multiplier = 1.0 / 1024.0 // Convert Mi to Gi
+		s = strings.TrimSuffix(s, "Mi")
+	} else if strings.HasSuffix(s, "Ki") {
+		multiplier = 1.0 / (1024.0 * 1024.0) // Convert Ki to Gi
+		s = strings.TrimSuffix(s, "Ki")
+	} else if strings.HasSuffix(s, "B") {
+		// Bytes to GiB (e.g., "1024B" -> 1024 / 1024^3)
+		multiplier = 1.0 / (1024.0 * 1024.0 * 1024.0)
+		s = strings.TrimSuffix(s, "B")
+	}
+
+	value, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return value * multiplier
 }
