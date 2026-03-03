@@ -28,12 +28,24 @@ type DMesgAnalysis struct {
 }
 
 // ParseDMesg parses dmesg output from bundle
-// Bundle path: systeminfo/dmesg
+// Tries new location first (systeminfo/dmesg), falls back to old (systemlogs/dmesg)
 func ParseDMesg(extractPath string) (*DMesgAnalysis, error) {
 	bundleRoot := getBundleRoot(extractPath)
-	dmesgPath := filepath.Join(bundleRoot, "systeminfo", "dmesg")
 
-	file, err := os.Open(dmesgPath)
+	// Try new location first, fall back to old for backward compatibility
+	dmesgPaths := []string{
+		filepath.Join(bundleRoot, "systeminfo", "dmesg"), // New format (v1.1+)
+		filepath.Join(bundleRoot, "systemlogs", "dmesg"), // Old format
+	}
+
+	var file *os.File
+	var err error
+	for _, dmesgPath := range dmesgPaths {
+		file, err = os.Open(dmesgPath)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dmesg: %w", err)
 	}
@@ -45,15 +57,15 @@ func ParseDMesg(extractPath string) (*DMesgAnalysis, error) {
 	}
 
 	scanner := bufio.NewScanner(file)
-	
+
 	// OOM kill patterns
 	// Example: [1234567.890123] Out of memory: Killed process 12345 (nginx) total-vm:131072kB, anon-rss:65536kB, file-rss:0kB, shmem-rss:0kB, UID:0 pgtables:128kB oom_score_adj:0
 	oomKillRegex := regexp.MustCompile(`\[\s*([\d.]+)\s*\]\s*Out of memory:\s*Killed process\s+(\d+)\s+\(([^)]+)\).*oom_score_adj:(-?\d+)`)
-	
+
 	// Memory pressure pattern
 	// Example: [1234567.890123] Memory cgroup out of memory: Kill process 12345 (nginx) score 999 or sacrifice child
 	cgroupOOMRegex := regexp.MustCompile(`\[\s*([\d.]+)\s*\]\s*Memory cgroup out of memory`)
-	
+
 	// Process killed summary
 	// Example: [1234567.890123] oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=cri-containerd-abc123.scope,mems_allowed=0,oom_memcg=/system.slice/containerd.service,task_memcg=/kubepods.slice/...,task=nginx,pid=12345,uid=0
 	oomKillDetailRegex := regexp.MustCompile(`\[\s*([\d.]+)\s*\]\s*oom-kill:.*task=([^,]+),pid=(\d+)`)
@@ -85,7 +97,7 @@ func ParseDMesg(extractPath string) (*DMesgAnalysis, error) {
 			taskName := matches[2]
 			if strings.Contains(taskName, "cri-containerd-") || strings.Contains(taskName, "cri-o-") {
 				// Extract container runtime info
-				analysis.KernelWarnings = append(analysis.KernelWarnings, 
+				analysis.KernelWarnings = append(analysis.KernelWarnings,
 					fmt.Sprintf("Container runtime OOM at %s: %s", matches[1], taskName))
 			}
 		}
@@ -111,9 +123,9 @@ func (d *DMesgAnalysis) GetOOMKillSummary() string {
 
 	var parts []string
 	parts = append(parts, fmt.Sprintf("Detected %d OOM kill(s):", len(d.OOMKills)))
-	
+
 	for _, kill := range d.OOMKills {
-		parts = append(parts, fmt.Sprintf("  - %s (PID %d, score %d)", 
+		parts = append(parts, fmt.Sprintf("  - %s (PID %d, score %d)",
 			kill.VictimName, kill.VictimPID, kill.OOMScore))
 	}
 
