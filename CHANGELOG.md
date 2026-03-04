@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-06
+
+### Added
+- **Bundle Format v1.1 Support**: Full support for new Rancher log bundle format
+  - Virtualization detection via `systemd-detect-virt` (kvm, vmware, docker, etc.)
+  - Versions file parser for comprehensive system/component information
+  - Pod describe directory support for per-namespace pod descriptions
+  - Sysstat data directory support for performance metrics
+- **Memory Unit Parsing**: Handles Gi, Mi, Ki, B suffixes in memory files
+- **Path Fallback System**: Automatic backward compatibility with old bundle formats
+  - Tries new locations first (e.g., `systeminfo/memory`), falls back to old (e.g., `systeminfo/freem`)
+  - Supports both `systeminfo/dmesg` (new) and `systemlogs/dmesg` (old)
+- **Integration Tests**: Comprehensive tests for both old and new bundle formats
+
+### Fixed
+- **test-cluster command not recognized**: Added missing commands to `isKnownCommand()` list
+  - Commands affected: `test-cluster`, `patterns`, `completion`
+  - Root cause: Hardcoded command list didn't include all subcommands
+
+### Changed
+- **SystemHealthInfo struct**: Added `VirtType` field for virtualization platform detection
+- **PathResolver interface**: Extended with new methods for v1.1 format support
+  - `GetRootVersionsFile()`, `GetSysteminfoPath()`, `GetDmesgPaths()`, `GetMemoryPaths()`
+- **Test Coverage**: Increased to 69.6% (exceeds 45% target)
+
+### Technical Details
+- New files: `internal/bundle/versions.go`, `internal/bundle/integration_v1.1_test.go`
+- Modified: `internal/bundle/systeminfo.go`, `internal/bundle/dmesg.go`, `internal/bundle/paths.go`, `cmd/root.go`
+- Bundle format detection: Automatic via file presence (no user action required)
+
 ## [1.0.1] - 2026-02-25
 
 ### Fixed
