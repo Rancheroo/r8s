@@ -89,7 +89,7 @@ func TestIsKnownCommand(t *testing.T) {
 		{"ask", "ask", true},
 		{"logs", "logs", true},
 		{"unknown", "unknown", false},
-		{"typo", "analize", true}, // typo that maps to analyze
+		{"typo", "analize", false}, // typo not in known commands (suggestions handled separately)
 		{"empty", "", false},
 	}
 
