@@ -98,9 +98,6 @@ func ExpectedFiles(bundlePath string) []ExpectedFile {
 		// Medium importance
 		{Path: kubectlPrefix + "kubectl/services", Importance: ImportanceMedium, Category: "networking"},
 		{Path: kubectlPrefix + "kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
-		// dmesg is in systemlogs/ or systeminfo/ at root
-		{Path: "systemlogs/dmesg", Importance: ImportanceMedium, Category: "system"},
-		{Path: "systeminfo/dmesg", Importance: ImportanceMedium, Category: "system"},
 		// journald logs are in journald/ at root
 		{Path: "journald/rke2-server", Importance: ImportanceMedium, Category: "logs"},
 
@@ -169,6 +166,13 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 		health.Categories[file.Category] = cat
 	}
 
+	// Check dmesg in both old and new locations (Issue #88)
+	// Use path resolver to check both systeminfo/dmesg and systemlogs/dmesg
+	if err := checkDmesgHealth(bundlePath, health); err != nil {
+		// Log error but don't fail - dmesg is medium importance
+		// Continue with health check
+	}
+
 	// Calculate completeness
 	if health.TotalFiles > 0 {
 		health.Completeness = float64(health.FoundFiles) / float64(health.TotalFiles) * 100
@@ -181,6 +185,63 @@ func CheckHealth(bundlePath string) (*HealthCheck, error) {
 	health.BundleType = detectBundleType(bundlePath)
 
 	return health, nil
+}
+
+// checkDmesgHealth checks if dmesg exists in either old or new location (Issue #88)
+// Uses GetDmesgPaths() to check both systeminfo/dmesg (new) and systemlogs/dmesg (old)
+func checkDmesgHealth(bundlePath string, health *HealthCheck) error {
+	// Detect bundle format and create appropriate resolver
+	format := DetectFormat(bundlePath)
+	resolver := NewPathResolver(bundlePath, format)
+
+	// Get all possible dmesg paths
+	dmesgPaths := resolver.GetDmesgPaths()
+
+	// Check if dmesg exists in any location
+	dmesgFound := false
+	foundPath := ""
+	for _, path := range dmesgPaths {
+		if _, err := os.Stat(path); err == nil {
+			dmesgFound = true
+			foundPath = path
+			break
+		}
+	}
+
+	// Update health check with dmesg status
+	// Use the first (new) path as the canonical path for reporting
+	canonicalPath := "systeminfo/dmesg"
+	if len(dmesgPaths) > 0 {
+		// Extract relative path from the first dmesg path
+		if relPath, err := filepath.Rel(bundlePath, dmesgPaths[0]); err == nil {
+			canonicalPath = relPath
+		}
+	}
+
+	health.TotalFiles++
+	cat := health.Categories["system"]
+	cat.Total++
+
+	if dmesgFound {
+		health.FoundFiles++
+		cat.Found++
+	} else {
+		// Only report as missing if not found in either location
+		health.MissingFiles = append(health.MissingFiles, MissingFile{
+			Path:       canonicalPath,
+			Importance: ImportanceMedium,
+			Category:   "system",
+			Impact:     impactDescription(ImportanceMedium, "system"),
+		})
+		cat.Missing++
+	}
+	cat.Complete = (cat.Found == cat.Total)
+	health.Categories["system"] = cat
+
+	// Suppress unused variable warning - foundPath indicates which path was found
+	_ = foundPath
+
+	return nil
 }
 
 // hasCriticalFiles returns true if all critical files are present
