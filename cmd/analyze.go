@@ -85,6 +85,10 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
+		if os.IsNotExist(err) {
+			ShowBundleNotFoundError(bundlePath)
+			return fmt.Errorf("bundle not found: %s", bundlePath)
+		}
 		ShowFriendlyError(fmt.Errorf("cannot access bundle path: %w", err))
 		return err
 	}
@@ -395,6 +399,8 @@ func outputAnalyzeTable(result AnalysisResult) error {
 	} else {
 		fmt.Println(color.GreenString("✓ No issues detected"))
 		fmt.Println()
+		// Issue #86: Show helpful message when no issues found
+		ShowNoIssuesFound(result.BundlePath)
 	}
 
 	// Summary line

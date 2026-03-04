@@ -65,15 +65,14 @@ func Execute() {
 			if !isKnownCommand(firstArg) {
 				// Check if it's a typo we can suggest
 				if suggestion, found := CommandSuggestions[strings.ToLower(firstArg)]; found {
-					ShowUnknownCommandError(firstArg)
-					// Offer to run the correct command
-					fmt.Fprintf(os.Stderr, "Run 'r8s %s' instead? (y/n): ", suggestion.Command)
+					// Show the new format: "Unknown command. Did you mean 'analyze'? Run 'r8s help'"
+					fmt.Fprintf(os.Stderr, "Unknown command. Did you mean '%s'? Run 'r8s help'\n", suggestion.Command)
 					os.Exit(ExitError)
 				} else if !isValidBundlePath(firstArg) {
 					// Could be a bundle path, which is handled by runRoot
 					// But if it doesn't exist as a path either, show unknown command
 					if _, err := os.Stat(firstArg); os.IsNotExist(err) {
-						ShowUnknownCommandError(firstArg)
+						fmt.Fprintf(os.Stderr, "Unknown command. Did you mean 'analyze'? Run 'r8s help'\n")
 						os.Exit(ExitError)
 					}
 				}

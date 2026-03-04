@@ -87,6 +87,10 @@ func runGet(cmd *cobra.Command, args []string) error {
 	// Load bundle
 	b, err := loadBundle(bundlePath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			ShowBundleNotFoundError(bundlePath)
+			return fmt.Errorf("bundle not found: %s", bundlePath)
+		}
 		return fmt.Errorf("failed to load bundle: %w", err)
 	}
 	defer b.Close()
