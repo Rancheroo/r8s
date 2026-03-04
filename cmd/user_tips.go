@@ -30,17 +30,17 @@ var UserTips = []string{
 	"💡 Ask r8s to summarize complex issues: r8s ask bundle/ 'explain the etcd problems'",
 	"💡 Use r8s ask for post-mortems: r8s ask bundle/ 'what caused the outage?'",
 
-	// kubectl Integration (21-30)
-	"💡 Use kubectl-r8s plugin for familiar syntax: kubectl r8s analyze ./bundle",
+	// Familiar Syntax (21-30)
 	"💡 r8s commands mirror kubectl: get pods, get nodes, logs, describe",
-	"💡 Use kubectl aliases with r8s: alias k8s-r8s='kubectl r8s'",
-	"💡 r8s supports kubectl-style output: -o json, -o yaml, -o wide",
+	"💡 r8s supports familiar output: -o json, -o yaml, -o wide",
 	"💡 Filter by namespace: r8s get pods bundle/ -n cattle-system",
-	"💡 r8s logs works like kubectl logs: r8s logs bundle/ pod-name",
+	"💡 r8s logs works like you'd expect: r8s logs bundle/ pod-name",
 	"💡 Use r8s describe for detailed resource info: r8s describe pod bundle/ nginx",
 	"💡 r8s get nodes shows cluster topology from bundle",
 	"💡 Use labels with r8s get: r8s get pods bundle/ -l app=nginx",
-	"💡 r8s supports all kubectl output formats for seamless integration",
+	"💡 r8s works with standard Unix pipes: r8s analyze bundle/ | grep ERROR",
+	"💡 Create aliases for common tasks: alias r8s-check='r8s test-cluster'",
+	"💡 r8s supports all standard output formats for integration",
 
 	// Debugging & Troubleshooting (31-40)
 	"💡 r8s test-cluster runs 7 diagnostic checks automatically",
