@@ -81,9 +81,9 @@ func Execute() {
 	}
 	
 	if err := rootCmd.Execute(); err != nil {
-		// Check for exit code error
-		if exitCode := GetExitCode(err); exitCode != ExitSuccess {
-			os.Exit(exitCode)
+		// Check for exit code error (type assertion, not value check)
+		if exitErr, ok := err.(*ExitCodeError); ok {
+			os.Exit(exitErr.Code)
 		}
 		// Regular error - show friendly version
 		ShowFriendlyError(err)
@@ -93,20 +93,22 @@ func Execute() {
 
 // isKnownCommand checks if a command is known
 func isKnownCommand(cmd string) bool {
+	// Only REAL Cobra commands - no typos or aliases
+	// Typos are handled by CommandSuggestions
 	knownCommands := []string{
-		"analyze", "analyse", "analize",
+		"analyze",
 		"ask",
 		"completion",
-		"describe", "desc",
+		"describe",
 		"export",
-		"generate", "gen",
+		"generate",
 		"get",
-		"logs", "log",
-		"patterns", "pattern",
-		"test-cluster", "testcluster",
-		"validate", "val", "check",
-		"version", "ver", "v",
-		"help", "h",
+		"logs",
+		"patterns",
+		"test-cluster",
+		"validate",
+		"version",
+		"help",
 	}
 
 	cmd = strings.ToLower(cmd)

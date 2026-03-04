@@ -117,11 +117,21 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 		// Format: describe ./bundle/ name (auto-detect kind)
 		bundlePath = args[0]
 		name = args[1]
-	} else {
-		// Format: describe kind ./bundle/ name
-		kind = strings.ToLower(args[0])
-		bundlePath = args[1]
-		name = args[2]
+	} else if len(args) == 3 {
+		// Check if user put bundle path first (common mistake)
+		// Heuristic: if args[0] contains "/" or ".", it's likely a path
+		if strings.Contains(args[0], "/") || strings.Contains(args[0], ".") {
+			// User did: describe ./bundle/ kind name
+			// Swap to: describe kind ./bundle/ name
+			bundlePath = args[0]
+			kind = strings.ToLower(args[1])
+			name = args[2]
+		} else {
+			// Format: describe kind ./bundle/ name
+			kind = strings.ToLower(args[0])
+			bundlePath = args[1]
+			name = args[2]
+		}
 	}
 
 	// Normalize kind aliases

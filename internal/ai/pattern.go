@@ -203,6 +203,14 @@ func (m *MatcherV2) Match(content string) []MatchResultV2 {
 					}
 				}
 
+				// Skip if PodName contains ".go" (CRITICAL-3 fix)
+				if podName, ok := metadata["PodName"]; ok && strings.Contains(podName, ".go") {
+					continue
+				}
+				if ns, ok := metadata["Namespace"]; ok && strings.Contains(ns, ".go") {
+					continue
+				}
+
 				// Create a result for each match
 				results = append(results, MatchResultV2{
 					Matched:     true,
@@ -727,7 +735,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
-				Pattern: `(?P<Namespace>\S+)\s+(?P<PodName>\S+)\s+\S+\s+Terminating\s+\S+\s+(?P<Duration>\S+)`,
+				Pattern: `(?P<Namespace>[a-z0-9-]+)\s+(?P<PodName>[a-z0-9-]+)\s+\S+\s+Terminating\s+\S+\s+(?P<Duration>[0-9hms]+)`,
 				Weight:  1.0,
 			},
 			{Type: "keyword", Pattern: "pod status terminating", Weight: 1.0},
