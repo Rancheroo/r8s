@@ -119,8 +119,8 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 		name = args[1]
 	} else if len(args) == 3 {
 		// Check if user put bundle path first (common mistake)
-		// Heuristic: if args[0] contains "/" or ".", it's likely a path
-		if strings.Contains(args[0], "/") || strings.Contains(args[0], ".") {
+		// Heuristic: if args[0] contains "/", it's likely a path
+		if strings.Contains(args[0], "/") {
 			// User did: describe ./bundle/ kind name
 			// Swap to: describe kind ./bundle/ name
 			bundlePath = args[0]

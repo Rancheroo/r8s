@@ -83,6 +83,7 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		// Check for exit code error (type assertion, not value check)
 		if exitErr, ok := err.(*ExitCodeError); ok {
+			ShowFriendlyError(err)
 			os.Exit(exitErr.Code)
 		}
 		// Regular error - show friendly version
