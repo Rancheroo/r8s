@@ -56,11 +56,41 @@ func init() {
 
 // runAsk executes the ask command
 func runAsk(cmd *cobra.Command, args []string) error {
+	// Validate we have the right number of args (should be caught by cobra, but defensive)
+	if len(args) < 2 {
+		ShowUsageError("ask", "r8s ask <bundle> <question>")
+		return NewUsageError("ask", "r8s ask <bundle> <question>")
+	}
+
 	bundlePath := args[0]
 	question := strings.Join(args[1:], " ")
 
+	// Check if first arg looks like a question (starts with quote) and second is a path
+	// This helps detect wrong argument order - but only for very clear cases
+	// to avoid rejecting valid bundle paths
+	if len(args) > 1 && isLikelyQuestion(bundlePath) && !isLikelyPath(bundlePath) && isLikelyPath(args[1]) {
+		// Double-check: first arg is clearly a question, second is clearly a path
+		// and the first arg contains actual question markers (?, why, what, how)
+		questionLower := strings.ToLower(bundlePath)
+		if strings.Contains(questionLower, "?") ||
+			strings.HasPrefix(questionLower, "why ") ||
+			strings.HasPrefix(questionLower, "what ") ||
+			strings.HasPrefix(questionLower, "how ") {
+			// First arg looks like a question, not a path
+			ShowUsageError("ask", "r8s ask <bundle> <question>")
+			fmt.Fprintf(os.Stderr, "\nIt looks like you might have the arguments in the wrong order.\n")
+			fmt.Fprintf(os.Stderr, "Expected:    r8s ask ./bundle/ \"your question\"\n")
+			fmt.Fprintf(os.Stderr, "You entered: r8s ask \"%s\" %s\n\n", bundlePath, args[1])
+			return NewUsageError("ask", "r8s ask <bundle> <question>")
+		}
+	}
+
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
+		if os.IsNotExist(err) {
+			ShowBundleNotFoundError(bundlePath)
+			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
+		}
 		return fmt.Errorf("cannot access bundle path: %w", err)
 	}
 
@@ -407,4 +437,29 @@ Supported query patterns (Day 10 v1):
 Try using one of these patterns, or use:
 • 'r8s analyze <bundle>' for full analysis
 • 'r8s export <bundle> --format=markdown' for a report`
+}
+
+// isLikelyQuestion checks if text looks like a question
+func isLikelyQuestion(text string) bool {
+	lower := strings.ToLower(text)
+	questionWords := []string{"why", "what", "which", "show", "find", "list", "how", "is", "are", "can", "will", "?"}
+	for _, word := range questionWords {
+		if strings.HasPrefix(lower, word+" ") || strings.HasPrefix(lower, word+"?") || strings.HasSuffix(lower, word) {
+			return true
+		}
+	}
+	return false
+}
+
+// isLikelyPath checks if text looks like a file path
+func isLikelyPath(text string) bool {
+	// Common path indicators
+	if strings.HasPrefix(text, "./") || strings.HasPrefix(text, "/") || strings.HasPrefix(text, "..") {
+		return true
+	}
+	// Check for file separators
+	if strings.Contains(text, "/") || strings.Contains(text, "\\") {
+		return true
+	}
+	return false
 }

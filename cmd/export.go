@@ -70,6 +70,10 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
+		if os.IsNotExist(err) {
+			ShowBundleNotFoundError(bundlePath)
+			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
+		}
 		return fmt.Errorf("cannot access bundle path: %w", err)
 	}
 

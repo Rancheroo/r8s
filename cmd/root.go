@@ -65,15 +65,14 @@ func Execute() {
 			if !isKnownCommand(firstArg) {
 				// Check if it's a typo we can suggest
 				if suggestion, found := CommandSuggestions[strings.ToLower(firstArg)]; found {
-					ShowUnknownCommandError(firstArg)
-					// Offer to run the correct command
-					fmt.Fprintf(os.Stderr, "Run 'r8s %s' instead? (y/n): ", suggestion.Command)
+					// Show the new format: "Unknown command. Did you mean 'analyze'? Run 'r8s help'"
+					fmt.Fprintf(os.Stderr, "Unknown command. Did you mean '%s'? Run 'r8s help'\n", suggestion.Command)
 					os.Exit(ExitError)
 				} else if !isValidBundlePath(firstArg) {
 					// Could be a bundle path, which is handled by runRoot
 					// But if it doesn't exist as a path either, show unknown command
 					if _, err := os.Stat(firstArg); os.IsNotExist(err) {
-						ShowUnknownCommandError(firstArg)
+						fmt.Fprintf(os.Stderr, "Unknown command. Did you mean 'analyze'? Run 'r8s help'\n")
 						os.Exit(ExitError)
 					}
 				}
@@ -82,9 +81,10 @@ func Execute() {
 	}
 	
 	if err := rootCmd.Execute(); err != nil {
-		// Check for exit code error
-		if exitCode := GetExitCode(err); exitCode != ExitSuccess {
-			os.Exit(exitCode)
+		// Check for exit code error (type assertion, not value check)
+		if exitErr, ok := err.(*ExitCodeError); ok {
+			// ExitCodeError means the command already displayed the error
+			os.Exit(exitErr.Code)
 		}
 		// Regular error - show friendly version
 		ShowFriendlyError(err)
@@ -94,20 +94,22 @@ func Execute() {
 
 // isKnownCommand checks if a command is known
 func isKnownCommand(cmd string) bool {
+	// Only REAL Cobra commands - no typos or aliases
+	// Typos are handled by CommandSuggestions
 	knownCommands := []string{
-		"analyze", "analyse", "analize",
+		"analyze",
 		"ask",
 		"completion",
-		"describe", "desc",
+		"describe",
 		"export",
-		"generate", "gen",
+		"generate",
 		"get",
-		"logs", "log",
-		"patterns", "pattern",
-		"test-cluster", "testcluster",
-		"validate", "val", "check",
-		"version", "ver", "v",
-		"help", "h",
+		"logs",
+		"patterns",
+		"test-cluster",
+		"validate",
+		"version",
+		"help",
 	}
 
 	cmd = strings.ToLower(cmd)

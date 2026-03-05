@@ -42,7 +42,7 @@ func TestCheckHealth(t *testing.T) {
 				return path
 			},
 			wantValid:      true,
-			wantComplete:   14.3, // 3/21 files - approximate
+			wantComplete:   15.4, // 3/20 files - dmesg now consolidated (Issue #88)
 			wantBundleType: "RKE2",
 			wantErr:        false,
 		},
@@ -56,7 +56,7 @@ func TestCheckHealth(t *testing.T) {
 				return path
 			},
 			wantValid:      false,
-			wantComplete:   7.1, // 1/14 approx - missing critical pods - RKE2 detected
+			wantComplete:   7.7, // 1/13 approx - missing critical pods - RKE2 detected (Issue #88: dmesg consolidated)
 			wantBundleType: "RKE2",
 			wantErr:        false,
 		},
@@ -355,6 +355,159 @@ func TestDetectBundleType(t *testing.T) {
 			got := detectBundleType(path)
 			if got != tt.expected {
 				t.Errorf("detectBundleType() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
+// TestDmesgFallback tests Issue #88: dmesg location fallback
+// Verifies that dmesg is found in either old (systemlogs/) or new (systeminfo/) location
+func TestDmesgFallback(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name           string
+		setup          func() string
+		wantDmesgFound bool
+		wantMissing    bool
+	}{
+		{
+			name: "dmesg in new location (systeminfo/dmesg)",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "new-location")
+				os.MkdirAll(filepath.Join(path, "rke2/kubectl"), 0755)
+				os.MkdirAll(filepath.Join(path, "systeminfo"), 0755)
+				// Create required critical files
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/nodes"), []byte("test"), 0644)
+				// Create dmesg in new location
+				os.WriteFile(filepath.Join(path, "systeminfo/dmesg"), []byte("dmesg content"), 0644)
+				return path
+			},
+			wantDmesgFound: true,
+			wantMissing:    false,
+		},
+		{
+			name: "dmesg in old location (systemlogs/dmesg)",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "old-location")
+				os.MkdirAll(filepath.Join(path, "rke2/kubectl"), 0755)
+				os.MkdirAll(filepath.Join(path, "systemlogs"), 0755)
+				// Create required critical files
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/nodes"), []byte("test"), 0644)
+				// Create dmesg in old location
+				os.WriteFile(filepath.Join(path, "systemlogs/dmesg"), []byte("dmesg content"), 0644)
+				return path
+			},
+			wantDmesgFound: true,
+			wantMissing:    false,
+		},
+		{
+			name: "dmesg in both locations (should be found)",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "both-locations")
+				os.MkdirAll(filepath.Join(path, "rke2/kubectl"), 0755)
+				os.MkdirAll(filepath.Join(path, "systeminfo"), 0755)
+				os.MkdirAll(filepath.Join(path, "systemlogs"), 0755)
+				// Create required critical files
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/nodes"), []byte("test"), 0644)
+				// Create dmesg in both locations
+				os.WriteFile(filepath.Join(path, "systeminfo/dmesg"), []byte("new dmesg"), 0644)
+				os.WriteFile(filepath.Join(path, "systemlogs/dmesg"), []byte("old dmesg"), 0644)
+				return path
+			},
+			wantDmesgFound: true,
+			wantMissing:    false,
+		},
+		{
+			name: "dmesg missing in both locations",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "missing-dmesg")
+				os.MkdirAll(filepath.Join(path, "rke2/kubectl"), 0755)
+				// Create required critical files
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "rke2/kubectl/nodes"), []byte("test"), 0644)
+				// No dmesg created
+				return path
+			},
+			wantDmesgFound: false,
+			wantMissing:    true,
+		},
+		{
+			name: "dmesg fallback with K3s bundle (new location)",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "k3s-new-location")
+				os.MkdirAll(filepath.Join(path, "k3s/kubectl"), 0755)
+				os.MkdirAll(filepath.Join(path, "systeminfo"), 0755)
+				// Create required critical files
+				os.WriteFile(filepath.Join(path, "k3s/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "k3s/kubectl/nodes"), []byte("test"), 0644)
+				// Create dmesg in new location
+				os.WriteFile(filepath.Join(path, "systeminfo/dmesg"), []byte("dmesg content"), 0644)
+				return path
+			},
+			wantDmesgFound: true,
+			wantMissing:    false,
+		},
+		{
+			name: "dmesg fallback with K3s bundle (old location)",
+			setup: func() string {
+				path := filepath.Join(tmpDir, "k3s-old-location")
+				os.MkdirAll(filepath.Join(path, "k3s/kubectl"), 0755)
+				os.MkdirAll(filepath.Join(path, "systemlogs"), 0755)
+				// Create required critical files
+				os.WriteFile(filepath.Join(path, "k3s/kubectl/pods"), []byte("test"), 0644)
+				os.WriteFile(filepath.Join(path, "k3s/kubectl/nodes"), []byte("test"), 0644)
+				// Create dmesg in old location
+				os.WriteFile(filepath.Join(path, "systemlogs/dmesg"), []byte("dmesg content"), 0644)
+				return path
+			},
+			wantDmesgFound: true,
+			wantMissing:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := tt.setup()
+			health, err := CheckHealth(path)
+			if err != nil {
+				t.Fatalf("CheckHealth() error = %v", err)
+			}
+
+			// Check if dmesg is in missing files
+			dmesgMissing := false
+			for _, missing := range health.MissingFiles {
+				if missing.Path == "systeminfo/dmesg" {
+					dmesgMissing = true
+					break
+				}
+			}
+
+			// Check system category stats
+			sysCat, hasSystem := health.Categories["system"]
+
+			if tt.wantDmesgFound {
+				// Dmesg should be found (not in missing files)
+				if dmesgMissing {
+					t.Errorf("dmesg reported as missing but should be found in one of the locations")
+				}
+				// System category should show found
+				if hasSystem && sysCat.Found == 0 {
+					t.Errorf("system category has Found=0 but dmesg should be counted")
+				}
+			} else {
+				// Dmesg should be missing
+				if !dmesgMissing {
+					t.Errorf("dmesg should be reported as missing but was not found in missing files")
+				}
+			}
+
+			// Verify system category exists
+			if !hasSystem {
+				t.Errorf("system category not found in health check")
 			}
 		})
 	}

@@ -328,3 +328,72 @@ func SetUnknownCommandHandler(root *cobra.Command) {
 		return err
 	})
 }
+
+// ShowBundleNotFoundError displays a helpful error when bundle path doesn't exist
+func ShowBundleNotFoundError(bundlePath string) {
+	fmt.Fprintln(os.Stderr)
+
+	// Header
+	header := color.New(color.Bold, color.FgRed)
+	header.Fprintf(os.Stderr, "Bundle not found: '%s'\n", bundlePath)
+
+	// Suggestion
+	suggestColor := color.New(color.FgYellow)
+	suggestColor.Fprintln(os.Stderr, "Try: r8s analyze ./bundle/")
+	fmt.Fprintln(os.Stderr)
+}
+
+// ShowUsageError displays usage hint when argument order is wrong
+func ShowUsageError(command, correctUsage string) {
+	fmt.Fprintln(os.Stderr)
+
+	// Header
+	header := color.New(color.Bold, color.FgRed)
+	header.Fprintln(os.Stderr, "Wrong argument order")
+	fmt.Fprintln(os.Stderr)
+
+	// Suggestion
+	suggestColor := color.New(color.FgYellow)
+	suggestColor.Fprintf(os.Stderr, "Usage: %s\n", correctUsage)
+	fmt.Fprintln(os.Stderr)
+}
+
+// ShowNoIssuesFound displays a friendly message when analysis finds no issues
+func ShowNoIssuesFound(bundlePath string) {
+	fmt.Fprintln(os.Stdout)
+
+	// Header
+	header := color.New(color.Bold, color.FgGreen)
+	header.Fprintln(os.Stdout, "No issues found - bundle is healthy!")
+	fmt.Fprintln(os.Stdout)
+
+	// Suggestion
+	suggestColor := color.New(color.FgYellow)
+	suggestColor.Fprintln(os.Stdout, "Want deeper analysis? Try 'r8s ask' for natural language queries")
+	fmt.Fprintln(os.Stdout)
+
+	exampleColor := color.New(color.FgHiBlack)
+	exampleColor.Fprintf(os.Stdout, "  r8s ask %s \"which pods are crashing?\"\n", bundlePath)
+	fmt.Fprintln(os.Stdout)
+}
+
+// NewUsageError creates an error with usage hint
+func NewUsageError(command, correctUsage string) error {
+	return &UsageError{Command: command, CorrectUsage: correctUsage}
+}
+
+// UsageError represents an error with incorrect argument usage
+type UsageError struct {
+	Command      string
+	CorrectUsage string
+}
+
+func (e *UsageError) Error() string {
+	return fmt.Sprintf("wrong argument order for command '%s'", e.Command)
+}
+
+// IsUsageError checks if an error is a UsageError
+func IsUsageError(err error) bool {
+	_, ok := err.(*UsageError)
+	return ok
+}

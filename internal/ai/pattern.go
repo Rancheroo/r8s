@@ -727,7 +727,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
-				Pattern: `(?P<Namespace>\S+)\s+(?P<PodName>\S+)\s+\S+\s+Terminating\s+\S+\s+(?P<Duration>\S+)`,
+				Pattern: `(?P<Namespace>[a-z0-9-]+)\s+(?P<PodName>[a-z0-9-]+)\s+\S+\s+Terminating\s+\S+\s+(?P<Duration>[0-9dhmsy]+)`,
 				Weight:  1.0,
 			},
 			{Type: "keyword", Pattern: "pod status terminating", Weight: 1.0},
