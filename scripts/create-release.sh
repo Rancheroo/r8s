@@ -1,34 +1,54 @@
 #!/bin/bash
-# GitHub Release Script for v0.8.0-alpha
-# Run this to create a proper GitHub release with binaries
+# GitHub Release Script for r8s
+# Usage: ./create-release.sh [version]
+# Example: ./create-release.sh v1.2.1
 
 set -e
 
-VERSION="v0.8.0-alpha"
+VERSION="${1:-v1.2.1}"
 REPO="Rancheroo/r8s"
-BIN_DIR="bin"
+RELEASE_DIR="releases"
 
 echo "Creating GitHub release ${VERSION}..."
+echo ""
 
-# Create the release with notes
+# Verify binaries exist
+for PLATFORM in linux-amd64 darwin-amd64 darwin-arm64; do
+  BINARY="${RELEASE_DIR}/r8s-${VERSION}-${PLATFORM}"
+  if [ ! -f "${BINARY}" ]; then
+    echo "❌ Missing binary: ${BINARY}"
+    echo "Run: GOOS=<os> GOARCH=<arch> go build -o ${BINARY} main.go"
+    exit 1
+  fi
+  echo "✓ Found ${BINARY}"
+done
+
+# Generate checksums
+echo ""
+echo "Generating checksums..."
+(cd ${RELEASE_DIR} && sha256sum r8s-${VERSION}-* > checksums-${VERSION}.txt)
+echo "✓ checksums-${VERSION}.txt"
+
+# Create the release
+echo ""
+echo "Creating GitHub release..."
 gh release create ${VERSION} \
   --repo ${REPO} \
-  --title "v0.8.0-alpha — kubectl for Rancher Bundles" \
-  --notes-file GITHUB_RELEASE_v0.8.0-alpha.md \
-  --prerelease
+  --title "${VERSION} — Simplify & Never Blank" \
+  --notes-file docs/releases/${VERSION#v}.md \
+  --target main
 
 echo "Uploading binary artifacts..."
 
-# Upload binaries
+# Upload binaries + checksums
 gh release upload ${VERSION} \
   --repo ${REPO} \
-  ${BIN_DIR}/r8s-v0.8.0-alpha-linux-amd64 \
-  ${BIN_DIR}/r8s-v0.8.0-alpha-linux-arm64 \
-  ${BIN_DIR}/r8s-v0.8.0-alpha-darwin-amd64 \
-  ${BIN_DIR}/r8s-v0.8.0-alpha-darwin-arm64 \
-  ${BIN_DIR}/r8s-v0.8.0-alpha-windows-amd64.exe \
-  ${BIN_DIR}/checksums.txt
+  ${RELEASE_DIR}/r8s-${VERSION}-linux-amd64 \
+  ${RELEASE_DIR}/r8s-${VERSION}-darwin-amd64 \
+  ${RELEASE_DIR}/r8s-${VERSION}-darwin-arm64 \
+  ${RELEASE_DIR}/checksums-${VERSION}.txt
 
+echo ""
 echo "✅ Release ${VERSION} created successfully!"
 echo ""
 echo "Verify at: https://github.com/${REPO}/releases/tag/${VERSION}"

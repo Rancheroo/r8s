@@ -1,19 +1,20 @@
 # r8s
 
-> **r8s v1.0.1 — AI-Powered kubectl for Rancher bundles.**
+> **r8s v1.2.1 — AI-Powered kubectl for Rancher Bundles**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher support bundles. It combines kubectl-like navigation with AI pattern detection to find root causes instantly.
+r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher support bundles. It combines kubectl-like navigation with AI pattern detection to find root causes instantly — no cluster access required.
 
-**Latest: v1.0.1** (February 2026) — Pattern Detection Hotfix
+**Latest: v1.2.1** (March 2026) — Simplify & Never Blank
 
-- **AI Analysis**: Detects 19+ issue patterns (CrashLoop, OOM, etcd, certs)
-- **Natural Language Queries**: Ask `r8s ask "why is nginx crashing?"`
+- **AI Analysis**: Detects 19+ issue patterns (CrashLoop, OOM, etcd, certs, CNI, storage)
+- **Natural Language Queries**: Ask `r8s ask "why is nginx crashing?"` — no kubectl expertise needed
 - **Root Cause Hints**: Explains *why* something broke and *how* to fix it
-- **CI/CD Integration**: Export findings to SARIF, JUnit, Markdown
-- **kubectl-compatible**: `get`, `logs`, `describe` work offline
+- **CI/CD Integration**: Export findings to JSON, YAML, Markdown
+- **kubectl-Compatible**: `get`, `logs`, `describe` work exactly like kubectl — but offline
+- **Never Blank**: Every command produces clear, helpful output
 
 ---
 
@@ -23,180 +24,363 @@ r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher suppor
 
 **Linux:**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.0.1/r8s-v1.0.1-linux-amd64
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.2.1/r8s-v1.2.1-linux-amd64
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
 
 **macOS (Intel):**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.0.1/r8s-v1.0.1-darwin-amd64
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.2.1/r8s-v1.2.1-darwin-amd64
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
 
 **macOS (Apple Silicon M1/M2/M3):**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.0.1/r8s-v1.0.1-darwin-arm64
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.2.1/r8s-v1.2.1-darwin-arm64
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
 
-### Or Build from Source
+### Build from Source
 
 ```bash
 git clone https://github.com/Rancheroo/r8s.git && cd r8s
 make build
+# Binary: ./bin/r8s
 ```
-
-### Usage Examples
-
-```bash
-# Analyze Bundle (AI Powered)
-r8s analyze ./support-bundle/
-# 🔴 Found: CrashLoopBackOff (Container nginx has crashed 5 times...)
-
-# Ask Questions (Natural Language)
-r8s ask ./support-bundle/ "why is nginx crashing?"
-
-# Export for GitHub Security
-r8s export ./support-bundle/ --format=sarif --output=results.sarif
-
-# Traditional kubectl commands
-r8s get pods ./support-bundle/
-r8s logs ./support-bundle/ nginx-pod
-```
-
-## 🔌 kubectl Plugin (Optional)
-
-Use r8s as a kubectl plugin for familiar UX:
-
-```bash
-# Install plugin
-cp kubectl-r8s ~/.local/bin/
-kubectl plugin list  # Verify kubectl-r8s appears
-
-# Use with kubectl
-export R8S_BUNDLE=./support-bundle/
-kubectl r8s get pods -n cattle-system
-kubectl r8s logs nginx-pod
-kubectl r8s analyze
-```
-
-**Note:** The r8s binary must be accessible. Options:
-1. Place `r8s` in same directory as `kubectl-r8s`
-2. Run from directory containing `./r8s`
-3. Set `R8S_BINARY=/path/to/r8s`
-4. Copy `r8s` to `/usr/local/bin/`
 
 ---
 
-## ✨ New AI Features (v0.9.0)
+## 💡 Tips & Tricks
 
-### 🧠 Pattern Detection
-Automatically detects 19+ common Kubernetes issues:
-- **CrashLoopBackOff / OOMKilled**
-- **ImagePullBackOff / ErrImagePull**
-- **etcd corruption / latency / quorum loss**
-- **Certificate expiration / invalid CA**
-- **CNI plugin errors / DNS failures**
-- **PVC binding failures / Storage pressure**
-- **Node NotReady / DiskPressure**
+r8s is designed to fit into the workflows you already use. Here are practical ways to get the most out of it.
 
-### 🗣️ Natural Language Queries
-Troubleshoot like a human:
+### Ask Questions in Plain English
+
+No need to memorize kubectl flags or log paths. Just ask:
+
+```bash
+r8s ask ./bundle/ "why is my pod crashing?"
+r8s ask ./bundle/ "show me all certificate issues"
+r8s ask ./bundle/ "what caused the outage?"
+r8s ask ./bundle/ "which pods are pending and why?"
+r8s ask ./bundle/ "explain the etcd problems"
+```
+
+This is the fastest way to triage — especially if you're new to a cluster or unfamiliar with the bundle structure.
+
+### Use JSON Output for Scripting
+
+Every command supports `--format=json` for automation:
+
+```bash
+# Extract critical issues
+r8s analyze ./bundle/ --format=json | jq '.issues[] | select(.severity=="critical")'
+
+# Count issues by severity
+r8s analyze ./bundle/ --format=json | jq '[.issues[] | .severity] | group_by(.) | map({(.[0]): length}) | add'
+
+# Get pod names in a namespace
+r8s get pods ./bundle/ -n cattle-system -o json | jq -r '.[].name'
+```
+
+### Validate Before You Analyze
+
+Bundles from customers are sometimes incomplete. Validate first:
+
+```bash
+r8s validate ./bundle/
+# Shows completeness %, missing files, bundle type (RKE2/K3s)
+
+# In scripts:
+r8s validate ./bundle/ --format=json | jq '.completeness'
+```
+
+### Combine with Standard Unix Tools
+
+r8s plays well with pipes, grep, and your existing toolkit:
+
+```bash
+# Find all crash-related pods
+r8s get pods ./bundle/ | grep -i crash
+
+# Search logs for specific errors
+r8s logs ./bundle/ my-pod | grep -i "connection refused"
+
+# Export and diff two bundles
+diff <(r8s analyze ./bundle-old/ --format=json) <(r8s analyze ./bundle-new/ --format=json)
+```
+
+### Use Exit Codes in Scripts
+
+r8s returns meaningful exit codes for automation:
+- `0` — Success / bundle is healthy
+- `1` — Issues found or incomplete bundle
+- `2` — Error (invalid args, file not found)
+
+```bash
+r8s analyze ./bundle/
+if [ $? -eq 1 ]; then
+  echo "⚠️ Issues detected — escalating"
+  r8s export ./bundle/ --format=markdown > incident-report.md
+fi
+```
+
+### Onboard New Team Members
+
+r8s is a great tool for engineers who aren't Kubernetes experts yet:
+
+```bash
+# They don't need to know kubectl commands
+r8s ask ./bundle/ "what's wrong with this cluster?"
+
+# Or explore like they would with kubectl
+r8s get pods ./bundle/
+r8s get nodes ./bundle/
+r8s logs ./bundle/ problematic-pod
+```
+
+---
+
+## 🔌 Integrate r8s Into Your Projects
+
+### GitHub Actions
+
+Run bundle analysis as part of your CI/CD pipeline:
+
+```yaml
+name: Bundle Analysis
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_path:
+        description: 'Path to support bundle'
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download r8s
+        run: |
+          curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.2.1/r8s-v1.2.1-linux-amd64
+          chmod +x r8s
+          sudo mv r8s /usr/local/bin/
+
+      - name: Validate Bundle
+        run: |
+          r8s validate ${{ inputs.bundle_path }} --format=json > validation.json
+          completeness=$(jq '.completeness' validation.json)
+          echo "Bundle completeness: ${completeness}%"
+          if [ "$completeness" -lt 70 ]; then
+            echo "::warning::Bundle is only ${completeness}% complete"
+          fi
+
+      - name: Analyze
+        run: |
+          r8s analyze ${{ inputs.bundle_path }} --format=json > analysis.json
+          critical=$(jq '[.issues[] | select(.severity=="critical")] | length' analysis.json)
+          echo "Critical issues: ${critical}"
+          if [ "$critical" -gt 0 ]; then
+            echo "::error::Found ${critical} critical issues"
+            exit 1
+          fi
+
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: |
+            validation.json
+            analysis.json
+```
+
+### Cron Job for Nightly Analysis
+
+Monitor bundles automatically:
+
+```bash
+#!/bin/bash
+# /etc/cron.daily/r8s-nightly
+BUNDLE_DIR="/var/log/rancher/bundles"
+REPORT_DIR="/var/log/r8s-reports"
+DATE=$(date +%Y-%m-%d)
+
+mkdir -p "$REPORT_DIR"
+
+for bundle in "$BUNDLE_DIR"/*/; do
+  name=$(basename "$bundle")
+  r8s analyze "$bundle" --format=json > "$REPORT_DIR/${name}-${DATE}.json"
+
+  # Alert on critical issues
+  critical=$(jq '[.issues[] | select(.severity=="critical")] | length' "$REPORT_DIR/${name}-${DATE}.json")
+  if [ "$critical" -gt 0 ]; then
+    echo "ALERT: ${critical} critical issues in ${name}" | mail -s "r8s Alert: ${name}" team@example.com
+  fi
+done
+```
+
+### Support Ticket Workflow
+
+Generate reports for customer tickets:
+
+```bash
+#!/bin/bash
+# Usage: ./triage.sh <bundle-path> <ticket-id>
+BUNDLE="$1"
+TICKET="$2"
+
+echo "=== Triage for $TICKET ==="
+
+# Step 1: Validate
+r8s validate "$BUNDLE"
+if [ $? -eq 2 ]; then
+  echo "❌ Invalid bundle — ask customer to re-collect"
+  exit 1
+fi
+
+# Step 2: Quick analysis
+r8s analyze "$BUNDLE" --format=json > "/tmp/${TICKET}-analysis.json"
+
+# Step 3: Generate human-readable report
+r8s export "$BUNDLE" --format=markdown > "/tmp/${TICKET}-report.md"
+
+# Step 4: Summarize
+echo ""
+echo "📋 Analysis complete. Files:"
+echo "  JSON:     /tmp/${TICKET}-analysis.json"
+echo "  Report:   /tmp/${TICKET}-report.md"
+echo ""
+echo "Quick look at critical issues:"
+jq -r '.issues[] | select(.severity=="critical") | "  🔴 \(.title)"' "/tmp/${TICKET}-analysis.json"
+```
+
+### Slack / Webhook Integration
+
+Post analysis results to Slack:
+
+```bash
+#!/bin/bash
+BUNDLE="$1"
+WEBHOOK_URL="${SLACK_WEBHOOK_URL}"
+
+# Analyze
+result=$(r8s analyze "$BUNDLE" --format=json)
+issues=$(echo "$result" | jq '[.issues[]] | length')
+critical=$(echo "$result" | jq '[.issues[] | select(.severity=="critical")] | length')
+
+# Post to Slack
+curl -s -X POST "$WEBHOOK_URL" \
+  -H 'Content-type: application/json' \
+  -d "{
+    \"text\": \"r8s Bundle Analysis\",
+    \"blocks\": [{
+      \"type\": \"section\",
+      \"text\": {
+        \"type\": \"mrkdwn\",
+        \"text\": \"*Bundle Analysis Complete*\n• Total issues: ${issues}\n• Critical: ${critical}\n• Bundle: \`$(basename $BUNDLE)\`\"
+      }
+    }]
+  }"
+```
+
+---
+
+## 📖 Commands
+
+### `r8s analyze` — AI-Powered Issue Detection
+```bash
+r8s analyze ./bundle/
+r8s analyze ./bundle/ --format=json | jq '.issues[] | select(.severity=="critical")'
+r8s analyze ./bundle/ --format=yaml
+```
+
+### `r8s ask` — Natural Language Queries
 ```bash
 r8s ask ./bundle/ "why is etcd slow?"
 r8s ask ./bundle/ "show me all certificate issues"
 r8s ask ./bundle/ "which pods are pending?"
 ```
 
-### 📤 Export Formats
-Integrate with your ecosystem:
-- **SARIF**: GitHub Advanced Security
-- **JUnit**: Jenkins / GitHub Actions / GitLab CI
-- **Markdown**: Human-readable reports
-- **JSON**: Custom automation
-
-```bash
-r8s export ./bundle/ --format=sarif > results.sarif
-r8s export ./bundle/ --format=junit > test-results.xml
-```
-
----
-
-## kubectl Compatibility
-
-| kubectl | r8s | Status |
-|---------|-----|--------|
-| `kubectl get pods` | `r8s get pods ./bundle/` | ✅ Full |
-| `kubectl logs pod` | `r8s logs ./bundle/ pod` | ✅ Full |
-| `kubectl describe pod` | `r8s describe pod ./bundle/ pod` | ✅ Full |
-| `kubectl get nodes` | `r8s get nodes ./bundle/` | ✅ Full |
-
----
-
-## Commands
-
-### `r8s validate` — Check Bundle Health
-```bash
-r8s validate ./support-bundle/
-# Output: Bundle completeness %, missing files, type detection
-
-r8s validate ./bundle/ --format=json | jq '.completeness'
-# CI-friendly validation
-
-# Exit codes:
-# 0 = Valid bundle (all critical files present)
-# 1 = Incomplete but usable (missing optional files)
-# 2 = Error (invalid bundle or path)
-```
-
-### `r8s get` — Get Resources
+### `r8s get` — List Resources (kubectl-style)
 ```bash
 r8s get pods ./bundle/
 r8s get nodes ./bundle/
 r8s get pods ./bundle/ -n kube-system
-r8s get pods ./bundle/ -o yaml
+r8s get deploy ./bundle/ -o json
+r8s get events ./bundle/
 ```
 
-### `r8s logs` — Stream Pod Logs
+Supported resources: `pods`, `nodes`, `namespaces`, `deployments`, `services`, `events`
+
+### `r8s logs` — View Pod Logs
 ```bash
 r8s logs ./bundle/ nginx-pod
 r8s logs ./bundle/ nginx-pod -c sidecar
 r8s logs ./bundle/ nginx-pod --tail=100
-r8s logs ./bundle/ nginx-pod --follow
 ```
 
 ### `r8s describe` — Resource Details
 ```bash
 r8s describe pod ./bundle/ nginx-pod
 r8s describe node ./bundle/ worker-1
-r8s describe deployment ./bundle/ app -o json
+```
+
+### `r8s validate` — Check Bundle Health
+```bash
+r8s validate ./bundle/
+r8s validate ./bundle/ --format=json | jq '.completeness'
 ```
 
 ### `r8s export` — Export Findings
 ```bash
 r8s export ./bundle/ --format=json > findings.json
 r8s export ./bundle/ --format=yaml > findings.yaml
+r8s export ./bundle/ --format=markdown > report.md
 ```
 
-### `r8s analyze` — Detect Issues
-```bash
-r8s analyze ./bundle/
-r8s analyze ./bundle/ --format=json | jq '.issues[] | select(.severity=="critical")'
-```
-
-### `r8s generate` — AI Prompts
+### `r8s generate prompt` — AI-Ready Diagnostics
 ```bash
 r8s generate prompt ./bundle/ > ai-analysis.md
 ```
 
+### `r8s test-cluster` — Run Diagnostic Checks
+```bash
+r8s test-cluster   # Runs 7 diagnostic checks automatically
+```
+
 ### `r8s completion` — Shell Completion
 ```bash
-r8s completion bash > /etc/bash_completion.d/r8s
+# Bash
+r8s completion bash | sudo tee /etc/bash_completion.d/r8s
+
+# Zsh
 r8s completion zsh > "${fpath[1]}/_r8s"
 ```
+
+---
+
+## 🧠 AI Pattern Detection
+
+r8s automatically detects 19+ common Kubernetes issues:
+
+**Workload Issues**
+- CrashLoopBackOff / OOMKilled
+- ImagePullBackOff / ErrImagePull
+- Pods stuck in Terminating / Pending
+
+**Cluster Infrastructure**
+- etcd corruption / latency / quorum loss
+- Certificate expiration / invalid CA
+- Node NotReady / DiskPressure / MemoryPressure
+
+**Networking & Storage**
+- CNI plugin errors / DNS failures
+- PVC binding failures / Storage pressure
+- Service endpoint misconfigurations
 
 ---
 
@@ -208,90 +392,16 @@ r8s completion zsh > "${fpath[1]}/_r8s"
 | 1 | Issues found or incomplete bundle |
 | 2 | Error (invalid args, file not found) |
 
-**CI/CD Example:**
-```yaml
-- name: Validate Bundle
-  run: |
-    r8s validate ./bundle/
-    if [ $? -eq 2 ]; then exit 1; fi
-```
-
 ---
 
-## Installation
+## Troubleshooting
 
-**Requirements:** Go 1.23+
-
-```bash
-# Build from source
-git clone https://github.com/Rancheroo/r8s.git
-cd r8s
-make build
-
-# Binary: ./bin/r8s
-```
-
-**Shell Completion:**
-```bash
-# Bash
-r8s completion bash | sudo tee /etc/bash_completion.d/r8s
-
-# Zsh
-r8s completion zsh > "${fpath[1]}/_r8s"
-```
-
----
-
-## Workflows
-
-### Support Engineer
-```bash
-# 1. Customer sends bundle
-tar -xzf rke2-support-bundle-*.tar.gz
-
-# 2. Quick health check
-r8s validate ./extracted-bundle/
-
-# 3. Find crashed pods
-r8s get pods ./bundle/ | grep -i crash
-
-# 4. Check logs
-r8s logs ./bundle/ problematic-pod --tail=50
-
-# 5. Export for escalation
-r8s export ./bundle/ --format=json > case-12345.json
-```
-
-### CI/CD Pipeline
-```yaml
-- name: Bundle Validation
-  run: |
-    r8s validate ./artifacts/bundle/ --format=json > validation.json
-    completeness=$(jq '.completeness' validation.json)
-    if [ "$completeness" -lt 70 ]; then
-      echo "Bundle only $completeness% complete"
-      exit 1
-    fi
-```
-
-### Automation Script
-```bash
-#!/bin/bash
-BUNDLE="$1"
-
-# Validate
-r8s validate "$BUNDLE"
-if [ $? -eq 2 ]; then exit 1; fi
-
-# Extract critical issues
-r8s analyze "$BUNDLE" --format=json | \
-  jq '.issues[] | select(.severity=="critical")' > critical.json
-
-# Generate AI summary
-if [ -s critical.json ]; then
-  r8s generate prompt "$BUNDLE" > summary.md
-fi
-```
+| Error | Solution |
+|-------|----------|
+| "bundle not found" | Check the path — r8s will show what you tried |
+| "not a directory" | Extract the bundle first: `tar -xzf bundle.tar.gz` |
+| "failed to load bundle" | Point to the extracted folder containing `rke2/` or `k3s/` |
+| "go: command not found" | Install Go 1.23+ or download a pre-built binary |
 
 ---
 
@@ -299,35 +409,9 @@ fi
 
 - **[CLI Reference](docs/USAGE.md)** — Complete command guide
 - **[Bundle Format](docs/BUNDLE-FORMAT.md)** — RKE2/K3s bundle structure
-- **[Troubleshooting](TROUBLESHOOTING.md)** — Common issues
 - **[Architecture](docs/ARCHITECTURE.md)** — Technical design
+- **[Release Notes](docs/releases/v1.2.1.md)** — What's new in v1.2.1
 - **[Contributing](CONTRIBUTING.md)** — Development guide
-
----
-
-## Troubleshooting
-
-| Error | Solution |
-|-------|----------|
-| "not a directory" | Extract bundle: `tar -xzf bundle.tar.gz` |
-| "failed to load bundle" | Point to extracted folder with `rke2/` or `k3s/` dir |
-| "go: command not found" | Install Go 1.23+ or use Docker builder |
-
----
-
-## What Happened to the Dashboard?
-
-**v0.8.0 removed the TUI** (Bubble Tea dashboard). Why?
-
-- **CLI is 80% of the value** — users want kubectl-compatible commands
-- **Scriptability** — can't automate a TUI
-- **Performance** — no startup delay
-- **Simplicity** — faster development, fewer bugs
-
-**Migration:**
-- `r8s dashboard` → `r8s analyze` or `r8s validate`
-- TUI navigation → `r8s get`, `r8s logs`, `r8s describe`
-- Need the old dashboard? Use v0.7.1 or earlier
 
 ---
 
@@ -343,8 +427,11 @@ make test
 # Build
 make build
 
-# Cross-compile
-make build-all
+# Full CI checks (lint + test + coverage)
+make ci
+
+# Development checks (tidy + fmt + vet + lint)
+make dev
 ```
 
 ---
@@ -364,4 +451,4 @@ Apache License 2.0 — See [LICENSE](LICENSE)
 
 **Made with ⚡ for Kubernetes troubleshooters**
 
-[Report Bug](https://github.com/Rancheroo/r8s/issues/new) | [Request Feature](https://github.com/Rancheroo/r8s/issues/new)
+[Report Bug](https://github.com/Rancheroo/r8s/issues/new) | [Request Feature](https://github.com/Rancheroo/r8s/issues/new) | [Releases](https://github.com/Rancheroo/r8s/releases)
