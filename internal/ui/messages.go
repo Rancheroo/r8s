@@ -1,88 +1,84 @@
 package ui
 
-// LoadingMessages returns humorous loading messages for r8s
-// All messages are under 80 characters for terminal friendliness
+// LoadingMessages returns professional loading messages
 var LoadingMessages = []string{
-	"Moo-ving through your logs... 🐄",
-	"Herding container cats... 🐱",
-	"Wrangling pods like a digital cowboy... 🤠",
-	"Rounding up stray goroutines... 🐂",
-	"Putting the 'ranch' in Rancher... 🌾",
-	"Tipping over your log cows... 🐮",
-	"Counting your cattle (and containers)... 🐄",
-	"Milking the kubelet for logs... 🥛",
-	"Shoveling hay in the data barn... 🌾",
-	"Checking the pasture for rogue pods... 🐂",
-	"Moo-tating your Kubernetes state... 🐄",
-	"Bale-ing out excessive log output... 🌾",
-	"Roping in those wild log streams... 🤠",
-	"Churning butter and processing logs... 🧈",
-	"Yeehaw! Loading your cluster data... 🤠",
-	"The cattle are restless... scanning logs... 🐮",
-	"Feeding hay to the hungry logger... 🌾",
-	"Don't have a cow, we're almost done... 🐄",
-	"Moo-ving violations detected in logs... 🚨",
-	"Brand-ing your pods with metadata... 🔥",
-	"Hold your horses (and containers)... 🐴",
-	"Steering through the log corral... 🐂",
-	"Pitchfork-ing relevant log entries... 🍴",
-	"Till-ing through your container soil... 🌱",
-	"Saddle up! We're going log riding... 🤠",
-	"Lowing latency as we load... moo... 🐄",
-	"Corral-ling your container logs... 🐮",
-	"Hay now, don't rush a good thing... 🌾",
-	"Udder-ly fantastic logs coming up... 🥛",
-	"Cattle-log analysis in progress... 🐂",
+	"Analyzing bundle contents...",
+	"Parsing container logs...",
+	"Scanning for error patterns...",
+	"Validating cluster state...",
+	"Checking resource limits...",
+	"Correlating system events...",
+	"Examining control plane health...",
+	"Processing Kubernetes objects...",
+	"Identifying root causes...",
+	"Generating analysis report...",
 }
 
-// RancherFacts returns interesting facts about Rancher and Kubernetes
-var RancherFacts = []string{
-	"Rancher was named after the cattle herding metaphor for managing clusters.",
-	"The Kubernetes logo has 7 spokes, representing the original 7 founders.",
-	"Rancher was founded in 2014 by Shannon Williams, Sheng Liang, and others.",
-	"A Kubernetes 'pod' name comes from the Latin 'pod' meaning seed pod.",
-	"Rancher was acquired by SUSE in December 2020 for $600 million.",
-	"The name Kubernetes comes from Greek, meaning 'helmsman' or 'pilot'.",
-	"RKE2 was designed with security-first principles for government use.",
-	"K3s is lightweight because it replaced etcd with SQLite by default.",
-	"The first commit to Kubernetes was by Joe Beda on June 6, 2014.",
-	"Rancher 1.0 was released in March 2016, before Kubernetes 1.0.",
-	"Containerd was donated to CNCF by Docker in March 2017.",
-	"Helm was originally called 'Helm Classic' and inspired by Homebrew.",
-	"The cattle vs pets analogy was popularized by Bill Baker at Microsoft.",
-}
-
-// SRETips returns professional tips for Site Reliability Engineers
-var SRETips = []string{
-	"Pro tip: Always check CrashLoopBackOff pods' previous logs first.",
-	"Tip: Use 'kubectl get events --sort-by=.lastTimestamp' for timeline.",
-	"Remember: OOMKilled usually means memory limits are too low.",
-	"Pro tip: 'stern' is better than 'kubectl logs -f' for multiple pods.",
-	"Tip: Set resource requests = limits for Guaranteed QoS class.",
-	"Golden rule: Never run kubectl delete without --dry-run=client first.",
-	"Pro tip: Use node affinity to pin critical workloads to specific nodes.",
-	"Remember: Readiness probes control traffic, liveness controls restarts.",
-	"Tip: PodDisruptionBudgets are essential for zero-downtime updates.",
-	"Pro tip: Labels are for querying, annotations are for tooling metadata.",
-	"Remember: ConfigMaps mount as files, Secrets mount as tmpfs by default.",
-	"Tip: Use 'kubectl explain' to learn any resource field quickly.",
-	"Pro tip: NetworkPolicy defaults to DENY all - whitelist explicitly.",
-	"Remember: etcd is the brain - back it up before any major changes.",
-	"Tip: HorizontalPodAutoscaler needs metrics-server to be installed.",
-}
-
-// R8sFacts - Interesting facts about r8s to show during loading
+// R8sFacts contains useful tips for automation and advanced usage
 var R8sFacts = []string{
-	"Did you know? r8s stands for Rancher Support CLI 🎉",
-	"Pro tip: Use --format=json for CI/CD pipelines 📊",
-	"Fun fact: r8s can analyze bundles offline - no cluster access needed! 🔌",
-	"Tip: Use 'r8s ask' to ask natural language questions about your bundle 💬",
-	"Did you know? r8s was born from 200+ real support cases 📚",
-	"Pro tip: Use --severity=critical to focus on urgent issues only 🚨",
-	"Fun fact: The name r8s is pronounced 'rates' like 'she rates highly' 📈",
-	"Tip: Run 'r8s validate' first to check bundle completeness ✅",
-	"Did you know? r8s supports RKE2, K3s, and kubectl bundles 🎯",
-	"Pro tip: Use 'r8s logs <bundle> <pod>' to view pod logs like kubectl 📜",
-	"Fun fact: r8s has analyzed over 10,000 support bundles! 🎊",
-	"Tip: Use --verbose for detailed analysis progress 🐛",
+	// CI/CD & Automation
+	"Use 'r8s export --format=sarif' for CI/CD pipeline integration",
+	"r8s outputs JSON - perfect for automation scripts: r8s analyze bundle/ --format=json | jq '.issues'",
+	"Integrate r8s into your GitHub Actions for automated bundle analysis",
+	"Use r8s in pre-commit hooks to validate cluster state before deployments",
+	"r8s SARIF output integrates with GitHub Advanced Security and other SAST tools",
+	"Automate nightly bundle analysis with cron: r8s analyze /var/log/bundles/ --format=json",
+	"Export to Markdown for inclusion in incident reports: r8s export bundle/ --format=markdown",
+	"Use r8s test-cluster in your deployment pipeline for pre-flight checks",
+	"r8s exit codes (0=healthy, 1=issues, 2=error) enable script automation",
+	"Chain r8s commands: r8s analyze bundle/ && r8s export bundle/ --format=sarif",
+
+	// AI & Natural Language
+	"Ask natural language questions: r8s ask bundle/ 'why is my pod crashing?'",
+	"r8s integrates with Claude Code for AI-powered troubleshooting workflows",
+	"Use r8s ask to get root cause analysis without knowing kubectl commands",
+	"Ask comparative questions: r8s ask bundle/ 'what changed between these events?'",
+	"r8s AI patterns detect issues you might miss in manual log review",
+	"Combine r8s ask with your knowledge base for instant troubleshooting runbooks",
+	"Use r8s ask to onboard new team members - no Kubernetes expertise required",
+	"r8s patterns learn from your bundles - the more you use it, the smarter it gets",
+	"Ask r8s to summarize complex issues: r8s ask bundle/ 'explain the etcd problems'",
+	"Use r8s ask for post-mortems: r8s ask bundle/ 'what caused the outage?'",
+
+	// Familiar Syntax
+	"r8s commands mirror kubectl: get pods, get nodes, logs, describe",
+	"r8s supports familiar output: -o json, -o yaml, -o wide",
+	"Filter by namespace: r8s get pods bundle/ -n cattle-system",
+	"r8s logs works like you'd expect: r8s logs bundle/ pod-name",
+	"Use r8s describe for detailed resource info: r8s describe pod bundle/ nginx",
+	"r8s get nodes shows cluster topology from bundle",
+	"Use labels with r8s get: r8s get pods bundle/ -l app=nginx",
+	"r8s works with standard Unix pipes: r8s analyze bundle/ | grep ERROR",
+	"Create aliases for common tasks: alias r8s-check='r8s test-cluster'",
+	"r8s supports all standard output formats for integration",
+
+	// Debugging & Troubleshooting
+	"r8s test-cluster runs 7 diagnostic checks automatically",
+	"Check bundle completeness: r8s validate bundle/ (should be >90%)",
+	"Look for patterns: r8s analyze bundle/ | grep -i 'crash\\|oom\\|error'",
+	"Use r8s offline - analyze production issues without cluster access",
+	"r8s detects OOM kills, crash loops, image pull failures automatically",
+	"Compare bundles: analyze old/ and new/ to spot what changed",
+	"r8s finds issues in etcd, networking, storage, and workloads",
+	"Use r8s validate to ensure complete bundle collection",
+	"r8s patterns identify root causes, not just symptoms",
+	"Export analysis for team review: r8s export bundle/ --format=markdown",
+
+	// Swiss Army Knife Features
+	"r8s is your Swiss Army knife for Rancher log automation",
+	"One tool for analysis, export, querying, and validation",
+	"r8s works with RKE2, K3s, and standard Kubernetes bundles",
+	"Use r8s in air-gapped environments - no internet required",
+	"r8s bundles can be archived for compliance and auditing",
+	"Share r8s analysis: export to Markdown and attach to tickets",
+	"r8s supports both interactive and scripted workflows",
+	"Master r8s once, use it for any Kubernetes distribution",
+	"r8s scales from single-node to multi-cluster analysis",
+	"The complete toolkit: analyze, ask, export, get, logs, validate, test-cluster",
 }
+
+// RancherFacts - Empty to prefer R8sFacts
+var RancherFacts = []string{}
+
+// SRETips - Empty to prefer R8sFacts
+var SRETips = []string{}
