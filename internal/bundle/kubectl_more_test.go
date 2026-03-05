@@ -223,7 +223,7 @@ longhorn-system   longhorn     longhorn-1.5.3  v1.5.3     deployed   3d
 
 func TestParseKubectlAge(t *testing.T) {
 	now := time.Now()
-	
+
 	tests := []struct {
 		input       string
 		expectedMin time.Duration
@@ -238,9 +238,9 @@ func TestParseKubectlAge(t *testing.T) {
 	for _, tc := range tests {
 		result := parseKubectlAge(tc.input)
 		age := now.Sub(result)
-		
+
 		if age < tc.expectedMin || age > tc.expectedMax {
-			t.Errorf("parseKubectlAge(%q) age %v outside expected range %v-%v", 
+			t.Errorf("parseKubectlAge(%q) age %v outside expected range %v-%v",
 				tc.input, age, tc.expectedMin, tc.expectedMax)
 		}
 	}

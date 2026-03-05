@@ -14,11 +14,11 @@ import (
 func TestValidFormats(t *testing.T) {
 	formats := ValidFormats()
 	expected := []string{"table", "json", "yaml", "wide", "name"}
-	
+
 	if len(formats) != len(expected) {
 		t.Errorf("ValidFormats() returned %d formats, expected %d", len(formats), len(expected))
 	}
-	
+
 	for i, f := range expected {
 		if i >= len(formats) || formats[i] != f {
 			t.Errorf("ValidFormats()[%d] = %s, expected %s", i, formats[i], f)
@@ -392,7 +392,7 @@ func TestOutputPodsYAMLStructure(t *testing.T) {
 	}
 
 	output, _ := io.ReadAll(r)
-	
+
 	// Verify YAML contains expected fields
 	outputStr := string(output)
 	expectedFields := []string{"namespace:", "name:", "ready:", "status:", "restarts:", "age:"}

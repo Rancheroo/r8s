@@ -9,13 +9,13 @@ import (
 
 // AnalysisResult represents the complete analysis of a bundle
 type AnalysisResult struct {
-	StartTime    time.Time       // When analysis started
-	EndTime      time.Time       // When analysis completed
-	Duration     time.Duration   // Analysis duration
-	Patterns     []MatchResultV2 // All pattern matches
-	Hints        []*Hint         // Generated hints
+	StartTime    time.Time          // When analysis started
+	EndTime      time.Time          // When analysis completed
+	Duration     time.Duration      // Analysis duration
+	Patterns     []MatchResultV2    // All pattern matches
+	Hints        []*Hint            // Generated hints
 	Correlations []CorrelationMatch // Detected correlations
-	Summary      AnalysisSummary // High-level summary
+	Summary      AnalysisSummary    // High-level summary
 }
 
 // CorrelationMatch represents a detected correlation between patterns
@@ -27,19 +27,19 @@ type CorrelationMatch struct {
 
 // AnalysisSummary provides high-level statistics
 type AnalysisSummary struct {
-	TotalPatterns   int // Total patterns analyzed
-	MatchesFound    int // Number of pattern matches
-	CriticalIssues  int // Critical severity matches
-	WarningIssues   int // Warning severity matches
-	InfoIssues      int // Info severity matches
-	Correlations    int // Number of correlations detected
+	TotalPatterns  int // Total patterns analyzed
+	MatchesFound   int // Number of pattern matches
+	CriticalIssues int // Critical severity matches
+	WarningIssues  int // Warning severity matches
+	InfoIssues     int // Info severity matches
+	Correlations   int // Number of correlations detected
 }
 
 // Analyzer orchestrates pattern matching and hint generation
 type Analyzer struct {
-	registry   *PatternRegistryV2
-	generator  *HintGeneratorV2
-	formatter  *HintFormatter
+	registry  *PatternRegistryV2
+	generator *HintGeneratorV2
+	formatter *HintFormatter
 }
 
 // NewAnalyzer creates a new analysis engine
@@ -62,10 +62,10 @@ func (a *Analyzer) Analyze(content string, opts AnalysisOptions) (*AnalysisResul
 	hints := a.generator.GenerateAll(matches, a.registry)
 
 	// Detect correlations
-	correlations := a.detectCorrelations(matches)
+	correlations := DetectCorrelations(matches, a.registry)
 
 	// Build summary
-	summary := a.buildSummary(matches, correlations)
+	summary := BuildSummary(matches, correlations, a.registry)
 
 	endTime := time.Now()
 
@@ -84,10 +84,10 @@ func (a *Analyzer) Analyze(content string, opts AnalysisOptions) (*AnalysisResul
 
 // AnalysisOptions provides options for analysis
 type AnalysisOptions struct {
-	MinSeverity  Severity // Minimum severity to include
+	MinSeverity   Severity   // Minimum severity to include
 	MinConfidence Confidence // Minimum confidence level
-	MaxHints     int      // Maximum hints to generate (0 = no limit)
-	IncludeInfo  bool     // Include info-level patterns
+	MaxHints      int        // Maximum hints to generate (0 = no limit)
+	IncludeInfo   bool       // Include info-level patterns
 }
 
 // FilteredAnalyze analyzes with options and filtering
@@ -100,7 +100,7 @@ func (a *Analyzer) FilteredAnalyze(content string, opts AnalysisOptions) (*Analy
 	// Filter patterns by severity
 	var filteredPatterns []MatchResultV2
 	for _, match := range result.Patterns {
-		if a.shouldInclude(match, opts) {
+		if ShouldIncludeMatch(match, opts) {
 			filteredPatterns = append(filteredPatterns, match)
 		}
 	}
@@ -112,7 +112,7 @@ func (a *Analyzer) FilteredAnalyze(content string, opts AnalysisOptions) (*Analy
 	// Filter hints by severity too
 	var filteredHints []*Hint
 	for _, hint := range result.Hints {
-		if a.shouldIncludeHint(hint, opts) {
+		if ShouldIncludeHint(hint, opts) {
 			filteredHints = append(filteredHints, hint)
 		}
 	}
@@ -124,119 +124,9 @@ func (a *Analyzer) FilteredAnalyze(content string, opts AnalysisOptions) (*Analy
 	}
 
 	// Rebuild summary with filtered results
-	result.Summary = a.buildSummary(filteredPatterns, result.Correlations)
+	result.Summary = BuildSummary(filteredPatterns, result.Correlations, a.registry)
 
 	return result, nil
-}
-
-// shouldInclude determines if a match should be included based on options
-func (a *Analyzer) shouldInclude(match MatchResultV2, opts AnalysisOptions) bool {
-	// Check severity
-	if !opts.IncludeInfo && match.Severity == SeverityInfo {
-		return false
-	}
-
-	// Check confidence
-	if match.Confidence == ConfidencePossible && opts.MinConfidence != "" {
-		if opts.MinConfidence == ConfidenceCertain || opts.MinConfidence == ConfidenceLikely {
-			return false
-		}
-	}
-	if match.Confidence == ConfidenceLikely && opts.MinConfidence == ConfidenceCertain {
-		return false
-	}
-
-	// Check minimum severity
-	if opts.MinSeverity != "" {
-		severityOrder := map[Severity]int{
-			SeverityInfo:     0,
-			SeverityWarning:  1,
-			SeverityCritical: 2,
-		}
-		if severityOrder[match.Severity] < severityOrder[opts.MinSeverity] {
-			return false
-		}
-	}
-
-	return true
-}
-
-// shouldIncludeHint determines if a hint should be included
-func (a *Analyzer) shouldIncludeHint(hint *Hint, opts AnalysisOptions) bool {
-	if !opts.IncludeInfo && hint.Severity == SeverityInfo {
-		return false
-	}
-
-	if opts.MinSeverity != "" {
-		severityOrder := map[Severity]int{
-			SeverityInfo:     0,
-			SeverityWarning:  1,
-			SeverityCritical: 2,
-		}
-		if severityOrder[hint.Severity] < severityOrder[opts.MinSeverity] {
-			return false
-		}
-	}
-
-	return true
-}
-
-// detectCorrelations finds all correlations between matched patterns
-func (a *Analyzer) detectCorrelations(matches []MatchResultV2) []CorrelationMatch {
-	var correlations []CorrelationMatch
-	matchedIDs := make(map[string]bool)
-
-	// Build set of matched IDs
-	for _, match := range matches {
-		matchedIDs[match.PatternID] = true
-	}
-
-	// Find correlations
-	for _, match := range matches {
-		pattern, found := a.registry.GetByID(match.PatternID)
-		if !found {
-			continue
-		}
-
-		for _, corr := range pattern.Correlations {
-			if matchedIDs[corr.PatternID] {
-				// Both patterns matched - this is a real correlation
-				correlations = append(correlations, CorrelationMatch{
-					PatternID1: match.PatternID,
-					PatternID2: corr.PatternID,
-					Message:    corr.Message,
-				})
-			}
-		}
-	}
-
-	return correlations
-}
-
-// buildSummary creates analysis summary statistics
-func (a *Analyzer) buildSummary(matches []MatchResultV2, correlations []CorrelationMatch) AnalysisSummary {
-	summary := AnalysisSummary{
-		TotalPatterns: len(a.registry.GetAll()),
-		MatchesFound:  0,
-		Correlations:  len(correlations),
-	}
-
-	for _, match := range matches {
-		if !match.Matched {
-			continue
-		}
-		summary.MatchesFound++
-		switch match.Severity {
-		case SeverityCritical:
-			summary.CriticalIssues++
-		case SeverityWarning:
-			summary.WarningIssues++
-		case SeverityInfo:
-			summary.InfoIssues++
-		}
-	}
-
-	return summary
 }
 
 // FormatResults formats analysis results as human-readable string
@@ -319,11 +209,11 @@ func (a *Analyzer) AnalyzeMultiple(contents map[string]string, opts AnalysisOpti
 
 // PatternStats provides statistics about pattern usage
 type PatternStats struct {
-	PatternID    string
-	Name         string
-	Category     string
-	MatchCount   int
-	HintCount    int
+	PatternID     string
+	Name          string
+	Category      string
+	MatchCount    int
+	HintCount     int
 	AvgConfidence Confidence
 }
 

@@ -12,6 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 // describeCmd represents the describe command
@@ -40,7 +42,6 @@ EXAMPLES:
 
 Supported kinds: pod, pods, node, nodes, deployment, deployments, 
 service, services, configmap, configmaps, event, events`,
-	Args: cobra.RangeArgs(2, 3),
 	RunE: runDescribe,
 }
 
@@ -59,13 +60,17 @@ func init() {
 }
 
 func runDescribe(cmd *cobra.Command, args []string) error {
+	if len(args) < 2 {
+		ui.ShowCmdUsage("describe", "r8s describe [kind] [bundle-path] [name]", cmd.Long)
+		return &ExitCodeError{Code: ExitError, Message: "invalid arguments for describe"}
+	}
 	// Parse arguments
 	kind, bundlePath, name := parseDescribeArgs(args)
 
 	// Validate bundle
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
+			ui.ShowBundleNotFoundError(bundlePath)
 			os.Exit(ExitError)
 			return nil
 		}
@@ -113,7 +118,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 
 // parseDescribeArgs handles flexible argument order
 func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
-	if len(args) == 2 {
+	if len(args) == 2 && !isKnownKind(args[0]) {
 		// Format: describe ./bundle/ name (auto-detect kind)
 		bundlePath = args[0]
 		name = args[1]
@@ -128,9 +133,35 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 			name = args[2]
 		} else {
 			// Format: describe kind ./bundle/ name
+			// OR: describe kind name ./bundle/
+			kind = strings.ToLower(args[0])
+			
+			// Check if args[1] looks like a path
+			if strings.Contains(args[1], "/") || strings.Contains(args[1], "\\") || isDir(args[1]) {
+				bundlePath = args[1]
+				name = args[2]
+			} else {
+				// Assume args[2] is the path (swapped order)
+				name = args[1]
+				bundlePath = args[2]
+			}
+		}
+	} else if len(args) == 2 {
+		// Format: describe kind bundle (missing name)
+		// OR: describe bundle name (auto-detect kind)
+		
+		// If args[0] is a known kind
+		if isKnownKind(args[0]) {
+			// Format: describe kind bundle
+			// This is missing 'name', but maybe user wants list?
+			// For now, treat as kind + bundle, name=""
 			kind = strings.ToLower(args[0])
 			bundlePath = args[1]
-			name = args[2]
+			name = ""
+		} else {
+			// Format: describe bundle name (auto-detect kind)
+			bundlePath = args[0]
+			name = args[1]
 		}
 	}
 
@@ -153,6 +184,24 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 	return
 }
 
+func isKnownKind(k string) bool {
+	switch strings.ToLower(k) {
+	case "pod", "pods", "node", "nodes", "deployment", "deployments",
+		"service", "services", "configmap", "configmaps", "event", "events":
+		return true
+	}
+	return false
+}
+
+// isDir checks if a path is a directory
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
+}
+
 // ResourceInfo holds parsed resource data
 type ResourceInfo struct {
 	Kind       string                 `json:"kind" yaml:"kind"`
@@ -171,23 +220,63 @@ func findResources(bundlePath, kind, name, namespace, selector string) ([]Resour
 	// Map of kind to file patterns (kubectl describe output)
 	// Note: describe files have "describe" suffix (e.g., podsdescribe, nodesdescribe)
 	kindPatterns := map[string][]string{
-		"pod":        {"rke2/kubectl/podsdescribe", "kubectl/podsdescribe", "rke2/kubectl/pods", "kubectl/pods"},
-		"node":       {"rke2/kubectl/nodesdescribe", "kubectl/nodesdescribe", "rke2/kubectl/nodes", "kubectl/nodes"},
-		"deployment": {"rke2/kubectl/deploymentsdescribe", "kubectl/deploymentsdescribe", "rke2/kubectl/deployments", "kubectl/deployments"},
-		"service":    {"rke2/kubectl/servicesdescribe", "kubectl/servicesdescribe", "rke2/kubectl/services", "kubectl/services"},
-		"configmap":  {"rke2/kubectl/configmapsdescribe", "kubectl/configmapsdescribe", "rke2/kubectl/configmaps", "kubectl/configmaps"},
-		"event":      {"rke2/kubectl/eventsdescribe", "kubectl/eventsdescribe", "rke2/kubectl/events", "kubectl/events"},
+		"pod": {
+			"rke2/kubectl/podsdescribe", 
+			"kubectl/podsdescribe", 
+			"rke2/kubectl/pods", 
+			"kubectl/pods",
+			"rke2/kubectl/poddescribe/*", 
+			"kubectl/poddescribe/*",
+		},
+		"node": {
+			"rke2/kubectl/nodesdescribe", 
+			"kubectl/nodesdescribe", 
+			"rke2/kubectl/nodes", 
+			"kubectl/nodes",
+		},
+		"deployment": {
+			"rke2/kubectl/deploymentsdescribe", 
+			"kubectl/deploymentsdescribe", 
+			"rke2/kubectl/deployments", 
+			"kubectl/deployments",
+		},
+		"service": {
+			"rke2/kubectl/servicesdescribe", 
+			"kubectl/servicesdescribe", 
+			"rke2/kubectl/services", 
+			"kubectl/services",
+		},
+		"configmap": {
+			"rke2/kubectl/configmapsdescribe", 
+			"kubectl/configmapsdescribe", 
+			"rke2/kubectl/configmaps", 
+			"kubectl/configmaps",
+		},
+		"event": {
+			"rke2/kubectl/eventsdescribe", 
+			"kubectl/eventsdescribe", 
+			"rke2/kubectl/events", 
+			"kubectl/events",
+		},
 	}
 
 	// If specific kind requested, search only that
 	if kind != "" {
 		patterns := kindPatterns[kind]
 		for _, pattern := range patterns {
-			file := filepath.Join(bundlePath, pattern)
-			if _, err := os.Stat(file); err == nil {
-				rs, err := parseResourceFile(file, kind, name, namespace, selector)
-				if err == nil {
-					resources = append(resources, rs...)
+			// Support glob patterns
+			fullPattern := filepath.Join(bundlePath, pattern)
+			matches, err := filepath.Glob(fullPattern)
+			if err != nil {
+				continue
+			}
+
+			for _, file := range matches {
+				if _, err := os.Stat(file); err == nil {
+					rs, err := parseResourceFile(file, kind, name, namespace, selector)
+					if err == nil {
+						resources = append(resources, rs...)
+					}
 				}
 			}
 		}

@@ -12,6 +12,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 // logsCmd represents the logs command
@@ -40,7 +42,6 @@ EXAMPLES:
 
   # Show last N lines
   r8s logs ./bundle/ --tail=100`,
-	Args: cobra.RangeArgs(1, 2),
 	RunE: runLogs,
 }
 
@@ -64,26 +65,42 @@ func init() {
 
 // LogEntry represents a single log line with metadata
 type LogEntry struct {
-	Timestamp   time.Time
-	PodName     string
-	Namespace   string
-	Container   string
-	Message     string
-	HasError    bool
-	HasWarning  bool
+	Timestamp  time.Time
+	PodName    string
+	Namespace  string
+	Container  string
+	Message    string
+	HasError   bool
+	HasWarning bool
 }
 
 func runLogs(cmd *cobra.Command, args []string) error {
-	bundlePath := args[0]
-	podFilter := ""
-	if len(args) > 1 {
-		podFilter = args[1]
+	if len(args) == 0 {
+		ui.ShowCmdUsage("logs", "r8s logs [bundle-path] [pod-name]", cmd.Long)
+		return nil
+	}
+	var bundlePath, podFilter string
+
+	if len(args) == 1 {
+		bundlePath = args[0]
+	} else if len(args) >= 2 {
+		// Check if first arg is a path
+		if strings.Contains(args[0], "/") || strings.Contains(args[0], "\\") || isDir(args[0]) {
+			bundlePath = args[0]
+			podFilter = args[1]
+		} else {
+			// Assume args[1] is the path (swapped order)
+			podFilter = args[0]
+			bundlePath = args[1]
+		}
+	} else {
+		return fmt.Errorf("bundle path required")
 	}
 
 	// Validate bundle exists
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
+			ui.ShowBundleNotFoundError(bundlePath)
 			os.Exit(ExitError)
 			return nil
 		}
@@ -149,13 +166,13 @@ func findLogFiles(bundlePath, namespaceFilter, podFilter string) ([]string, erro
 		filename := info.Name()
 		ext := filepath.Ext(filename)
 		base := strings.TrimSuffix(filename, ext)
-		
+
 		// Extract namespace and pod from path structure if possible
 		relPath, _ := filepath.Rel(podlogsDir, path)
 		dirParts := strings.Split(relPath, string(filepath.Separator))
-		
+
 		var ns, pod string
-		
+
 		if len(dirParts) >= 2 {
 			// Path structure: namespace/podname.log
 			ns = dirParts[0]
@@ -167,7 +184,7 @@ func findLogFiles(bundlePath, namespaceFilter, podFilter string) ([]string, erro
 			if len(parts) < 2 {
 				parts = strings.Split(base, "-")
 			}
-			
+
 			if len(parts) >= 2 {
 				ns = parts[0]
 				pod = strings.Join(parts[1:], "-")
@@ -243,14 +260,14 @@ func outputLogFile(path string, isFollowing bool) error {
 	filename := filepath.Base(path)
 	ext := filepath.Ext(filename)
 	base := strings.TrimSuffix(filename, ext)
-	
+
 	// Try to extract from directory structure first
 	dir := filepath.Dir(path)
 	parentDir := filepath.Base(dir)
 	grandparentDir := filepath.Base(filepath.Dir(dir))
-	
+
 	var namespace, pod, container string
-	
+
 	// Check if path has namespace/pod structure
 	if grandparentDir == "podlogs" || parentDir == "podlogs" {
 		// Try to parse from filename
@@ -258,7 +275,7 @@ func outputLogFile(path string, isFollowing bool) error {
 		if len(parts) < 2 {
 			parts = strings.Split(base, "-")
 		}
-		
+
 		if len(parts) >= 3 {
 			// Assume format: namespace-pod-container
 			namespace = parts[0]

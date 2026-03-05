@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Rancheroo/r8s/internal/bundle"
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 // getCmd represents the get command
@@ -46,15 +47,14 @@ OUTPUT FORMATS:
   json   - JSON for piping to jq
   yaml   - YAML output
   wide   - Extra columns like kubectl wide`,
-	Args: cobra.RangeArgs(1, 2),
 	RunE: runGet,
 }
 
 var (
-	getOutput       string // Output format: table, json, yaml, wide
-	getNamespace    string // Filter by namespace (-n)
-	getAllNamespaces bool  // Show all namespaces (-A)
-	getSelector     string // Label selector (-l)
+	getOutput        string // Output format: table, json, yaml, wide
+	getNamespace     string // Filter by namespace (-n)
+	getAllNamespaces bool   // Show all namespaces (-A)
+	getSelector      string // Label selector (-l)
 )
 
 func init() {
@@ -68,26 +68,33 @@ func init() {
 
 // runGet executes the get command
 func runGet(cmd *cobra.Command, args []string) error {
-	resource := strings.ToLower(args[0])
+	if len(args) == 0 {
+		ui.ShowCmdUsage("get", "r8s get [resource] [bundle-path]", cmd.Long)
+		return nil
+	}
+	var resource, bundlePath string
+
+	// Handle flexible argument order
+	if len(args) >= 2 {
+		// Check if first arg is a path
+		if strings.Contains(args[0], "/") || strings.Contains(args[0], "\\") || isDir(args[0]) {
+			bundlePath = args[0]
+			resource = strings.ToLower(args[1])
+		} else {
+			// Assume standard order: get resource bundle
+			resource = strings.ToLower(args[0])
+			bundlePath = args[1]
+		}
+	} else {
+		return fmt.Errorf("bundle path required: r8s get [resource] [bundle-path]")
+	}
 	
 	// Validate output format
-	validFormats := map[string]bool{"table": true, "json": true, "yaml": true, "wide": true, "name": true}
-	if !validFormats[getOutput] {
-		return fmt.Errorf("invalid output format: %q (supported: table, json, yaml, wide, name)", getOutput)
-	}
-	
-	// Determine bundle path
-	var bundlePath string
-	if len(args) > 1 {
-		bundlePath = args[1]
-	} else {
-		return fmt.Errorf("bundle path required: r8s get %s [bundle-path]", resource)
-	}
 
 	// Pre-validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
+			ui.ShowBundleNotFoundError(bundlePath)
 			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
 		}
 		return err
@@ -119,6 +126,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	}
 }
 
+
 // loadBundle loads a bundle from path
 func loadBundle(path string) (*bundle.Bundle, error) {
 	// Use existing load logic
@@ -126,16 +134,16 @@ func loadBundle(path string) (*bundle.Bundle, error) {
 		Path:    path,
 		Verbose: verbose,
 	}
-	
+
 	b, err := bundle.Load(importOpts)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if !b.Loaded {
 		return nil, fmt.Errorf("bundle failed to load")
 	}
-	
+
 	return b, nil
 }
 
@@ -144,19 +152,19 @@ func loadBundle(path string) (*bundle.Bundle, error) {
 // ============================================
 
 type PodRow struct {
-	Namespace   string `json:"namespace"`
-	Name        string `json:"name"`
-	Ready       string `json:"ready"`
-	Status      string `json:"status"`
-	Restarts    int    `json:"restarts"`
-	Age         string `json:"age"`
-	Node        string `json:"node,omitempty"`
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Ready     string `json:"ready"`
+	Status    string `json:"status"`
+	Restarts  int    `json:"restarts"`
+	Age       string `json:"age"`
+	Node      string `json:"node,omitempty"`
 }
 
 func getPods(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 	// Collect pods
 	pods := []PodRow{}
-	
+
 	for _, pod := range b.Pods {
 		// Filter by namespace
 		if namespace != "" && pod.Namespace != namespace {
@@ -166,24 +174,24 @@ func getPods(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 			// If no namespace specified, show interesting namespaces
 			// Actually, show all for now
 		}
-		
+
 		// Determine status (simplified - would need yaml parsing for real status)
 		status := "Unknown"
 		if pod.HasCurrentLogs {
 			status = "Running"
 		}
-		
+
 		pods = append(pods, PodRow{
 			Namespace: pod.Namespace,
 			Name:      pod.Name,
 			Ready:     fmt.Sprintf("%d/%d", len(pod.Containers), len(pod.Containers)),
 			Status:    status,
-			Restarts:  0, // Would need to parse from yaml
+			Restarts:  0,   // Would need to parse from yaml
 			Age:       "-", // Would need timestamp from yaml
 			Node:      b.Manifest.NodeName,
 		})
 	}
-	
+
 	// Sort by namespace, then name
 	sort.Slice(pods, func(i, j int) bool {
 		if pods[i].Namespace != pods[j].Namespace {
@@ -191,7 +199,7 @@ func getPods(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 		}
 		return pods[i].Name < pods[j].Name
 	})
-	
+
 	// Output
 	switch getOutput {
 	case "json":
@@ -210,13 +218,13 @@ func getPods(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 func outputPodsTable(pods []PodRow, showNamespace bool) error {
 	const padding = 4
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
-	
+
 	if showNamespace {
 		fmt.Fprintln(w, "NAMESPACE\tNAME\tREADY\tSTATUS\tRESTARTS\tAGE")
 	} else {
 		fmt.Fprintln(w, "NAME\tREADY\tSTATUS\tRESTARTS\tAGE")
 	}
-	
+
 	for _, pod := range pods {
 		if showNamespace {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%s\n",
@@ -226,7 +234,7 @@ func outputPodsTable(pods []PodRow, showNamespace bool) error {
 				pod.Name, pod.Ready, pod.Status, pod.Restarts, pod.Age)
 		}
 	}
-	
+
 	w.Flush()
 	fmt.Printf("\n%d pods found\n", len(pods))
 	return nil
@@ -235,14 +243,14 @@ func outputPodsTable(pods []PodRow, showNamespace bool) error {
 func outputPodsWide(pods []PodRow) error {
 	const padding = 4
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
-	
+
 	fmt.Fprintln(w, "NAMESPACE\tNAME\tREADY\tSTATUS\tRESTARTS\tAGE\tNODE")
-	
+
 	for _, pod := range pods {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%s\t%s\n",
 			pod.Namespace, pod.Name, pod.Ready, pod.Status, pod.Restarts, pod.Age, pod.Node)
 	}
-	
+
 	w.Flush()
 	return nil
 }
@@ -261,7 +269,7 @@ type NodeRow struct {
 func getNodes(b *bundle.Bundle) error {
 	// Bundle only has one node's data (the node it was collected from)
 	// For future: support multi-node bundles
-	
+
 	nodes := []NodeRow{
 		{
 			Name:    b.Manifest.NodeName,
@@ -270,7 +278,7 @@ func getNodes(b *bundle.Bundle) error {
 			OS:      "-", // Could parse from node yaml
 		},
 	}
-	
+
 	switch getOutput {
 	case "json":
 		return outputGetJSON(nodes)
@@ -284,14 +292,14 @@ func getNodes(b *bundle.Bundle) error {
 func outputNodesTable(nodes []NodeRow) error {
 	const padding = 4
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
-	
+
 	fmt.Fprintln(w, "NAME\tSTATUS\tVERSION\tOS-IMAGE")
-	
+
 	for _, node := range nodes {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 			node.Name, node.Status, node.Version, node.OS)
 	}
-	
+
 	w.Flush()
 	return nil
 }
@@ -312,7 +320,7 @@ func getNamespaces(b *bundle.Bundle) error {
 	for _, pod := range b.Pods {
 		namespaceMap[pod.Namespace] = true
 	}
-	
+
 	namespaces := []NamespaceRow{}
 	for ns := range namespaceMap {
 		namespaces = append(namespaces, NamespaceRow{
@@ -321,11 +329,11 @@ func getNamespaces(b *bundle.Bundle) error {
 			Age:    "-",
 		})
 	}
-	
+
 	sort.Slice(namespaces, func(i, j int) bool {
 		return namespaces[i].Name < namespaces[j].Name
 	})
-	
+
 	switch getOutput {
 	case "json":
 		return outputGetJSON(namespaces)
@@ -339,13 +347,13 @@ func getNamespaces(b *bundle.Bundle) error {
 func outputNamespacesTable(namespaces []NamespaceRow) error {
 	const padding = 4
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
-	
+
 	fmt.Fprintln(w, "NAME\tSTATUS\tAGE")
-	
+
 	for _, ns := range namespaces {
 		fmt.Fprintf(w, "%s\t%s\t%s\n", ns.Name, ns.Status, ns.Age)
 	}
-	
+
 	w.Flush()
 	return nil
 }
@@ -375,13 +383,13 @@ func getServices(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 // ============================================
 
 type EventRow struct {
-	Namespace   string `json:"namespace"`
-	Type        string `json:"type"`
-	Reason      string `json:"reason"`
-	Message     string `json:"message"`
-	Source      string `json:"source"`
-	Count       int    `json:"count"`
-	Age         string `json:"age"`
+	Namespace string `json:"namespace"`
+	Type      string `json:"type"`
+	Reason    string `json:"reason"`
+	Message   string `json:"message"`
+	Source    string `json:"source"`
+	Count     int    `json:"count"`
+	Age       string `json:"age"`
 }
 
 func getEvents(b *bundle.Bundle, namespace string, allNamespaces bool) error {
@@ -422,4 +430,3 @@ func outputNames(data interface{}) error {
 	}
 	return nil
 }
-

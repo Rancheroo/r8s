@@ -9,6 +9,7 @@ import (
 	"github.com/Rancheroo/r8s/internal/ai"
 )
 
+// TestIsLikelyQuestion verifies the heuristic for detecting natural language questions.
 func TestIsLikelyQuestion(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -43,6 +44,7 @@ func TestIsLikelyQuestion(t *testing.T) {
 	}
 }
 
+// TestIsLikelyPath verifies the heuristic for detecting file paths.
 func TestIsLikelyPath(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -70,6 +72,7 @@ func TestIsLikelyPath(t *testing.T) {
 	}
 }
 
+// TestParseQueryIntent verifies that natural language queries are correctly parsed into structured intents.
 func TestParseQueryIntent(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -131,6 +134,7 @@ func TestParseQueryIntent(t *testing.T) {
 	}
 }
 
+// TestFormatNoResultsResponse verifies the output format when no issues are found.
 func TestFormatNoResultsResponse(t *testing.T) {
 	intent := QueryIntent{
 		Type:      "why",
@@ -141,14 +145,21 @@ func TestFormatNoResultsResponse(t *testing.T) {
 	response := formatNoResultsResponse(intent)
 
 	// Check that response contains expected elements
-	if !strings.Contains(response, "No crashing issues found") {
-		t.Error("response should mention no issues found")
+	if !strings.Contains(response, "crashing") {
+		t.Error("response should mention condition (crashing)")
+	}
+	if !strings.Contains(response, "pod") {
+		t.Error("response should mention resource (pod)")
+	}
+	if !strings.Contains(response, "No") {
+		t.Error("response should mention No issues found")
 	}
 	if !strings.Contains(response, "r8s analyze") {
 		t.Error("response should suggest using r8s analyze")
 	}
 }
 
+// TestFormatUnknownResponse verifies the help message returned for unknown queries.
 func TestFormatUnknownResponse(t *testing.T) {
 	response := formatUnknownResponse()
 
@@ -164,6 +175,7 @@ func TestFormatUnknownResponse(t *testing.T) {
 	}
 }
 
+// TestMatchesIntent verifies the logic for matching AI hints against query intents.
 func TestMatchesIntent(t *testing.T) {
 	// Create a test hint
 	hint := &ai.Hint{
@@ -205,7 +217,7 @@ func TestMatchesIntent(t *testing.T) {
 	}
 }
 
-// Test response formatters produce non-empty output
+// TestResponseFormatters ensures that all response formatting functions produce non-empty output.
 func TestResponseFormatters(t *testing.T) {
 	hints := []*ai.Hint{
 		{

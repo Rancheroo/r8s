@@ -10,7 +10,7 @@ import (
 // Bundle: /home/bradmin/Downloads/logBundles/r8s-cp-wlp7h-lhvgq-2026-03-03_03_49_04/
 func TestIntegration_NewBundleFormat(t *testing.T) {
 	bundlePath := "/home/bradmin/Downloads/logBundles/r8s-cp-wlp7h-lhvgq-2026-03-03_03_49_04"
-	
+
 	// Skip if bundle doesn't exist (CI environment)
 	if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
 		t.Skip("New format bundle not available for integration test")

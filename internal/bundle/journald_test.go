@@ -9,7 +9,7 @@ import (
 
 func TestParseJournald(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create systemlogs directory structure
 	systemlogsDir := filepath.Join(tmpDir, "systemlogs")
 	if err := os.MkdirAll(systemlogsDir, 0755); err != nil {
@@ -84,7 +84,7 @@ Jan 01 10:01:00 node1 rke2-server[1234]: I0101 10:01:00.000000 1234 server.go:1]
 	}
 
 	events, _ := ParseJournald(tmpDir)
-	
+
 	if events.HasIssues() {
 		t.Error("Expected no issues, but HasIssues() returned true")
 	}

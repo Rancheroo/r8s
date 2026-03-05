@@ -7,6 +7,7 @@ Complete command-line reference for r8s (Rancheroos).
 - [Global Flags](#global-flags)
 - [Commands](#commands)
   - [r8s (root)](#r8s-root)
+  - [r8s ask](#r8s-ask)
   - [r8s tui](#r8s-tui)
   - [r8s config](#r8s-config)
   - [r8s version](#r8s-version)
@@ -85,6 +86,35 @@ r8s /tmp/support-bundles/bundle-001/
 - Auto-detects bundle vs live mode
 - No need to remember `tui` subcommand
 - Matches user mental model: "analyze this thing"
+
+---
+
+## r8s ask
+
+Ask natural language questions about your bundle. This uses an AI-driven pattern engine to find issues and explain root causes.
+
+### Synopsis
+```bash
+r8s ask [bundle-path] [question]
+```
+
+### Examples
+```bash
+# Root Cause Analysis
+r8s ask ./bundle/ "why is nginx-pod crashing?"
+r8s ask ./bundle/ "what caused the outage?"
+
+# Issue Discovery
+r8s ask ./bundle/ "show me imagepullbackoff issues"
+r8s ask ./bundle/ "which certificates are expired?"
+
+# Resource Status
+r8s ask ./bundle/ "which nodes are not ready?"
+r8s ask ./bundle/ "which pods are running?"
+r8s ask ./bundle/ "what is wrong with worker-1?"
+```
+
+**Note:** Queries for "running" or "ready" states use strict checking against cluster data, while issue queries use the AI pattern engine.
 
 ---
 

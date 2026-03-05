@@ -12,30 +12,30 @@ import (
 type Confidence string
 
 const (
-	ConfidenceCertain Confidence = "certain" // Direct evidence, unambiguous
-	ConfidenceLikely  Confidence = "likely"  // Strong evidence, minor ambiguity
+	ConfidenceCertain  Confidence = "certain"  // Direct evidence, unambiguous
+	ConfidenceLikely   Confidence = "likely"   // Strong evidence, minor ambiguity
 	ConfidencePossible Confidence = "possible" // Some evidence, needs verification
 )
 
 // PatternV2 represents a detection pattern with confidence and correlation support
 // Sprint 11: Enhanced pattern schema for AI Intelligence
 type PatternV2 struct {
-	ID             string        `yaml:"id"`             // Unique identifier
-	Name           string        `yaml:"name"`           // Human-readable name
-	Category       string        `yaml:"category"`       // e.g., "OOM", "ImagePull", "etcd"
-	Severity       Severity      `yaml:"severity"`       // Critical, Warning, Info
-	Confidence     Confidence    `yaml:"confidence"`     // Certain, Likely, Possible
-	Matchers       []Matcher     `yaml:"matchers"`       // Match criteria
-	Correlations   []Correlation `yaml:"correlations"`   // Related patterns
-	HintGenerator  HintGenerator `yaml:"hint_generator"` // Root cause hint template
-	Description    string        `yaml:"description"`    // What this pattern detects
+	ID            string        `yaml:"id"`             // Unique identifier
+	Name          string        `yaml:"name"`           // Human-readable name
+	Category      string        `yaml:"category"`       // e.g., "OOM", "ImagePull", "etcd"
+	Severity      Severity      `yaml:"severity"`       // Critical, Warning, Info
+	Confidence    Confidence    `yaml:"confidence"`     // Certain, Likely, Possible
+	Matchers      []Matcher     `yaml:"matchers"`       // Match criteria
+	Correlations  []Correlation `yaml:"correlations"`   // Related patterns
+	HintGenerator HintGenerator `yaml:"hint_generator"` // Root cause hint template
+	Description   string        `yaml:"description"`    // What this pattern detects
 }
 
 // Matcher defines how to match a pattern
 type Matcher struct {
-	Type    string   `yaml:"type"`    // "keyword", "regex"
-	Pattern string   `yaml:"pattern"` // Pattern string
-	Weight  float64  `yaml:"weight"`  // 0.0-1.0, contribution to confidence
+	Type    string  `yaml:"type"`    // "keyword", "regex"
+	Pattern string  `yaml:"pattern"` // Pattern string
+	Weight  float64 `yaml:"weight"`  // 0.0-1.0, contribution to confidence
 }
 
 // Correlation links patterns together for root cause analysis
@@ -46,23 +46,11 @@ type Correlation struct {
 
 // HintGenerator produces root cause hints
 type HintGenerator struct {
-	Template    string            `yaml:"template"`     // Go template for hint
-	Variables   []string          `yaml:"variables"`    // Required variables
-	Suggestion  string            `yaml:"suggestion"`   // Recommended fix
-	Command     string            `yaml:"command"`      // kubectl command to run
-	References  []string          `yaml:"references"`   // Doc links
-}
-
-// Pattern (legacy v1) represents a detection pattern for a specific Kubernetes issue
-// Deprecated: Use PatternV2 for new patterns
-type Pattern struct {
-	ID          string   `yaml:"id"`          // Unique identifier
-	Name        string   `yaml:"name"`        // Human-readable name
-	Category    string   `yaml:"category"`    // e.g., "OOM", "ImagePull", "CrashLoop"
-	Severity    Severity `yaml:"severity"`    // Critical, Warning, Info
-	Keywords    []string `yaml:"keywords"`    // Strings to match (all must match)
-	Description string   `yaml:"description"` // What this pattern detects
-	Suggestion  string   `yaml:"suggestion"`  // Recommended fix
+	Template   string   `yaml:"template"`   // Go template for hint
+	Variables  []string `yaml:"variables"`  // Required variables
+	Suggestion string   `yaml:"suggestion"` // Recommended fix
+	Command    string   `yaml:"command"`    // kubectl command to run
+	References []string `yaml:"references"` // Doc links
 }
 
 // Severity represents issue severity
@@ -73,17 +61,6 @@ const (
 	SeverityWarning  Severity = "warning"
 	SeverityInfo     Severity = "info"
 )
-
-// MatchResult represents the outcome of pattern matching (v1 legacy)
-// Deprecated: Use MatchResultV2 for new patterns
-type MatchResult struct {
-	Matched     bool
-	PatternID   string
-	PatternName string
-	Severity    Severity
-	Message     string
-	Confidence  float64 // 0.0 to 1.0
-}
 
 // MatchResultV2 represents pattern matching outcome with correlation support
 // Sprint 11: Enhanced match result with confidence levels and correlations
@@ -105,60 +82,6 @@ type Resource struct {
 	Kind      string // e.g., "Pod", "Node"
 	Name      string // Resource name
 	Namespace string // Namespace (if applicable)
-}
-
-// PatternMatcher provides pattern matching functionality (v1 legacy)
-// Deprecated: Use MatcherV2 for new patterns
-type PatternMatcher struct {
-	pattern Pattern
-}
-
-// NewMatcher creates a new pattern matcher (v1 legacy)
-// Deprecated: Use NewMatcherV2 for new patterns
-func NewMatcher(p Pattern) *PatternMatcher {
-	return &PatternMatcher{pattern: p}
-}
-
-// Match checks if the content matches the pattern
-// Sprint 8: Simple keyword matching (80/20) - no regex for now
-func (m *PatternMatcher) Match(content string) MatchResult {
-	content = strings.ToLower(content)
-
-	// Count how many keywords matched
-	matches := 0
-	for _, keyword := range m.pattern.Keywords {
-		if strings.Contains(content, strings.ToLower(keyword)) {
-			matches++
-		}
-	}
-
-	// At least one keyword must match (80/20: simple beats perfect)
-	if matches == 0 {
-		return MatchResult{Matched: false}
-	}
-
-	// Calculate simple confidence based on match quality
-	confidence := 1.0
-	if len(content) > 1000 {
-		confidence = 0.9 // Lower confidence for very long content
-	}
-
-	return MatchResult{
-		Matched:     true,
-		PatternID:   m.pattern.ID,
-		PatternName: m.pattern.Name,
-		Severity:    m.pattern.Severity,
-		Message:     m.detectedMessage(),
-		Confidence:  confidence,
-	}
-}
-
-// detectedMessage returns a human-readable detection message
-func (m *PatternMatcher) detectedMessage() string {
-	return fmt.Sprintf("[%s] %s: %s",
-		strings.ToUpper(string(m.pattern.Severity)),
-		m.pattern.Name,
-		m.pattern.Description)
 }
 
 // MatcherV2 provides pattern matching for PatternV2 (Sprint 11)
@@ -190,7 +113,7 @@ func (m *MatcherV2) Match(content string) []MatchResultV2 {
 			if matches == nil {
 				continue
 			}
-			
+
 			if len(matches) > 0 {
 				hasRegexMatch = true
 			}
@@ -236,7 +159,7 @@ func (m *MatcherV2) Match(content string) []MatchResultV2 {
 					Metadata:    make(map[string]string),
 				})
 				// Break after first keyword match to avoid flooding
-				break 
+				break
 			}
 		}
 	}
@@ -275,47 +198,14 @@ func (m *MatcherV2) detectedMessageV2() string {
 		m.pattern.Description)
 }
 
-// BuiltinPatterns contains the built-in pattern definitions (v1 legacy)
-// Sprint 8: 3 patterns only (80/20) - OOMKill, ImagePullBackOff, CrashLoop
-// Deprecated: Use BuiltinPatternsV2 for new patterns
-var BuiltinPatterns = []Pattern{
-	{
-		ID:          "oomkill",
-		Name:        "OOMKill Detected",
-		Category:    "OOM",
-		Severity:    SeverityCritical,
-		Keywords:    []string{"out of memory", "oomkill", "oom_kill_process", "killed process"},
-		Description: "Container was killed due to memory limits",
-		Suggestion:  "Increase memory limit or optimize application memory usage",
-	},
-	{
-		ID:          "imagepullbackoff",
-		Name:        "ImagePullBackOff",
-		Category:    "Image",
-		Severity:    SeverityWarning,
-		Keywords:    []string{"imagepullbackoff", "pull access denied", "failed to pull image", "image not found"},
-		Description: "Cannot pull container image from registry",
-		Suggestion:  "Check image name, registry credentials, and network connectivity",
-	},
-	{
-		ID:          "crashloopbackoff",
-		Name:        "CrashLoopBackOff",
-		Category:    "Crash",
-		Severity:    SeverityCritical,
-		Keywords:    []string{"crashloopbackoff", "back-off restarting", "crash loop"},
-		Description: "Container repeatedly crashing and restarting",
-		Suggestion:  "Check container logs for application errors and exit codes",
-	},
-}
-
 // BuiltinPatternsV2 contains Sprint 11 pattern definitions with confidence and correlations
 var BuiltinPatternsV2 = []PatternV2{
 	{
-		ID:          "oomkill-v2",
-		Name:        "OOMKill Detected",
-		Category:    "OOM",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "oomkill-v2",
+		Name:       "OOMKill Detected",
+		Category:   "OOM",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -341,11 +231,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "imagepullbackoff-v2",
-		Name:        "ImagePullBackOff",
-		Category:    "Image",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceCertain,
+		ID:         "imagepullbackoff-v2",
+		Name:       "ImagePullBackOff",
+		Category:   "Image",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -366,11 +256,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "crashloopbackoff-v2",
-		Name:        "CrashLoopBackOff",
-		Category:    "Crash",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "crashloopbackoff-v2",
+		Name:       "CrashLoopBackOff",
+		Category:   "Crash",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			// Regex to capture details from kubectl get pods output
 			{
@@ -396,11 +286,11 @@ var BuiltinPatternsV2 = []PatternV2{
 	},
 	// Sprint 11 Day 2: etcd Patterns
 	{
-		ID:          "etcd-corruption",
-		Name:        "etcd Data Corruption",
-		Category:    "etcd",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "etcd-corruption",
+		Name:       "etcd Data Corruption",
+		Category:   "etcd",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -426,11 +316,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "etcd-latency",
-		Name:        "etcd High Latency",
-		Category:    "etcd",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "etcd-latency",
+		Name:       "etcd High Latency",
+		Category:   "etcd",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -452,11 +342,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "etcd-quorum",
-		Name:        "etcd Quorum Loss",
-		Category:    "etcd",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "etcd-quorum",
+		Name:       "etcd Quorum Loss",
+		Category:   "etcd",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "etcdserver: no leader", Weight: 1.0},
 			{Type: "keyword", Pattern: "etcd: lost quorum", Weight: 1.0},
@@ -473,11 +363,11 @@ var BuiltinPatternsV2 = []PatternV2{
 	},
 	// Sprint 11 Day 2: Certificate Patterns
 	{
-		ID:          "certificate-expired",
-		Name:        "Certificate Expired",
-		Category:    "Certificate",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "certificate-expired",
+		Name:       "Certificate Expired",
+		Category:   "Certificate",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "certificate has expired", Weight: 1.0},
 			{Type: "keyword", Pattern: "x509: certificate has expired", Weight: 1.0},
@@ -495,11 +385,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "certificate-expiring",
-		Name:        "Certificate Expiring Soon",
-		Category:    "Certificate",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "certificate-expiring",
+		Name:       "Certificate Expiring Soon",
+		Category:   "Certificate",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "certificate will expire", Weight: 1.0},
 			{Type: "keyword", Pattern: "certificate expiring", Weight: 1.0},
@@ -514,11 +404,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "certificate-invalid-ca",
-		Name:        "Invalid Certificate Authority",
-		Category:    "Certificate",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "certificate-invalid-ca",
+		Name:       "Invalid Certificate Authority",
+		Category:   "Certificate",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "x509: unknown authority", Weight: 1.0},
 			{Type: "keyword", Pattern: "certificate signed by unknown authority", Weight: 1.0},
@@ -537,11 +427,11 @@ var BuiltinPatternsV2 = []PatternV2{
 	},
 	// Sprint 11 Day 3: Networking Patterns
 	{
-		ID:          "dns-failure",
-		Name:        "DNS Resolution Failure",
-		Category:    "Networking",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "dns-failure",
+		Name:       "DNS Resolution Failure",
+		Category:   "Networking",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -567,11 +457,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "cni-error",
-		Name:        "CNI Plugin Error",
-		Category:    "Networking",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "cni-error",
+		Name:       "CNI Plugin Error",
+		Category:   "Networking",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "cni plugin failed", Weight: 1.0},
 			{Type: "keyword", Pattern: "failed to set up sandbox", Weight: 1.0},
@@ -592,11 +482,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "connectivity-timeout",
-		Name:        "Network Connectivity Timeout",
-		Category:    "Networking",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "connectivity-timeout",
+		Name:       "Network Connectivity Timeout",
+		Category:   "Networking",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -619,11 +509,11 @@ var BuiltinPatternsV2 = []PatternV2{
 	},
 	// Sprint 11 Day 3: Storage Patterns
 	{
-		ID:          "pvc-binding-failure",
-		Name:        "PVC Binding Failure",
-		Category:    "Storage",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "pvc-binding-failure",
+		Name:       "PVC Binding Failure",
+		Category:   "Storage",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "persistentvolumeclaim is not bound", Weight: 1.0},
 			{Type: "keyword", Pattern: "pvc is not bound", Weight: 1.0},
@@ -643,11 +533,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "storage-pressure",
-		Name:        "Storage Pressure",
-		Category:    "Storage",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "storage-pressure",
+		Name:       "Storage Pressure",
+		Category:   "Storage",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "disk pressure", Weight: 1.0},
 			{Type: "keyword", Pattern: "filesystem has no space left", Weight: 1.0},
@@ -668,11 +558,11 @@ var BuiltinPatternsV2 = []PatternV2{
 	},
 	// Sprint 11 Day 4: Node & Pod State Patterns
 	{
-		ID:          "node-pressure",
-		Name:        "Node Pressure Conditions",
-		Category:    "Node",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "node-pressure",
+		Name:       "Node Pressure Conditions",
+		Category:   "Node",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "diskpressure", Weight: 1.0},
 			{Type: "keyword", Pattern: "memorypressure", Weight: 1.0},
@@ -693,11 +583,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "pod-stuck-pending",
-		Name:        "Pod Stuck Pending",
-		Category:    "Pod",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "pod-stuck-pending",
+		Name:       "Pod Stuck Pending",
+		Category:   "Pod",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "pod status pending", Weight: 1.0},
 			{Type: "keyword", Pattern: "0/1 nodes available", Weight: 1.0},
@@ -719,11 +609,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "pod-stuck-terminating",
-		Name:        "Pod Stuck Terminating",
-		Category:    "Pod",
-		Severity:    SeverityWarning,
-		Confidence:  ConfidenceLikely,
+		ID:         "pod-stuck-terminating",
+		Name:       "Pod Stuck Terminating",
+		Category:   "Pod",
+		Severity:   SeverityWarning,
+		Confidence: ConfidenceLikely,
 		Matchers: []Matcher{
 			{
 				Type:    "regex",
@@ -744,11 +634,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "leader-election-failure",
-		Name:        "Leader Election Failure",
-		Category:    "ControlPlane",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "leader-election-failure",
+		Name:       "Leader Election Failure",
+		Category:   "ControlPlane",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "failed to acquire lease", Weight: 1.0},
 			{Type: "keyword", Pattern: "leader election lost", Weight: 1.0},
@@ -769,11 +659,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 	},
 	{
-		ID:          "node-not-ready",
-		Name:        "Node Not Ready",
-		Category:    "Node",
-		Severity:    SeverityCritical,
-		Confidence:  ConfidenceCertain,
+		ID:         "node-not-ready",
+		Name:       "Node Not Ready",
+		Category:   "Node",
+		Severity:   SeverityCritical,
+		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
 			{Type: "keyword", Pattern: "node notready", Weight: 1.0},
 			{Type: "keyword", Pattern: "status notready", Weight: 1.0},
@@ -792,76 +682,6 @@ var BuiltinPatternsV2 = []PatternV2{
 			References: []string{"https://kubernetes.io/docs/concepts/architecture/nodes/", "https://kubernetes.io/docs/tasks/debug/debug-cluster/"},
 		},
 	},
-}
-
-// PatternRegistry manages pattern definitions (v1 legacy)
-type PatternRegistry struct {
-	patterns []Pattern
-}
-
-// NewRegistry creates a new pattern registry with built-in patterns
-func NewRegistry() *PatternRegistry {
-	return &PatternRegistry{
-		patterns: BuiltinPatterns,
-	}
-}
-
-// Register adds a new pattern to the registry
-func (r *PatternRegistry) Register(p Pattern) error {
-	// Validate pattern
-	if p.ID == "" {
-		return fmt.Errorf("pattern ID is required")
-	}
-	if p.Name == "" {
-		return fmt.Errorf("pattern name is required")
-	}
-	if len(p.Keywords) == 0 {
-		return fmt.Errorf("at least one keyword is required")
-	}
-
-	r.patterns = append(r.patterns, p)
-	return nil
-}
-
-// GetByID retrieves a pattern by ID
-func (r *PatternRegistry) GetByID(id string) (Pattern, bool) {
-	for _, p := range r.patterns {
-		if p.ID == id {
-			return p, true
-		}
-	}
-	return Pattern{}, false
-}
-
-// GetByCategory retrieves all patterns in a category
-func (r *PatternRegistry) GetByCategory(category string) []Pattern {
-	var result []Pattern
-	for _, p := range r.patterns {
-		if p.Category == category {
-			result = append(result, p)
-		}
-	}
-	return result
-}
-
-// GetAll returns all patterns
-func (r *PatternRegistry) GetAll() []Pattern {
-	return r.patterns
-}
-
-// Analyze scans content against all patterns and returns matches
-func (r *PatternRegistry) Analyze(content string) []MatchResult {
-	var matches []MatchResult
-
-	for _, pattern := range r.patterns {
-		matcher := NewMatcher(pattern)
-		result := matcher.Match(content)
-		if result.Matched {
-			matches = append(matches, result)
-		}
-	}
-
-	return matches
 }
 
 // PatternRegistryV2 manages PatternV2 definitions with correlation support

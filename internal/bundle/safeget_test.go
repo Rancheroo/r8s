@@ -35,10 +35,10 @@ func TestSafeString(t *testing.T) {
 
 func TestSafeStringDefault(t *testing.T) {
 	tests := []struct {
-		name         string
-		input        interface{}
-		defaultVal   string
-		expected     string
+		name       string
+		input      interface{}
+		defaultVal string
+		expected   string
 	}{
 		{"nil uses default", nil, "default", "default"},
 		{"string value", "hello", "default", "hello"},

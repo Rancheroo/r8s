@@ -163,7 +163,7 @@ func AnalyzeCompleteness(extractPath string) (*CompletenessResult, error) {
 
 	for _, file := range expectedFiles {
 		fullPath := filepath.Join(bundleRoot, file.Path)
-		
+
 		// Check if file or directory exists
 		info, err := os.Stat(fullPath)
 		exists := err == nil
@@ -176,7 +176,7 @@ func AnalyzeCompleteness(extractPath string) (*CompletenessResult, error) {
 			result.PresentFiles++
 			presentWeight += file.Weight
 			result.PresentFileList = append(result.PresentFileList, file.Description)
-			
+
 			if file.Required {
 				result.RequiredPresent++
 			}

@@ -9,56 +9,56 @@ import (
 // Sprint 11 Day 1: Pattern Engine v2 Architecture
 func TestPatternV2Matcher(t *testing.T) {
 	tests := []struct {
-		name       string
-		pattern    PatternV2
-		content    string
-		wantMatch  bool
+		name           string
+		pattern        PatternV2
+		content        string
+		wantMatch      bool
 		wantConfidence Confidence
 	}{
 		{
 			name: "OOMKill detection - certain",
 			pattern: PatternV2{
-				ID:          "test-oom",
-				Name:        "Test OOM",
-				Category:    "OOM",
-				Severity:    SeverityCritical,
-				Confidence:  ConfidenceCertain,
+				ID:         "test-oom",
+				Name:       "Test OOM",
+				Category:   "OOM",
+				Severity:   SeverityCritical,
+				Confidence: ConfidenceCertain,
 				Matchers: []Matcher{
 					{Type: "keyword", Pattern: "out of memory", Weight: 1.0},
 					{Type: "keyword", Pattern: "oomkill", Weight: 1.0},
 				},
 				Description: "Test OOM pattern",
 			},
-			content:   "The container was killed due to out of memory error",
-			wantMatch: true,
+			content:        "The container was killed due to out of memory error",
+			wantMatch:      true,
 			wantConfidence: ConfidenceCertain,
 		},
 		{
 			name: "ImagePull detection - certain",
 			pattern: PatternV2{
-				ID:          "test-image",
-				Name:        "Test Image Pull",
-				Category:    "Image",
-				Severity:    SeverityWarning,
-				Confidence:  ConfidenceCertain,
+				ID:         "test-image",
+				Name:       "Test Image Pull",
+				Category:   "Image",
+				Severity:   SeverityWarning,
+				Confidence: ConfidenceCertain,
 				Matchers: []Matcher{
 					{Type: "keyword", Pattern: "imagepullbackoff", Weight: 1.0},
 					{Type: "keyword", Pattern: "failed to pull", Weight: 0.5},
 				},
 				Description: "Test image pull pattern",
 			},
-			content:   "Pod is in ImagePullBackOff state",
-			wantMatch: true,
+			content:        "Pod is in ImagePullBackOff state",
+			wantMatch:      true,
 			wantConfidence: ConfidenceCertain,
 		},
 		{
 			name: "No match - empty content",
 			pattern: PatternV2{
-				ID:          "test-empty",
-				Name:        "Test Empty",
-				Category:    "Test",
-				Severity:    SeverityInfo,
-				Confidence:  ConfidenceCertain,
+				ID:         "test-empty",
+				Name:       "Test Empty",
+				Category:   "Test",
+				Severity:   SeverityInfo,
+				Confidence: ConfidenceCertain,
 				Matchers: []Matcher{
 					{Type: "keyword", Pattern: "notfound", Weight: 1.0},
 				},
@@ -70,11 +70,11 @@ func TestPatternV2Matcher(t *testing.T) {
 		{
 			name: "Partial match - possible confidence",
 			pattern: PatternV2{
-				ID:          "test-partial",
-				Name:        "Test Partial",
-				Category:    "Test",
-				Severity:    SeverityWarning,
-				Confidence:  ConfidencePossible,
+				ID:         "test-partial",
+				Name:       "Test Partial",
+				Category:   "Test",
+				Severity:   SeverityWarning,
+				Confidence: ConfidencePossible,
 				Matchers: []Matcher{
 					{Type: "keyword", Pattern: "keyword1", Weight: 1.0},
 					{Type: "keyword", Pattern: "keyword2", Weight: 1.0},
@@ -82,8 +82,8 @@ func TestPatternV2Matcher(t *testing.T) {
 				},
 				Description: "Test partial pattern",
 			},
-			content:   "Only keyword1 is present here",
-			wantMatch: true,
+			content:        "Only keyword1 is present here",
+			wantMatch:      true,
 			wantConfidence: ConfidencePossible, // 1/3 matched = 33%
 		},
 	}
@@ -92,7 +92,7 @@ func TestPatternV2Matcher(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			matcher := NewMatcherV2(tt.pattern)
 			results := matcher.Match(tt.content)
-			
+
 			// Find first matched result
 			var matchedResult *MatchResultV2
 			for i := range results {
@@ -101,7 +101,7 @@ func TestPatternV2Matcher(t *testing.T) {
 					break
 				}
 			}
-			
+
 			gotMatch := matchedResult != nil
 			if gotMatch != tt.wantMatch {
 				t.Errorf("Match() matched = %v, want %v", gotMatch, tt.wantMatch)

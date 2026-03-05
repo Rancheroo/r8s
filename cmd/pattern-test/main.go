@@ -79,23 +79,23 @@ func main() {
 
 	fmt.Println("Sprint 11 Pattern Engine Test")
 	fmt.Println("=" + strings.Repeat("=", 50))
-	
+
 	allPassed := true
 
 	for _, tc := range testCases {
 		fmt.Printf("\nTest: %s\n", tc.name)
 		fmt.Println(strings.Repeat("-", 40))
-		
+
 		// Run analysis
 		registry := ai.NewRegistryV2()
 		matches := registry.AnalyzeV2(tc.content)
-		
+
 		// Check expected patterns
 		foundIDs := make(map[string]bool)
 		for _, m := range matches {
 			foundIDs[m.PatternID] = true
 		}
-		
+
 		passed := true
 		for _, wantID := range tc.want {
 			if foundIDs[wantID] {
@@ -106,7 +106,7 @@ func main() {
 				allPassed = false
 			}
 		}
-		
+
 		// Check for unexpected correlations
 		if len(matches) > 0 {
 			fmt.Printf("  Total matches: %d\n", len(matches))
@@ -116,14 +116,14 @@ func main() {
 				}
 			}
 		}
-		
+
 		if passed {
 			fmt.Println("  [PASS]")
 		} else {
 			fmt.Println("  [FAIL]")
 		}
 	}
-	
+
 	fmt.Println("\n" + strings.Repeat("=", 50))
 	if allPassed {
 		fmt.Println("All tests PASSED ✓")

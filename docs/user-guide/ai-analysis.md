@@ -41,10 +41,19 @@ You can ask r8s questions in plain English. The NLQ engine parses your intent an
 |--------|------------------|--------------|
 | **Why** | "Why is nginx crashing?" | Explains root cause (OOM, config, etc.) |
 | **Show** | "Show me certificate issues" | Lists all findings of a specific type |
-| **Which** | "Which nodes are not ready?" | Lists resources in a specific state |
+| **Which** | "Which nodes are not ready?" | Lists resources in a specific state (including "running" and "ready") |
 | **What** | "What is wrong with etcd?" | General health check for a component |
 
 ### Examples
+```bash
+$ r8s ask ./bundle/ "which pods are running?"
+
+🎯 Found 8 pods that are ready:
+• coredns-854c77959c-7x9j6
+• metrics-server-86cbb8457f-m8j2w
+...
+```
+
 ```bash
 $ r8s ask ./bundle/ "why is web-pod crashing?"
 

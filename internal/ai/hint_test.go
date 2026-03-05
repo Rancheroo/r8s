@@ -74,11 +74,11 @@ func TestHintGeneratorApplyTemplate(t *testing.T) {
 	hg := NewHintGenerator()
 
 	tests := []struct {
-		name     string
-		tmpl     string
-		data     map[string]string
-		want     string
-		wantErr  bool
+		name    string
+		tmpl    string
+		data    map[string]string
+		want    string
+		wantErr bool
 	}{
 		{
 			name:    "simple substitution",

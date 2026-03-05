@@ -309,7 +309,7 @@ func TestParseMemoryValue(t *testing.T) {
 			diff = -diff
 		}
 		if diff > tt.epsilon {
-			t.Errorf("parseMemoryValue(%q) = %v, want %v (diff %v > epsilon %v)", 
+			t.Errorf("parseMemoryValue(%q) = %v, want %v (diff %v > epsilon %v)",
 				tt.input, result, tt.expected, diff, tt.epsilon)
 		}
 	}

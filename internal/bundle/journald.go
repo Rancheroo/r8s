@@ -12,24 +12,25 @@ import (
 // JournaldEntry represents a single journald log entry
 // NOTE: Currently unused but kept for future structured parsing
 // TODO: Implement structured journald parsing or remove in cleanup
+//
 //lint:ignore U1000 Reserved for future use
 type JournaldEntry struct {
-	Timestamp   time.Time
-	Unit        string           // Service unit name (e.g., rke2-server)
-	Message     string           // Log message
-	Priority    string           // debug, info, warn, error, fatal
-	PID         string           // Process ID
-	RawLine     string           // Original log line for reference
+	Timestamp time.Time
+	Unit      string // Service unit name (e.g., rke2-server)
+	Message   string // Log message
+	Priority  string // debug, info, warn, error, fatal
+	PID       string // Process ID
+	RawLine   string // Original log line for reference
 }
 
 // RKE2ControlPlaneEvents contains extracted control plane events
 type RKE2ControlPlaneEvents struct {
-	ServerRestarts   []ControlPlaneEvent
-	AgentIssues      []ControlPlaneEvent
+	ServerRestarts    []ControlPlaneEvent
+	AgentIssues       []ControlPlaneEvent
 	CertificateIssues []ControlPlaneEvent
-	EtcdIssues       []ControlPlaneEvent
-	APIServerIssues  []ControlPlaneEvent
-	UnknownErrors    []ControlPlaneEvent
+	EtcdIssues        []ControlPlaneEvent
+	APIServerIssues   []ControlPlaneEvent
+	UnknownErrors     []ControlPlaneEvent
 }
 
 // ControlPlaneEvent represents a single control plane event
@@ -188,14 +189,14 @@ func determineSeverity(errorType, message string) string {
 	messageLower := strings.ToLower(message)
 
 	if strings.Contains(messageLower, "fatal") ||
-	   strings.Contains(messageLower, "panic") ||
-	   strings.Contains(messageLower, "critical") {
+		strings.Contains(messageLower, "panic") ||
+		strings.Contains(messageLower, "critical") {
 		return "critical"
 	}
 
 	if strings.Contains(messageLower, "error") ||
-	   errorType == "cert_error" ||
-	   errorType == "etcd_error" {
+		errorType == "cert_error" ||
+		errorType == "etcd_error" {
 		return "error"
 	}
 

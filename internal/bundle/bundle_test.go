@@ -28,7 +28,7 @@ func TestBundle_ReadLogFile(t *testing.T) {
 	os.WriteFile(logPath, []byte(logContent), 0644)
 
 	b := &Bundle{}
-	
+
 	// Test with nil log file
 	_, err = b.ReadLogFile(nil)
 	if err == nil {

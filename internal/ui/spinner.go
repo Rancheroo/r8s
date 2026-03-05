@@ -1,10 +1,9 @@
-// Package cmd implements spinner/progress indicators for r8s.
-// Sprint 12: Animated loading spinner with Rancher personality
-package cmd
+package ui
 
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -145,6 +144,9 @@ func (pb *ProgressBar) Increment(suffix string) {
 
 // render draws the progress bar
 func (pb *ProgressBar) render() {
+	if pb.total <= 0 {
+		return
+	}
 	percent := float64(pb.current) * 100 / float64(pb.total)
 	filled := int(percent / 100 * float64(pb.width))
 
@@ -152,13 +154,15 @@ func (pb *ProgressBar) render() {
 	emptyColor := color.New(color.FgHiBlack)
 	textColor := color.New(color.FgCyan)
 
-	// Build bar
-	bar := ""
+	// Build bar using strings.Builder for efficiency
+	var builder strings.Builder
+	builder.Grow(pb.width * 10) // Pre-allocate buffer
+
 	for i := 0; i < pb.width; i++ {
 		if i < filled {
-			bar += barColor.Sprint("█")
+			builder.WriteString(barColor.Sprint("█"))
 		} else {
-			bar += emptyColor.Sprint("░")
+			builder.WriteString(emptyColor.Sprint("░"))
 		}
 	}
 
@@ -169,7 +173,7 @@ func (pb *ProgressBar) render() {
 	}
 
 	textColor.Fprintf(os.Stderr, "\r   %s [%s] %3.0f%%%s",
-		pb.prefix, bar, percent, suffixStr)
+		pb.prefix, builder.String(), percent, suffixStr)
 }
 
 // Finish marks the progress as complete

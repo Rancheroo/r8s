@@ -11,8 +11,8 @@ import (
 
 // ParallelAnalyzer provides concurrent pattern matching for improved performance
 type ParallelAnalyzer struct {
-	registry   *PatternRegistryV2
-	generator  *HintGeneratorV2
+	registry    *PatternRegistryV2
+	generator   *HintGeneratorV2
 	workerCount int
 }
 
@@ -23,7 +23,7 @@ func NewParallelAnalyzer() *ParallelAnalyzer {
 	if workers < 4 {
 		workers = 4
 	}
-	
+
 	return &ParallelAnalyzer{
 		registry:    NewRegistryV2(),
 		generator:   NewHintGenerator(),
@@ -54,30 +54,30 @@ type PatternMatchResult struct {
 // AnalyzeParallel performs concurrent pattern matching on content
 func (pa *ParallelAnalyzer) AnalyzeParallel(ctx context.Context, content map[string]string, opts AnalysisOptions) (*AnalysisResult, error) {
 	startTime := time.Now()
-	
+
 	// Create worker pool
 	tasks := make(chan PatternMatchTask, len(pa.registry.GetAll())*len(content))
 	results := make(chan PatternMatchResult, len(pa.registry.GetAll())*len(content))
-	
+
 	var wg sync.WaitGroup
-	
+
 	// Start workers
 	for i := 0; i < pa.workerCount; i++ {
 		wg.Add(1)
 		go pa.worker(ctx, &wg, tasks, results)
 	}
-	
+
 	// Close results channel when workers done
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
-	
+
 	// Submit tasks for each file + pattern combination
 	totalTasks := 0
 	for fileName, fileContent := range content {
 		for _, pattern := range pa.registry.GetAll() {
-			if pa.shouldAnalyzePattern(pattern, opts) {
+			if ShouldAnalyzePattern(pattern, opts) {
 				tasks <- PatternMatchTask{
 					Pattern:  pattern,
 					Content:  fileContent,
@@ -88,24 +88,24 @@ func (pa *ParallelAnalyzer) AnalyzeParallel(ctx context.Context, content map[str
 		}
 	}
 	close(tasks)
-	
+
 	// Collect results
 	var allMatches []MatchResultV2
 	for result := range results {
 		allMatches = append(allMatches, result.Matches...)
 	}
-	
+
 	// Generate hints
 	hints := pa.generator.GenerateAll(allMatches, pa.registry)
-	
+
 	// Detect correlations
-	correlations := pa.detectCorrelations(allMatches)
-	
+	correlations := DetectCorrelations(allMatches, pa.registry)
+
 	// Build summary
-	summary := pa.buildSummary(allMatches, correlations)
-	
+	summary := BuildSummary(allMatches, correlations, pa.registry)
+
 	endTime := time.Now()
-	
+
 	return &AnalysisResult{
 		StartTime:    startTime,
 		EndTime:      endTime,
@@ -120,7 +120,7 @@ func (pa *ParallelAnalyzer) AnalyzeParallel(ctx context.Context, content map[str
 // worker processes pattern matching tasks concurrently
 func (pa *ParallelAnalyzer) worker(ctx context.Context, wg *sync.WaitGroup, tasks <-chan PatternMatchTask, results chan<- PatternMatchResult) {
 	defer wg.Done()
-	
+
 	for task := range tasks {
 		select {
 		case <-ctx.Done():
@@ -128,7 +128,7 @@ func (pa *ParallelAnalyzer) worker(ctx context.Context, wg *sync.WaitGroup, task
 		default:
 			matcher := NewMatcherV2(task.Pattern)
 			matches := matcher.Match(task.Content)
-			
+
 			// Add file name to each match
 			for i := range matches {
 				if matches[i].Matched {
@@ -138,90 +138,13 @@ func (pa *ParallelAnalyzer) worker(ctx context.Context, wg *sync.WaitGroup, task
 					matches[i].Metadata["SourceFile"] = task.FileName
 				}
 			}
-			
+
 			results <- PatternMatchResult{
 				Matches: matches,
 				Pattern: task.Pattern,
 			}
 		}
 	}
-}
-
-// shouldAnalyzePattern determines if a pattern should be analyzed based on options
-func (pa *ParallelAnalyzer) shouldAnalyzePattern(p PatternV2, opts AnalysisOptions) bool {
-	// Check severity filter
-	if opts.MinSeverity != "" {
-		severityOrder := map[Severity]int{
-			SeverityInfo:     0,
-			SeverityWarning:  1,
-			SeverityCritical: 2,
-		}
-		if severityOrder[p.Severity] < severityOrder[opts.MinSeverity] {
-			return false
-		}
-	}
-	
-	return true
-}
-
-// detectCorrelations finds all correlations between matched patterns
-func (pa *ParallelAnalyzer) detectCorrelations(matches []MatchResultV2) []CorrelationMatch {
-	var correlations []CorrelationMatch
-	matchedIDs := make(map[string]bool)
-
-	for _, match := range matches {
-		if match.Matched {
-			matchedIDs[match.PatternID] = true
-		}
-	}
-
-	for _, match := range matches {
-		if !match.Matched {
-			continue
-		}
-		
-		pattern, found := pa.registry.GetByID(match.PatternID)
-		if !found {
-			continue
-		}
-
-		for _, corr := range pattern.Correlations {
-			if matchedIDs[corr.PatternID] {
-				correlations = append(correlations, CorrelationMatch{
-					PatternID1: match.PatternID,
-					PatternID2: corr.PatternID,
-					Message:    corr.Message,
-				})
-			}
-		}
-	}
-
-	return correlations
-}
-
-// buildSummary creates analysis summary statistics
-func (pa *ParallelAnalyzer) buildSummary(matches []MatchResultV2, correlations []CorrelationMatch) AnalysisSummary {
-	summary := AnalysisSummary{
-		TotalPatterns: len(pa.registry.GetAll()),
-		MatchesFound:  0,
-		Correlations:  len(correlations),
-	}
-
-	for _, match := range matches {
-		if match.Matched {
-			summary.MatchesFound++
-			switch match.Severity {
-			case SeverityCritical:
-				summary.CriticalIssues++
-			case SeverityWarning:
-				summary.WarningIssues++
-			case SeverityInfo:
-				summary.InfoIssues++
-			}
-		}
-	}
-
-	return summary
 }
 
 // BenchmarkResult represents performance benchmark results
@@ -235,14 +158,14 @@ type BenchmarkResult struct {
 // Benchmark runs a performance benchmark
 func (pa *ParallelAnalyzer) Benchmark(content map[string]string, iterations int) BenchmarkResult {
 	start := time.Now()
-	
+
 	for i := 0; i < iterations; i++ {
 		ctx := context.Background()
 		_, _ = pa.AnalyzeParallel(ctx, content, AnalysisOptions{})
 	}
-	
+
 	duration := time.Since(start)
-	
+
 	return BenchmarkResult{
 		Duration:       duration,
 		PatternsPerSec: float64(len(pa.registry.GetAll())*iterations) / duration.Seconds(),
@@ -261,32 +184,32 @@ func (pa *ParallelAnalyzer) AnalyzeParallelWithProgress(
 	opts AnalysisOptions,
 	progress ProgressFunc,
 ) (*AnalysisResult, error) {
-	
+
 	if progress == nil {
 		// No progress callback, use standard parallel analysis
 		return pa.AnalyzeParallel(ctx, content, opts)
 	}
-	
+
 	startTime := time.Now()
-	
+
 	// Calculate total tasks (accounting for severity filter)
 	totalTasks := 0
 	for range content {
 		for _, pattern := range pa.registry.GetAll() {
-			if pa.shouldAnalyzePattern(pattern, opts) {
+			if ShouldAnalyzePattern(pattern, opts) {
 				totalTasks++
 			}
 		}
 	}
 	completedTasks := 0
 	var progressMu sync.Mutex
-	
+
 	// Create worker pool with progress tracking
 	tasks := make(chan PatternMatchTask, totalTasks)
 	results := make(chan PatternMatchResult, totalTasks)
-	
+
 	var wg sync.WaitGroup
-	
+
 	// Start workers
 	for i := 0; i < pa.workerCount; i++ {
 		wg.Add(1)
@@ -299,7 +222,7 @@ func (pa *ParallelAnalyzer) AnalyzeParallelWithProgress(
 				default:
 					matcher := NewMatcherV2(task.Pattern)
 					matches := matcher.Match(task.Content)
-					
+
 					// Add file name to each match
 					for i := range matches {
 						if matches[i].Matched {
@@ -309,12 +232,12 @@ func (pa *ParallelAnalyzer) AnalyzeParallelWithProgress(
 							matches[i].Metadata["SourceFile"] = task.FileName
 						}
 					}
-					
+
 					results <- PatternMatchResult{
 						Matches: matches,
 						Pattern: task.Pattern,
 					}
-					
+
 					// Report progress
 					progressMu.Lock()
 					completedTasks++
@@ -324,17 +247,17 @@ func (pa *ParallelAnalyzer) AnalyzeParallelWithProgress(
 			}
 		}()
 	}
-	
+
 	// Close results when done
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
-	
+
 	// Submit tasks
 	for fileName, fileContent := range content {
 		for _, pattern := range pa.registry.GetAll() {
-			if pa.shouldAnalyzePattern(pattern, opts) {
+			if ShouldAnalyzePattern(pattern, opts) {
 				tasks <- PatternMatchTask{
 					Pattern:  pattern,
 					Content:  fileContent,
@@ -344,24 +267,24 @@ func (pa *ParallelAnalyzer) AnalyzeParallelWithProgress(
 		}
 	}
 	close(tasks)
-	
+
 	// Collect results
 	var allMatches []MatchResultV2
 	for result := range results {
 		allMatches = append(allMatches, result.Matches...)
 	}
-	
+
 	// Generate hints
 	hints := pa.generator.GenerateAll(allMatches, pa.registry)
-	
+
 	// Detect correlations
-	correlations := pa.detectCorrelations(allMatches)
-	
+	correlations := DetectCorrelations(allMatches, pa.registry)
+
 	// Build summary
-	summary := pa.buildSummary(allMatches, correlations)
-	
+	summary := BuildSummary(allMatches, correlations, pa.registry)
+
 	endTime := time.Now()
-	
+
 	return &AnalysisResult{
 		StartTime:    startTime,
 		EndTime:      endTime,

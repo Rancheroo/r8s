@@ -135,7 +135,7 @@ func TestDMesgAnalysis_GetOOMKillSummary(t *testing.T) {
 		},
 		MemoryPressure: true,
 	}
-	
+
 	summary := analysisWithOOM.GetOOMKillSummary()
 	if summary == "" {
 		t.Error("Expected non-empty summary")
@@ -148,10 +148,9 @@ func TestDMesgAnalysis_GetOOMKillSummary(t *testing.T) {
 	analysisWithoutOOM := &DMesgAnalysis{
 		OOMKills: []DMesgOOMKill{},
 	}
-	
+
 	summary = analysisWithoutOOM.GetOOMKillSummary()
 	if !strings.Contains(summary, "No OOM kills detected") {
 		t.Errorf("Summary should say 'No OOM kills detected', got: %s", summary)
 	}
 }
-
