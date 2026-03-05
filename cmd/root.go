@@ -208,17 +208,18 @@ PowerShell:
 	DisableFlagsInUseLine: true,
 	ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
 	Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		switch args[0] {
 		case "bash":
-			cmd.Root().GenBashCompletion(os.Stdout)
+			return cmd.Root().GenBashCompletion(os.Stdout)
 		case "zsh":
-			cmd.Root().GenZshCompletion(os.Stdout)
+			return cmd.Root().GenZshCompletion(os.Stdout)
 		case "fish":
-			cmd.Root().GenFishCompletion(os.Stdout, true)
+			return cmd.Root().GenFishCompletion(os.Stdout, true)
 		case "powershell":
-			cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+			return cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
 		}
+		return nil
 	},
 }
 
@@ -235,13 +236,6 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	// v0.8.0: CLI-first - show help if no subcommand
 	if len(args) == 0 {
 		return cmd.Help()
-	}
-
-	// Fix #95: If argument is "completion" or "help", let Cobra handle it
-	// (Even though we add them explicitly, custom Execute logic can still hide them)
-	if args[0] == "completion" || args[0] == "help" {
-		// Handled by Cobra's traversal since we added the commands
-		return nil
 	}
 
 	// If bundle path provided without subcommand, default to analyze
