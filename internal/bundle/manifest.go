@@ -160,6 +160,22 @@ func parseK8sVersion(extractPath string) string {
 					}
 				}
 			}
+		} else if strings.Contains(version, "Server Version:") {
+			// Text format: Client/Server version
+			lines := strings.Split(version, "\n")
+			for _, line := range lines {
+				if strings.Contains(line, "Server Version:") {
+					parts := strings.Split(line, ": ")
+					if len(parts) >= 2 {
+						return strings.TrimSpace(parts[1])
+					}
+				}
+			}
+		}
+		// Fallback: return first line if short
+		lines := strings.Split(version, "\n")
+		if len(lines) > 0 {
+			return lines[0]
 		}
 		return version
 	}
@@ -302,6 +318,12 @@ func InventoryPods(extractPath string) ([]PodInfo, error) {
 
 // parsePodLogFilename extracts pod information from a log filename.
 func parsePodLogFilename(filename string) *LogFileInfo {
+	// Remove extension first
+	ext := filepath.Ext(filename)
+	if ext != "" {
+		filename = strings.TrimSuffix(filename, ext)
+	}
+
 	// Check for -previous suffix first
 	isPrevious := strings.HasSuffix(filename, "-previous")
 	if isPrevious {

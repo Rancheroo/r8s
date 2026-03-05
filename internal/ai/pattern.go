@@ -369,6 +369,11 @@ var BuiltinPatternsV2 = []PatternV2{
 		Severity:   SeverityCritical,
 		Confidence: ConfidenceCertain,
 		Matchers: []Matcher{
+			{
+				Type:    "regex",
+				Pattern: `Serving cert is expired: (?P<Cert>\S+)`,
+				Weight:  1.0,
+			},
 			{Type: "keyword", Pattern: "certificate has expired", Weight: 1.0},
 			{Type: "keyword", Pattern: "x509: certificate has expired", Weight: 1.0},
 			{Type: "keyword", Pattern: "certificate is not valid", Weight: 0.9},
@@ -378,7 +383,7 @@ var BuiltinPatternsV2 = []PatternV2{
 		},
 		Description: "Kubernetes certificate has expired",
 		HintGenerator: HintGenerator{
-			Template:   "Certificate expired.",
+			Template:   "Certificate expired{{if .Cert}}: {{.Cert}}{{end}}",
 			Suggestion: "Approve pending CSR to renew certificate: 'kubectl get csr', then 'kubectl certificate approve <csr-name>'",
 			Command:    "kubectl get csr && kubectl certificate approve $(kubectl get csr -o json | jq -r '.items[] | select(.status.conditions == null) | .metadata.name')",
 			References: []string{"https://kubernetes.io/docs/tasks/tls/certificate-issue/", "https://docs.rke2.io/security/certificates/"},

@@ -162,33 +162,33 @@ type PodRow struct {
 }
 
 func getPods(b *bundle.Bundle, namespace string, allNamespaces bool) error {
-	// Collect pods
+	// Collect pods from kubectl output (source of truth)
+	kubectlPods, err := bundle.ParsePods(b.ExtractPath)
+	if err != nil {
+		// Fallback to inventory if parsing fails
+		return getPodsFromInventory(b, namespace, allNamespaces)
+	}
+
 	pods := []PodRow{}
 
-	for _, pod := range b.Pods {
+	for _, pod := range kubectlPods {
 		// Filter by namespace
-		if namespace != "" && pod.Namespace != namespace {
+		if namespace != "" && pod.NamespaceID != namespace {
 			continue
 		}
-		if !allNamespaces && namespace == "" && pod.Namespace != "default" && pod.Namespace != "cattle-system" {
+		if !allNamespaces && namespace == "" && pod.NamespaceID != "default" && pod.NamespaceID != "cattle-system" {
 			// If no namespace specified, show interesting namespaces
-			// Actually, show all for now
-		}
-
-		// Determine status (simplified - would need yaml parsing for real status)
-		status := "Unknown"
-		if pod.HasCurrentLogs {
-			status = "Running"
+			// Actually, show all for now to match kubectl behavior better
 		}
 
 		pods = append(pods, PodRow{
-			Namespace: pod.Namespace,
+			Namespace: pod.NamespaceID,
 			Name:      pod.Name,
-			Ready:     fmt.Sprintf("%d/%d", len(pod.Containers), len(pod.Containers)),
-			Status:    status,
-			Restarts:  0,   // Would need to parse from yaml
-			Age:       "-", // Would need timestamp from yaml
-			Node:      b.Manifest.NodeName,
+			Ready:     pod.KubectlReady,
+			Status:    pod.KubectlStatus,
+			Restarts:  pod.RestartCount,
+			Age:       pod.KubectlAge,
+			Node:      pod.NodeName,
 		})
 	}
 
@@ -213,6 +213,35 @@ func getPods(b *bundle.Bundle, namespace string, allNamespaces bool) error {
 	default:
 		return outputPodsTable(pods, allNamespaces || namespace == "")
 	}
+}
+
+// getPodsFromInventory is a fallback using file inventory
+func getPodsFromInventory(b *bundle.Bundle, namespace string, allNamespaces bool) error {
+	pods := []PodRow{}
+	for _, pod := range b.Pods {
+		// Filter by namespace
+		if namespace != "" && pod.Namespace != namespace {
+			continue
+		}
+		
+		status := "Unknown"
+		if pod.HasCurrentLogs {
+			status = "Running"
+		}
+
+		pods = append(pods, PodRow{
+			Namespace: pod.Namespace,
+			Name:      pod.Name,
+			Ready:     fmt.Sprintf("%d/%d", len(pod.Containers), len(pod.Containers)),
+			Status:    status,
+			Restarts:  0,
+			Age:       "-",
+			Node:      b.Manifest.NodeName,
+		})
+	}
+	
+	// Reuse output logic... (simplified for diff context)
+	return outputPodsTable(pods, allNamespaces || namespace == "")
 }
 
 func outputPodsTable(pods []PodRow, showNamespace bool) error {
@@ -267,16 +296,29 @@ type NodeRow struct {
 }
 
 func getNodes(b *bundle.Bundle) error {
-	// Bundle only has one node's data (the node it was collected from)
-	// For future: support multi-node bundles
+	// Try to parse nodes from kubectl output first
+	parsedNodes, err := bundle.ParseNodes(b.ExtractPath)
+	var nodes []NodeRow
 
-	nodes := []NodeRow{
-		{
-			Name:    b.Manifest.NodeName,
-			Status:  "Ready",
-			Version: b.Manifest.K8sVersion,
-			OS:      "-", // Could parse from node yaml
-		},
+	if err == nil && len(parsedNodes) > 0 {
+		for _, n := range parsedNodes {
+			nodes = append(nodes, NodeRow{
+				Name:    n.Name,
+				Status:  n.Status,
+				Version: b.Manifest.K8sVersion, // Fallback as ParseNodes doesn't get version yet
+				OS:      "-",
+			})
+		}
+	} else {
+		// Fallback to manifest metadata (single node)
+		nodes = []NodeRow{
+			{
+				Name:    b.Manifest.NodeName,
+				Status:  "Ready",
+				Version: b.Manifest.K8sVersion,
+				OS:      "-",
+			},
+		}
 	}
 
 	switch getOutput {
