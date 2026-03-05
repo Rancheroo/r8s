@@ -184,6 +184,9 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		if result.Critical > 0 {
 			return NewExitError(ExitIssuesFound, fmt.Sprintf("analysis found %d critical issues", result.Critical))
 		}
+		if result.Warning > 0 {
+			return NewExitError(ExitIssuesFound, fmt.Sprintf("analysis found %d warnings", result.Warning))
+		}
 		return nil
 	}
 }

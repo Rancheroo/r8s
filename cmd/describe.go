@@ -118,7 +118,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 
 // parseDescribeArgs handles flexible argument order
 func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
-	if len(args) == 2 {
+	if len(args) == 2 && !isKnownKind(args[0]) {
 		// Format: describe ./bundle/ name (auto-detect kind)
 		bundlePath = args[0]
 		name = args[1]
@@ -146,6 +146,23 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 				bundlePath = args[2]
 			}
 		}
+	} else if len(args) == 2 {
+		// Format: describe kind bundle (missing name)
+		// OR: describe bundle name (auto-detect kind)
+		
+		// If args[0] is a known kind
+		if isKnownKind(args[0]) {
+			// Format: describe kind bundle
+			// This is missing 'name', but maybe user wants list?
+			// For now, treat as kind + bundle, name=""
+			kind = strings.ToLower(args[0])
+			bundlePath = args[1]
+			name = ""
+		} else {
+			// Format: describe bundle name (auto-detect kind)
+			bundlePath = args[0]
+			name = args[1]
+		}
 	}
 
 	// Normalize kind aliases
@@ -165,6 +182,15 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 	}
 
 	return
+}
+
+func isKnownKind(k string) bool {
+	switch strings.ToLower(k) {
+	case "pod", "pods", "node", "nodes", "deployment", "deployments",
+		"service", "services", "configmap", "configmaps", "event", "events":
+		return true
+	}
+	return false
 }
 
 // isDir checks if a path is a directory
