@@ -402,7 +402,13 @@ func formatShowResponse(intent QueryIntent, hints []*ai.Hint) string {
 		title = "matching"
 	}
 
-	sb.WriteString(fmt.Sprintf("📋 Showing %s %d %s issues:\n\n", title, len(hints), intent.Resource))
+	// Use "resources" for positive states, "issues" for negative ones
+	term := "issues"
+	if intent.Condition == "running" || intent.Condition == "ready" {
+		term = "resources"
+	}
+
+	sb.WriteString(fmt.Sprintf("📋 Showing %s %d %s %s:\n\n", title, len(hints), intent.Resource, term))
 
 	for i, hint := range hints {
 		icon := "🔵"
@@ -436,6 +442,7 @@ func formatWhichResponse(intent QueryIntent, hints []*ai.Hint) string {
 		condition = "affected"
 	}
 
+	// Terminology fix: Don't imply "issues" for neutral queries
 	sb.WriteString(fmt.Sprintf("🎯 Found %d %s that are %s:\n\n", len(hints), resourceName, condition))
 
 	for _, hint := range hints {
@@ -499,15 +506,21 @@ func formatGeneralResponse(hints []*ai.Hint) string {
 
 // formatNoResultsResponse creates a helpful message when no issues are found matching the query.
 func formatNoResultsResponse(intent QueryIntent) string {
-	msg := fmt.Sprintf("❓ No issues found matching your query for '%s'.\n", intent.Condition)
+	// Customize message based on query type
+	term := "issues"
+	if intent.Condition == "running" || intent.Condition == "ready" {
+		term = "resources"
+	}
+
+	msg := fmt.Sprintf("❓ No %s found matching your query for '%s'.\n", term, intent.Condition)
 	if intent.Condition == "" {
-		msg = "❓ No relevant issues found matching your query.\n"
+		msg = fmt.Sprintf("❓ No relevant %s found matching your query.\n", term)
 	}
 	if intent.Resource != "" {
 		if intent.Condition != "" {
-			msg = fmt.Sprintf("❓ No %s issues found matching '%s'.\n", intent.Resource, intent.Condition)
+			msg = fmt.Sprintf("❓ No %s %s found matching '%s'.\n", intent.Resource, term, intent.Condition)
 		} else {
-			msg = fmt.Sprintf("❓ No %s issues found matching your query.\n", intent.Resource)
+			msg = fmt.Sprintf("❓ No %s %s found matching your query.\n", intent.Resource, term)
 		}
 	}
 

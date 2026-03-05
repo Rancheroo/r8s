@@ -99,7 +99,8 @@ func ExpectedFiles(bundlePath string) []ExpectedFile {
 		{Path: kubectlPrefix + "kubectl/services", Importance: ImportanceMedium, Category: "networking"},
 		{Path: kubectlPrefix + "kubectl/configmaps", Importance: ImportanceMedium, Category: "config"},
 		// journald logs are in journald/ at root
-		{Path: "journald/rke2-server", Importance: ImportanceMedium, Category: "logs"},
+		// Support generic system logs if specific rke2-server logs aren't found
+		{Path: "journald/", Importance: ImportanceMedium, Category: "logs"},
 
 		// Low importance (nice to have)
 		{Path: kubectlPrefix + "kubectl/crds", Importance: ImportanceLow, Category: "crds"},
