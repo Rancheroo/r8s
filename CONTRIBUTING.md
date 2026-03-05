@@ -276,6 +276,59 @@ func TestConfig_Validate(t *testing.T) {
 
 ---
 
+## Reporting Issues
+
+We use GitHub Issues to track public bugs and feature requests.
+
+### Bug Reports
+
+A good bug report shouldn't leave others needing to chase you up for more information. Please use the following template:
+
+```markdown
+**Title:** [BUG] Short description of the issue
+
+**Description:**
+A clear and concise description of what the bug is.
+
+**Steps to Reproduce:**
+1. Run command '...'
+2. With bundle '...'
+3. See error
+
+**Expected Behavior:**
+A clear and concise description of what you expected to happen.
+
+**Actual Behavior:**
+What actually happened (include screenshots or logs if possible).
+
+**Environment:**
+- r8s version: [e.g. v1.2.1]
+- OS: [e.g. Ubuntu 22.04]
+- Bundle type: [e.g. RKE2, K3s]
+```
+
+### Feature Requests
+
+Feature requests are welcome! Please use the following template:
+
+```markdown
+**Title:** [FEAT] Short description of the feature
+
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional Context**
+Add any other context or screenshots about the feature request here.
+```
+
+---
+
 ## Branch Workflow
 
 ### Sprint Branches

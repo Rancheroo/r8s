@@ -5,7 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-03-06
+## [1.3.2] - 2026-03-05
+
+### Added
+- **Demo Mode**: Added `scripts/setup-demo-bundles.sh` to generate scenarios for team demos.
+- **Documentation**: New `docs/DEMO_SCRIPT.md` with speaker notes and `CONTRIBUTING.md` issue templates.
+- **Refactor**: Moved debug scripts to `scripts/` directory for cleaner root.
+
+### Changed
+- Updated `README.md` to reflect v1.3.2 status.
+- Improved error handling in bundle validation.
+
+## [1.2.1] - 2026-03-04
+
+### Added
+- **Natural Language Query**: `r8s ask` now supports `why`, `show`, `which` intents.
+- **Critical Pattern Detection**: Added 5 new patterns including Etcd Quorum Loss.
+
+### Fixed
+- Fixed critical bug where pattern detection wasn't finding issues due to incorrect file path patterns.
+- Updated default `bundleType` to `rke2`.
+
+## [1.1.0] - 2026-03-03
 
 ### Added
 - **Bundle Format v1.1 Support**: Full support for new Rancher log bundle format
