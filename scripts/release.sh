@@ -16,7 +16,7 @@ echo "🚀 Building release $VERSION..."
 
 # Ensure clean state
 echo "📥 Fetching tags..."
-git fetch --tags
+git fetch --tags --force
 
 # Checkout the tag
 echo "📋 Checking out $VERSION..."
@@ -56,9 +56,15 @@ fi
 echo "🔐 Checking GitHub authentication..."
 gh auth status || exit 1
 
-# Upload to GitHub release
-echo "📤 Uploading binary to GitHub release $VERSION..."
-gh release upload "$VERSION" ./bin/r8s --clobber
+# Create release if it doesn't exist, otherwise upload
+echo "📤 Creating/Uploading release $VERSION..."
+if gh release view "$VERSION" &>/dev/null; then
+    echo "   Release exists, uploading binary..."
+    gh release upload "$VERSION" ./bin/r8s --clobber
+else
+    echo "   Creating new release..."
+    gh release create "$VERSION" ./bin/r8s --generate-notes
+fi
 
 echo ""
 echo "✅ Release $VERSION binary uploaded successfully!"
