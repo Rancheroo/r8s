@@ -364,12 +364,12 @@ func ShowNoIssuesFound(bundlePath string) {
 
 	// Header
 	header := color.New(color.Bold, color.FgGreen)
-	header.Fprintln(os.Stdout, "No issues found")
+	header.Fprintln(os.Stdout, "No issues found - bundle is healthy!")
 	fmt.Fprintln(os.Stdout)
 
 	// Suggestion
 	suggestColor := color.New(color.FgYellow)
-	suggestColor.Fprintln(os.Stdout, "Try 'r8s ask' for natural language queries")
+	suggestColor.Fprintln(os.Stdout, "Want deeper analysis? Try 'r8s ask' for natural language queries")
 	fmt.Fprintln(os.Stdout)
 
 	exampleColor := color.New(color.FgHiBlack)

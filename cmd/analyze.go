@@ -87,10 +87,9 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
 			ShowBundleNotFoundError(bundlePath)
-			return fmt.Errorf("bundle not found: %s", bundlePath)
+			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
 		}
-		ShowFriendlyError(fmt.Errorf("cannot access bundle path: %w", err))
-		return err
+		return fmt.Errorf("cannot access bundle path: %w", err)
 	}
 
 	// Initialize loading display for non-JSON output

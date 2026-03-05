@@ -66,21 +66,30 @@ func runAsk(cmd *cobra.Command, args []string) error {
 	question := strings.Join(args[1:], " ")
 
 	// Check if first arg looks like a question (starts with quote) and second is a path
-	// This helps detect wrong argument order
-	if isLikelyQuestion(bundlePath) && !isLikelyPath(bundlePath) && (len(args) > 1 && (isLikelyPath(args[1]) || isValidBundlePath(args[1]))) {
-		// First arg looks like a question, not a path
-		ShowUsageError("ask", "r8s ask <bundle> <question>")
-		fmt.Fprintf(os.Stderr, "\nIt looks like you might have the arguments in the wrong order.\n")
-		fmt.Fprintf(os.Stderr, "Expected:    r8s ask ./bundle/ \"your question\"\n")
-		fmt.Fprintf(os.Stderr, "You entered: r8s ask \"%s\" %s\n\n", bundlePath, args[1])
-		return NewUsageError("ask", "r8s ask <bundle> <question>")
+	// This helps detect wrong argument order - but only for very clear cases
+	// to avoid rejecting valid bundle paths
+	if len(args) > 1 && isLikelyQuestion(bundlePath) && !isLikelyPath(bundlePath) && isLikelyPath(args[1]) {
+		// Double-check: first arg is clearly a question, second is clearly a path
+		// and the first arg contains actual question markers (?, why, what, how)
+		questionLower := strings.ToLower(bundlePath)
+		if strings.Contains(questionLower, "?") ||
+			strings.HasPrefix(questionLower, "why ") ||
+			strings.HasPrefix(questionLower, "what ") ||
+			strings.HasPrefix(questionLower, "how ") {
+			// First arg looks like a question, not a path
+			ShowUsageError("ask", "r8s ask <bundle> <question>")
+			fmt.Fprintf(os.Stderr, "\nIt looks like you might have the arguments in the wrong order.\n")
+			fmt.Fprintf(os.Stderr, "Expected:    r8s ask ./bundle/ \"your question\"\n")
+			fmt.Fprintf(os.Stderr, "You entered: r8s ask \"%s\" %s\n\n", bundlePath, args[1])
+			return NewUsageError("ask", "r8s ask <bundle> <question>")
+		}
 	}
 
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
 			ShowBundleNotFoundError(bundlePath)
-			return fmt.Errorf("bundle not found: %s", bundlePath)
+			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
 		}
 		return fmt.Errorf("cannot access bundle path: %w", err)
 	}

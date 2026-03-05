@@ -7,16 +7,16 @@ package cmd
 // Tips focus on automation, integrations, and advanced use cases
 var UserTips = []string{
 	// CI/CD & Automation (1-10)
-	"💡 Use 'r8s export --format=sarif' for CI/CD pipeline integration",
 	"💡 r8s outputs JSON - perfect for automation scripts: r8s analyze bundle/ --format=json | jq '.issues'",
 	"💡 Integrate r8s into your GitHub Actions for automated bundle analysis",
 	"💡 Use r8s in pre-commit hooks to validate cluster state before deployments",
-	"💡 r8s SARIF output integrates with GitHub Advanced Security and other SAST tools",
 	"💡 Automate nightly bundle analysis with cron: r8s analyze /var/log/bundles/ --format=json",
 	"💡 Export to Markdown for inclusion in incident reports: r8s export bundle/ --format=markdown",
 	"💡 Use r8s test-cluster in your deployment pipeline for pre-flight checks",
 	"💡 r8s exit codes (0=healthy, 1=issues, 2=error) enable script automation",
-	"💡 Chain r8s commands: r8s analyze bundle/ && r8s export bundle/ --format=sarif",
+	"💡 Combine r8s with jq: r8s analyze bundle/ --format=json | jq -r '.issues[] | select(.severity==\"critical\")'",
+	"💡 Use r8s validate to verify bundle completeness before analysis",
+	"💡 Schedule 'r8s analyze' via cron and email results to your team",
 
 	// AI & Natural Language (11-20)
 	"💡 Ask natural language questions: r8s ask bundle/ 'why is my pod crashing?'",

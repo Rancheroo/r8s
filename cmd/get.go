@@ -84,7 +84,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("bundle path required: r8s get %s [bundle-path]", resource)
 	}
 
-	// Pre-validate bundle path (MED-1 fix)
+	// Pre-validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
 			ShowBundleNotFoundError(bundlePath)
@@ -96,10 +96,6 @@ func runGet(cmd *cobra.Command, args []string) error {
 	// Load bundle
 	b, err := loadBundle(bundlePath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
-			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
-		}
 		return fmt.Errorf("failed to load bundle: %w", err)
 	}
 	defer b.Close()
