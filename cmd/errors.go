@@ -360,21 +360,21 @@ func ShowUsageError(command, correctUsage string) {
 
 // ShowNoIssuesFound displays a friendly message when analysis finds no issues
 func ShowNoIssuesFound(bundlePath string) {
-	fmt.Fprintln(os.Stderr)
+	fmt.Fprintln(os.Stdout)
 
 	// Header
 	header := color.New(color.Bold, color.FgGreen)
-	header.Fprintln(os.Stderr, "No issues found")
-	fmt.Fprintln(os.Stderr)
+	header.Fprintln(os.Stdout, "No issues found")
+	fmt.Fprintln(os.Stdout)
 
 	// Suggestion
 	suggestColor := color.New(color.FgYellow)
-	suggestColor.Fprintln(os.Stderr, "Try 'r8s ask' for natural language queries")
-	fmt.Fprintln(os.Stderr)
+	suggestColor.Fprintln(os.Stdout, "Try 'r8s ask' for natural language queries")
+	fmt.Fprintln(os.Stdout)
 
 	exampleColor := color.New(color.FgHiBlack)
-	exampleColor.Fprintf(os.Stderr, "  r8s ask %s \"which pods are crashing?\"\n", bundlePath)
-	fmt.Fprintln(os.Stderr)
+	exampleColor.Fprintf(os.Stdout, "  r8s ask %s \"which pods are crashing?\"\n", bundlePath)
+	fmt.Fprintln(os.Stdout)
 }
 
 // NewUsageError creates an error with usage hint
