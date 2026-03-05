@@ -98,7 +98,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			ShowBundleNotFoundError(bundlePath)
-			return fmt.Errorf("bundle not found: %s", bundlePath)
+			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
 		}
 		return fmt.Errorf("failed to load bundle: %w", err)
 	}
