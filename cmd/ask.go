@@ -211,22 +211,24 @@ func parseQueryIntent(question string) QueryIntent {
 
 	// Extract condition
 	switch {
-	case strings.Contains(q, "crash") || strings.Contains(q, "crashloop"):
+	case strings.Contains(q, "crash") || strings.Contains(q, "crashloop") || strings.Contains(q, "restarting"):
 		intent.Condition = "crashing"
-	case strings.Contains(q, "imagepull") || strings.Contains(q, "can't pull"):
+	case strings.Contains(q, "imagepull") || strings.Contains(q, "can't pull") || strings.Contains(q, "pull error"):
 		intent.Condition = "imagepull"
-	case strings.Contains(q, "pending"):
+	case strings.Contains(q, "pending") || strings.Contains(q, "stuck") || strings.Contains(q, "scheduling"):
 		intent.Condition = "pending"
 	case strings.Contains(q, "expire"):
 		intent.Condition = "expired"
-	case strings.Contains(q, "not ready"):
+	case strings.Contains(q, "not ready") || strings.Contains(q, "unhealthy") || strings.Contains(q, "dead"):
 		intent.Condition = "notready"
-	case strings.Contains(q, "oom") || strings.Contains(q, "memory"):
+	case strings.Contains(q, "oom") || strings.Contains(q, "memory") || strings.Contains(q, "killed"):
 		intent.Condition = "oom"
-	case strings.Contains(q, "fail"):
+	case strings.Contains(q, "fail") || strings.Contains(q, "broken") || strings.Contains(q, "error"):
 		intent.Condition = "failed"
-	case strings.Contains(q, "ready") || strings.Contains(q, "running"):
+	case strings.Contains(q, "ready") || strings.Contains(q, "running") || strings.Contains(q, "healthy"):
 		intent.Condition = "ready"
+	case strings.Contains(q, "slow") || strings.Contains(q, "latency") || strings.Contains(q, "lag") || strings.Contains(q, "timeout"):
+		intent.Condition = "latency"
 	}
 
 	return intent
@@ -471,18 +473,29 @@ func formatGeneralResponse(hints []*ai.Hint) string {
 }
 
 func formatNoResultsResponse(intent QueryIntent) string {
-	return fmt.Sprintf(`❓ No %s issues found matching your query.
+	msg := fmt.Sprintf("❓ No issues found matching your query for '%s'.\n", intent.Condition)
+	if intent.Condition == "" {
+		msg = "❓ No relevant issues found matching your query.\n"
+	}
+	if intent.Resource != "" {
+		msg = fmt.Sprintf("❓ No %s issues found matching your query.\n", intent.Resource)
+	}
 
+	return fmt.Sprintf(`%s
 This could mean:
-• No issues detected for this resource type
+• No issues detected for this resource/condition
 • The issue has been resolved since the bundle was collected
 • The query pattern isn't fully matching (Day 10 v1 limitations)
 
 Try:
 • 'r8s analyze %s' for a full bundle report
 • Different wording for your question
-• Checking if the bundle includes recent data`,
-		intent.Condition, "<bundle-path>")
+• Checking if the bundle includes recent data
+
+SUGGESTED PATTERNS:
+• Entities: pod, node, certificate, image, pvc, service
+• Issues: oomkill, crashloop, imagepull, etcd, cni, dns`,
+		msg, "<bundle-path>")
 }
 
 func formatUnknownResponse() string {
