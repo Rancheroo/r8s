@@ -75,6 +75,7 @@ func (h *Harness) Run(tc TestCase) TestResult {
 
 	// Check for unexpected extra patterns (optional, but good for precision)
 	if len(testResult.Matches) > len(tc.ExpectedPatterns) {
+		testResult.Passed = false
 		testResult.Errors = append(testResult.Errors, fmt.Sprintf("Found %d matches, expected %d", len(testResult.Matches), len(tc.ExpectedPatterns)))
 	}
 
