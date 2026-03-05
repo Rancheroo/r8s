@@ -42,7 +42,6 @@ EXAMPLES:
 
   # Show last N lines
   r8s logs ./bundle/ --tail=100`,
-	Args: cobra.RangeArgs(1, 2),
 	RunE: runLogs,
 }
 
@@ -76,6 +75,10 @@ type LogEntry struct {
 }
 
 func runLogs(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		ui.ShowCmdUsage("logs", "r8s logs [bundle-path] [pod-name]", cmd.Long)
+		return nil
+	}
 	var bundlePath, podFilter string
 
 	if len(args) == 1 {

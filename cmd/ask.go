@@ -47,7 +47,6 @@ LIMITATIONS (v1):
 - Single-fact questions only (no compound queries)
 - No follow-up questions
 - Limited to supported query patterns`,
-	Args: cobra.MinimumNArgs(2),
 	RunE: runAsk,
 }
 
@@ -57,7 +56,13 @@ func init() {
 
 // runAsk executes the ask command
 func runAsk(cmd *cobra.Command, args []string) error {
-	// Validate we have the right number of args (should be caught by cobra, but defensive)
+	// If no args provided, show guide instead of error
+	if len(args) == 0 {
+		ui.ShowCmdUsage("ask", "r8s ask [bundle-path] [question]", cmd.Long)
+		return nil
+	}
+
+	// Validate we have the right number of args
 	if len(args) < 2 {
 		ui.ShowUsageError("ask", "r8s ask <bundle> <question>")
 		return ui.NewUsageError("ask", "r8s ask <bundle> <question>")

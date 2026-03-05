@@ -42,7 +42,6 @@ EXAMPLES:
 
   # Export only critical issues
   r8s export ./bundle/ --format=sarif --min-severity=critical`,
-	Args: cobra.ExactArgs(1),
 	RunE: runExport,
 }
 
@@ -65,7 +64,8 @@ func init() {
 // runExport executes the export command
 func runExport(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("bundle path is required")
+		ui.ShowCmdUsage("export", "r8s export [bundle-path]", cmd.Long)
+		return nil
 	}
 	bundlePath := args[0]
 

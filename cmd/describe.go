@@ -42,7 +42,6 @@ EXAMPLES:
 
 Supported kinds: pod, pods, node, nodes, deployment, deployments, 
 service, services, configmap, configmaps, event, events`,
-	Args: cobra.RangeArgs(2, 3),
 	RunE: runDescribe,
 }
 
@@ -61,6 +60,10 @@ func init() {
 }
 
 func runDescribe(cmd *cobra.Command, args []string) error {
+	if len(args) < 2 {
+		ui.ShowCmdUsage("describe", "r8s describe [kind] [bundle-path] [name]", cmd.Long)
+		return nil
+	}
 	// Parse arguments
 	kind, bundlePath, name := parseDescribeArgs(args)
 

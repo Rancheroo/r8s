@@ -47,7 +47,6 @@ OUTPUT FORMATS:
   json   - JSON for piping to jq
   yaml   - YAML output
   wide   - Extra columns like kubectl wide`,
-	Args: cobra.RangeArgs(1, 2),
 	RunE: runGet,
 }
 
@@ -69,6 +68,10 @@ func init() {
 
 // runGet executes the get command
 func runGet(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		ui.ShowCmdUsage("get", "r8s get [resource] [bundle-path]", cmd.Long)
+		return nil
+	}
 	var resource, bundlePath string
 
 	// Handle flexible argument order

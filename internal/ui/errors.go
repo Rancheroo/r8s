@@ -347,3 +347,23 @@ func IsUsageError(err error) bool {
 	_, ok := err.(*UsageError)
 	return ok
 }
+
+// ShowCmdUsage displays a friendly usage guide for a command
+func ShowCmdUsage(cmdName, usage, description string) {
+	fmt.Fprintln(os.Stderr)
+	
+	// Header
+	header := color.New(color.Bold, color.FgCyan)
+	header.Fprintf(os.Stderr, "📖 %s Guide\n", strings.Title(cmdName))
+	fmt.Fprintln(os.Stderr)
+	
+	// Description
+	fmt.Fprintln(os.Stderr, description)
+	fmt.Fprintln(os.Stderr)
+	
+	// Usage
+	usageHeader := color.New(color.Bold, color.FgYellow)
+	usageHeader.Fprintln(os.Stderr, "Usage:")
+	fmt.Fprintf(os.Stderr, "  %s\n", usage)
+	fmt.Fprintln(os.Stderr)
+}

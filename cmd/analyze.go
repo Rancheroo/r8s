@@ -39,7 +39,6 @@ EXIT CODES:
   0 - No issues found or analyzed successfully
   1 - Issues detected (warnings or critical)
   2 - Invalid bundle or path`,
-	Args: cobra.ExactArgs(1),
 	RunE: runAnalyze,
 }
 
@@ -57,6 +56,10 @@ func init() {
 
 // runAnalyze executes the analyze command with personality and progress
 func runAnalyze(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		ui.ShowCmdUsage("analyze", "r8s analyze [bundle-path]", cmd.Long)
+		return nil
+	}
 	bundlePath := args[0]
 	startTime := time.Now()
 
