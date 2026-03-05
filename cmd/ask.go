@@ -221,6 +221,12 @@ func parseQueryIntent(question string) QueryIntent {
 		intent.Condition = "expired"
 	case strings.Contains(q, "not ready"):
 		intent.Condition = "notready"
+	case strings.Contains(q, "oom") || strings.Contains(q, "memory"):
+		intent.Condition = "oom"
+	case strings.Contains(q, "fail"):
+		intent.Condition = "failed"
+	case strings.Contains(q, "ready") || strings.Contains(q, "running"):
+		intent.Condition = "ready"
 	}
 
 	return intent
@@ -261,38 +267,76 @@ func generateResponse(intent QueryIntent, hints []*ai.Hint, originalQuestion str
 
 // matchesIntent checks if a hint matches the query intent
 func matchesIntent(hint *ai.Hint, intent QueryIntent) bool {
-	// Check pattern ID matches resource/condition
-	patternIDLower := strings.ToLower(hint.PatternID)
+	// If resource matches but condition doesn't, filter carefully
+	// Sprint 11: Fix imprecise matching logic
 
-	// Check condition match
-	if intent.Condition != "" {
-		if !strings.Contains(patternIDLower, intent.Condition) {
-			// Also check aliases
-			if intent.Condition == "crashing" && !strings.Contains(patternIDLower, "crash") {
-				return false
-			}
-			if intent.Condition == "imagepull" && !strings.Contains(patternIDLower, "imagepull") {
-				return false
-			}
+	// 1. Filter by resource type
+	if intent.Resource != "" {
+		isPodPattern := isPatternForResource(hint.PatternID, "pod")
+		isNodePattern := isPatternForResource(hint.PatternID, "node")
+		
+		if intent.Resource == "pod" && !isPodPattern {
+			return false
 		}
-	}
-
-	// Check resource match
-	if intent.Resource == "pod" {
-		// Many patterns relate to pods
-		podPatterns := []string{"crashloop", "imagepull", "oomkill", "pending", "terminating"}
-		found := false
-		for _, pp := range podPatterns {
-			if strings.Contains(patternIDLower, pp) {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if intent.Resource == "node" && !isNodePattern {
 			return false
 		}
 	}
 
+	// 2. Filter by condition
+	if intent.Condition != "" {
+		// Use strict condition matching
+		patternLower := strings.ToLower(hint.PatternID)
+		
+		switch intent.Condition {
+		case "crashing":
+			return strings.Contains(patternLower, "crash")
+		case "oom":
+			return strings.Contains(patternLower, "oom")
+		case "pending":
+			return strings.Contains(patternLower, "pending")
+		case "terminating":
+			return strings.Contains(patternLower, "terminating")
+		case "imagepull":
+			return strings.Contains(patternLower, "imagepull")
+		case "notready":
+			return strings.Contains(patternLower, "not-ready")
+		case "failed", "failing":
+			// Failing should match any non-info issue
+			return hint.Severity == ai.SeverityCritical || hint.Severity == ai.SeverityWarning
+		case "ready", "running":
+			// If asking for "running" or "ready", and we found issues, those are NOT running/ready
+			// So technically these hints are ANTI-matches for "ready" state queries
+			// But for now, let's assume the user means "show me things that ARE NOT ready" 
+			// when they ask "which pods are ready?" in a troubleshooting tool.
+			// Or we can return nothing if everything is actually ready?
+			// Better: Show issues that prevent readiness.
+			return true
+		default:
+			// Generic match
+			return strings.Contains(patternLower, intent.Condition)
+		}
+	}
+
+	return true
+}
+
+func isPatternForResource(patternID, resourceType string) bool {
+	pid := strings.ToLower(patternID)
+	if resourceType == "pod" {
+		return strings.Contains(pid, "crash") || 
+			strings.Contains(pid, "oom") || 
+			strings.Contains(pid, "image") || 
+			strings.Contains(pid, "pending") || 
+			strings.Contains(pid, "terminating")
+	}
+	if resourceType == "node" {
+		return strings.Contains(pid, "node") || 
+			strings.Contains(pid, "disk") || 
+			strings.Contains(pid, "memory") || 
+			strings.Contains(pid, "pid") ||
+			strings.Contains(pid, "pressure")
+	}
 	return true
 }
 
