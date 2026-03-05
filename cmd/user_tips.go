@@ -40,7 +40,7 @@ var UserTips = []string{
 	"💡 Use labels with r8s get: r8s get pods bundle/ -l app=nginx",
 	"💡 r8s works with standard Unix pipes: r8s analyze bundle/ | grep ERROR",
 	"💡 Create aliases for common tasks: alias r8s-check='r8s test-cluster'",
-	"💡 r8s supports all standard output formats for integration",
+	"💡 r8s analyze supports table, json, yaml output for integration",
 
 	// Debugging & Troubleshooting (31-40)
 	"💡 r8s test-cluster runs 7 diagnostic checks automatically",
