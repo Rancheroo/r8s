@@ -67,7 +67,7 @@ func runAsk(cmd *cobra.Command, args []string) error {
 
 	// Check if first arg looks like a question (starts with quote) and second is a path
 	// This helps detect wrong argument order
-	if isLikelyQuestion(bundlePath) && !isLikelyPath(bundlePath) {
+	if isLikelyQuestion(bundlePath) && !isLikelyPath(bundlePath) && (len(args) > 1 && (isLikelyPath(args[1]) || isValidBundlePath(args[1]))) {
 		// First arg looks like a question, not a path
 		ShowUsageError("ask", "r8s ask <bundle> <question>")
 		fmt.Fprintf(os.Stderr, "\nIt looks like you might have the arguments in the wrong order.\n")
