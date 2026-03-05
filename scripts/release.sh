@@ -35,15 +35,31 @@ fi
 
 # Clean previous builds
 echo "🧹 Cleaning previous builds..."
-rm -f bin/r8s
+rm -f bin/r8s*
 
-# Build
-echo "🔨 Building binary..."
-make build
+# Build for multiple platforms
+echo "🔨 Building binaries..."
+PLATFORMS=("linux/amd64" "linux/arm64" "darwin/amd64" "darwin/arm64" "windows/amd64")
 
-# Verify binary works
-echo "✅ Verifying binary..."
-./bin/r8s version
+for PLATFORM in "${PLATFORMS[@]}"; do
+    GOOS=${PLATFORM%/*}
+    GOARCH=${PLATFORM#*/}
+    OUTPUT_NAME="r8s-${GOOS}-${GOARCH}"
+    
+    if [ "$GOOS" == "windows" ]; then
+        OUTPUT_NAME+=".exe"
+    fi
+
+    echo "   Building for $GOOS/$GOARCH..."
+    env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags "-X main.version=$VERSION" -o "bin/$OUTPUT_NAME" main.go
+done
+
+# Verify local binary (linux/amd64 or current)
+if [ "$(go env GOOS)" == "linux" ]; then
+    cp "bin/r8s-linux-$(go env GOARCH)" bin/r8s
+    echo "✅ Verifying binary..."
+    ./bin/r8s version
+fi
 
 # Check if gh CLI is available
 if ! command -v gh &> /dev/null; then
@@ -58,12 +74,25 @@ gh auth status || exit 1
 
 # Create release if it doesn't exist, otherwise upload
 echo "📤 Creating/Uploading release $VERSION..."
+
+# Find all binaries in bin/
+FILES=$(find bin -type f -name "r8s-*")
+
 if gh release view "$VERSION" &>/dev/null; then
-    echo "   Release exists, uploading binary..."
-    gh release upload "$VERSION" ./bin/r8s --clobber
+    echo "   Release exists, updating notes and uploading binaries..."
+    # If RELEASE_NOTES.md exists, update the notes
+    if [ -f "RELEASE_NOTES.md" ]; then
+        echo "   Updating release notes from RELEASE_NOTES.md..."
+        gh release edit "$VERSION" --notes-file RELEASE_NOTES.md
+    fi
+    gh release upload "$VERSION" $FILES --clobber
 else
     echo "   Creating new release..."
-    gh release create "$VERSION" ./bin/r8s --generate-notes
+    NOTES_FLAG="--generate-notes"
+    if [ -f "RELEASE_NOTES.md" ]; then
+        NOTES_FLAG="--notes-file RELEASE_NOTES.md"
+    fi
+    gh release create "$VERSION" $FILES $NOTES_FLAG
 fi
 
 echo ""
