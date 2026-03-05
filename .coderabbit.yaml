@@ -2,13 +2,13 @@
 # This file helps CodeRabbit understand our codebase patterns and principles
 # Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
 
-version: 1
+# version: 1
 
 # Language-specific settings
-language_settings:
-  go:
-    enabled: true
-    allow_unsafe: false
+# language_settings:
+#   go:
+#     enabled: true
+#     allow_unsafe: false
     
 # Reviews
 reviews:
@@ -165,23 +165,23 @@ knowledge_base:
       description: "DataSource interface - use this!"
 
 # Learn from our responses
-learning:
-  # CodeRabbit will learn from our review responses
-  enabled: true
-  
-  # Common responses we've given (to help it learn faster)
-  common_responses:
-    - pattern: "os.Exit in RunE"
-      response: "Intentional for CI contract. Exit codes signal test status."
-    
-    - pattern: "unchecked error return"
-      response: "Tolerant parsing - ignore errors, return zero values."
-    
-    - pattern: "multiple completeness systems"
-      response: "Intentional separation: UI (simple) vs validation (precise)."
-    
-    - pattern: "test name suggests full"
-      response: "Rename to clarify scope (e.g., _RequiredFilesPresent)."
+# learning:
+#   # CodeRabbit will learn from our review responses
+#   enabled: true
+#   
+#   # Common responses we've given (to help it learn faster)
+#   common_responses:
+#     - pattern: "os.Exit in RunE"
+#       response: "Intentional for CI contract. Exit codes signal test status."
+#     
+#     - pattern: "unchecked error return"
+#       response: "Tolerant parsing - ignore errors, return zero values."
+#     
+#     - pattern: "multiple completeness systems"
+#       response: "Intentional separation: UI (simple) vs validation (precise)."
+#     
+#     - pattern: "test name suggests full"
+#       response: "Rename to clarify scope (e.g., _RequiredFilesPresent)."
 
 # Chat settings
 chat:

@@ -341,6 +341,8 @@ func matchesIntent(hint *ai.Hint, intent QueryIntent) bool {
 	return true
 }
 
+// isPatternForResource checks if a pattern ID matches a specific resource type.
+// It uses keyword matching to associate patterns with resource types like "pod" or "node".
 func isPatternForResource(patternID, resourceType string) bool {
 	pid := strings.ToLower(patternID)
 	if resourceType == "pod" {
@@ -362,6 +364,7 @@ func isPatternForResource(patternID, resourceType string) bool {
 
 // Response formatters
 
+// formatWhyResponse formats the response for "why" type queries, focusing on explanations and suggestions.
 func formatWhyResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
 
@@ -390,6 +393,7 @@ func formatWhyResponse(intent QueryIntent, hints []*ai.Hint) string {
 	return sb.String()
 }
 
+// formatShowResponse formats the response for "show" type queries, listing matching issues.
 func formatShowResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
 
@@ -418,6 +422,7 @@ func formatShowResponse(intent QueryIntent, hints []*ai.Hint) string {
 	return sb.String()
 }
 
+// formatWhichResponse formats the response for "which" type queries, listing affected resource names.
 func formatWhichResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
 
@@ -446,6 +451,7 @@ func formatWhichResponse(intent QueryIntent, hints []*ai.Hint) string {
 	return sb.String()
 }
 
+// formatWhatResponse formats the response for "what" type queries, providing a general analysis of a resource.
 func formatWhatResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
 
@@ -471,6 +477,7 @@ func formatWhatResponse(intent QueryIntent, hints []*ai.Hint) string {
 	return sb.String()
 }
 
+// formatGeneralResponse formats a generic response when the query type is not specific.
 func formatGeneralResponse(hints []*ai.Hint) string {
 	var sb strings.Builder
 
@@ -490,6 +497,7 @@ func formatGeneralResponse(hints []*ai.Hint) string {
 	return sb.String()
 }
 
+// formatNoResultsResponse creates a helpful message when no issues are found matching the query.
 func formatNoResultsResponse(intent QueryIntent) string {
 	msg := fmt.Sprintf("❓ No issues found matching your query for '%s'.\n", intent.Condition)
 	if intent.Condition == "" {
@@ -520,6 +528,7 @@ SUGGESTED PATTERNS:
 		msg, "<bundle-path>")
 }
 
+// formatUnknownResponse returns a help message for queries that could not be parsed.
 func formatUnknownResponse() string {
 	return `❓ I didn't understand that question.
 
@@ -559,7 +568,8 @@ func isLikelyPath(text string) bool {
 	return false
 }
 
-// handleStateQuery processes requests for current state (running/ready) using raw parsers
+// handleStateQuery processes requests for current state (running/ready) using raw parsers.
+// It returns the response string, a boolean indicating if the query was handled, and any error.
 func handleStateQuery(bundlePath string, intent QueryIntent) (string, bool, error) {
 	// We only handle "which" or "show" queries
 	if intent.Type != "which" && intent.Type != "show" {
@@ -617,6 +627,7 @@ func handleStateQuery(bundlePath string, intent QueryIntent) (string, bool, erro
 	return "", false, nil
 }
 
+// isPodReady checks if a pod is considered ready based on its status and ready condition.
 func isPodReady(pod rancher.Pod) bool {
 	// 1. Check Status
 	if pod.KubectlStatus != "Running" && pod.KubectlStatus != "Completed" {
@@ -637,6 +648,7 @@ func isPodReady(pod rancher.Pod) bool {
 	return false
 }
 
+// pluralize returns "s" if count is not 1, for simple pluralization.
 func pluralize(count int) string {
 	if count == 1 {
 		return ""
