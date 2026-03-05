@@ -209,11 +209,11 @@ func TestParseJournaldLogs_AllPatterns(t *testing.T) {
 
 func TestParseJournaldLine(t *testing.T) {
 	tests := []struct {
-		name            string
-		line            string
-		wantTimestamp   string
-		wantLevel       string
-		wantMessage     string
+		name          string
+		line          string
+		wantTimestamp string
+		wantLevel     string
+		wantMessage   string
 	}{
 		{
 			name:          "standard format",

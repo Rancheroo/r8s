@@ -13,6 +13,7 @@ import (
 
 	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 // exportCmd represents the export command
@@ -71,7 +72,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
+			ui.ShowBundleNotFoundError(bundlePath)
 			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
 		}
 		return fmt.Errorf("cannot access bundle path: %w", err)
@@ -93,9 +94,9 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := ai.AnalysisOptions{
-		MinSeverity:  parseSeverity(minSev),
-		IncludeInfo:  minSev == "info",
-		MaxHints:     0, // No limit
+		MinSeverity: parseSeverity(minSev),
+		IncludeInfo: minSev == "info",
+		MaxHints:    0, // No limit
 	}
 
 	// Scan bundle content
@@ -152,14 +153,14 @@ func collectBundleContent(bundlePath, bundleType string) (map[string]string, err
 	if lowerType == "" {
 		lowerType = "rke2"
 	}
-	
+
 	patterns := []string{
 		// Type-specific paths (e.g., rke2/kubectl/pods)
 		fmt.Sprintf("%s/kubectl/pods", lowerType),
 		fmt.Sprintf("%s/podlogs/*", lowerType),
 		fmt.Sprintf("%s/agent-logs/*", lowerType),
 		fmt.Sprintf("%s/kubectl/poddescribe/*", lowerType),
-		
+
 		// System logs
 		"systemlogs/journald-*",
 		"systemlogs/syslog",

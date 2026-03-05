@@ -409,11 +409,11 @@ type ConfigMap struct {
 
 // HelmChart represents a Rancher HelmChart resource
 type HelmChart struct {
-	Name       string `json:"name"`
-	Namespace  string `json:"namespace"`
-	Chart      string `json:"chart"`      // Chart name (e.g., "rancher-monitoring")
-	Version    string `json:"version"`    // Chart version
-	Status     string `json:"status"`     // Deployed, Failed, Pending
-	Repo       string `json:"repo"`       // Helm repository
-	Age        string `json:"age"`        // Human-readable age
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Chart     string `json:"chart"`   // Chart name (e.g., "rancher-monitoring")
+	Version   string `json:"version"` // Chart version
+	Status    string `json:"status"`  // Deployed, Failed, Pending
+	Repo      string `json:"repo"`    // Helm repository
+	Age       string `json:"age"`     // Human-readable age
 }

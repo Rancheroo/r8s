@@ -195,8 +195,10 @@ func testJournaldIssues(extractPath string) TestResult {
 		result.Details = append(result.Details, "", "Top Critical Events:")
 		count := 0
 		for _, event := range critical {
-			if count >= 5 { break }
-			result.Details = append(result.Details, fmt.Sprintf("  [%s] %s: %s", 
+			if count >= 5 {
+				break
+			}
+			result.Details = append(result.Details, fmt.Sprintf("  [%s] %s: %s",
 				event.Timestamp.Format("15:04:05"), event.Unit, event.Message))
 			count++
 		}
@@ -395,7 +397,7 @@ func testDMesgOOM(extractPath string) TestResult {
 	result.Description = fmt.Sprintf("Found %d OOM kill(s) in kernel logs", len(analysis.OOMKills))
 
 	for _, kill := range analysis.OOMKills {
-		detail := fmt.Sprintf("  • %s (PID %d, OOM score: %d)", 
+		detail := fmt.Sprintf("  • %s (PID %d, OOM score: %d)",
 			kill.VictimName, kill.VictimPID, kill.OOMScore)
 		result.Details = append(result.Details, detail)
 	}

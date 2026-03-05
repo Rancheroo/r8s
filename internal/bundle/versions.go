@@ -23,9 +23,9 @@ type VersionInfo struct {
 	DistroVersion string // e.g., "rke2 version v1.33.7+rke2r1"
 
 	// Container images grouped by category
-	RKE2Images    []ContainerImage // RKE2 system images
-	CattleImages  []ContainerImage // Rancher/cattle images
-	CustomImages  []ContainerImage // Other user workloads
+	RKE2Images   []ContainerImage // RKE2 system images
+	CattleImages []ContainerImage // Rancher/cattle images
+	CustomImages []ContainerImage // Other user workloads
 
 	// Helm releases
 	HelmReleases []HelmRelease
@@ -50,7 +50,7 @@ type HelmRelease struct {
 // ParseVersions parses the root-level versions file from a bundle
 func ParseVersions(bundleRoot string) (*VersionInfo, error) {
 	versionsPath := filepath.Join(bundleRoot, "versions")
-	
+
 	file, err := os.Open(versionsPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open versions file: %w", err)
@@ -59,19 +59,19 @@ func ParseVersions(bundleRoot string) (*VersionInfo, error) {
 
 	info := &VersionInfo{}
 	scanner := bufio.NewScanner(file)
-	
+
 	// State machine for parsing sections
 	section := "header"
-	
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmed := strings.TrimSpace(line)
-		
+
 		// Skip empty lines
 		if trimmed == "" {
 			continue
 		}
-		
+
 		// Skip table headers (but use them for section detection)
 		isHeaderLine := false
 		switch trimmed {
@@ -84,7 +84,7 @@ func ParseVersions(bundleRoot string) (*VersionInfo, error) {
 				isHeaderLine = true
 			}
 		}
-		
+
 		if isHeaderLine {
 			// Use headers to detect section changes
 			if strings.Contains(trimmed, "CHART") && strings.Contains(trimmed, "VERSION") {
@@ -94,7 +94,7 @@ func ParseVersions(bundleRoot string) (*VersionInfo, error) {
 			}
 			continue
 		}
-		
+
 		// Detect other section changes
 		switch {
 		case strings.Contains(line, "rke2 version") || strings.Contains(line, "k3s version"):
@@ -102,7 +102,7 @@ func ParseVersions(bundleRoot string) (*VersionInfo, error) {
 			section = "images"
 			continue
 		}
-		
+
 		// Parse based on current section
 		switch section {
 		case "header":
@@ -113,26 +113,26 @@ func ParseVersions(bundleRoot string) (*VersionInfo, error) {
 			parseHelmLine(info, line)
 		}
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading versions file: %w", err)
 	}
-	
+
 	return info, nil
 }
 
 // parseHeaderLine extracts system info from header lines
 func parseHeaderLine(info *VersionInfo, line string) {
 	trimmed := strings.TrimSpace(line)
-	
+
 	// Collection date (first line typically)
-	if info.CollectionDate == "" && !strings.Contains(line, "Mem:") && 
-	   !strings.HasPrefix(line, "Linux") && !strings.HasPrefix(line, "Swap:") &&
-	   !strings.Contains(line, "total") && !strings.Contains(line, "version") {
+	if info.CollectionDate == "" && !strings.Contains(line, "Mem:") &&
+		!strings.HasPrefix(line, "Linux") && !strings.HasPrefix(line, "Swap:") &&
+		!strings.Contains(line, "total") && !strings.Contains(line, "version") {
 		info.CollectionDate = trimmed
 		return
 	}
-	
+
 	// Memory: Mem: 3.8Gi 2.0Gi ...
 	if strings.HasPrefix(trimmed, "Mem:") {
 		fields := strings.Fields(trimmed)
@@ -142,7 +142,7 @@ func parseHeaderLine(info *VersionInfo, line string) {
 		}
 		return
 	}
-	
+
 	// Linux kernel line: Linux <hostname> <kernel>...
 	if strings.HasPrefix(trimmed, "Linux ") {
 		fields := strings.Fields(trimmed)
@@ -154,7 +154,7 @@ func parseHeaderLine(info *VersionInfo, line string) {
 		}
 		return
 	}
-	
+
 	// OS Name: Ubuntu 24.04.3 LTS
 	osRe := regexp.MustCompile(`^(Ubuntu|CentOS|RHEL|SLES|Debian|Alpine)`)
 	if osRe.MatchString(trimmed) {
@@ -165,34 +165,34 @@ func parseHeaderLine(info *VersionInfo, line string) {
 // parseImageLine extracts container image info
 func parseImageLine(info *VersionInfo, line string) {
 	trimmed := strings.TrimSpace(line)
-	
+
 	// Image lines have format: <pod-name> <image>
 	// With varying whitespace (columnar format)
 	fields := strings.Fields(trimmed)
 	if len(fields) < 2 {
 		return
 	}
-	
+
 	podName := fields[0]
 	image := fields[len(fields)-1]
-	
+
 	// Skip metadata lines
 	if strings.HasPrefix(podName, "go") ||
-	   !strings.Contains(image, "/") ||
-	   (!strings.Contains(image, ":") && !strings.Contains(image, "v")) {
+		!strings.Contains(image, "/") ||
+		(!strings.Contains(image, ":") && !strings.Contains(image, "v")) {
 		return
 	}
-	
+
 	// Skip if looks like a header or partial line
 	if podName == "NAME" || image == "IMAGE" {
 		return
 	}
-	
+
 	img := ContainerImage{
 		PodName: podName,
 		Image:   image,
 	}
-	
+
 	// Categorize based on pod/image name
 	switch {
 	case strings.Contains(podName, "cattle-") || strings.Contains(podName, "rancher-"):
@@ -209,13 +209,13 @@ func parseImageLine(info *VersionInfo, line string) {
 func parseHelmLine(info *VersionInfo, line string) {
 	trimmed := strings.TrimSpace(line)
 	fields := strings.Fields(trimmed)
-	
+
 	// Helm table format: NAME CHART VERSION RELEASE_NAME RELEASE_VERSION STATUS
 	// Need at least 6 fields
 	if len(fields) < 6 {
 		return
 	}
-	
+
 	release := HelmRelease{
 		Name:           fields[0],
 		Chart:          fields[1],
@@ -224,6 +224,6 @@ func parseHelmLine(info *VersionInfo, line string) {
 		ReleaseVersion: fields[4],
 		Status:         fields[5],
 	}
-	
+
 	info.HelmReleases = append(info.HelmReleases, release)
 }

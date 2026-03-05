@@ -12,6 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 // describeCmd represents the describe command
@@ -65,7 +67,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 	// Validate bundle
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
+			ui.ShowBundleNotFoundError(bundlePath)
 			os.Exit(ExitError)
 			return nil
 		}

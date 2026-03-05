@@ -43,13 +43,13 @@ type ExpectedFile struct {
 
 // HealthCheck represents the result of a bundle health check
 type HealthCheck struct {
-	TotalFiles     int
-	FoundFiles     int
-	MissingFiles   []MissingFile
-	Completeness   float64 // 0.0 to 100.0
-	IsValid        bool    // Can be loaded (critical files present)
-	BundleType     string  // "RKE2", "K3s", "kubectl", "unknown"
-	Categories     map[string]CategoryHealth
+	TotalFiles   int
+	FoundFiles   int
+	MissingFiles []MissingFile
+	Completeness float64 // 0.0 to 100.0
+	IsValid      bool    // Can be loaded (critical files present)
+	BundleType   string  // "RKE2", "K3s", "kubectl", "unknown"
+	Categories   map[string]CategoryHealth
 }
 
 // MissingFile represents a missing file with its impact

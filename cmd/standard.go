@@ -12,11 +12,11 @@ import (
 type OutputFormat string
 
 const (
-	FormatJSON   OutputFormat = "json"
-	FormatYAML   OutputFormat = "yaml"
-	FormatTable  OutputFormat = "table"
-	FormatWide   OutputFormat = "wide"
-	FormatHuman  OutputFormat = "human"
+	FormatJSON  OutputFormat = "json"
+	FormatYAML  OutputFormat = "yaml"
+	FormatTable OutputFormat = "table"
+	FormatWide  OutputFormat = "wide"
+	FormatHuman OutputFormat = "human"
 )
 
 // ValidFormats returns list of valid format strings
@@ -36,10 +36,10 @@ func IsValidFormat(format string) bool {
 
 // Exit codes for standardized CLI behavior
 const (
-	ExitSuccess       = 0 // No issues, command completed successfully
-	ExitIssuesFound   = 1 // Issues found but command completed (e.g., bundle incomplete)
-	ExitError         = 2 // Error occurred (invalid args, file not found, etc.)
-	ExitCancelled     = 130 // Ctrl+C (SIGINT)
+	ExitSuccess     = 0   // No issues, command completed successfully
+	ExitIssuesFound = 1   // Issues found but command completed (e.g., bundle incomplete)
+	ExitError       = 2   // Error occurred (invalid args, file not found, etc.)
+	ExitCancelled   = 130 // Ctrl+C (SIGINT)
 )
 
 // HandleExit sets exit code and returns error message
@@ -90,10 +90,10 @@ func FormatHelp() string {
 
 // StandardFlags provides common flag descriptions
 type StandardFlags struct {
-	Format   string
-	Output   string
-	Help     bool
-	Verbose  bool
+	Format  string
+	Output  string
+	Help    bool
+	Verbose bool
 }
 
 // StandardizeFormat normalizes format string

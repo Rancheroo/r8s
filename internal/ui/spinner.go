@@ -1,6 +1,4 @@
-// Package cmd implements spinner/progress indicators for r8s.
-// Sprint 12: Animated loading spinner with Rancher personality
-package cmd
+package ui
 
 import (
 	"fmt"

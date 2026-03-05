@@ -24,46 +24,46 @@ cattle-cluster-agent-78b58bc994-dmc2f                   rancher/rancher-agent:v2
 NAME                           CHART                          VERSION     RELEASE NAME                   RELEASE VERSION   STATUS
 rke2-calico                    rke2-calico                    v3.31.200   rke2-calico                    1                 deployed
 `
-	
+
 	versionsPath := filepath.Join(tmpDir, "versions")
 	if err := os.WriteFile(versionsPath, []byte(versionsContent), 0644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
-	
+
 	info, err := ParseVersions(tmpDir)
 	if err != nil {
 		t.Fatalf("ParseVersions failed: %v", err)
 	}
-	
+
 	// Verify header parsing
 	if info.CollectionDate != "Tue Mar  3 03:49:05 UTC 2026" {
 		t.Errorf("CollectionDate = %q, want %q", info.CollectionDate, "Tue Mar  3 03:49:05 UTC 2026")
 	}
-	
+
 	if info.MemoryTotal != "3.8Gi" {
 		t.Errorf("MemoryTotal = %q, want %q", info.MemoryTotal, "3.8Gi")
 	}
-	
+
 	if info.MemoryUsed != "2.0Gi" {
 		t.Errorf("MemoryUsed = %q, want %q", info.MemoryUsed, "2.0Gi")
 	}
-	
+
 	if info.Hostname != "r8s-cp-wlp7h-lhvgq" {
 		t.Errorf("Hostname = %q, want %q", info.Hostname, "r8s-cp-wlp7h-lhvgq")
 	}
-	
+
 	if info.KernelVersion != "6.8.0-71-generic" {
 		t.Errorf("KernelVersion = %q, want %q", info.KernelVersion, "6.8.0-71-generic")
 	}
-	
+
 	if info.OSName != "Ubuntu 24.04.3 LTS" {
 		t.Errorf("OSName = %q, want %q", info.OSName, "Ubuntu 24.04.3 LTS")
 	}
-	
+
 	if info.DistroVersion != "rke2 version v1.33.7+rke2r1 (b0a4ec8463abd1e23e41f213fdb54ad8006c693b)" {
 		t.Errorf("DistroVersion = %q, want RKE2 version", info.DistroVersion)
 	}
-	
+
 	// Verify RKE2 images
 	if len(info.RKE2Images) != 1 {
 		t.Errorf("RKE2Images count = %d, want 1", len(info.RKE2Images))
@@ -75,7 +75,7 @@ rke2-calico                    rke2-calico                    v3.31.200   rke2-c
 			t.Errorf("RKE2Images[0].Image = %q", info.RKE2Images[0].Image)
 		}
 	}
-	
+
 	// Verify Cattle images
 	if len(info.CattleImages) != 1 {
 		t.Errorf("CattleImages count = %d, want 1", len(info.CattleImages))
@@ -84,7 +84,7 @@ rke2-calico                    rke2-calico                    v3.31.200   rke2-c
 			t.Errorf("CattleImages[0].PodName = %q", info.CattleImages[0].PodName)
 		}
 	}
-	
+
 	// Verify Helm releases
 	if len(info.HelmReleases) != 1 {
 		t.Errorf("HelmReleases count = %d, want 1", len(info.HelmReleases))
@@ -100,7 +100,7 @@ rke2-calico                    rke2-calico                    v3.31.200   rke2-c
 
 func TestParseVersions_FileNotFound(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	_, err := ParseVersions(tmpDir)
 	if err == nil {
 		t.Error("Expected error for missing file, got nil")
@@ -115,15 +115,15 @@ k3s version v1.28.5+k3s1
 NAME IMAGE
 coredns-abc123 rancher/mirrored-coredns:1.10.1
 `
-	
+
 	versionsPath := filepath.Join(tmpDir, "versions")
 	os.WriteFile(versionsPath, []byte(versionsContent), 0644)
-	
+
 	info, err := ParseVersions(tmpDir)
 	if err != nil {
 		t.Fatalf("ParseVersions failed: %v", err)
 	}
-	
+
 	if !strings.Contains(info.DistroVersion, "k3s version") {
 		t.Errorf("Expected k3s version, got %q", info.DistroVersion)
 	}
@@ -141,19 +141,19 @@ rke2-calico calico v1.0 calico 1 deployed
 rke2-coredns coredns v2.0 coredns 1 deployed
 rke2-metrics metrics v3.0 metrics 1 failed
 `
-	
+
 	versionsPath := filepath.Join(tmpDir, "versions")
 	os.WriteFile(versionsPath, []byte(versionsContent), 0644)
-	
+
 	info, err := ParseVersions(tmpDir)
 	if err != nil {
 		t.Fatalf("ParseVersions failed: %v", err)
 	}
-	
+
 	if len(info.HelmReleases) != 3 {
 		t.Errorf("HelmReleases count = %d, want 3", len(info.HelmReleases))
 	}
-	
+
 	// Check failed status is captured
 	foundFailed := false
 	for _, r := range info.HelmReleases {

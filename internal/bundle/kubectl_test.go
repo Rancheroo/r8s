@@ -12,7 +12,7 @@ func createKubectlTestBundle(t *testing.T, files map[string]string) (string, fun
 
 	tmpDir, err := os.MkdirTemp("", "r8s-kubectl-test-")
 	if err != nil {
-	t.Fatalf("Failed to create temp dir: %v", err)
+		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
 	// Create rke2/kubectl structure

@@ -12,6 +12,7 @@ import (
 
 	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 // askCmd represents the ask command
@@ -58,8 +59,8 @@ func init() {
 func runAsk(cmd *cobra.Command, args []string) error {
 	// Validate we have the right number of args (should be caught by cobra, but defensive)
 	if len(args) < 2 {
-		ShowUsageError("ask", "r8s ask <bundle> <question>")
-		return NewUsageError("ask", "r8s ask <bundle> <question>")
+		ui.ShowUsageError("ask", "r8s ask <bundle> <question>")
+		return ui.NewUsageError("ask", "r8s ask <bundle> <question>")
 	}
 
 	bundlePath := args[0]
@@ -77,18 +78,18 @@ func runAsk(cmd *cobra.Command, args []string) error {
 			strings.HasPrefix(questionLower, "what ") ||
 			strings.HasPrefix(questionLower, "how ") {
 			// First arg looks like a question, not a path
-			ShowUsageError("ask", "r8s ask <bundle> <question>")
+			ui.ShowUsageError("ask", "r8s ask <bundle> <question>")
 			fmt.Fprintf(os.Stderr, "\nIt looks like you might have the arguments in the wrong order.\n")
 			fmt.Fprintf(os.Stderr, "Expected:    r8s ask ./bundle/ \"your question\"\n")
 			fmt.Fprintf(os.Stderr, "You entered: r8s ask \"%s\" %s\n\n", bundlePath, args[1])
-			return NewUsageError("ask", "r8s ask <bundle> <question>")
+			return ui.NewUsageError("ask", "r8s ask <bundle> <question>")
 		}
 	}
 
 	// Validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
 		if os.IsNotExist(err) {
-			ShowBundleNotFoundError(bundlePath)
+			ui.ShowBundleNotFoundError(bundlePath)
 			return &ExitCodeError{Code: ExitError, Message: fmt.Sprintf("bundle not found: %s", bundlePath)}
 		}
 		return fmt.Errorf("cannot access bundle path: %w", err)
@@ -247,7 +248,7 @@ func generateResponse(intent QueryIntent, hints []*ai.Hint, originalQuestion str
 func matchesIntent(hint *ai.Hint, intent QueryIntent) bool {
 	// Check pattern ID matches resource/condition
 	patternIDLower := strings.ToLower(hint.PatternID)
-	
+
 	// Check condition match
 	if intent.Condition != "" {
 		if !strings.Contains(patternIDLower, intent.Condition) {
@@ -284,42 +285,42 @@ func matchesIntent(hint *ai.Hint, intent QueryIntent) bool {
 
 func formatWhyResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString(fmt.Sprintf("🔍 Analysis: Why resources are %s\n\n", intent.Condition))
-	
+
 	for i, hint := range hints {
 		sb.WriteString(fmt.Sprintf("**Finding %d:** %s\n\n", i+1, hint.Summary))
-		
+
 		if hint.Explanation != "" {
 			sb.WriteString(fmt.Sprintf("**What happened:**\n%s\n\n", hint.Explanation))
 		}
-		
+
 		if hint.Suggestion != "" {
 			sb.WriteString(fmt.Sprintf("**What to do:**\n%s\n\n", hint.Suggestion))
 		}
-		
+
 		if hint.Command != "" {
 			sb.WriteString(fmt.Sprintf("**Try this command:**\n```\n%s\n```\n\n", hint.Command))
 		}
-		
+
 		if i < len(hints)-1 {
 			sb.WriteString("---\n\n")
 		}
 	}
-	
+
 	return sb.String()
 }
 
 func formatShowResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
-	
+
 	title := intent.Condition
 	if title == "" {
 		title = "matching"
 	}
-	
+
 	sb.WriteString(fmt.Sprintf("📋 Showing %s %d %s issues:\n\n", title, len(hints), intent.Resource))
-	
+
 	for i, hint := range hints {
 		icon := "🔵"
 		if hint.Severity == ai.SeverityCritical {
@@ -327,55 +328,55 @@ func formatShowResponse(intent QueryIntent, hints []*ai.Hint) string {
 		} else if hint.Severity == ai.SeverityWarning {
 			icon = "🟡"
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("%s **%d.** %s\n", icon, i+1, hint.Summary))
 	}
-	
+
 	if len(hints) > 5 {
 		sb.WriteString(fmt.Sprintf("\n... and %d more. Use 'r8s analyze' for full details.\n", len(hints)-5))
 	}
-	
+
 	return sb.String()
 }
 
 func formatWhichResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
-	
+
 	resourceName := intent.Resource
 	if resourceName == "" {
 		resourceName = "resources"
 	}
-	
+
 	condition := intent.Condition
 	if condition == "" {
 		condition = "affected"
 	}
-	
+
 	sb.WriteString(fmt.Sprintf("🎯 Found %d %s that are %s:\n\n", len(hints), resourceName, condition))
-	
+
 	for _, hint := range hints {
 		// Extract name from hint if possible
 		name := hint.PatternID
 		if hint.Metadata["PodName"] != "" {
 			name = hint.Metadata["PodName"]
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("• %s\n", name))
 	}
-	
+
 	return sb.String()
 }
 
 func formatWhatResponse(intent QueryIntent, hints []*ai.Hint) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString(fmt.Sprintf("🤔 Analysis: What is wrong with %s?\n\n", intent.Resource))
-	
+
 	if len(hints) == 0 {
 		sb.WriteString("No issues detected for this resource.\n")
 		return sb.String()
 	}
-	
+
 	for _, hint := range hints {
 		icon := "🔵"
 		if hint.Severity == ai.SeverityCritical {
@@ -383,19 +384,19 @@ func formatWhatResponse(intent QueryIntent, hints []*ai.Hint) string {
 		} else if hint.Severity == ai.SeverityWarning {
 			icon = "🟡"
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("%s **%s**\n", icon, hint.Summary))
 		sb.WriteString(fmt.Sprintf("   %s\n\n", hint.Explanation))
 	}
-	
+
 	return sb.String()
 }
 
 func formatGeneralResponse(hints []*ai.Hint) string {
 	var sb strings.Builder
-	
+
 	sb.WriteString(fmt.Sprintf("Found %d relevant issues:\n\n", len(hints)))
-	
+
 	for _, hint := range hints {
 		icon := "🔵"
 		if hint.Severity == ai.SeverityCritical {
@@ -403,10 +404,10 @@ func formatGeneralResponse(hints []*ai.Hint) string {
 		} else if hint.Severity == ai.SeverityWarning {
 			icon = "🟡"
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("%s %s\n", icon, hint.Summary))
 	}
-	
+
 	return sb.String()
 }
 
@@ -421,7 +422,7 @@ This could mean:
 Try:
 • 'r8s analyze %s' for a full bundle report
 • Different wording for your question
-• Checking if the bundle includes recent data`, 
+• Checking if the bundle includes recent data`,
 		intent.Condition, "<bundle-path>")
 }
 

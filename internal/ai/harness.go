@@ -9,63 +9,76 @@ import (
 
 // Harness provides a framework for testing patterns against sample data
 type Harness struct {
-	engine *Engine
+	analyzer *Analyzer
 }
 
 // NewHarness creates a new test harness
 func NewHarness() *Harness {
 	return &Harness{
-		engine: NewEngine(),
+		analyzer: NewAnalyzer(),
 	}
 }
 
 // TestCase represents a single test scenario for the AI engine
 type TestCase struct {
-	Name             string        `json:"name"`
-	Content          string        `json:"content"`
-	Metadata         MatchMetadata `json:"metadata"`
-	ExpectedPatterns []string      `json:"expected_patterns"`
-	ExpectedSeverity string        `json:"expected_severity"`
+	Name             string   `json:"name"`
+	Content          string   `json:"content"`
+	ExpectedPatterns []string `json:"expected_patterns"`
+	ExpectedSeverity string   `json:"expected_severity"`
 }
 
 // TestResult contains the outcome of a test case execution
 type TestResult struct {
-	Name     string    `json:"name"`
-	Passed   bool      `json:"passed"`
-	Findings []Finding `json:"findings"`
-	Errors   []string  `json:"errors"`
+	Name    string          `json:"name"`
+	Passed  bool            `json:"passed"`
+	Matches []MatchResultV2 `json:"matches"`
+	Errors  []string        `json:"errors"`
 }
 
 // Run executes a test case and validates the results
 func (h *Harness) Run(tc TestCase) TestResult {
-	findings := h.engine.Analyze(tc.Content, tc.Metadata)
-	
-	result := TestResult{
-		Name:     tc.Name,
-		Findings: findings,
-		Errors:   []string{},
-		Passed:   true,
+	// Use default options for testing
+	result, err := h.analyzer.Analyze(tc.Content, AnalysisOptions{})
+
+	testResult := TestResult{
+		Name:    tc.Name,
+		Matches: []MatchResultV2{},
+		Errors:  []string{},
+		Passed:  true,
+	}
+
+	if err != nil {
+		testResult.Passed = false
+		testResult.Errors = append(testResult.Errors, fmt.Sprintf("Analysis failed: %v", err))
+		return testResult
+	}
+
+	// Filter only matched patterns
+	for _, m := range result.Patterns {
+		if m.Matched {
+			testResult.Matches = append(testResult.Matches, m)
+		}
 	}
 
 	// Check if expected patterns were found
 	foundIDs := make(map[string]bool)
-	for _, f := range findings {
-		foundIDs[f.PatternID] = true
+	for _, m := range testResult.Matches {
+		foundIDs[m.PatternID] = true
 	}
 
 	for _, expectedID := range tc.ExpectedPatterns {
 		if !foundIDs[expectedID] {
-			result.Passed = false
-			result.Errors = append(result.Errors, fmt.Sprintf("Expected pattern %s not found", expectedID))
+			testResult.Passed = false
+			testResult.Errors = append(testResult.Errors, fmt.Sprintf("Expected pattern %s not found", expectedID))
 		}
 	}
 
 	// Check for unexpected extra patterns (optional, but good for precision)
-	if len(findings) > len(tc.ExpectedPatterns) {
-		result.Errors = append(result.Errors, fmt.Sprintf("Found %d findings, expected %d", len(findings), len(tc.ExpectedPatterns)))
+	if len(testResult.Matches) > len(tc.ExpectedPatterns) {
+		testResult.Errors = append(testResult.Errors, fmt.Sprintf("Found %d matches, expected %d", len(testResult.Matches), len(tc.ExpectedPatterns)))
 	}
 
-	return result
+	return testResult
 }
 
 // RunSuite executes multiple test cases
@@ -111,38 +124,22 @@ func SaveTestData(path string, cases []TestCase) error {
 func GetDefaultTestCases() []TestCase {
 	return []TestCase{
 		{
-			Name:    "OOM Kill in dmesg",
-			Content: " [123.456] Memory cgroup out of memory: Killed process 12345 (java)",
-			Metadata: MatchMetadata{
-				SourceType: "dmesg",
-				NodeName:   "node-1",
-			},
-			ExpectedPatterns: []string{"oomkill"},
+			Name:             "OOM Kill in dmesg",
+			Content:          " [123.456] Memory cgroup out of memory: Killed process 12345 (java)",
+			ExpectedPatterns: []string{"oomkill-v2"},
 			ExpectedSeverity: "critical",
 		},
 		{
-			Name:    "Image Pull Backoff in Events",
-			Content: "Normal  BackOff    4m22s (x12 over 9m11s)  kubelet  Back-off pulling image \"nginx:latest\" (ImagePullBackOff)",
-			Metadata: MatchMetadata{
-				SourceType:    "events",
-				PodName:       "nginx-pod",
-				Namespace:     "default",
-				ContainerName: "nginx",
-			},
-			ExpectedPatterns: []string{"imagepullbackoff"},
-			ExpectedSeverity: "high",
+			Name:             "Image Pull Backoff in Events",
+			Content:          "Normal  BackOff    4m22s (x12 over 9m11s)  kubelet  Back-off pulling image \"nginx:latest\" (ImagePullBackOff)",
+			ExpectedPatterns: []string{"imagepullbackoff-v2"},
+			ExpectedSeverity: "warning",
 		},
 		{
-			Name:    "CrashLoopBackOff in Pod Logs",
-			Content: "2024-02-17T12:00:00Z panic: application failed to connect to database. CrashLoopBackOff detected.",
-			Metadata: MatchMetadata{
-				SourceType:    "logs",
-				PodName:       "db-app",
-				Namespace:     "prod",
-				ContainerName: "app",
-			},
-			ExpectedPatterns: []string{"crashloopbackoff"},
-			ExpectedSeverity: "high",
+			Name:             "CrashLoopBackOff in Pod Logs",
+			Content:          "2024-02-17T12:00:00Z panic: application failed to connect to database. CrashLoopBackOff detected.",
+			ExpectedPatterns: []string{"crashloopbackoff-v2"},
+			ExpectedSeverity: "critical",
 		},
 	}
 }

@@ -23,8 +23,8 @@ type SARIFLog struct {
 }
 
 type SARIFRun struct {
-	Tool      SARIFTool       `json:"tool"`
-	Results   []SARIFResult   `json:"results"`
+	Tool        SARIFTool         `json:"tool"`
+	Results     []SARIFResult     `json:"results"`
 	Invocations []SARIFInvocation `json:"invocations,omitempty"`
 }
 
@@ -33,19 +33,19 @@ type SARIFTool struct {
 }
 
 type SARIFDriver struct {
-	Name            string       `json:"name"`
-	Version         string       `json:"version"`
-	InformationURI  string       `json:"informationUri"`
-	Rules           []SARIFRule  `json:"rules"`
+	Name           string      `json:"name"`
+	Version        string      `json:"version"`
+	InformationURI string      `json:"informationUri"`
+	Rules          []SARIFRule `json:"rules"`
 }
 
 type SARIFRule struct {
-	ID               string            `json:"id"`
-	Name             string            `json:"name"`
-	ShortDescription SARIFMessage      `json:"shortDescription"`
-	FullDescription  SARIFMessage      `json:"fullDescription"`
-	DefaultConfiguration SARIFConfig   `json:"defaultConfiguration"`
-	HelpURI          string            `json:"helpUri,omitempty"`
+	ID                   string       `json:"id"`
+	Name                 string       `json:"name"`
+	ShortDescription     SARIFMessage `json:"shortDescription"`
+	FullDescription      SARIFMessage `json:"fullDescription"`
+	DefaultConfiguration SARIFConfig  `json:"defaultConfiguration"`
+	HelpURI              string       `json:"helpUri,omitempty"`
 }
 
 type SARIFMessage struct {
@@ -81,9 +81,9 @@ type SARIFRegion struct {
 }
 
 type SARIFInvocation struct {
-	ExecutionSuccessful bool      `json:"executionSuccessful"`
-	StartTimeUTC        string    `json:"startTimeUtc"`
-	EndTimeUTC          string    `json:"endTimeUtc"`
+	ExecutionSuccessful bool   `json:"executionSuccessful"`
+	StartTimeUTC        string `json:"startTimeUtc"`
+	EndTimeUTC          string `json:"endTimeUtc"`
 }
 
 // severityToSARIFLevel converts internal severity to SARIF level
@@ -198,21 +198,21 @@ type JUnitTestSuites struct {
 }
 
 type JUnitTestSuite struct {
-	Name      string           `xml:"name,attr"`
-	Tests     int              `xml:"tests,attr"`
-	Failures  int              `xml:"failures,attr"`
-	Errors    int              `xml:"errors,attr"`
-	Time      float64          `xml:"time,attr"`
-	Timestamp string           `xml:"timestamp,attr"`
-	TestCases []JUnitTestCase  `xml:"testcase"`
+	Name      string          `xml:"name,attr"`
+	Tests     int             `xml:"tests,attr"`
+	Failures  int             `xml:"failures,attr"`
+	Errors    int             `xml:"errors,attr"`
+	Time      float64         `xml:"time,attr"`
+	Timestamp string          `xml:"timestamp,attr"`
+	TestCases []JUnitTestCase `xml:"testcase"`
 }
 
 type JUnitTestCase struct {
-	Name      string         `xml:"name,attr"`
-	ClassName string         `xml:"classname,attr"`
-	Time      float64        `xml:"time,attr"`
-	Failure   *JUnitFailure  `xml:"failure,omitempty"`
-	Error     *JUnitError    `xml:"error,omitempty"`
+	Name      string        `xml:"name,attr"`
+	ClassName string        `xml:"classname,attr"`
+	Time      float64       `xml:"time,attr"`
+	Failure   *JUnitFailure `xml:"failure,omitempty"`
+	Error     *JUnitError   `xml:"error,omitempty"`
 }
 
 type JUnitFailure struct {

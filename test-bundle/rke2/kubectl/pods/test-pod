@@ -1,0 +1,4 @@
+Name: test-pod
+Namespace: default
+Status: Running
+

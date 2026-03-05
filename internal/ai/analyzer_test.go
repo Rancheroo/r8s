@@ -77,10 +77,10 @@ func TestAnalyzerFilteredAnalyze(t *testing.T) {
 	`
 
 	tests := []struct {
-		name        string
-		opts        AnalysisOptions
-		minMatches  int
-		maxMatches  int
+		name       string
+		opts       AnalysisOptions
+		minMatches int
+		maxMatches int
 	}{
 		{
 			name: "include all",
@@ -143,7 +143,7 @@ func TestAnalyzerDetectCorrelations(t *testing.T) {
 	foundOOMCrashCorrelation := false
 	for _, corr := range result.Correlations {
 		if (corr.PatternID1 == "oomkill-v2" && corr.PatternID2 == "crashloopbackoff-v2") ||
-		   (corr.PatternID1 == "crashloopbackoff-v2" && corr.PatternID2 == "oomkill-v2") {
+			(corr.PatternID1 == "crashloopbackoff-v2" && corr.PatternID2 == "oomkill-v2") {
 			foundOOMCrashCorrelation = true
 			if corr.Message == "" {
 				t.Error("Expected correlation message to be non-empty")
@@ -170,7 +170,7 @@ func TestAnalyzerBuildSummary(t *testing.T) {
 		{PatternID1: "1", PatternID2: "2"},
 	}
 
-	summary := analyzer.buildSummary(matches, correlations)
+	summary := BuildSummary(matches, correlations, analyzer.registry)
 
 	if summary.CriticalIssues != 2 {
 		t.Errorf("Expected 2 critical issues, got %d", summary.CriticalIssues)
@@ -267,7 +267,7 @@ func TestAnalyzerGetHintsByCategory(t *testing.T) {
 
 	result := &AnalysisResult{
 		Hints: []*Hint{
-			{PatternID: "oomkill-v2"},       // Category: OOM
+			{PatternID: "oomkill-v2"},          // Category: OOM
 			{PatternID: "crashloopbackoff-v2"}, // Category: Crash
 			{PatternID: "imagepullbackoff-v2"}, // Category: Image
 		},
@@ -284,7 +284,7 @@ func TestAnalyzerAnalyzeMultiple(t *testing.T) {
 	analyzer := NewAnalyzer()
 
 	contents := map[string]string{
-		"pod.logs": "Out of memory: Kill process 1234",
+		"pod.logs":  "Out of memory: Kill process 1234",
 		"node.logs": "Certificate has expired",
 	}
 
@@ -347,8 +347,6 @@ func TestAnalyzerGetPatternStats(t *testing.T) {
 }
 
 func TestShouldInclude(t *testing.T) {
-	analyzer := NewAnalyzer()
-
 	tests := []struct {
 		name     string
 		match    MatchResultV2
@@ -383,9 +381,9 @@ func TestShouldInclude(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := analyzer.shouldInclude(tt.match, tt.opts)
+			got := ShouldIncludeMatch(tt.match, tt.opts)
 			if got != tt.expected {
-				t.Errorf("shouldInclude() = %v, want %v", got, tt.expected)
+				t.Errorf("ShouldIncludeMatch() = %v, want %v", got, tt.expected)
 			}
 		})
 	}

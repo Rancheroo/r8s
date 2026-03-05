@@ -8,14 +8,14 @@ import (
 
 func TestAnalyzeCompleteness_FullBundle(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create all required files
 	requiredFiles := []string{
 		"rke2/kubectl/pods",
 		"rke2/kubectl/nodes",
 		"rke2/kubectl/events",
 	}
-	
+
 	for _, file := range requiredFiles {
 		path := filepath.Join(tmpDir, file)
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -42,14 +42,14 @@ func TestAnalyzeCompleteness_FullBundle(t *testing.T) {
 
 func TestAnalyzeCompleteness_Partial(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create only some files
 	files := []string{
 		"rke2/kubectl/pods",
 		"rke2/kubectl/nodes",
 		// Missing: rke2/kubectl/events
 	}
-	
+
 	for _, file := range files {
 		path := filepath.Join(tmpDir, file)
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -76,14 +76,14 @@ func TestAnalyzeCompleteness_Partial(t *testing.T) {
 
 func TestAnalyzeCompleteness_WithPodLogs(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	// Create required files
 	requiredFiles := []string{
 		"rke2/kubectl/pods",
 		"rke2/kubectl/nodes",
 		"rke2/kubectl/events",
 	}
-	
+
 	for _, file := range requiredFiles {
 		path := filepath.Join(tmpDir, file)
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -93,7 +93,7 @@ func TestAnalyzeCompleteness_WithPodLogs(t *testing.T) {
 			t.Fatalf("Failed to write file: %v", err)
 		}
 	}
-	
+
 	// Create podlogs directory with some files
 	podlogsDir := filepath.Join(tmpDir, "rke2", "podlogs")
 	if err := os.MkdirAll(podlogsDir, 0755); err != nil {
@@ -145,7 +145,7 @@ func TestFormatCompleteness(t *testing.T) {
 	result := &CompletenessResult{
 		Percentage: 85,
 	}
-	
+
 	formatted := FormatCompleteness(result)
 	expected := "Bundle: 85% (Good)"
 	if formatted != expected {

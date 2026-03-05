@@ -39,10 +39,10 @@ func createEtcdTestBundle(t *testing.T, files map[string]string) (string, func()
 
 func TestParseEtcdHealth_NoAlarms(t *testing.T) {
 	files := map[string]string{
-		"alarmlist":   "memberID:0",
+		"alarmlist":      "memberID:0",
 		"endpointhealth": "https://127.0.0.1:2379 is healthy: successfully committed proposal",
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -62,10 +62,10 @@ func TestParseEtcdHealth_NoAlarms(t *testing.T) {
 func TestParseEtcdHealth_WithAlarms(t *testing.T) {
 	// Alarm file format: alarms listed without memberID prefix
 	files := map[string]string{
-		"alarmlist": "alarm:NOSPACE\nalarm:NOSPACE",
+		"alarmlist":      "alarm:NOSPACE\nalarm:NOSPACE",
 		"endpointhealth": "https://127.0.0.1:2379 is healthy",
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -90,7 +90,7 @@ func TestParseEtcdHealth_Unhealthy(t *testing.T) {
 		"alarmlist":      "memberID:0",
 		"endpointhealth": "https://127.0.0.1:2379 is unhealthy",
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -131,11 +131,11 @@ func TestParseEtcdMemberList(t *testing.T) {
 2a8f4b9c12345678, started, node2, https://10.0.0.2:2380, https://10.0.0.2:2379, false
 3b1c5d0e87654321, started, learner-node, https://10.0.0.3:2380, https://10.0.0.3:2379, true
 `
-	
+
 	files := map[string]string{
 		"memberlist": content,
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -190,11 +190,11 @@ func TestParseEtcdEndpointStatus(t *testing.T) {
 | 127.0.0.1:2379 | 15e9d2d844399be2 |  3.5.21 |   50 MB |     true  |    false   |         5 |     12345 |              12345 |        |
 +----------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 `
-	
+
 	files := map[string]string{
 		"endpointstatus": content,
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -230,11 +230,11 @@ func TestParseEtcdEndpointStatus_NotLeader(t *testing.T) {
 | 127.0.0.1:2379 | 15e9d2d844399be2 |  3.5.21 |   50 MB |    false  |    false   |         5 |     12345 |              12345 |        |
 +----------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 `
-	
+
 	files := map[string]string{
 		"endpointstatus": content,
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -282,7 +282,7 @@ func TestParseEtcdDetails(t *testing.T) {
 +----------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 `,
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 
@@ -320,7 +320,7 @@ func TestParseEtcdDetails_NeedsCompaction(t *testing.T) {
 +----------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 `,
 	}
-	
+
 	bundlePath, cleanup := createEtcdTestBundle(t, files)
 	defer cleanup()
 

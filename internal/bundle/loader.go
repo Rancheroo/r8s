@@ -127,76 +127,16 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	}
 
 	// Inventory pods
-	pods, err := InventoryPods(extractPath)
-	if err != nil {
-		// Pods are optional - log warning
-		if opts.Verbose {
-			fmt.Printf("⚠️  pods: missing\n")
-		}
-		health.MissingFiles = append(health.MissingFiles, "pods")
-		pods = []PodInfo{} // Empty slice
-	} else {
-		if opts.Verbose {
-			fmt.Printf("✓ pods: %d\n", len(pods))
-		}
-		health.FoundFiles++
-	}
+	pods := loadResource(extractPath, InventoryPods, "pods", health, opts.Verbose)
 
 	// Inventory log files
-	logFiles, err := InventoryLogFiles(extractPath)
-	if err != nil {
-		// Logs are optional - log warning
-		if opts.Verbose {
-			fmt.Printf("⚠️  logs: missing\n")
-		}
-		health.MissingFiles = append(health.MissingFiles, "logs")
-		logFiles = []LogFileInfo{} // Empty slice
-	} else {
-		if opts.Verbose {
-			fmt.Printf("✓ logs: %d\n", len(logFiles))
-		}
-		health.FoundFiles++
-	}
+	logFiles := loadResource(extractPath, InventoryLogFiles, "logs", health, opts.Verbose)
 
 	// Parse kubectl resources (all optional)
-	crds, crdErr := ParseCRDs(extractPath)
-	if crdErr != nil {
-		health.MissingFiles = append(health.MissingFiles, "crds")
-		if opts.Verbose {
-			fmt.Printf("⚠️  crds: missing\n")
-		}
-	} else {
-		health.FoundFiles++
-		if opts.Verbose {
-			fmt.Printf("✓ crds: %d\n", len(crds))
-		}
-	}
-
-	deployments, depErr := ParseDeployments(extractPath)
-	if depErr != nil {
-		health.MissingFiles = append(health.MissingFiles, "deployments")
-		if opts.Verbose {
-			fmt.Printf("⚠️  deployments: missing\n")
-		}
-	} else {
-		health.FoundFiles++
-		if opts.Verbose {
-			fmt.Printf("✓ deployments: %d\n", len(deployments))
-		}
-	}
-
-	services, svcErr := ParseServices(extractPath)
-	if svcErr != nil {
-		health.MissingFiles = append(health.MissingFiles, "services")
-		if opts.Verbose {
-			fmt.Printf("⚠️  services: missing\n")
-		}
-	} else {
-		health.FoundFiles++
-		if opts.Verbose {
-			fmt.Printf("✓ services: %d\n", len(services))
-		}
-	}
+	crds := loadResource(extractPath, ParseCRDs, "crds", health, opts.Verbose)
+	deployments := loadResource(extractPath, ParseDeployments, "deployments", health, opts.Verbose)
+	services := loadResource(extractPath, ParseServices, "services", health, opts.Verbose)
+	events := loadResource(extractPath, ParseEvents, "events", health, opts.Verbose)
 
 	namespaces, nsErr := ParseNamespaces(extractPath)
 	kubectlPods, _ := ParsePods(extractPath)
@@ -239,19 +179,6 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 		health.FoundFiles++
 		if opts.Verbose {
 			fmt.Printf("✓ namespaces: %d\n", len(namespaces))
-		}
-	}
-
-	events, evtErr := ParseEvents(extractPath)
-	if evtErr != nil {
-		health.MissingFiles = append(health.MissingFiles, "events")
-		if opts.Verbose {
-			fmt.Printf("⚠️  events: missing\n")
-		}
-	} else {
-		health.FoundFiles++
-		if opts.Verbose {
-			fmt.Printf("✓ events: %d\n", len(events))
 		}
 	}
 
@@ -307,4 +234,27 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 	}
 
 	return bundle, nil
+}
+
+// loadResource is a generic helper to load resources and handle errors
+func loadResource[T any](
+	path string,
+	parseFunc func(string) ([]T, error),
+	name string,
+	health *BundleHealth,
+	verbose bool,
+) []T {
+	items, err := parseFunc(path)
+	if err != nil {
+		health.MissingFiles = append(health.MissingFiles, name)
+		if verbose {
+			fmt.Printf("⚠️  %s: missing\n", name)
+		}
+		return []T{} // Return empty slice
+	}
+	health.FoundFiles++
+	if verbose {
+		fmt.Printf("✓ %s: %d\n", name, len(items))
+	}
+	return items
 }

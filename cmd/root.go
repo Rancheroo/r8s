@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/Rancheroo/r8s/internal/ui"
 )
 
 var (
@@ -26,8 +28,8 @@ var rootCmd = &cobra.Command{
 	Use:           "r8s [bundle-path]",
 	Args:          cobra.MaximumNArgs(1), // Allow 0 or 1 positional argument (bundle path)
 	Short:         "r8s - The fastest way to understand a broken Kubernetes cluster from a log bundle",
-	SilenceErrors: true,                  // We handle error output ourselves
-	SilenceUsage:  true,                  // Don't dump usage on every error
+	SilenceErrors: true, // We handle error output ourselves
+	SilenceUsage:  true, // Don't dump usage on every error
 	Long: `r8s — kubectl for Rancher bundles. Analyze clusters offline.
 
 USAGE:
@@ -54,8 +56,8 @@ For more: https://github.com/Rancheroo/r8s`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() {
 	// Set up custom error handling
-	SetUnknownCommandHandler(rootCmd)
-	
+	ui.SetUnknownCommandHandler(rootCmd)
+
 	// Check for unknown commands before executing
 	if len(os.Args) > 1 {
 		firstArg := os.Args[1]
@@ -63,23 +65,24 @@ func Execute() {
 		if !strings.HasPrefix(firstArg, "-") && firstArg != "help" && firstArg != "--help" && firstArg != "-h" {
 			// Check if it's a known subcommand
 			if !isKnownCommand(firstArg) {
-				// Check if it's a typo we can suggest
-				if suggestion, found := CommandSuggestions[strings.ToLower(firstArg)]; found {
-					// Show the new format: "Unknown command. Did you mean 'analyze'? Run 'r8s help'"
-					fmt.Fprintf(os.Stderr, "Unknown command. Did you mean '%s'? Run 'r8s help'\n", suggestion.Command)
-					os.Exit(ExitError)
-				} else if !isValidBundlePath(firstArg) {
-					// Could be a bundle path, which is handled by runRoot
-					// But if it doesn't exist as a path either, show unknown command
+				// Check if it's a valid bundle path (if it exists)
+				if isValidBundlePath(firstArg) {
+					// It might be a bundle path, let runRoot handle it
+					// But we should verify it exists before assuming it's a bundle path vs a typo
 					if _, err := os.Stat(firstArg); os.IsNotExist(err) {
-						fmt.Fprintf(os.Stderr, "Unknown command. Did you mean 'analyze'? Run 'r8s help'\n")
+						// It doesn't exist, so it's likely a typo'd command
+						ui.ShowUnknownCommandError(firstArg)
 						os.Exit(ExitError)
 					}
+				} else {
+					// Not a path, definitively an unknown command
+					ui.ShowUnknownCommandError(firstArg)
+					os.Exit(ExitError)
 				}
 			}
 		}
 	}
-	
+
 	if err := rootCmd.Execute(); err != nil {
 		// Check for exit code error (type assertion, not value check)
 		if exitErr, ok := err.(*ExitCodeError); ok {
@@ -87,36 +90,22 @@ func Execute() {
 			os.Exit(exitErr.Code)
 		}
 		// Regular error - show friendly version
-		ShowFriendlyError(err)
+		ui.ShowFriendlyError(err)
 		os.Exit(ExitError)
 	}
 }
 
 // isKnownCommand checks if a command is known
-func isKnownCommand(cmd string) bool {
-	// Only REAL Cobra commands - no typos or aliases
-	// Typos are handled by CommandSuggestions
-	knownCommands := []string{
-		"analyze",
-		"ask",
-		"completion",
-		"describe",
-		"export",
-		"generate",
-		"get",
-		"logs",
-		"patterns",
-		"test-cluster",
-		"validate",
-		"version",
-		"help",
-	}
-
-	cmd = strings.ToLower(cmd)
-	for _, known := range knownCommands {
-		if cmd == known {
+func isKnownCommand(cmdName string) bool {
+	cmdName = strings.ToLower(cmdName)
+	for _, c := range rootCmd.Commands() {
+		if c.Name() == cmdName || c.HasAlias(cmdName) {
 			return true
 		}
+	}
+	// Special case for help which is always available
+	if cmdName == "help" {
+		return true
 	}
 	return false
 }

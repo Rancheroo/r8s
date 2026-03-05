@@ -22,9 +22,9 @@ type DMesgOOMKill struct {
 
 // DMesgAnalysis contains analysis results from dmesg
 type DMesgAnalysis struct {
-	OOMKills        []DMesgOOMKill
-	MemoryPressure  bool // System-wide memory pressure detected
-	KernelWarnings  []string
+	OOMKills       []DMesgOOMKill
+	MemoryPressure bool // System-wide memory pressure detected
+	KernelWarnings []string
 }
 
 // ParseDMesg parses dmesg output from bundle

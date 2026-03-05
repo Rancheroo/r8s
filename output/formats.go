@@ -87,12 +87,12 @@ type NamespaceRow struct {
 
 // EventRow represents an event in kubectl get events output
 type EventRow struct {
-	Namespace     string `json:"namespace" yaml:"namespace"`
-	LastSeen      string `json:"lastSeen" yaml:"lastSeen"`
-	Type          string `json:"type" yaml:"type"`
-	Reason        string `json:"reason" yaml:"reason"`
-	Object        string `json:"object" yaml:"object"`
-	Message       string `json:"message" yaml:"message"`
+	Namespace string `json:"namespace" yaml:"namespace"`
+	LastSeen  string `json:"lastSeen" yaml:"lastSeen"`
+	Type      string `json:"type" yaml:"type"`
+	Reason    string `json:"reason" yaml:"reason"`
+	Object    string `json:"object" yaml:"object"`
+	Message   string `json:"message" yaml:"message"`
 }
 
 // DeploymentRow represents a deployment in kubectl get deploy output
@@ -107,13 +107,13 @@ type DeploymentRow struct {
 
 // ServiceRow represents a service in kubectl get svc output
 type ServiceRow struct {
-	Namespace string `json:"namespace" yaml:"namespace"`
-	Name      string `json:"name" yaml:"name"`
-	Type      string `json:"type" yaml:"type"`
-	ClusterIP string `json:"clusterIP" yaml:"clusterIP"`
+	Namespace  string `json:"namespace" yaml:"namespace"`
+	Name       string `json:"name" yaml:"name"`
+	Type       string `json:"type" yaml:"type"`
+	ClusterIP  string `json:"clusterIP" yaml:"clusterIP"`
 	ExternalIP string `json:"externalIP" yaml:"externalIP"`
-	Ports     string `json:"ports" yaml:"ports"`
-	Age       string `json:"age" yaml:"age"`
+	Ports      string `json:"ports" yaml:"ports"`
+	Age        string `json:"age" yaml:"age"`
 }
 
 // OutputPods outputs pod data in the specified format
@@ -473,7 +473,7 @@ func FormatError(err error) string {
 		return ""
 	}
 	msg := err.Error()
-	
+
 	// Provide actionable error messages
 	switch {
 	case strings.Contains(msg, "bundle not loaded") || strings.Contains(msg, "no such file"):

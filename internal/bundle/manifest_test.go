@@ -38,7 +38,7 @@ func TestDetectFormat_RKE2Direct(t *testing.T) {
 		"rke2/kubectl": {"nodes", "pods"},
 		"rke2/server":  {"kube-apiserver.log"},
 	}
-	
+
 	bundlePath, cleanup := createManifestTestBundle(t, structure)
 	defer cleanup()
 
@@ -59,7 +59,7 @@ func TestDetectFormat_RKE2Wrapped(t *testing.T) {
 	// Create wrapper directory with single entry
 	wrapperDir := filepath.Join(tmpDir, "w-guard-wg-cp-svtk6-lqtxw-2025-11-27_04_19_09")
 	os.MkdirAll(wrapperDir, 0755)
-	
+
 	// Create rke2 inside wrapper
 	os.MkdirAll(filepath.Join(wrapperDir, "rke2", "kubectl"), 0755)
 	os.WriteFile(filepath.Join(wrapperDir, "rke2", "kubectl", "nodes"), []byte("test"), 0644)
@@ -73,10 +73,10 @@ func TestDetectFormat_RKE2Wrapped(t *testing.T) {
 func TestDetectFormat_KubectlDump(t *testing.T) {
 	// kubectl cluster-info dump structure
 	structure := map[string][]string{
-		"namespaces/default": {"pod.yaml"},
+		"namespaces/default":     {"pod.yaml"},
 		"namespaces/kube-system": {"pod.yaml"},
 	}
-	
+
 	bundlePath, cleanup := createManifestTestBundle(t, structure)
 	defer cleanup()
 
@@ -91,7 +91,7 @@ func TestDetectFormat_Unknown(t *testing.T) {
 	structure := map[string][]string{
 		"random": {"file.txt"},
 	}
-	
+
 	bundlePath, cleanup := createManifestTestBundle(t, structure)
 	defer cleanup()
 
@@ -114,7 +114,7 @@ func TestParseManifest_RKE2(t *testing.T) {
 		"rke2/server":  {"kube-apiserver.log"},
 		"systemlogs":   {"syslog"},
 	}
-	
+
 	bundlePath, cleanup := createManifestTestBundle(t, structure)
 	defer cleanup()
 
@@ -126,11 +126,11 @@ func TestParseManifest_RKE2(t *testing.T) {
 	if manifest.BundleType != string(FormatRKE2) {
 		t.Errorf("Expected bundle type %s, got: %s", FormatRKE2, manifest.BundleType)
 	}
-	
+
 	if manifest.FileCount == 0 {
 		t.Error("Expected FileCount > 0")
 	}
-	
+
 	if manifest.TotalSize == 0 {
 		t.Error("Expected TotalSize > 0")
 	}
@@ -140,7 +140,7 @@ func TestParseManifest_UnknownFormat(t *testing.T) {
 	structure := map[string][]string{
 		"random": {"file.txt"},
 	}
-	
+
 	bundlePath, cleanup := createManifestTestBundle(t, structure)
 	defer cleanup()
 
@@ -160,7 +160,7 @@ func TestParseManifest_WithVersion(t *testing.T) {
 	// Create rke2 structure
 	os.MkdirAll(filepath.Join(tmpDir, "rke2", "kubectl"), 0755)
 	os.WriteFile(filepath.Join(tmpDir, "rke2", "kubectl", "nodes"), []byte("test"), 0644)
-	
+
 	// Add version file
 	os.WriteFile(filepath.Join(tmpDir, "rke2", "version"), []byte("v1.28.5+rke2r1"), 0644)
 
@@ -209,7 +209,7 @@ func TestExtractNodeName_FromHostname(t *testing.T) {
 	// Create simple structure
 	os.MkdirAll(filepath.Join(tmpDir, "rke2", "kubectl"), 0755)
 	os.WriteFile(filepath.Join(tmpDir, "rke2", "kubectl", "nodes"), []byte("test"), 0644)
-	
+
 	// Add hostname file
 	os.MkdirAll(filepath.Join(tmpDir, "systeminfo"), 0755)
 	os.WriteFile(filepath.Join(tmpDir, "systeminfo", "hostname"), []byte("my-server-01\n"), 0644)
@@ -233,8 +233,8 @@ func TestCalculateBundleStats(t *testing.T) {
 
 	// Create some files with known sizes
 	os.MkdirAll(filepath.Join(tmpDir, "subdir"), 0755)
-	os.WriteFile(filepath.Join(tmpDir, "file1.txt"), []byte("hello"), 0644) // 5 bytes
-	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world!"), 0644) // 6 bytes
+	os.WriteFile(filepath.Join(tmpDir, "file1.txt"), []byte("hello"), 0644)          // 5 bytes
+	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world!"), 0644)         // 6 bytes
 	os.WriteFile(filepath.Join(tmpDir, "subdir", "file3.txt"), []byte("test"), 0644) // 4 bytes
 
 	count, size, err := calculateBundleStats(tmpDir)

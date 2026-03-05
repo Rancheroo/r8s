@@ -149,7 +149,7 @@ func generateChatbotPrompt(bundlePath string, health *bundle.HealthCheck) string
 	if len(health.MissingFiles) > 0 {
 		prompt += "## Bundle Completeness\n\n"
 		prompt += fmt.Sprintf("Present: %d/%d files (%.0f%%)\n\n", health.FoundFiles, health.TotalFiles, health.Completeness)
-		
+
 		prompt += "### Missing Files by Category\n\n"
 		for cat, stats := range health.Categories {
 			if stats.Missing > 0 {
@@ -168,7 +168,7 @@ func generateChatbotPrompt(bundlePath string, health *bundle.HealthCheck) string
 	prompt += "2. **Step-by-step remediation** with specific kubectl commands\n"
 	prompt += "3. **Prevention recommendations** to avoid recurrence\n"
 	prompt += "4. **Priority order** for any fixes needed\n\n"
-	
+
 	if health.Completeness < 100 {
 		prompt += "Note: This bundle may be incomplete. Recommendations should note where missing data limits analysis.\n\n"
 	}
@@ -191,10 +191,10 @@ func generateTerminalPrompt(bundlePath string, health *bundle.HealthCheck) strin
 	if len(highImpact) > 0 {
 		prompt += "## Issues Found\n\n"
 		for i, missing := range highImpact {
-			prompt += fmt.Sprintf("%d. [%s] %s: %s\n", 
-				i+1, 
+			prompt += fmt.Sprintf("%d. [%s] %s: %s\n",
+				i+1,
 				missing.Importance.String(),
-				missing.Path, 
+				missing.Path,
 				missing.Impact)
 		}
 		prompt += "\n"

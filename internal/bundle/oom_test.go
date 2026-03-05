@@ -298,9 +298,9 @@ func TestNormalizePodName(t *testing.T) {
 		{"my-app", "my-app"},
 		{"default/my-app", "my-app"},
 		{"kube-system/coredns", "coredns"},
-		{"my-app-abc12", "my-app"},       // 5 char hash-like suffix stripped
-		{"my-app-abcde", "my-app"},       // 5 char hash-like suffix stripped
-		{"my-app-a1b2c", "my-app"},       // hash-like suffix
+		{"my-app-abc12", "my-app"}, // 5 char hash-like suffix stripped
+		{"my-app-abcde", "my-app"}, // 5 char hash-like suffix stripped
+		{"my-app-a1b2c", "my-app"}, // hash-like suffix
 		{"single", "single"},
 	}
 
@@ -326,10 +326,10 @@ func TestIsHashLike(t *testing.T) {
 		{"a1b2c", true},
 		{"12345", true},
 		{"abcd", false},  // too short
-		{"", false},       // empty
-		{"ABCDE", false},  // uppercase
-		{"abc-e", false},  // hyphen
-		{"abc_e", false},  // underscore
+		{"", false},      // empty
+		{"ABCDE", false}, // uppercase
+		{"abc-e", false}, // hyphen
+		{"abc_e", false}, // underscore
 		{"abcdef", true},
 	}
 
@@ -566,8 +566,8 @@ spec:
 			expectedQoS:  "BestEffort",
 		},
 		{
-			name:         "Not a Pod kind",
-			yaml:         `kind: Deployment
+			name: "Not a Pod kind",
+			yaml: `kind: Deployment
 metadata:
   name: my-deploy`,
 			expectedName: "",
@@ -652,8 +652,8 @@ spec:
 			expectedNode: "",
 		},
 		{
-			name:         "Not a Pod",
-			yaml:         `kind: Service
+			name: "Not a Pod",
+			yaml: `kind: Service
 metadata:
   name: my-svc`,
 			expectedPod:  "",
