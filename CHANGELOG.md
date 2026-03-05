@@ -116,3 +116,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 - Basic kubectl commands
 - Bundle parsing
+## [1.3.3] - 2026-03-05
+
+### Added
+- **AI Context Generation**: New `r8s generate prompt` feature to extract and format bundle data for LLM analysis.
+- **OpenCode Integration**: Seamless support for piping bundle context to local AI with `| opencode run`.
+- **Intelligent Summarization**: Automatically includes failing pods, relevant logs, and warning events in generated prompts.
+
+### Changed
+- Updated demo script to include AI integration examples.

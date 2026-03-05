@@ -67,12 +67,26 @@ r8s ask $r8sbundle1 "show me all expired certificates"
 *Context: You know the issue is in the `cattle-system` namespace, but need details.*
 
 ### Step 1: Familiar Exploration
-Use standard kubectl commands on the static bundle.
+Use standard kubectl commands on the static bundle. No more manual directory navigation.
 
 ```bash
-r8s get pods $r8sbundle2 -n cattle-system
+# List all namespaces
+r8s get namespaces $r8sbundle2
+
+# List nodes with details
 r8s get nodes $r8sbundle2
+
+# Get pods in a specific namespace
+r8s get pods $r8sbundle2 -n cattle-system
+
+# See IP addresses and Nodes with -o wide
+r8s get pods $r8sbundle2 -n cattle-system -o wide
+
+# Describe a node to check capacity and conditions
+r8s describe node $r8sbundle2 worker-2
 ```
+
+*   **Talking Point:** "It supports standard flags like `-n`, `-A` (all namespaces), and `-o wide`. You don't need to learn a new syntax."
 
 ### Step 2: Logs without Unzipping
 Don't navigate the directory structure manually.
@@ -99,6 +113,19 @@ r8s describe pod $r8sbundle2 rancher-webhook-5d9b7
 ## 5. Scenario 3: Automation & Tooling (8 mins)
 
 *Context: The engineers in the audience build their own tools or want to automate triage.*
+
+### AI-Ready Diagnostics
+Want to use ChatGPT/Claude/OpenCode to analyze the bundle? Don't copy-paste 50 log files.
+
+```bash
+# Generate a single, context-rich prompt for an LLM
+r8s generate prompt $r8sbundle2 > analysis-context.md
+
+# Pipe directly into OpenCode
+r8s generate prompt $r8sbundle2 | opencode run
+```
+
+*   **Talking Point:** "This command packages the most critical parts of the bundle (node status, failing pods, recent logs) into a single Markdown file optimized for LLM context windows. You can pipe this straight into `opencode` or `claude` to start an interactive debugging session with full context."
 
 ### JSON Output for Scripting
 Every command supports `--format=json`.

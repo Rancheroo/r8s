@@ -1,13 +1,13 @@
 # r8s
 
-> **r8s v1.3.2 — AI-Powered kubectl for Rancher Bundles**
+> **r8s v1.3.3 — AI-Powered kubectl for Rancher Bundles**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
 r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher support bundles. It combines kubectl-like navigation with AI pattern detection to find root causes instantly — no cluster access required.
 
-**Latest: v1.3.2** (March 2026) — Demo Ready & Polish
+**Latest: v1.3.3** (March 2026) — Demo Ready & Polish
 
 - **AI Analysis**: Detects 19+ issue patterns (CrashLoop, OOM, etcd, certs, CNI, storage)
 - **Natural Language Queries**: Ask `r8s ask "why is nginx crashing?"` — no kubectl expertise needed
@@ -24,21 +24,21 @@ r8s (pronounced "rates") is an intelligent CLI tool for analyzing Rancher suppor
 
 **Linux:**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.2/r8s-v1.3.2-linux-amd64
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.3/r8s-v1.3.3-linux-amd64
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
 
 **macOS (Intel):**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.2/r8s-v1.3.2-darwin-amd64
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.3/r8s-v1.3.3-darwin-amd64
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
 
 **macOS (Apple Silicon M1/M2/M3):**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.2/r8s-v1.3.2-darwin-arm64
+curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.3/r8s-v1.3.3-darwin-arm64
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
