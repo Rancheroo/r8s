@@ -14,12 +14,19 @@ if [ -z "$PR" ]; then
     exit 1
 fi
 
-REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
-echo "🔍 Analyzing PR #$PR in $REPO..."
+# Verify dependencies
+BASE64=$(which base64)
+JQ=$(which jq)
+GH=$(which gh)
 
-# 1. Get all comments
-echo "📥 Fetching comments..."
-ALL_COMMENTS=$(gh api repos/$REPO/pulls/$PR/comments --paginate --jq '.')
+if [ -z "$BASE64" ] || [ -z "$JQ" ] || [ -z "$GH" ]; then
+    echo "❌ Missing dependencies: base64, jq, or gh not found"
+    echo "PATH: $PATH"
+    exit 1
+fi
+
+REPO=$($GH repo view --json nameWithOwner -q .nameWithOwner)
+echo "🔍 Analyzing PR #$PR in $REPO..."
 
 # 2. Find answered IDs (comments that are replies to something)
 ANSWERED_IDS=$(echo "$ALL_COMMENTS" | jq -r '.[].in_reply_to_id | select(. != null)')
@@ -50,7 +57,7 @@ echo "⚠️  Found $COUNT unanswered comments."
 
 for row in $UNANSWERED; do
     _jq() {
-     echo ${row} | base64 --decode | jq -r ${1}
+     echo "${row}" | $BASE64 --decode | $JQ -r "${1}"
     }
     
     ID=$(_jq '.id')
@@ -77,7 +84,7 @@ for row in $UNANSWERED; do
     
     if [ -n "$MSG" ]; then
         echo "🚀 Replying..."
-        gh api repos/$REPO/pulls/$PR/comments/$ID/replies -f body="$MSG" > /dev/null
+        $GH api repos/$REPO/pulls/$PR/comments/$ID/replies -f body="$MSG" > /dev/null
         echo "✅ Replied."
     else
         echo "⏭️  Skipped."
