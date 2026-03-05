@@ -127,6 +127,9 @@ func init() {
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
 	
+	// Fix: #95 Add completion command explicitly to root
+	rootCmd.AddCommand(completionCmd)
+	
 	// Add custom help command to show tip
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		// Fix: Show Long description if available (restores missing docs)
@@ -159,6 +162,68 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+// completionCmd represents the completion command
+var completionCmd = &cobra.Command{
+	Use:   "completion [bash|zsh|fish|powershell]",
+	Short: "Generate completion script",
+	Long: `To load completions:
+
+Bash:
+
+  $ source <(r8s completion bash)
+
+  # To load completions for each session, execute once:
+  # Linux:
+  $ r8s completion bash > /etc/bash_completion.d/r8s
+  # macOS:
+  $ r8s completion bash > /usr/local/etc/bash_completion.d/r8s
+
+Zsh:
+
+  # If shell completion is not already enabled in your environment,
+  # you will need to enable it.  You can execute the following once:
+
+  $ echo "autoload -U compinit; compinit" >> ~/.zshrc
+
+  # To load completions for each session, execute once:
+  $ r8s completion zsh > "${fpath[1]}/_r8s"
+
+  # You will need to start a new shell for this setup to take effect.
+
+Fish:
+
+  $ r8s completion fish | source
+
+  # To load completions for each session, execute once:
+  $ r8s completion fish > ~/.config/fish/completions/r8s.fish
+
+PowerShell:
+
+  PS> r8s completion powershell | Out-String | Invoke-Expression
+
+  # To load completions for each session, execute once:
+  PS> r8s completion powershell > r8s.ps1
+  # and source this file from your PowerShell profile.
+`,
+	DisableFlagsInUseLine: true,
+	ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+	Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		switch args[0] {
+		case "bash":
+			return cmd.Root().GenBashCompletion(os.Stdout)
+		case "zsh":
+			return cmd.Root().GenZshCompletion(os.Stdout)
+		case "fish":
+			return cmd.Root().GenFishCompletion(os.Stdout, true)
+		case "powershell":
+			return cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+		}
+		return nil
+	},
+}
+
+
 // SetVersionInfo sets the version information from main
 func SetVersionInfo(version, commit, date string) {
 	versionInfo.Version = version
@@ -171,6 +236,13 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	// v0.8.0: CLI-first - show help if no subcommand
 	if len(args) == 0 {
 		return cmd.Help()
+	}
+
+	// If bundle path provided without subcommand, default to analyze
+	// (Even though we add them explicitly, custom Execute logic can still hide them)
+	if args[0] == "completion" || args[0] == "help" {
+		// Handled by Cobra's traversal since we added the commands
+		return nil
 	}
 
 	// If bundle path provided without subcommand, default to analyze
