@@ -130,9 +130,18 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 			name = args[2]
 		} else {
 			// Format: describe kind ./bundle/ name
+			// OR: describe kind name ./bundle/
 			kind = strings.ToLower(args[0])
-			bundlePath = args[1]
-			name = args[2]
+			
+			// Check if args[1] looks like a path
+			if strings.Contains(args[1], "/") || strings.Contains(args[1], "\\") || isDir(args[1]) {
+				bundlePath = args[1]
+				name = args[2]
+			} else {
+				// Assume args[2] is the path (swapped order)
+				name = args[1]
+				bundlePath = args[2]
+			}
 		}
 	}
 
@@ -155,6 +164,15 @@ func parseDescribeArgs(args []string) (kind, bundlePath, name string) {
 	return
 }
 
+// isDir checks if a path is a directory
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
+}
+
 // ResourceInfo holds parsed resource data
 type ResourceInfo struct {
 	Kind       string                 `json:"kind" yaml:"kind"`
@@ -173,23 +191,63 @@ func findResources(bundlePath, kind, name, namespace, selector string) ([]Resour
 	// Map of kind to file patterns (kubectl describe output)
 	// Note: describe files have "describe" suffix (e.g., podsdescribe, nodesdescribe)
 	kindPatterns := map[string][]string{
-		"pod":        {"rke2/kubectl/podsdescribe", "kubectl/podsdescribe", "rke2/kubectl/pods", "kubectl/pods"},
-		"node":       {"rke2/kubectl/nodesdescribe", "kubectl/nodesdescribe", "rke2/kubectl/nodes", "kubectl/nodes"},
-		"deployment": {"rke2/kubectl/deploymentsdescribe", "kubectl/deploymentsdescribe", "rke2/kubectl/deployments", "kubectl/deployments"},
-		"service":    {"rke2/kubectl/servicesdescribe", "kubectl/servicesdescribe", "rke2/kubectl/services", "kubectl/services"},
-		"configmap":  {"rke2/kubectl/configmapsdescribe", "kubectl/configmapsdescribe", "rke2/kubectl/configmaps", "kubectl/configmaps"},
-		"event":      {"rke2/kubectl/eventsdescribe", "kubectl/eventsdescribe", "rke2/kubectl/events", "kubectl/events"},
+		"pod": {
+			"rke2/kubectl/podsdescribe", 
+			"kubectl/podsdescribe", 
+			"rke2/kubectl/pods", 
+			"kubectl/pods",
+			"rke2/kubectl/poddescribe/*", 
+			"kubectl/poddescribe/*",
+		},
+		"node": {
+			"rke2/kubectl/nodesdescribe", 
+			"kubectl/nodesdescribe", 
+			"rke2/kubectl/nodes", 
+			"kubectl/nodes",
+		},
+		"deployment": {
+			"rke2/kubectl/deploymentsdescribe", 
+			"kubectl/deploymentsdescribe", 
+			"rke2/kubectl/deployments", 
+			"kubectl/deployments",
+		},
+		"service": {
+			"rke2/kubectl/servicesdescribe", 
+			"kubectl/servicesdescribe", 
+			"rke2/kubectl/services", 
+			"kubectl/services",
+		},
+		"configmap": {
+			"rke2/kubectl/configmapsdescribe", 
+			"kubectl/configmapsdescribe", 
+			"rke2/kubectl/configmaps", 
+			"kubectl/configmaps",
+		},
+		"event": {
+			"rke2/kubectl/eventsdescribe", 
+			"kubectl/eventsdescribe", 
+			"rke2/kubectl/events", 
+			"kubectl/events",
+		},
 	}
 
 	// If specific kind requested, search only that
 	if kind != "" {
 		patterns := kindPatterns[kind]
 		for _, pattern := range patterns {
-			file := filepath.Join(bundlePath, pattern)
-			if _, err := os.Stat(file); err == nil {
-				rs, err := parseResourceFile(file, kind, name, namespace, selector)
-				if err == nil {
-					resources = append(resources, rs...)
+			// Support glob patterns
+			fullPattern := filepath.Join(bundlePath, pattern)
+			matches, err := filepath.Glob(fullPattern)
+			if err != nil {
+				continue
+			}
+
+			for _, file := range matches {
+				if _, err := os.Stat(file); err == nil {
+					rs, err := parseResourceFile(file, kind, name, namespace, selector)
+					if err == nil {
+						resources = append(resources, rs...)
+					}
 				}
 			}
 		}

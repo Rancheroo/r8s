@@ -69,21 +69,24 @@ func init() {
 
 // runGet executes the get command
 func runGet(cmd *cobra.Command, args []string) error {
-	resource := strings.ToLower(args[0])
+	var resource, bundlePath string
 
-	// Validate output format
-	validFormats := map[string]bool{"table": true, "json": true, "yaml": true, "wide": true, "name": true}
-	if !validFormats[getOutput] {
-		return fmt.Errorf("invalid output format: %q (supported: table, json, yaml, wide, name)", getOutput)
-	}
-
-	// Determine bundle path
-	var bundlePath string
-	if len(args) > 1 {
-		bundlePath = args[1]
+	// Handle flexible argument order
+	if len(args) >= 2 {
+		// Check if first arg is a path
+		if strings.Contains(args[0], "/") || strings.Contains(args[0], "\\") || isDir(args[0]) {
+			bundlePath = args[0]
+			resource = strings.ToLower(args[1])
+		} else {
+			// Assume standard order: get resource bundle
+			resource = strings.ToLower(args[0])
+			bundlePath = args[1]
+		}
 	} else {
-		return fmt.Errorf("bundle path required: r8s get %s [bundle-path]", resource)
+		return fmt.Errorf("bundle path required: r8s get [resource] [bundle-path]")
 	}
+	
+	// Validate output format
 
 	// Pre-validate bundle path
 	if _, err := os.Stat(bundlePath); err != nil {
@@ -119,6 +122,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unknown resource type: %s (supported: pods, nodes, ns, deploy, svc, events)", resource)
 	}
 }
+
 
 // loadBundle loads a bundle from path
 func loadBundle(path string) (*bundle.Bundle, error) {

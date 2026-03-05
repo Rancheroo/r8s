@@ -76,10 +76,22 @@ type LogEntry struct {
 }
 
 func runLogs(cmd *cobra.Command, args []string) error {
-	bundlePath := args[0]
-	podFilter := ""
-	if len(args) > 1 {
-		podFilter = args[1]
+	var bundlePath, podFilter string
+
+	if len(args) == 1 {
+		bundlePath = args[0]
+	} else if len(args) >= 2 {
+		// Check if first arg is a path
+		if strings.Contains(args[0], "/") || strings.Contains(args[0], "\\") || isDir(args[0]) {
+			bundlePath = args[0]
+			podFilter = args[1]
+		} else {
+			// Assume args[1] is the path (swapped order)
+			podFilter = args[0]
+			bundlePath = args[1]
+		}
+	} else {
+		return fmt.Errorf("bundle path required")
 	}
 
 	// Validate bundle exists
