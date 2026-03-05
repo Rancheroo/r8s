@@ -60,3 +60,9 @@ tmp/
 
 # Debug binaries
 __debug_bin*
+
+# Root build artifacts (use bin/ for builds)
+/r8s
+/r8s-*
+!/r8s-*.go
+!/r8s-*.md

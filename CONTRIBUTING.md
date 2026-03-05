@@ -276,6 +276,52 @@ func TestConfig_Validate(t *testing.T) {
 
 ---
 
+## Branch Workflow
+
+### Sprint Branches
+
+At the start of each sprint, create a sprint branch from `main`:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b sprint[N]  # e.g., sprint13
+git push origin sprint[N]
+```
+
+The sprint branch serves as the integration point for all sprint work.
+
+### Task Branches
+
+For individual tasks within a sprint:
+
+```
+sprint[N]-[priority]-[brief-description]
+
+Examples:
+- sprint13-critical-pv-pvc-support
+- sprint13-high-journald-parser
+```
+
+### Workflow
+
+1. Create task branch from sprint branch
+2. Work, commit, push
+3. Create PR from task branch → sprint branch
+4. After approval: squash merge, delete task branch
+5. At sprint end: merge sprint branch → `main`
+
+### Branch Cleanup
+
+Delete merged branches promptly. Run periodically:
+
+```bash
+git branch --merged main | grep -v "^\*" | xargs -n 1 git branch -d
+git remote prune origin
+```
+
+---
+
 ## Pull Request Process
 
 ### Before Submitting
@@ -327,13 +373,11 @@ func TestConfig_Validate(t *testing.T) {
 
 ### Post-Merge Cleanup
 
-After your PR is merged, follow the **30-Day Branch Cleanup Rule** to maintain repository hygiene:
+After your PR is merged:
 
-- Delete your local feature branch after merge
+- Delete your local feature branch immediately
 - Delete the remote branch (if not auto-deleted)
-- Every 30 days, clean up stale merged branches
-
-See [POST_MERGE_CLEANUP.md](POST_MERGE_CLEANUP.md) for detailed commands and the complete cleanup process. This prevents branch sprawl and keeps the repository clean for all contributors.
+- See [Branch Workflow](#branch-workflow) above for cleanup commands
 
 ---
 
@@ -488,6 +532,16 @@ go tool pprof mem.prof
 ## License
 
 By contributing to r8s, you agree that your contributions will be licensed under the Apache License 2.0.
+
+---
+
+## Documentation Guidelines
+
+Keep the repo root clean. Only these files belong in the root:
+
+- `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `PRINCIPLES.md`, `TESTING.md`, `TROUBLESHOOTING.md`
+
+**Do NOT** add sprint-specific, PR-specific, or test-result documents to the repo root. Use GitHub PRs, Issues, and Discussions for ephemeral content. If a document has long-term reference value, place it in `docs/` or `docs/development/`.
 
 ---
 
