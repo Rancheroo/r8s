@@ -103,14 +103,13 @@ func PrintAnalysisTable(result AnalysisResult) error {
 	fmt.Println()
 
 	// Show random tip at the end
-	rand.Seed(time.Now().UnixNano()) // Ensure randomness (though init() usually does this)
-	if rand.Intn(3) == 0 {           // 1/3 chance to show tip
-		if len(R8sFacts) > 0 {
-			tip := R8sFacts[rand.Intn(len(R8sFacts))]
-			tipColor := color.New(color.Italic, color.FgHiBlack)
-			tipColor.Fprintln(os.Stderr, "💡 "+tip)
-			fmt.Println()
-		}
+	if len(R8sFacts) > 0 {
+		rand.Seed(time.Now().UnixNano())
+		tip := R8sFacts[rand.Intn(len(R8sFacts))]
+		// Use Cyan for better visibility than gray
+		tipColor := color.New(color.Italic, color.FgCyan)
+		tipColor.Fprintln(os.Stderr, "💡 "+tip)
+		fmt.Println()
 	}
 
 	return nil

@@ -126,6 +126,18 @@ func init() {
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
+	
+	// Add custom help command to show tip
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		// Default help (using standard Cobra method)
+		// We can't use cmd.Parent().HelpFunc() because it might be nil or cause loop
+		// Instead, we just manually print usage
+		cmd.Printf(cmd.UsageString())
+		
+		// Show tip at bottom of help
+		fmt.Println()
+		ui.ShowRandomTip()
+	})
 }
 
 var versionCmd = &cobra.Command{
@@ -137,6 +149,10 @@ var versionCmd = &cobra.Command{
 			versionInfo.Commit,
 			versionInfo.Date,
 		)
+		
+		// Show a tip on version command
+		fmt.Println()
+		ui.ShowRandomTip()
 	},
 }
 
