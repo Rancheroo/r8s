@@ -12,6 +12,7 @@ import (
 
 	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
+	"github.com/Rancheroo/r8s/internal/rancher"
 	"github.com/Rancheroo/r8s/internal/ui"
 )
 
@@ -26,7 +27,7 @@ queries the bundle data, and answers with context-specific responses.
 
 🧱 BUILDING A QUERY (THE LEGO BLOCKS):
   Entities:  pod, node, certificate, image, pvc, service
-  States:    crashing, pending, expired, not ready, failed
+  States:    crashing, pending, expired, not ready, failed, running, ready
   Issues:    oomkill, imagepullbackoff, crashloopbackoff, etcd-latency
 
 EXAMPLES:
@@ -40,6 +41,7 @@ EXAMPLES:
 
   # Resource Status
   r8s ask ./bundle/ "which nodes are not ready?"
+  r8s ask ./bundle/ "which pods are running?"
   r8s ask ./bundle/ "what is wrong with worker-1?"
 
 SUPPORTED PATTERNS:
@@ -112,6 +114,25 @@ func runAsk(cmd *cobra.Command, args []string) error {
 
 	// Parse the question
 	intent := parseQueryIntent(question)
+
+	// STRICT STRUCTURE OPTIMIZATION (Elon's Laws):
+	// Handle direct state queries (running/ready) using raw data parsing
+	// instead of inferring from AI hints. This is less dynamic but more reliable.
+	if response, handled, err := handleStateQuery(bundlePath, intent); handled {
+		if err != nil {
+			return fmt.Errorf("failed to query state: %w", err)
+		}
+		// Output response
+		fmt.Println()
+		header := color.New(color.Bold, color.FgCyan)
+		header.Println("🤖 R8S Natural Language Query")
+		header.Println(strings.Repeat("═", 60))
+		fmt.Println()
+
+		fmt.Printf("Question: %s\n\n", question)
+		fmt.Println(response)
+		return nil
+	}
 
 	// Load bundle
 	health, err := bundle.CheckHealth(bundlePath)
@@ -307,13 +328,10 @@ func matchesIntent(hint *ai.Hint, intent QueryIntent) bool {
 			// Failing should match any non-info issue
 			return hint.Severity == ai.SeverityCritical || hint.Severity == ai.SeverityWarning
 		case "ready", "running":
-			// If asking for "running" or "ready", and we found issues, those are NOT running/ready
-			// So technically these hints are ANTI-matches for "ready" state queries
-			// But for now, let's assume the user means "show me things that ARE NOT ready" 
-			// when they ask "which pods are ready?" in a troubleshooting tool.
-			// Or we can return nothing if everything is actually ready?
-			// Better: Show issues that prevent readiness.
-			return true
+			// We now handle positive state queries ("which pods are running") in handleStateQuery.
+			// If we are here, it means we are looking for issues.
+			// Issues are by definition NOT ready/running.
+			return false
 		default:
 			// Generic match
 			return strings.Contains(patternLower, intent.Condition)
@@ -478,7 +496,11 @@ func formatNoResultsResponse(intent QueryIntent) string {
 		msg = "❓ No relevant issues found matching your query.\n"
 	}
 	if intent.Resource != "" {
-		msg = fmt.Sprintf("❓ No %s issues found matching your query.\n", intent.Resource)
+		if intent.Condition != "" {
+			msg = fmt.Sprintf("❓ No %s issues found matching '%s'.\n", intent.Resource, intent.Condition)
+		} else {
+			msg = fmt.Sprintf("❓ No %s issues found matching your query.\n", intent.Resource)
+		}
 	}
 
 	return fmt.Sprintf(`%s
@@ -535,4 +557,89 @@ func isLikelyPath(text string) bool {
 		return true
 	}
 	return false
+}
+
+// handleStateQuery processes requests for current state (running/ready) using raw parsers
+func handleStateQuery(bundlePath string, intent QueryIntent) (string, bool, error) {
+	// We only handle "which" or "show" queries
+	if intent.Type != "which" && intent.Type != "show" {
+		return "", false, nil
+	}
+
+	// We only handle positive state assertions
+	if intent.Condition != "ready" && intent.Condition != "running" {
+		return "", false, nil
+	}
+
+	var sb strings.Builder
+
+	if intent.Resource == "pod" {
+		pods, err := bundle.ParsePods(bundlePath)
+		if err != nil {
+			// If file missing or parse error, fall back to analysis
+			return "", false, nil
+		}
+
+		var matching []string
+		for _, pod := range pods {
+			if isPodReady(pod) {
+				matching = append(matching, pod.Name)
+			}
+		}
+
+		sb.WriteString(fmt.Sprintf("🎯 Found %d pod%s that are ready:\n\n", len(matching), pluralize(len(matching))))
+		for _, name := range matching {
+			sb.WriteString(fmt.Sprintf("• %s\n", name))
+		}
+		return sb.String(), true, nil
+	}
+
+	if intent.Resource == "node" {
+		nodes, err := bundle.ParseNodes(bundlePath)
+		if err != nil {
+			return "", false, nil
+		}
+
+		var matching []string
+		for _, node := range nodes {
+			if strings.ToLower(node.Status) == "ready" {
+				matching = append(matching, node.Name)
+			}
+		}
+
+		sb.WriteString(fmt.Sprintf("🎯 Found %d node%s that are ready:\n\n", len(matching), pluralize(len(matching))))
+		for _, name := range matching {
+			sb.WriteString(fmt.Sprintf("• %s\n", name))
+		}
+		return sb.String(), true, nil
+	}
+
+	return "", false, nil
+}
+
+func isPodReady(pod rancher.Pod) bool {
+	// 1. Check Status
+	if pod.KubectlStatus != "Running" && pod.KubectlStatus != "Completed" {
+		return false
+	}
+
+	// 2. Check Ready fraction (e.g. "1/1", "2/2")
+	parts := strings.Split(pod.KubectlReady, "/")
+	if len(parts) == 2 && parts[0] == parts[1] {
+		return true
+	}
+	
+	// Completed pods are "ready" in the sense that they succeeded
+	if pod.KubectlStatus == "Completed" {
+		return true
+	}
+
+	return false
+}
+
+func pluralize(count int) string {
+	if count == 1 {
+		return ""
+	}
+	return "s"
 }

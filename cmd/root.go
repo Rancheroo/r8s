@@ -129,9 +129,12 @@ func init() {
 	
 	// Add custom help command to show tip
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		// Fix: Show Long description if available (restores missing docs)
+		if cmd.Long != "" {
+			cmd.Printf("%s\n\n", cmd.Long)
+		}
+
 		// Default help (using standard Cobra method)
-		// We can't use cmd.Parent().HelpFunc() because it might be nil or cause loop
-		// Instead, we just manually print usage
 		cmd.Printf(cmd.UsageString())
 		
 		// Show tip at bottom of help

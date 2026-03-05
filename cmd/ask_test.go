@@ -141,8 +141,14 @@ func TestFormatNoResultsResponse(t *testing.T) {
 	response := formatNoResultsResponse(intent)
 
 	// Check that response contains expected elements
-	if !strings.Contains(response, "No crashing issues found") {
-		t.Error("response should mention no issues found")
+	if !strings.Contains(response, "crashing") {
+		t.Error("response should mention condition (crashing)")
+	}
+	if !strings.Contains(response, "pod") {
+		t.Error("response should mention resource (pod)")
+	}
+	if !strings.Contains(response, "No") {
+		t.Error("response should mention No issues found")
 	}
 	if !strings.Contains(response, "r8s analyze") {
 		t.Error("response should suggest using r8s analyze")
