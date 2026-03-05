@@ -24,29 +24,39 @@ var askCmd = &cobra.Command{
 This is the natural language interface for r8s. It parses your question,
 queries the bundle data, and answers with context-specific responses.
 
-SUPPORTED QUERY TYPES (v1):
-  "why is <pod> crashing?"    - Explain crash reasons with logs
-  "show me <pattern> issues"   - List all issues of a type
-  "which <resource> are <state>?" - Find resources in specific states
-  "what is causing <issue>?"   - Root cause analysis
+🧱 BUILDING A QUERY (THE LEGO BLOCKS):
+  Entities:  pod, node, certificate, image, pvc, service
+  States:    crashing, pending, expired, not ready, failed
+  Issues:    oomkill, imagepullbackoff, crashloopbackoff, etcd-latency
 
 EXAMPLES:
-  # Ask about a specific pod
+  # Root Cause Analysis
+  r8s ask ./bundle/ "what caused the outage?"
   r8s ask ./bundle/ "why is nginx-pod crashing?"
-  
-  # Find all image pull issues
+
+  # Issue Discovery
   r8s ask ./bundle/ "show me imagepullbackoff issues"
-  
-  # Check certificate state
   r8s ask ./bundle/ "which certificates are expired?"
-  
-  # Get help for a specific pod
+
+  # Resource Status
+  r8s ask ./bundle/ "which nodes are not ready?"
   r8s ask ./bundle/ "what is wrong with worker-1?"
+
+SUPPORTED PATTERNS:
+  <issue> types:
+    - oomkill
+    - crashloopbackoff
+    - imagepullbackoff
+    - etcd-latency
+    - etcd-corruption
+    - certificate-expired
+    - dns-failure
+    - cni-error
 
 LIMITATIONS (v1):
 - Single-fact questions only (no compound queries)
 - No follow-up questions
-- Limited to supported query patterns`,
+- Context is limited to bundle contents`,
 	RunE: runAsk,
 }
 
