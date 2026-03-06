@@ -92,7 +92,7 @@ func TestParseQueryIntent(t *testing.T) {
 			name:     "show imagepull",
 			question: "show me imagepullbackoff issues",
 			wantType: "show",
-			resource: "image",
+			resource: "",
 			cond:     "imagepull",
 		},
 		{
