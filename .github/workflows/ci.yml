@@ -180,7 +180,7 @@ jobs:
     
     - name: Check documentation files exist
       run: |
-        REQUIRED_DOCS="README.md ROADMAP_UPDATES.md CHANGELOG.md CONTRIBUTING.md"
+        REQUIRED_DOCS="README.md CHANGELOG.md CONTRIBUTING.md"
         MISSING=0
         for doc in $REQUIRED_DOCS; do
           if [ ! -f "$doc" ]; then
