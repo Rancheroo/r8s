@@ -1,6 +1,6 @@
 # r8s
 
-> **r8s v1.3.3 — AI-Powered kubectl & Automation Engine for Rancher Bundles**
+> **r8s — CLI-Powered Automation Engine & kubectl for Rancher Bundles with AI (of course)**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
