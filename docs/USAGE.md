@@ -89,9 +89,11 @@ r8s /tmp/support-bundles/bundle-001/
 
 ---
 
-## r8s ask
+## r8s ask (BETA)
 
 Ask natural language questions about your bundle. This uses an AI-driven pattern engine to find issues and explain root causes.
+
+> **Warning:** This command is in BETA. Results may vary. Always verify with `r8s analyze`.
 
 ### Synopsis
 ```bash

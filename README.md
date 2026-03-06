@@ -39,8 +39,10 @@ r8s analyze ./support-bundle/
 # 🔴 [CRITICAL] CrashLoopBackOff: rancher-webhook-5d9b7 (Restarts: 5)
 ```
 
-### 3. Ask Questions in Plain English
+### 3. Ask Questions in Plain English (BETA)
 No need to grep. Just ask.
+
+> ⚠️ **Beta Feature:** This feature is experimental. Verify results manually.
 
 ```bash
 r8s ask ./support-bundle/ "why is nginx crashing?"

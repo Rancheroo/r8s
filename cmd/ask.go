@@ -20,8 +20,12 @@ import (
 // askCmd represents the ask command
 var askCmd = &cobra.Command{
 	Use:   "ask [bundle-path] [question]",
-	Short: "Ask natural language questions about your bundle",
+	Short: "Ask natural language questions about your bundle (BETA)",
 	Long: `Ask questions in plain English about issues in your bundle.
+
+⚠️  BETA FEATURE WARNING ⚠️
+This command is currently in BETA. It uses an experimental local NLP engine.
+Results may vary in accuracy. Always verify findings with 'r8s analyze' or manual inspection.
 
 This is the natural language interface for r8s. It parses your question,
 queries the bundle data, and answers with context-specific responses.
@@ -80,6 +84,11 @@ func runAsk(cmd *cobra.Command, args []string) error {
 		ui.ShowUsageError("ask", "r8s ask <bundle> <question>")
 		return ui.NewUsageError("ask", "r8s ask <bundle> <question>")
 	}
+
+	// Beta Warning
+	betaHeader := color.New(color.FgYellow)
+	betaHeader.Println("⚠️  BETA: Natural language queries are experimental. Verify with 'r8s analyze'.")
+	fmt.Println()
 
 	bundlePath := args[0]
 	question := strings.Join(args[1:], " ")
