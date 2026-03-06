@@ -11,6 +11,7 @@ Thank you for your interest in contributing to r8s! This document provides guide
 - [Pull Request Process](#pull-request-process)
 - [Commit Guidelines](#commit-guidelines)
 - [Architecture Overview](#architecture-overview)
+- [Extending r8s](#extending-r8s)
 
 ---
 
@@ -177,14 +178,17 @@ We follow standard Go conventions and idioms:
 
 ```
 r8s/
-├── cmd/              # CLI commands
+├── cmd/              # CLI commands (root, ask, analyze, logs, test-cluster)
 │   └── root.go      # Root command setup
 ├── internal/        # Private application code
+│   ├── ai/         # AI Pattern Engine & NLP (Analysis)
+│   ├── bundle/     # Bundle Parsing & Logic
 │   ├── config/     # Configuration management
 │   ├── rancher/    # Rancher API client
 │   ├── tui/        # Terminal UI components
 │   └── k8s/        # Kubernetes operations
 ├── docs/           # Documentation
+├── scripts/        # Automation & Test scripts
 └── main.go         # Application entry point
 ```
 
@@ -522,11 +526,20 @@ git commit -m "feat: implement filter mode
    - `styles.go`: Visual styling
    - Uses Bubble Tea for event-driven architecture
 
-2. **Rancher Client (internal/rancher/)**
+2. **Analysis Engine (internal/ai/)**
+   - **Pattern Registry**: Stores detection patterns.
+   - **Analyzer**: Matches patterns against bundle content.
+   - **NLP Engine**: Parses natural language queries into intent.
+
+3. **Bundle Processor (internal/bundle/)**
+   - Handles loading, parsing, and indexing of support bundles.
+   - Supports RKE2, K3s, and Rancher formats.
+
+4. **Rancher Client (internal/rancher/)**
    - `client.go`: API client implementation
    - `types.go`: Data structures matching Rancher API
 
-3. **Config (internal/config/)**
+5. **Config (internal/config/)**
    - `config.go`: Configuration management
    - Handles multiple profiles
 
@@ -537,6 +550,28 @@ git commit -m "feat: implement filter mode
 3. Command executes → returns message
 4. Message processed → updates app state
 5. App re-renders with new state
+
+---
+
+## Extending r8s
+
+### Adding a New Detection Pattern (AI Engine)
+
+To add a new issue detection capability:
+
+1.  **Define Pattern**: Create a new YAML file in `internal/ai/patterns/` (for future dynamic loading) or add to `BuiltinPatternsV2` in `internal/ai/pattern.go`.
+2.  **Schema**:
+    *   `ID`: Unique identifier (e.g., `etcd-corruption`).
+    *   `Matchers`: Regex or keywords to find in logs/events.
+    *   `Severity`: Critical, Warning, or Info.
+    *   `HintGenerator`: Template for the root cause explanation and suggested fix.
+3.  **Rebuild**: Run `make build`.
+
+### Common Customizations
+
+*   **Config Defaults**: Modify `internal/config/config.go` to change default paths or timeouts.
+*   **Theme/Colors**: Update `internal/tui/styles.go` to adjust the visual theme.
+*   **Bundle Parsing**: Add new file parsers in `internal/bundle/` to support new log formats.
 
 ---
 
