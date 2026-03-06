@@ -17,11 +17,18 @@ It's not just a viewer. It's a **pipeline-ready tool** designed for First Respon
 
 **Linux / macOS:**
 ```bash
-curl -L -o r8s https://github.com/Rancheroo/r8s/releases/download/v1.3.3/r8s-v1.3.3-linux-amd64
+# Download the latest release automatically
+LATEST_VERSION=$(curl -s https://api.github.com/repos/Rancheroo/r8s/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m | sed 's/x86_64/amd64/')
+
+curl -L -o r8s "https://github.com/Rancheroo/r8s/releases/download/${LATEST_VERSION}/r8s-${LATEST_VERSION}-${OS}-${ARCH}"
 chmod +x r8s
 sudo mv r8s /usr/local/bin/
 ```
-*(Replace `linux-amd64` with `darwin-amd64` (Intel) or `darwin-arm64` (Apple Silicon) as needed)*
+
+**Docker (Coming Soon):**
+> 🐳 **Help Wanted:** We are looking for a contributor to containerize `r8s` for CI/CD usage. This is a [Great First Issue](https://github.com/Rancheroo/r8s/issues/112)!
 
 ---
 
