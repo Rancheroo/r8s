@@ -1,5 +1,0 @@
-NAMESPACE       NAME                                READY   STATUS             RESTARTS   AGE   IP            NODE
-kube-system     etcd-ip-10-0-0-1                    0/1     Error              5          10d   10.0.0.1      master-1
-calico-system   calico-node-x9f2k                   0/1     CrashLoopBackOff   12         10d   10.0.0.2      worker-1
-default         app-backend-5d9b7f8c9d-abcde        0/1     OOMKilled          2          4h    10.42.1.5     worker-1
-kube-system     rke2-server-master-1                1/1     Running            0          10d   10.0.0.1      master-1

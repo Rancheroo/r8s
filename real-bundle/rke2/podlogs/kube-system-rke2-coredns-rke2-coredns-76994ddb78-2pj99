@@ -1,5 +1,0 @@
-maxprocs: Updating GOMAXPROCS=1: using minimum allowed GOMAXPROCS
-.:53
-[INFO] plugin/reload: Running configuration SHA512 = 079cbd89a2ce0a6de3d578400eda4a06ff01f9e7466e83cfd53815fc152d55f74e414475e601e26aa134f0e9ee4f03407782e76f8f580ef3bec00ef576b1e688
-CoreDNS-1.13.1
-linux/amd64, go1.24.11 X:boringcrypto, 1db4568df

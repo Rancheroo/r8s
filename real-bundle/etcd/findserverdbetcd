@@ -1,6 +1,0 @@
--rw-r--r-- 1 root root 7177 Feb  3 05:29 /var/lib/rancher/rke2/server/db/etcd/member/snap/0000000000000002-0000000000002711.snap
--rw------- 1 root root 33615872 Feb  3 05:40 /var/lib/rancher/rke2/server/db/etcd/member/snap/db
--rw------- 1 root root 64000000 Feb  3 05:09 /var/lib/rancher/rke2/server/db/etcd/member/wal/0.tmp
--rw------- 1 root root 64000000 Feb  3 05:40 /var/lib/rancher/rke2/server/db/etcd/member/wal/0000000000000000-0000000000000000.wal
--rw------- 1 root root 27 Feb  3 05:08 /var/lib/rancher/rke2/server/db/etcd/name
--rw------- 1 root root 1293 Feb  3 05:08 /var/lib/rancher/rke2/server/db/etcd/config

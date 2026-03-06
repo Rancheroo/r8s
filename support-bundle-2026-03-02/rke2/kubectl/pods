@@ -1,4 +1,0 @@
-NAMESPACE       NAME                              READY   STATUS             RESTARTS          AGE   IP            NODE
-cattle-system   rancher-webhook-5d9b7f8c9d-abcde  0/1     CrashLoopBackOff   5 (2m ago)        15m   10.42.2.10    worker-2
-cattle-system   rancher-6d7b8c9d0e-12345          3/3     Running            0                 5d    10.42.2.11    worker-2
-kube-system     coredns-7c8d9e0f1a-54321          1/1     Running            0                 5d    10.42.2.12    worker-2

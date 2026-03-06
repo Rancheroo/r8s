@@ -66,3 +66,16 @@ __debug_bin*
 /r8s-*
 !/r8s-*.go
 !/r8s-*.md
+
+# Test results and temporary bundles
+test-results-*/
+support-bundle-*/
+test-bundle/
+real-bundle/
+clean-bundle/
+output/
+*.sh
+!scripts/*.sh
+!sprint12-*.sh
+!bulk-bundle-test.sh
+!test-exit-diagnostic.sh

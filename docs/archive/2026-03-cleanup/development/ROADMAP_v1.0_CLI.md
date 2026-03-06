@@ -299,6 +299,13 @@ r8s config init                          # Create config file
 
 ---
 
+## Post-v1.0 Candidates
+
+### Bundle Comparison (`r8s diff`)
+Native ability to diff two bundles to spot regression, configuration drift, or new issues.
+- **Input:** Two bundle paths
+- **Output:** Diff report (New issues, Resolved issues, Node state changes)
+
 ## Immediate Next Steps
 
 ### v0.8.0 Release (This Week)

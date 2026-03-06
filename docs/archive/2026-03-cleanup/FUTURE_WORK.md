@@ -35,6 +35,18 @@ This document tracks known issues and planned enhancements for future releases.
 
 ## Planned Enhancements
 
+### Native Bundle Comparison (`r8s diff`)
+
+**Feature**: Compare two support bundles to identify changes in cluster state, node health, or configuration over time.
+
+**Value**: Critical for "what changed?" root cause analysis.
+
+**Proposed Usage**:
+```bash
+r8s diff ./bundle-old/ ./bundle-new/
+r8s diff ./bundle-old/ ./bundle-new/ --format=markdown > diff_report.md
+```
+
 ### v0.7.x Roadmap
 
 - TBD: Add more issues as they are identified

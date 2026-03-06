@@ -1,1 +1,0 @@
-Error from server (BadRequest): previous terminated container "cluster-register" in pod "cattle-cluster-agent-dbb4889db-7lb5n" not found

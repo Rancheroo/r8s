@@ -1,6 +1,0 @@
-Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                                  
-tcp   LISTEN 0      4096               *:10250            *:*    users:(("kubelet",pid=2254,fd=11))                      
-tcp   LISTEN 0      4096            [::]:22            [::]:*    users:(("sshd",pid=17998,fd=4),("systemd",pid=1,fd=168))
-tcp   LISTEN 0      4096               *:6443             *:*    users:(("kube-apiserver",pid=2514,fd=3))                
-tcp   LISTEN 0      4096               *:9345             *:*    users:(("rke2",pid=2208,fd=6))                          
-tcp   LISTEN 0      4096               *:5473             *:*    users:(("calico-typha",pid=4865,fd=6))                  
