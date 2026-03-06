@@ -5,7 +5,11 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-**r8s** (pronounced "rates") is an intelligent CLI tool for analyzing Rancher support bundles. It combines kubectl-like navigation with AI pattern detection to find root causes instantly — no cluster access required. It is the log bundle swiss army knife with lasers.
+**r8s** (pronounced "rates") is **The CLI Automation Engine for Kubernetes Triage**.
+
+Stop scrolling through thousands of text files. **r8s** turns static support bundles into a live, queryable environment. It combines `kubectl` muscle memory with an AI-driven analysis engine, allowing you to **validate**, **triage**, and **resolve** issues before you even open a log file.
+
+It's not just a viewer. It's a **pipeline-ready tool** designed for First Response automation. It is the log bundle swiss army knife with lasers. 🔦
 
 ---
 
