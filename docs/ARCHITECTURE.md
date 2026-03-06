@@ -9,8 +9,7 @@ This document provides a comprehensive overview of r8s's technical architecture,
 - [Project Structure](#project-structure)
 - [Core Components](#core-components)
 - [Data Flow](#data-flow)
-- [State Management](#state-management)
-- [Offline Mode](#offline-mode)
+- [Analysis Engine](#analysis-engine)
 - [API Integration](#api-integration)
 - [Design Patterns](#design-patterns)
 
@@ -18,15 +17,15 @@ This document provides a comprehensive overview of r8s's technical architecture,
 
 ## Overview
 
-r8s is a terminal user interface (TUI) application for navigating and managing Rancher-based Kubernetes clusters. It follows the Model-Update-View pattern popularized by The Elm Architecture, implemented via the Bubble Tea framework.
+r8s is a **CLI Automation Engine** for Kubernetes triage. Its core architecture is designed around a headless analysis engine that can ingest, parse, and diagnose support bundles programmatically.
 
 ### Key Principles
 
-1. **Event-Driven**: All user interactions are events processed through a central Update function
-2. **Immutable State**: State updates return new state rather than mutating existing state
-3. **Graceful Degradation**: Offline mode with mock data allows development without live Rancher
-4. **Type Safety**: Strongly-typed Go structs for all API responses
-5. **Separation of Concerns**: Clear boundaries between UI, business logic, and API client
+1.  **Automation First**: Every feature must be accessible via CLI flags and machine-readable output (JSON/SARIF).
+2.  **Pipeline Ready**: Designed to run in CI/CD, creating exit codes and reports.
+3.  **Stateless Analysis**: Each run is independent and idempotent.
+4.  **Graceful Degradation**: Robust handling of incomplete or corrupted bundles.
+5.  **Separation of Concerns**: Clear boundaries between the Analysis Engine and CLI presentation layer.
 
 ---
 
@@ -36,20 +35,9 @@ r8s is a terminal user interface (TUI) application for navigating and managing R
 
 | Package | Purpose | Version |
 |---------|---------|---------|
-| [Bubble Tea](https://github.com/charmbracelet/bubbletea) | TUI framework | Latest |
-| [Lipgloss](https://github.com/charmbracelet/lipgloss) | Terminal styling | Latest |
-| [Bubble Table](https://github.com/evertras/bubble-table) | Table component | Latest |
-| [Cobra](https://github
-
-.com/spf13/cobra) | CLI framework | Latest |
+| [Cobra](https://github.com/spf13/cobra) | CLI framework & command routing | Latest |
 | [Viper](https://github.com/spf13/viper) | Configuration | Latest |
-
-### Standard Library
-
-- `encoding/json`: API response parsing
-- `net/http`: HTTP client for Rancher API
-- `time`: Timestamps and duration handling
-- `fmt`, `strings`: String formatting and manipulation
+| `regexp` | AI Pattern Matching Engine | Stdlib |
 
 ---
 
@@ -58,467 +46,95 @@ r8s is a terminal user interface (TUI) application for navigating and managing R
 ```
 r8s/
 ├── main.go                      # Application entry point
-├── cmd/
-│   └── root.go                 # CLI root command
-├── internal/                   # Private application code
-│   ├── config/
-│   │   ├── config.go          # Configuration logic
-│   │   └── config_test.go     # Configuration tests
-│   ├── rancher/
-│   │   ├── client.go          # Rancher API client
-│   │   ├── client_test.go     # Client tests
-│   │   └── types.go           # API response types
-│   ├── tui/
-│   │   ├── app.go             # Main TUI application
-│   │   ├── styles.go          # Visual styles
-│   │   ├── actions/           # User actions (future)
-│   │   ├── components/        # Reusable UI components (future)
-│   │   └── views/             # View-specific logic (future)
-│   └── k8s/                   # Kubernetes operations (future)
-├── docs/
-│   ├── ARCHITECTURE.md        # This file
-│   └── archive/               # Archived development docs
-├── scripts/
-│   ├── setup_*.sh             # Setup scripts
-│   └── deprecated/            # Old test scripts
-└── bin/                       # Compiled binaries
+├── cmd/                         # CLI Commands
+│   ├── root.go                  # Root & Routing
+│   ├── analyze.go               # Analysis Command
+│   ├── ask.go                   # NLP/Query Command
+│   ├── get.go                   # Resource Listing
+│   └── tui.go                   # (Removed)
+├── internal/                    # Private application code
+│   ├── ai/                      # ⭐ Analysis & Pattern Engine
+│   │   ├── analyzer.go          # Core analysis logic
+│   │   └── patterns/            # Detection patterns
+│   ├── bundle/                  # Bundle Parsing & Ingestion
+│   ├── config/                  # Configuration
+│   ├── rancher/                 # Rancher/K8s API Client
+│   └── ui/                      # CLI Presentation Layer
+└── docs/                        # Documentation
 ```
-
-### Package Responsibilities
-
-- **main.go**: Initializes config and starts TUI
-- **cmd/**: CLI parsing and command setup
-- **internal/config**: Configuration file management, profile handling
-- **internal/rancher**: Rancher API communication, type definitions
-- **internal/tui**: All UI rendering, event handling, state management
-- **internal/k8s**: Direct Kubernetes operations (future)
 
 ---
 
 ## Core Components
 
-### 1. Configuration Management (`internal/config/`)
+### 1. Analysis Engine (`internal/ai/`)
+
+The heart of r8s. It accepts a `Bundle` object and runs a battery of heuristic checks and pattern matching algorithms.
 
 ```go
-type Config struct {
-    CurrentProfile string    `yaml:"current_profile"`
-    Profiles       []Profile `yaml:"profiles"`
-    // ...
+type Analyzer struct {
+    patterns []Pattern
 }
 
-type Profile struct {
-    Name        string `yaml:"name"`
-    URL         string `yaml:"url"`
-    BearerToken string `yaml:"bearer_token"`
-    // ...
+func (a *Analyzer) Run(bundle *bundle.Bundle) Report {
+    // 1. Scan for known log patterns
+    // 2. Check resource states (CrashLoop, OOM)
+    // 3. Correlate events
+    return Report{Issues: [...]}
 }
 ```
 
-**Responsibilities:**
-- Load/parse YAML configuration from `~/.r8s/config.yaml`
-- Validate configuration structure
-- Provide current profile access
-- Support multiple Rancher environments
+### 2. Bundle Processor (`internal/bundle/`)
 
-### 2. Rancher API Client (`internal/rancher/`)
+Responsible for ingesting data from various sources (Tarballs, Directories, Live API) and normalizing it into a standard internal model.
 
-```go
-type Client struct {
-    baseURL    string
-    token      string
-    httpClient *http.Client
-}
-```
+### 3. Presentation Layer (`internal/ui/`)
 
-**Key Methods:**
-- `TestConnection()`: Verify API connectivity
-- `ListClusters()`: Fetch cluster list
-- `ListProjects(clusterID)`: Fetch projects for a cluster
-- `ListNamespaces(clusterID)`: Fetch namespaces
-- `ListPods(projectID)`: Fetch pods
-- `ListDeployments(projectID)`: Fetch deployments
-- `ListServices(projectID)`: Fetch services
-- `ListCRDs(clusterID)`: Fetch Custom Resource Definitions
-- `GetPodDetails(...)`: Fetch individual pod details
-- And more...
-
-**Error Handling:**
-- HTTP errors wrapped with context
-- Connection timeouts
-- Authentication failures
-- API version compatibility
-
-### 3. TUI Application (`internal/tui/`)
-
-```go
-type App struct {
-    // Configuration
-    config *config.Config
-    client *rancher.Client
-    
-    // State
-    viewStack   []ViewContext
-    currentView ViewContext
-    
-    // Data
-    clusters    []rancher.Cluster
-    pods        []rancher.Pod
-    deployments []rancher.Deployment
-    // ...
-    
-    // UI State
-    table       table.Model
-    loading     bool
-    error       string
-    offlineMode bool
-}
-```
-
-**Core Methods:**
-- `Init()`: Initialize application, start data fetching
-- `Update(msg)`: Process events, update state
-- `View()`: Render current state to terminal
+Handles all user output formatting, including spinners, tables, colors, and structured data (JSON/YAML/SARIF) generation. It ensures consistent experience across all CLI commands.
 
 ---
 
 ## Data Flow
 
-### 1. Application Lifecycle
+### 1. CLI / Automation Flow
 
 ```
-┌────────────────┐
-│  main.go       │  Load config, create App
-└───────┬────────┘
-        │
-        v
-┌────────────────┐
-│  App.Init()    │  Start fetching clusters
-└───────┬────────┘
-        │
-        v
-┌────────────────┐
-│  Event Loop    │  Bubble Tea runtime
-│  - Update()    │  Process user input
-│  - View()      │  Render UI
-└────────────────┘
+User Command (r8s analyze)
+         |
+         v
+   cmd/analyze.go
+         |
+         v
+   Bundle Processor (Ingest data)
+         |
+         v
+   Analysis Engine (Run patterns)
+         |
+         v
+   JSON/SARIF Formatter
+         |
+         v
+   Stdout (Pipe to jq/Slack)
 ```
-
-### 2. User Interaction Flow
-
-```
-User presses key (e.g., "Enter")
-         |
-         v
-   Key event → Update(KeyMsg)
-         |
-         v
-   Determine action based on currentView
-         |
-         v
-   Return Command (e.g., fetchProjects)
-         |
-         v
-   Command executes asynchronously
-         |
-         v
-   Command returns Message (e.g., projectsMsg)
-         |
-         v
-   Update() processes message
-         |
-         v
-   State updated (a.projects = msg.projects)
-         |
-         v
-   View() re-renders with new state
-```
-
-### 3. API Request Flow
-
-```
-fetchClusters() called
-         |
-         v
-   Check offlineMode
-         |
-    +----+----+
-    |         |
-    v         v
-  Offline   Online
-    |         |
-    v         v
-  Mock     API Request
-  Data       |
-    |        v
-    |    Parse JSON → Cluster structs
-    |        |
-    +--------+
-         |
-         v
-   Return clustersMsg
-         |
-         v
-   Update state
-         |
-         v
-   Render table
-```
-
----
-
-## State Management
-
-### View Stack Navigation
-
-r8s uses a stack-based navigation system:
-
-```go
-type ViewContext struct {
-    viewType      ViewType  // Current view (Clusters, Pods, etc.)
-    clusterID     string    // Context: which cluster
-    projectID     string    // Context: which project
-    namespaceName string    // Context: which namespace
-    // ...
-}
-```
-
-**Navigation Example:**
-
-```
-Initial: ViewClusters
-         |
-         | User presses Enter on "production"
-         v
-      Push ViewClusters to stack
-      Navigate to ViewProjects (clusterID="c-prod")
-         |
-         | User presses Enter on "default-project"
-         v
-      Push ViewProjects to stack
-      Navigate to ViewNamespaces
-         |
-         | User presses Esc
-         v
-      Pop from stack → Back to ViewProjects
-```
-
-### State Updates
-
-All state updates follow this pattern:
-
-```go
-case projectsMsg:
-    a.loading = false           // Update UI state
-    a.projects = msg.projects   // Update data
-    a.error = ""               // Clear errors
-    a.updateTable()            // Re-render table
-```
-
----
-
-## Offline Mode
-
-### Design Philosophy
-
-Offline mode enables:
-- Development without live Rancher access
-- Demos and testing
-- UI development iteration
-- Feature exploration
-
-### Implementation
-
-```go
-// At startup
-if err := client.TestConnection(); err != nil {
-    offlineMode = true
-}
-
-// In fetch functions
-func (a *App) fetchPods(...) tea.Cmd {
-    return func() tea.Msg {
-        if a.offlineMode {
-            return podsMsg{pods: a.getMockPods(...)}
-        }
-        
-        // Real API call
-        collection, err := a.client.ListPods(projectID)
-        if err != nil {
-            // Fallback to mock for graceful degradation
-            return podsMsg{pods: a.getMockPods(...)}
-        }
-        return podsMsg{pods: collection.Data}
-    }
-}
-```
-
-### Mock Data Generation
-
-Mock data is:
-- **Realistic**: Mimics actual Rancher responses
-- **Varied**: Different scenarios (running, failed, pending pods)
-- **Consistent**: Deterministic for testing
-- **Namespace-aware**: Filtered appropriately
-
----
-
-## API Integration
-
-### Authentication
-
-Bearer token authentication:
-
-```go
-req.Header.Set("Authorization", "Bearer "+c.token)
-```
-
-Supports:
-- Direct bearer tokens
-- API key + secret (concatenated to form bearer token)
-
-### Request/Response Cycle
-
-```go
-func (c *Client) ListPods(projectID string) (*PodCollection, error) {
-    // 1. Build URL
-    url := fmt.Sprintf("%s/v3/projects/%s/pods", c.baseURL, projectID)
-    
-    // 2. Create request
-    req, _ := http.NewRequest("GET", url, nil)
-    req.Header.Set("Authorization", "Bearer "+c.token)
-    
-    // 3. Execute request
-    resp, err := c.httpClient.Do(req)
-    
-    // 4. Parse response
-    var collection PodCollection
-    json.NewDecoder(resp.Body).Decode(&collection)
-    
-    // 5. Return data
-    return &collection, nil
-}
-```
-
-### Type Mapping
-
-Rancher API responses map to Go structs:
-
-```go
-// API Response (JSON)
-{
-  "id": "c-m-12345",
-  "type": "cluster",
-  "name": "production",
-  "state": "active"
-}
-
-// Go Struct
-type Cluster struct {
-    ID    string `json:"id"`
-    Type  string `json:"type"`
-    Name  string `json:"name"`
-    State string `json:"state"`
-}
-```
-
-### Field Mapping Strategy
-
-Some fields have multiple possible names (see Deployment replica counts):
-
-```go
-// Try multiple field mappings
-if deployment.Scale != nil {
-    replicas = deployment.Scale.Scale
-} else if deployment.Replicas > 0 {
-    replicas = deployment.Replicas
-}
-```
-
 ---
 
 ## Design Patterns
 
-### 1. Event-Driven Architecture (Bubble Tea)
+### 1. Command Pattern (Cobra)
 
-```go
-// Model
-type App struct { /* state */ }
+Each CLI command (`analyze`, `get`, `logs`) is encapsulated in a Cobra command struct, allowing for consistent flag parsing, help generation, and execution flow.
 
-// Init
-func (a *App) Init() tea.Cmd { /* setup */ }
+### 2. Strategy Pattern (Data Sources)
 
-// Update
-func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    // Process events, return new state + commands
-}
+The `Bundle` interface abstracts the underlying data source. The Analysis Engine doesn't care if the data comes from:
+- A live Kubernetes API
+- A local directory (extracted bundle)
+- A tarball (future support)
+- A mock data generator
 
-// View
-func (a *App) View() string {
-    // Render current state
-}
-```
+### 3. Factory Pattern (Mock Data)
 
-### 2. Command Pattern
-
-Commands encapsulate asynchronous operations:
-
-```go
-func (a *App) fetchClusters() tea.Cmd {
-    return func() tea.Msg {
-        // Fetch data
-        clusters := /* ... */
-        
-        // Return message
-        return clustersMsg{clusters: clusters}
-    }
-}
-```
-
-### 3. Message Passing
-
-All data flows through messages:
-
-```go
-type clustersMsg struct {
-    clusters []rancher.Cluster
-}
-
-type podsMsg struct {
-    pods []rancher.Pod
-}
-
-type errMsg struct {
-    error
-}
-```
-
-### 4. Fallback Strategy
-
-Multi-tier attempts with graceful degradation:
-
-```go
-// Tier 1: Preferred field
-if deployment.Scale != nil {
-    use(deployment.Scale.Ready)
-// Tier 2: Alternative field
-} else if deployment.ReadyReplicas > 0 {
-    use(deployment.ReadyReplicas)
-// Tier 3: Default
-} else {
-    use(0)
-}
-```
-
-### 5. Factory Pattern
-
-Mock data generators act as factories:
-
-```go
-func (a *App) getMockPods(namespace string) []rancher.Pod {
-    // Generate realistic mock data
-    return []rancher.Pod{/* ... */}
-}
-```
+Mock data generators act as factories for testing patterns without needing real bundles.
 
 ---
 
@@ -526,21 +142,23 @@ func (a *App) getMockPods(namespace string) []rancher.Pod {
 
 ### Memory Management
 
-- **Table rendering**: Only visible rows rendered (pagination)
-- **Data caching**: Fetched data stored in App state
-- **No memory leaks**: Tested with race detector
+- **Streaming Processing**: Large files (logs) are processed line-by-line where possible to avoid loading 10GB+ files into RAM.
+- **Bounded Buffers**: Log tailing uses fixed-size circular buffers.
 
-### Network Optimization
+### Execution Speed
 
-- **Single request per view**: Avoid redundant API calls
-- **Filtered responses**: Only fetch needed data
-- **Connection pooling**: HTTP client reuse
+- **Parallel Analysis**: Independent analysis rules run concurrently.
+- **Lazy Loading**: Resources are only parsed when requested by a specific rule or command.
 
-### UI Responsiveness
+---
 
-- **Asynchronous fetching**: Commands don't block UI
-- **Loading states**: User feedback during operations
-- **Error handling**: Clear error messages
+## Future Enhancements
+
+### Planned Architecture Changes
+
+1.  **Plugin System**: MCP-style extensions for custom analysis rules.
+2.  **Remote Analysis**: Support fetching bundles directly from S3/GCS.
+3.  **Live Watch Mode**: Continuous analysis of a live cluster.
 
 ---
 
@@ -566,24 +184,6 @@ go test -race ./...
 - Target: 80%
 - Critical paths: >90%
 
----
-
-## Future Enhancements
-
-### Planned Architecture Changes
-
-1. **Component extraction**: Move table, modal to `internal/tui/components/`
-2. **View separation**: Split views into separate files
-3. **Action handlers**: Dedicated action package
-4. **Plugin system**: MCP-style extensions
-5. **State machine**: Formal FSM for view transitions
-
-### Scalability
-
-- Handle large datasets (1000s of pods)
-- Virtual scrolling for tables
-- Lazy loading with pagination
-- Background refresh without blocking
 
 ---
 
@@ -592,7 +192,7 @@ go test -race ./...
 r8s's architecture prioritizes:
 - **Maintainability**: Clear separation of concerns
 - **Testability**: Comprehensive test coverage
-- **User Experience**: Responsive, intuitive UI
+- **User Experience**: Consistent, clear CLI output
 - **Reliability**: Graceful error handling and offline mode
 
 For implementation details, see:

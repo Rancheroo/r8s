@@ -1,14 +1,15 @@
 <!-- This is a machine-generated file. To regenerate it, run: make docs -->
 # r8s CLI Reference
 
-Complete command-line reference for r8s (Rancheroos).
+Complete command-line reference for **r8s**, the CLI Automation Engine for Kubernetes Triage.
 
 ## Table of Contents
 - [Global Flags](#global-flags)
 - [Commands](#commands)
-  - [r8s (root)](#r8s-root)
-  - [r8s ask](#r8s-ask)
-  - [r8s tui](#r8s-tui)
+  - [r8s analyze](#r8s-analyze)
+  - [r8s get](#r8s-get)
+  - [r8s describe](#r8s-describe)
+  - [r8s logs](#r8s-logs)
   - [r8s config](#r8s-config)
   - [r8s version](#r8s-version)
 - [Environment Variables](#environment-variables)
@@ -34,58 +35,119 @@ These flags work with any r8s command:
 
 ## r8s (root)
 
-The root command provides the simplest way to launch r8s - just point it at what you want to view.
+The root command provides the simplest way to launch r8s analysis.
 
 ### Synopsis
 ```bash
 r8s [bundle-path] [flags]
 ```
 
+### Examples
+```bash
+# Analyze a bundle
+r8s ./support-bundle/
+
+# Show help
+r8s --help
+```
+
+---
+
+## r8s analyze
+
+**The core automation command.** Scans the bundle or cluster for known failure patterns (CrashLoops, OOMs, Etcd issues, Certificate expiries).
+
+### Synopsis
+```bash
+r8s analyze [bundle-path] [flags]
+```
+
 ### Flags
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--mockdata` | `false` | Enable demo mode with mock data (no API required) |
-
-All [global flags](#global-flags) also apply.
+| `--format` | `text` | Output format: `text`, `json`, `yaml`, `sarif` |
+| `--severity` | | Filter by severity (`critical`, `warning`, `info`) |
 
 ### Examples
-
-**Live cluster mode:**
 ```bash
-# Launch TUI with default profile
-r8s
+# Basic analysis
+r8s analyze ./bundle/
 
-# Use specific profile
-r8s --profile=production
+# JSON output for automation
+r8s analyze ./bundle/ --format=json | jq '.issues[] | select(.severity=="critical")'
 
-# Start in specific namespace
-r8s --namespace=kube-system
+# Generate SARIF report for GitHub Advanced Security
+r8s analyze ./bundle/ --format=sarif > results.sarif
 ```
 
-**Demo mode:**
+---
+
+## r8s get
+
+List resources in the bundle, mimicking `kubectl get`.
+
+### Synopsis
 ```bash
-# Launch with mock data (no configuration needed)
-r8s --mockdata
+r8s get [resource] [bundle-path] [flags]
 ```
 
-**Bundle mode:**
+### Examples
 ```bash
-# Extract bundle first
-tar -xzf support-bundle.tar.gz
+# List pods
+r8s get pods ./bundle/ -n cattle-system
 
-# Then analyze extracted folder
-r8s ./extracted-bundle-folder/
+# List all nodes
+r8s get nodes ./bundle/
 
-# Works with any path format
-r8s ./example-log-bundle/w-guard-wg-cp-xyz/
-r8s /tmp/support-bundles/bundle-001/
+# List all resources (slow)
+r8s get all ./bundle/
 ```
 
-**Why use the root command?**
-- Simplest UX - just `r8s ./bundle/`
-- Auto-detects bundle vs live mode
-- No need to remember `tui` subcommand
-- Matches user mental model: "analyze this thing"
+---
+
+## r8s describe
+
+Show detailed information about a specific resource, mimicking `kubectl describe`.
+
+### Synopsis
+```bash
+r8s describe [resource] [name] [bundle-path] [flags]
+```
+
+### Examples
+```bash
+# Describe a pod
+r8s describe pod rancher-webhook-5d9b7 ./bundle/ -n cattle-system
+
+# Describe a node
+r8s describe node worker-1 ./bundle/
+```
+
+---
+
+## r8s logs
+
+View logs for a container, automatically resolving the correct log file from the bundle.
+
+### Synopsis
+```bash
+r8s logs [pod-name] [bundle-path] [flags]
+```
+
+### Flags
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--container` | `-c` | | Specific container to read logs from |
+| `--previous` | `-p` | `false` | Read previous (crashed) container logs |
+
+### Examples
+```bash
+# View logs
+r8s logs rancher-webhook-5d9b7 ./bundle/
+
+# View previous logs for a crashing pod
+r8s logs rancher-webhook-5d9b7 ./bundle/ -p
+```
 
 ---
 
@@ -117,93 +179,6 @@ r8s ask ./bundle/ "what is wrong with worker-1?"
 ```
 
 **Note:** Queries for "running" or "ready" states use strict checking against cluster data, while issue queries use the AI pattern engine.
-
----
-
-## r8s tui
-
-Launch the interactive Terminal UI for browsing clusters or bundles.
-
-**Note:** The root command `r8s` is simpler for most use cases. Use `r8s tui` when you need TUI-specific flags like `--bundle`.
-
-### Synopsis
-```bash
-r8s tui [flags]
-```
-
-### Flags
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--mockdata` | `false` | Enable demo mode with mock data (no API required) |
-| `--bundle` | | Path to extracted log bundle folder |
-
-### Examples
-
-**Live cluster mode:**
-```bash
-# Use default profile from config
-r8s tui
-
-# Use specific profile
-r8s tui --profile=production
-
-# Start in specific namespace
-r8s tui --namespace=kube-system
-
-# Skip TLS verification (dev only!)
-r8s tui --insecure
-```
-
-**Demo mode:**
-```bash
-# Launch with mock data (no configuration needed)
-r8s tui --mockdata
-```
-
-**Bundle mode:**
-```bash
-# Extract bundle first
-tar -xzf support-bundle.tar.gz
-
-# Analyze extracted folder
-r8s tui --bundle=./w-guard-wg-cp-xyz/
-
-# Works with relative paths
-r8s tui --bundle=./example-log-bundle/extracted-folder/
-
-# Works with absolute paths
-r8s tui --bundle=/tmp/support-bundles/bundle-001/
-```
-
-### Keyboard Shortcuts
-
-**Navigation:**
-- `↑` / `k` - Move up
-- `↓` / `j` - Move down
-- `Enter` - Navigate into resource
-- `Esc` - Go back
-- `q` / `Ctrl+C` - Quit
-
-**Views:**
-- `1` - Switch to Pods view
-- `2` - Switch to Deployments view
-- `3` - Switch to Services view
-- `C` - Jump to CRDs view
-
-**Actions:**
-- `d` - Describe resource (JSON)
-- `l` - View logs (pods only)
-- `r` / `Ctrl+R` - Refresh
-- `?` - Show help
-
-**Log viewing:**
-- `/` - Search logs
-- `n` - Next search result
-- `N` - Previous search result
-- `Ctrl+E` - Filter ERROR logs
-- `Ctrl+W` - Filter WARN logs
-- `Ctrl+A` - Show all logs
-- `t` - Toggle tail mode
 
 ---
 
@@ -394,63 +369,31 @@ logLevel: info
 *Either `bearerToken` OR `accessKey`+`secretKey` required
 
 ---
-
-## Common Workflows
-
-### First-Time Setup
-
+### 1. Automated Triage (CI/CD)
 ```bash
-# 1. Initialize config
-r8s config init
+# Check if bundle is valid
+if ! r8s validate ./bundle/; then
+  exit 1
+fi
 
-# 2. Edit config with your credentials
-r8s config edit
-
-# 3. Validate config
-r8s config validate
-
-# 4. Launch TUI
-r8s
+# Fail build on critical issues
+r8s analyze ./bundle/ --severity=critical --exit-code
 ```
 
-### Multiple Rancher Environments
-
+### 2. Rapid Root Cause Analysis
 ```bash
-# Production
-r8s --profile=production
+# 1. Ask the engine
+r8s ask ./bundle/ "why is the ingress controller failing?"
 
-# Staging
-r8s --profile=staging
-
-# Development
-r8s --profile=dev
+# 2. Verify with logs
+r8s logs ingress-controller-x8s7 ./bundle/ | grep "Error"
 ```
 
-### Troubleshooting a Cluster
-
+### 3. Deep Dive Investigation
 ```bash
-# 1. Get support bundle from RKE2 node
-ssh node.example.com
-sudo rke2 support-bundle
-
-# 2. Download bundle
-scp node.example.com:/tmp/rke2-support-bundle-*.tar.gz ./
-
-# 3. Extract bundle
-tar -xzf rke2-support-bundle-*.tar.gz
-
-# 4. Analyze
-r8s ./rke2-support-bundle-*/
+# Launch TUI to explore
+r8s ./bundle/
 ```
-
-### Demo/Screenshot Mode
-
-```bash
-# Launch with realistic mock data
-r8s --mockdata
-
-# Take screenshots for documentation
-# Navigate through UI as normal
 ```
 
 ---

@@ -295,7 +295,7 @@ A good bug report shouldn't leave others needing to chase you up for more inform
 A clear and concise description of what the bug is.
 
 **Steps to Reproduce:**
-1. Run command '...'
+1. Run command 'r8s analyze ...'
 2. With bundle '...'
 3. See error
 
@@ -490,66 +490,15 @@ git commit -m "feat: implement filter mode
 
 ## Architecture Overview
 
-### High-Level Architecture
+**For a detailed deep-dive into the r8s architecture, please see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).**
 
-```
-┌─────────────────────────────────────────────┐
-│           Terminal (User Input)             │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│        Bubble Tea Framework (TUI)           │
-│  ┌────────────────────────────────────────┐ │
-│  │  App (State Management)                │ │
-│  │  - viewStack    - currentView          │ │
-│  │  - clusters     - deployments          │ │
-│  │  - pods         - services             │ │
-│  └─────────────┬──────────────────────────┘ │
-└────────────────┼────────────────────────────┘
-                 │
-┌────────────────▼────────────────────────────┐
-│      Rancher API Client                     │
-│  - Authentication (Bearer Token)            │
-│  - Resource Fetching (Clusters, Pods, etc.) │
-│  - Error Handling & Retry Logic             │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│         Rancher API / Kubernetes            │
-└─────────────────────────────────────────────┘
-```
+At a high level, r8s is split into three layers:
 
-### Key Components
+1.  **CLI Layer (`cmd/`)**: Handles command routing (`analyze`, `ask`, `get`) and flag parsing.
+2.  **Analysis Engine (`internal/ai/`)**: The core logic that ingests bundles and detects issues.
+3.  **Presentation Layer (`internal/ui/`)**: CLI output formatting.
 
-1. **TUI (internal/tui/)**
-   - `app.go`: Main application state and logic
-   - `styles.go`: Visual styling
-   - Uses Bubble Tea for event-driven architecture
-
-2. **Analysis Engine (internal/ai/)**
-   - **Pattern Registry**: Stores detection patterns.
-   - **Analyzer**: Matches patterns against bundle content.
-   - **NLP Engine**: Parses natural language queries into intent.
-
-3. **Bundle Processor (internal/bundle/)**
-   - Handles loading, parsing, and indexing of support bundles.
-   - Supports RKE2, K3s, and Rancher formats.
-
-4. **Rancher Client (internal/rancher/)**
-   - `client.go`: API client implementation
-   - `types.go`: Data structures matching Rancher API
-
-5. **Config (internal/config/)**
-   - `config.go`: Configuration management
-   - Handles multiple profiles
-
-### State Flow
-
-1. User presses key → Bubble Tea Update()
-2. Update() processes key → triggers command (e.g., fetchPods)
-3. Command executes → returns message
-4. Message processed → updates app state
-5. App re-renders with new state
+All features should be implemented in the Engine first, then exposed via CLI JSON output.
 
 ---
 
@@ -570,7 +519,6 @@ To add a new issue detection capability:
 ### Common Customizations
 
 *   **Config Defaults**: Modify `internal/config/config.go` to change default paths or timeouts.
-*   **Theme/Colors**: Update `internal/tui/styles.go` to adjust the visual theme.
 *   **Bundle Parsing**: Add new file parsers in `internal/bundle/` to support new log formats.
 
 ---
@@ -581,16 +529,8 @@ To add a new issue detection capability:
 
 1. Add struct to `internal/rancher/types.go`
 2. Add fetch method to `internal/rancher/client.go`
-3. Add view case to `internal/tui/app.go`
-4. Update `updateTable()` to render the resource
-5. Add tests
-
-### Adding a New Key Binding
-
-1. Add case to `Update()` in `app.go`
-2. Implement handler function
-3. Update help screen
-4. Document in README
+3. Add parser logic to `internal/bundle/parser.go`
+4. Add tests
 
 ### Debugging
 
@@ -603,7 +543,7 @@ export LOG_LEVEL=debug
 go run -race main.go
 
 # Profile memory
-go test -memprofile=mem.prof ./internal/tui
+go test -memprofile=mem.prof ./internal/ai
 go tool pprof mem.prof
 ```
 
