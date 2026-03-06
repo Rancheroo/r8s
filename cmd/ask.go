@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"regexp"
 
 	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
@@ -203,6 +204,14 @@ func parseQueryIntent(question string) QueryIntent {
 	}
 
 	// Extract resource type and name
+	
+	// Check for "image" resource using word boundaries to avoid matching "imagepull"
+	// This matches "image", "images", "docker" but not "imagepull"
+	imageRegex := regexp.MustCompile(`\b(image|images|docker)\b`)
+	if imageRegex.MatchString(q) {
+		intent.Resource = "image"
+	}
+
 	if strings.Contains(q, "pod") || strings.Contains(q, "container") {
 		intent.Resource = "pod"
 		// Try to extract pod name
@@ -220,10 +229,6 @@ func parseQueryIntent(question string) QueryIntent {
 
 	if strings.Contains(q, "certificate") || strings.Contains(q, "cert") {
 		intent.Resource = "certificate"
-	}
-
-	if strings.Contains(q, "image") || strings.Contains(q, "docker") {
-		intent.Resource = "image"
 	}
 
 	if strings.Contains(q, "node") {
@@ -584,8 +589,8 @@ func isLikelyPath(text string) bool {
 // handleStateQuery processes requests for current state (running/ready) using raw parsers.
 // It returns the response string, a boolean indicating if the query was handled, and any error.
 func handleStateQuery(bundlePath string, intent QueryIntent) (string, bool, error) {
-	// We only handle "which" or "show" queries
-	if intent.Type != "which" && intent.Type != "show" {
+	// We only handle "which", "show", or "what" queries
+	if intent.Type != "which" && intent.Type != "show" && intent.Type != "what" {
 		return "", false, nil
 	}
 

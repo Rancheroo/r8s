@@ -19,7 +19,7 @@ fi
 # Get current commit
 COMMIT=$(git rev-parse HEAD)
 
-# Get comment details using gh (no jq needed)
+# Get comment details using gh (jq preferred)
 echo "Fetching comment $COMMENT_ID..."
 COMMENT_JSON=$(gh api repos/$REPO/pulls/comments/$COMMENT_ID 2>/dev/null || echo "")
 
@@ -28,24 +28,14 @@ if [ -z "$COMMENT_JSON" ]; then
     exit 1
 fi
 
-# Extract path and line using grep (no jq dependency)
-PATH=$(echo "$COMMENT_JSON" | grep '"path"' | head -1 | sed 's/.*"path": "\([^"]*\)".*/\1/')
-LINE=$(echo "$COMMENT_JSON" | grep '"line"' | head -1 | sed 's/.*"line": \([0-9]*\).*/\1/')
+# Extract path and line using gh jq (more robust than grep/sed)
+PATH=$(echo "$COMMENT_JSON" | gh api - --jq '.path')
+LINE=$(echo "$COMMENT_JSON" | gh api - --jq '.line // .original_line // 1')
 
 # Validate we have required fields
 if [ -z "$PATH" ] || [ "$PATH" == "null" ]; then
     echo "❌ Error: Could not determine file path"
     exit 1
-fi
-
-# Use original_line if line is null or 0
-if [ -z "$LINE" ] || [ "$LINE" == "null" ] || [ "$LINE" == "0" ]; then
-    LINE=$(echo "$COMMENT_JSON" | grep '"original_line"' | head -1 | sed 's/.*"original_line": \([0-9]*\).*/\1/')
-fi
-
-# Default to line 1 if still empty
-if [ -z "$LINE" ] || [ "$LINE" == "null" ] || [ "$LINE" == "0" ]; then
-    LINE=1
 fi
 
 echo "Replying to comment $COMMENT_ID on $PATH:$LINE"
