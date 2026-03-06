@@ -159,41 +159,8 @@ func findLogFiles(bundlePath, namespaceFilter, podFilter string) ([]string, erro
 			return nil
 		}
 
-		// Parse filename: handles multiple formats
-		// Format 1: namespace_podname_container.log (underscore)
-		// Format 2: namespace-podname-container.log (hyphen)
-		// Format 3: podname.log (simple)
-		filename := info.Name()
-		ext := filepath.Ext(filename)
-		base := strings.TrimSuffix(filename, ext)
-
-		// Extract namespace and pod from path structure if possible
-		relPath, _ := filepath.Rel(podlogsDir, path)
-		dirParts := strings.Split(relPath, string(filepath.Separator))
-
-		var ns, pod string
-
-		if len(dirParts) >= 2 {
-			// Path structure: namespace/podname.log
-			ns = dirParts[0]
-			pod = strings.TrimSuffix(dirParts[1], ext)
-		} else {
-			// Flat structure: try to parse from filename
-			// Try underscore first, then hyphen
-			parts := strings.Split(base, "_")
-			if len(parts) < 2 {
-				parts = strings.Split(base, "-")
-			}
-
-			if len(parts) >= 2 {
-				ns = parts[0]
-				pod = strings.Join(parts[1:], "-")
-			} else {
-				// Can't parse, use defaults
-				ns = "default"
-				pod = base
-			}
-		}
+		// Use shared logic to parse metadata
+		ns, pod, _ := parseLogPath(path)
 
 		// Apply filters
 		if namespaceFilter != "" && ns != namespaceFilter {
