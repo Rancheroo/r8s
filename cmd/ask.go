@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"regexp"
 
 	"github.com/Rancheroo/r8s/internal/ai"
 	"github.com/Rancheroo/r8s/internal/bundle"
@@ -203,9 +204,11 @@ func parseQueryIntent(question string) QueryIntent {
 	}
 
 	// Extract resource type and name
-	// Check "image" first so it can be overridden by more specific resources
-	// if "image" is part of another word (like "imagepull")
-	if strings.Contains(q, "image") || strings.Contains(q, "docker") {
+	
+	// Check for "image" resource using word boundaries to avoid matching "imagepull"
+	// This matches "image", "images", "docker" but not "imagepull"
+	imageRegex := regexp.MustCompile(`\b(image|images|docker)\b`)
+	if imageRegex.MatchString(q) {
 		intent.Resource = "image"
 	}
 

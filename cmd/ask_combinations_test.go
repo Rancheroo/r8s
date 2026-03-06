@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// TestAskCombinations verifies that common NLQ patterns are parsed into correct intents.
+// This matrix test covers 750+ combinations of prefixes, resources, and conditions.
 func TestAskCombinations(t *testing.T) {
 	// 1. Define components
 	resources := []struct {
@@ -28,6 +30,7 @@ func TestAskCombinations(t *testing.T) {
 		{"crashloop", "crashing"},
 		{"restarting", "crashing"},
 		{"imagepull", "imagepull"},
+		{"imagepullbackoff", "imagepull"},
 		{"can't pull", "imagepull"},
 		{"pending", "pending"},
 		{"stuck", "pending"},
