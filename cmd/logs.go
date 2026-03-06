@@ -248,15 +248,8 @@ func streamLogsFollow(files []string) error {
 	}
 }
 
-// outputLogFile outputs a single log file
-func outputLogFile(path string, isFollowing bool) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Get metadata from filename using same logic as findLogFiles
+// parseLogPath extracts metadata from a log file path
+func parseLogPath(path string) (namespace, pod, container string) {
 	filename := filepath.Base(path)
 	ext := filepath.Ext(filename)
 	base := strings.TrimSuffix(filename, ext)
@@ -266,21 +259,64 @@ func outputLogFile(path string, isFollowing bool) error {
 	parentDir := filepath.Base(dir)
 	grandparentDir := filepath.Base(filepath.Dir(dir))
 
-	var namespace, pod, container string
-
 	// Check if path has namespace/pod structure
 	if grandparentDir == "podlogs" || parentDir == "podlogs" {
 		// Try to parse from filename
+		// Strategy 1: Underscore separator (Standard Rancher/R8S)
+		// Format: namespace_pod_container.log
 		parts := strings.Split(base, "_")
-		if len(parts) < 2 {
-			parts = strings.Split(base, "-")
+		if len(parts) >= 3 {
+			namespace = parts[0]
+			pod = strings.Join(parts[1:len(parts)-1], "_")
+			container = parts[len(parts)-1]
+			return
+		} else if len(parts) == 2 {
+			namespace = parts[0]
+			pod = parts[1]
+			container = "default"
+			return
 		}
 
+		// Strategy 2: Hyphen separator (Ambiguous, best effort)
+		parts = strings.Split(base, "-")
+		
+		// Heuristic: Handle common system namespaces
+		if len(parts) >= 2 {
+			first := parts[0]
+			second := parts[1]
+			if (first == "cattle" || first == "kube" || first == "calico" || first == "fleet" || first == "ingress") && second == "system" {
+				// Detected *-system namespace
+				namespace = first + "-" + second
+				if len(parts) > 2 {
+					pod = strings.Join(parts[2:], "-")
+				} else {
+					pod = "unknown"
+				}
+				container = "default" // Cannot reliably determine container with hyphen separator
+				return
+			}
+		}
+
+		// Default hyphen strategy
 		if len(parts) >= 3 {
 			// Assume format: namespace-pod-container
+			// This is fragile but maintains backward compatibility for some formats
+			// BUT, for r8s demo/rancher bundles, it's often namespace-podname
+			// So we'll prefer namespace-podname and default container
+			
+			// If we didn't match system namespaces, this is a guess.
+			// Let's assume the last part is container ONLY if it's short/looks like a container name?
+			// No, that's too magic.
+			
+			// Let's stick to the previous behavior but fix the namespace part?
+			// Previous behavior: namespace = parts[0], container = last, rest = pod.
+			// This causes the "cattle/system-..." issue.
+			
+			// New behavior: namespace = parts[0], rest = pod, container = default
+			// This matches findLogFiles logic roughly
 			namespace = parts[0]
-			pod = strings.Join(parts[1:len(parts)-1], "-")
-			container = parts[len(parts)-1]
+			pod = strings.Join(parts[1:], "-")
+			container = "default"
 		} else if len(parts) == 2 {
 			namespace = parts[0]
 			pod = parts[1]
@@ -296,6 +332,19 @@ func outputLogFile(path string, isFollowing bool) error {
 		pod = base
 		container = "default"
 	}
+	return
+}
+
+// outputLogFile outputs a single log file
+func outputLogFile(path string, isFollowing bool) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Get metadata
+	namespace, pod, container := parseLogPath(path)
 
 	// Print header if not following
 	if !isFollowing {

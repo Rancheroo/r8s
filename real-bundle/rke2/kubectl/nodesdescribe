@@ -1,0 +1,318 @@
+Name:               r8s-cp-wlp7h-lhvgq
+Roles:              control-plane,etcd,master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=rke2
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=r8s-cp-wlp7h-lhvgq
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=true
+                    node-role.kubernetes.io/etcd=true
+                    node-role.kubernetes.io/master=true
+                    node.kubernetes.io/instance-type=rke2
+                    plan.upgrade.cattle.io/system-agent-upgrader=35e4ef60455ea256999b11198ce94d970705e7c2df7e106aaa25a149
+                    rke.cattle.io/machine=a243b941-9386-4dda-85aa-9ae1510e1943
+Annotations:        alpha.kubernetes.io/provided-node-ip: 209.38.17.11
+                    cluster.x-k8s.io/annotations-from-machine: 
+                    cluster.x-k8s.io/cluster-name: r8s
+                    cluster.x-k8s.io/cluster-namespace: fleet-default
+                    cluster.x-k8s.io/labels-from-machine: 
+                    cluster.x-k8s.io/machine: r8s-cp-wlp7h-lhvgq
+                    cluster.x-k8s.io/owner-kind: MachineSet
+                    cluster.x-k8s.io/owner-name: r8s-cp-wlp7h
+                    etcd.rke2.cattle.io/local-snapshots-timestamp: 2026-02-03T05:30:11Z
+                    etcd.rke2.cattle.io/node-address: 209.38.17.11
+                    etcd.rke2.cattle.io/node-name: r8s-cp-wlp7h-lhvgq-53034f0a
+                    management.cattle.io/pod-limits: {"cpu":"200m","memory":"192Mi"}
+                    management.cattle.io/pod-requests: {"cpu":"1225m","memory":"2320Mi","pods":"16"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 10.126.0.4/20
+                    projectcalico.org/IPv4VXLANTunnelAddr: 10.42.212.128
+                    projectcalico.org/Interfaces: [{"name":"eth0","addresses":["209.38.17.11","10.49.0.7"]},{"name":"eth1","addresses":["10.126.0.4"]}]
+                    rke2.io/encryption-config-hash: start-5f605842ca5d816e946423524a06007f912cdb8bd21d55e9855b7cbca444f8d4
+                    rke2.io/hostname: r8s-cp-wlp7h-lhvgq
+                    rke2.io/internal-ip: 209.38.17.11
+                    rke2.io/node-args:
+                      ["server","--agent-token","********","--cni","calico","--disable-kube-proxy","false","--etcd-expose-metrics","false","--etcd-snapshot-rete...
+                    rke2.io/node-config-hash: LPGYNFBLAC7WGBS7WUYKWLDOOL6TI7J6UNLWKG2R7ZALI2JT2XZA====
+                    rke2.io/node-env: {"RKE2_DATA_DIR":"/var/lib/rancher/rke2"}
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Tue, 03 Feb 2026 05:09:33 +0000
+Taints:             node-role.kubernetes.io/etcd:NoExecute
+                    node-role.kubernetes.io/control-plane:NoSchedule
+Unschedulable:      false
+Lease:              Failed to get lease: leases.coordination.k8s.io "r8s-cp-wlp7h-lhvgq" is forbidden: User "system:kube-proxy" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "kube-node-lease"
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Tue, 03 Feb 2026 05:10:58 +0000   Tue, 03 Feb 2026 05:10:58 +0000   CalicoIsUp                   Calico is running on this node
+  EtcdIsVoter          True    Tue, 03 Feb 2026 05:39:44 +0000   Tue, 03 Feb 2026 05:09:44 +0000   MemberNotLearner             Node is a voting member of the etcd cluster
+  MemoryPressure       False   Tue, 03 Feb 2026 05:35:24 +0000   Tue, 03 Feb 2026 05:09:33 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 03 Feb 2026 05:35:24 +0000   Tue, 03 Feb 2026 05:09:33 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 03 Feb 2026 05:35:24 +0000   Tue, 03 Feb 2026 05:09:33 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                True    Tue, 03 Feb 2026 05:35:24 +0000   Tue, 03 Feb 2026 05:10:48 +0000   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  209.38.17.11
+  Hostname:    r8s-cp-wlp7h-lhvgq
+Capacity:
+  cpu:                2
+  ephemeral-storage:  80162804Ki
+  hugepages-2Mi:      0
+  memory:             4009980Ki
+  pods:               110
+Allocatable:
+  cpu:                2
+  ephemeral-storage:  77982375671
+  hugepages-2Mi:      0
+  memory:             4009980Ki
+  pods:               110
+System Info:
+  Machine ID:                 50445c26d232c8ab8c5039e7698182bc
+  System UUID:                a27d4c0f-b6fb-4212-9faa-3e8e66c410ab
+  Boot ID:                    e401c2bd-a106-4bd8-8ba4-f35a36caec4c
+  Kernel Version:             6.8.0-71-generic
+  OS Image:                   Ubuntu 24.04.3 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.1.5-k3s1
+  Kubelet Version:            v1.33.7+rke2r1
+  Kube-Proxy Version:         
+PodCIDR:                      10.42.0.0/24
+PodCIDRs:                     10.42.0.0/24
+ProviderID:                   rke2://r8s-cp-wlp7h-lhvgq
+Pods:                         not authorized
+Events:                       <none>
+
+
+Name:               r8s-wk-jnhwv-4xqzn
+Roles:              worker
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=rke2
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=r8s-wk-jnhwv-4xqzn
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/worker=true
+                    node.kubernetes.io/instance-type=rke2
+                    plan.upgrade.cattle.io/system-agent-upgrader=35e4ef60455ea256999b11198ce94d970705e7c2df7e106aaa25a149
+                    rke.cattle.io/machine=9c8430b3-0444-42fc-9ba8-7a298a17a9ea
+Annotations:        alpha.kubernetes.io/provided-node-ip: 170.64.184.21
+                    cluster.x-k8s.io/annotations-from-machine: 
+                    cluster.x-k8s.io/cluster-name: r8s
+                    cluster.x-k8s.io/cluster-namespace: fleet-default
+                    cluster.x-k8s.io/labels-from-machine: 
+                    cluster.x-k8s.io/machine: r8s-wk-jnhwv-4xqzn
+                    cluster.x-k8s.io/owner-kind: MachineSet
+                    cluster.x-k8s.io/owner-name: r8s-wk-jnhwv
+                    management.cattle.io/pod-limits: {"cpu":"100m","memory":"128Mi"}
+                    management.cattle.io/pod-requests: {"cpu":"550m","memory":"546Mi","pods":"15"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 10.126.0.3/20
+                    projectcalico.org/IPv4VXLANTunnelAddr: 10.42.55.128
+                    projectcalico.org/Interfaces: [{"name":"eth0","addresses":["170.64.184.21","10.49.0.6"]},{"name":"eth1","addresses":["10.126.0.3"]}]
+                    rke2.io/hostname: r8s-wk-jnhwv-4xqzn
+                    rke2.io/internal-ip: 170.64.184.21
+                    rke2.io/node-args:
+                      ["agent","--node-label","rke.cattle.io/machine=9c8430b3-0444-42fc-9ba8-7a298a17a9ea","--private-registry","/etc/rancher/rke2/registries.ya...
+                    rke2.io/node-config-hash: RAIJEZ4ZYTI6D5MIKTCX7AZJPLTPVUX3F5J2D6X5CM47KRTG7GZA====
+                    rke2.io/node-env: {"RKE2_DATA_DIR":"/var/lib/rancher/rke2"}
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Tue, 03 Feb 2026 05:13:31 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:              Failed to get lease: leases.coordination.k8s.io "r8s-wk-jnhwv-4xqzn" is forbidden: User "system:kube-proxy" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "kube-node-lease"
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Tue, 03 Feb 2026 05:14:10 +0000   Tue, 03 Feb 2026 05:14:10 +0000   CalicoIsUp                   Calico is running on this node
+  MemoryPressure       False   Tue, 03 Feb 2026 05:38:03 +0000   Tue, 03 Feb 2026 05:13:31 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 03 Feb 2026 05:38:03 +0000   Tue, 03 Feb 2026 05:13:31 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 03 Feb 2026 05:38:03 +0000   Tue, 03 Feb 2026 05:13:31 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                True    Tue, 03 Feb 2026 05:38:03 +0000   Tue, 03 Feb 2026 05:14:05 +0000   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  170.64.184.21
+  Hostname:    r8s-wk-jnhwv-4xqzn
+Capacity:
+  cpu:                4
+  ephemeral-storage:  161421296Ki
+  hugepages-2Mi:      0
+  memory:             8131896Ki
+  pods:               110
+Allocatable:
+  cpu:                4
+  ephemeral-storage:  157030636626
+  hugepages-2Mi:      0
+  memory:             8131896Ki
+  pods:               110
+System Info:
+  Machine ID:                 99d85d8ac6d5af40e6379e2d698182bd
+  System UUID:                0b465783-c476-4928-b3d8-32c96cb3b8a7
+  Boot ID:                    11a6fb22-5195-4c18-abce-4b30a2fdeccd
+  Kernel Version:             6.8.0-71-generic
+  OS Image:                   Ubuntu 24.04.3 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.1.5-k3s1
+  Kubelet Version:            v1.33.7+rke2r1
+  Kube-Proxy Version:         
+PodCIDR:                      10.42.3.0/24
+PodCIDRs:                     10.42.3.0/24
+ProviderID:                   rke2://r8s-wk-jnhwv-4xqzn
+Pods:                         not authorized
+Events:                       <none>
+
+
+Name:               r8s-wk-jnhwv-j5k8h
+Roles:              worker
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=rke2
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=r8s-wk-jnhwv-j5k8h
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/worker=true
+                    node.kubernetes.io/instance-type=rke2
+                    plan.upgrade.cattle.io/system-agent-upgrader=35e4ef60455ea256999b11198ce94d970705e7c2df7e106aaa25a149
+                    rke.cattle.io/machine=7578c075-1b00-4988-8cba-7045f2d35557
+Annotations:        alpha.kubernetes.io/provided-node-ip: 209.38.21.222
+                    cluster.x-k8s.io/annotations-from-machine: 
+                    cluster.x-k8s.io/cluster-name: r8s
+                    cluster.x-k8s.io/cluster-namespace: fleet-default
+                    cluster.x-k8s.io/labels-from-machine: 
+                    cluster.x-k8s.io/machine: r8s-wk-jnhwv-j5k8h
+                    cluster.x-k8s.io/owner-kind: MachineSet
+                    cluster.x-k8s.io/owner-name: r8s-wk-jnhwv
+                    management.cattle.io/pod-limits: {}
+                    management.cattle.io/pod-requests: {"cpu":"350m","memory":"218Mi","pods":"16"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 10.126.0.2/20
+                    projectcalico.org/IPv4VXLANTunnelAddr: 10.42.14.64
+                    projectcalico.org/Interfaces: [{"name":"eth0","addresses":["209.38.21.222","10.49.0.5"]},{"name":"eth1","addresses":["10.126.0.2"]}]
+                    rke2.io/hostname: r8s-wk-jnhwv-j5k8h
+                    rke2.io/internal-ip: 209.38.21.222
+                    rke2.io/node-args:
+                      ["agent","--node-label","rke.cattle.io/machine=7578c075-1b00-4988-8cba-7045f2d35557","--private-registry","/etc/rancher/rke2/registries.ya...
+                    rke2.io/node-config-hash: 5DCKVQ3W6MRIJBMKRG4T5ZQZI6I5UJERKU5KHKNEJSYUKOYVSLUQ====
+                    rke2.io/node-env: {"RKE2_DATA_DIR":"/var/lib/rancher/rke2"}
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Tue, 03 Feb 2026 05:13:30 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:              Failed to get lease: leases.coordination.k8s.io "r8s-wk-jnhwv-j5k8h" is forbidden: User "system:kube-proxy" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "kube-node-lease"
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Tue, 03 Feb 2026 05:14:08 +0000   Tue, 03 Feb 2026 05:14:08 +0000   CalicoIsUp                   Calico is running on this node
+  MemoryPressure       False   Tue, 03 Feb 2026 05:38:02 +0000   Tue, 03 Feb 2026 05:13:30 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 03 Feb 2026 05:38:02 +0000   Tue, 03 Feb 2026 05:13:30 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 03 Feb 2026 05:38:02 +0000   Tue, 03 Feb 2026 05:13:30 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                True    Tue, 03 Feb 2026 05:38:02 +0000   Tue, 03 Feb 2026 05:14:04 +0000   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  209.38.21.222
+  Hostname:    r8s-wk-jnhwv-j5k8h
+Capacity:
+  cpu:                4
+  ephemeral-storage:  161421296Ki
+  hugepages-2Mi:      0
+  memory:             8131892Ki
+  pods:               110
+Allocatable:
+  cpu:                4
+  ephemeral-storage:  157030636626
+  hugepages-2Mi:      0
+  memory:             8131892Ki
+  pods:               110
+System Info:
+  Machine ID:                 e3871f623bee5cc46c34beb8698182ba
+  System UUID:                1a803874-61fd-46fb-835d-845415203221
+  Boot ID:                    8b22e9b7-6c15-4cad-acb2-3f413aaf08c8
+  Kernel Version:             6.8.0-71-generic
+  OS Image:                   Ubuntu 24.04.3 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.1.5-k3s1
+  Kubelet Version:            v1.33.7+rke2r1
+  Kube-Proxy Version:         
+PodCIDR:                      10.42.1.0/24
+PodCIDRs:                     10.42.1.0/24
+ProviderID:                   rke2://r8s-wk-jnhwv-j5k8h
+Pods:                         not authorized
+Events:                       <none>
+
+
+Name:               r8s-wk-jnhwv-vpdq4
+Roles:              worker
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=rke2
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=r8s-wk-jnhwv-vpdq4
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/worker=true
+                    node.kubernetes.io/instance-type=rke2
+                    plan.upgrade.cattle.io/system-agent-upgrader=35e4ef60455ea256999b11198ce94d970705e7c2df7e106aaa25a149
+                    rke.cattle.io/machine=baef01c9-334d-4b14-86b3-d0e952691b76
+Annotations:        alpha.kubernetes.io/provided-node-ip: 134.199.155.171
+                    cluster.x-k8s.io/annotations-from-machine: 
+                    cluster.x-k8s.io/cluster-name: r8s
+                    cluster.x-k8s.io/cluster-namespace: fleet-default
+                    cluster.x-k8s.io/labels-from-machine: 
+                    cluster.x-k8s.io/machine: r8s-wk-jnhwv-vpdq4
+                    cluster.x-k8s.io/owner-kind: MachineSet
+                    cluster.x-k8s.io/owner-name: r8s-wk-jnhwv
+                    management.cattle.io/pod-limits: {}
+                    management.cattle.io/pod-requests: {"cpu":"350m","memory":"218Mi","pods":"15"}
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 10.126.0.5/20
+                    projectcalico.org/IPv4VXLANTunnelAddr: 10.42.249.64
+                    projectcalico.org/Interfaces: [{"name":"eth0","addresses":["134.199.155.171","10.49.0.8"]},{"name":"eth1","addresses":["10.126.0.5"]}]
+                    rke2.io/hostname: r8s-wk-jnhwv-vpdq4
+                    rke2.io/internal-ip: 134.199.155.171
+                    rke2.io/node-args:
+                      ["agent","--node-label","rke.cattle.io/machine=baef01c9-334d-4b14-86b3-d0e952691b76","--private-registry","/etc/rancher/rke2/registries.ya...
+                    rke2.io/node-config-hash: SFEC5EJPL3EUMX3PK3ZNY7ZLL2HYRGAXDNQQGTBKBD46VXGCNSMQ====
+                    rke2.io/node-env: {"RKE2_DATA_DIR":"/var/lib/rancher/rke2"}
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Tue, 03 Feb 2026 05:13:33 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:              Failed to get lease: leases.coordination.k8s.io "r8s-wk-jnhwv-vpdq4" is forbidden: User "system:kube-proxy" cannot get resource "leases" in API group "coordination.k8s.io" in the namespace "kube-node-lease"
+Conditions:
+  Type                 Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                 ------  -----------------                 ------------------                ------                       -------
+  NetworkUnavailable   False   Tue, 03 Feb 2026 05:14:10 +0000   Tue, 03 Feb 2026 05:14:10 +0000   CalicoIsUp                   Calico is running on this node
+  MemoryPressure       False   Tue, 03 Feb 2026 05:38:05 +0000   Tue, 03 Feb 2026 05:13:33 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure         False   Tue, 03 Feb 2026 05:38:05 +0000   Tue, 03 Feb 2026 05:13:33 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure          False   Tue, 03 Feb 2026 05:38:05 +0000   Tue, 03 Feb 2026 05:13:33 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                True    Tue, 03 Feb 2026 05:38:05 +0000   Tue, 03 Feb 2026 05:14:06 +0000   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  134.199.155.171
+  Hostname:    r8s-wk-jnhwv-vpdq4
+Capacity:
+  cpu:                4
+  ephemeral-storage:  161421296Ki
+  hugepages-2Mi:      0
+  memory:             8131892Ki
+  pods:               110
+Allocatable:
+  cpu:                4
+  ephemeral-storage:  157030636626
+  hugepages-2Mi:      0
+  memory:             8131892Ki
+  pods:               110
+System Info:
+  Machine ID:                 0b7ef65b84d47a61b5d3aeea698182bc
+  System UUID:                0cc60312-0de2-49dc-894e-0c767cbcb09c
+  Boot ID:                    4ef17bd5-5e94-4cf0-b837-1b110246fabe
+  Kernel Version:             6.8.0-71-generic
+  OS Image:                   Ubuntu 24.04.3 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.1.5-k3s1
+  Kubelet Version:            v1.33.7+rke2r1
+  Kube-Proxy Version:         
+PodCIDR:                      10.42.5.0/24
+PodCIDRs:                     10.42.5.0/24
+ProviderID:                   rke2://r8s-wk-jnhwv-vpdq4
+Pods:                         not authorized
+Events:                       <none>

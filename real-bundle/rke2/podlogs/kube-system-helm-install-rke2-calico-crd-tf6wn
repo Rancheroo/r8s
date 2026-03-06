@@ -1,0 +1,48 @@
+if [[ ${KUBERNETES_SERVICE_HOST} =~ .*:.* ]]; then
+	echo "KUBERNETES_SERVICE_HOST is using IPv6"
+	CHART="${CHART//%\{KUBERNETES_API\}%/[${KUBERNETES_SERVICE_HOST}]:${KUBERNETES_SERVICE_PORT}}"
+else
+	CHART="${CHART//%\{KUBERNETES_API\}%/${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}}"
+fi
+
+set +v -x
++ [[ '' == v2 ]]
++ shopt -s nullglob
++ [[ -f /config/ca-file.pem ]]
++ [[ -f /tmp/ca-file.pem ]]
++ [[ false == true ]]
++ [[ false == true ]]
++ [[ -n '' ]]
++ helm_content_decode
++ set -e
++ ENC_CHART_PATH=/chart/rke2-calico-crd.tgz.base64
++ CHART_PATH=/tmp/rke2-calico-crd.tgz
++ [[ ! -f /chart/rke2-calico-crd.tgz.base64 ]]
++ base64 -d /chart/rke2-calico-crd.tgz.base64
++ CHART=/tmp/rke2-calico-crd.tgz
++ set +e
++ [[ install != delete ]]
++ helm_repo_init
++ grep -q -e 'https\?://'
++ [[ /tmp/rke2-calico-crd.tgz == stable/* ]]
++ [[ -n '' ]]
++ helm_update install --set-string global.clusterCIDR=10.42.0.0/16 --set-string global.clusterCIDRv4=10.42.0.0/16 --set-string global.clusterDNS=10.43.0.10 --set-string global.clusterDomain=cluster.local --set-string global.rke2DataDir=/var/lib/rancher/rke2 --set-string global.serviceCIDR=10.43.0.0/16 --set-string global.systemDefaultIngressClass=ingress-nginx
+++ helm ls --all -f '^rke2-calico-crd$' --namespace kube-system --output json++ ++ jq -r '"\(.[0].chart),\(.[0].status)"'
+
+tr '[:upper:]' '[:lower:]'
++ LINE=null,null
++ IFS=,
++ read -r INSTALLED_VERSION STATUS _
++ VALUES=
++ [[ install = delete ]]
++ [[ null =~ ^(|null)$ ]]
++ [[ null =~ ^(|null)$ ]]
++ echo 'Installing helm chart'
++ helm install --set-string global.clusterCIDR=10.42.0.0/16 --set-string global.clusterCIDRv4=10.42.0.0/16 --set-string global.clusterDNS=10.43.0.10 --set-string global.clusterDomain=cluster.local --set-string global.rke2DataDir=/var/lib/rancher/rke2 --set-string global.serviceCIDR=10.43.0.0/16 --set-string global.systemDefaultIngressClass=ingress-nginx rke2-calico-crd /tmp/rke2-calico-crd.tgz
+NAME: rke2-calico-crd
+LAST DEPLOYED: Tue Feb  3 05:09:52 2026
+NAMESPACE: kube-system
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
++ exit

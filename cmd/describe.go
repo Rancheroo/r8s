@@ -211,6 +211,7 @@ type ResourceInfo struct {
 	Status     string                 `json:"status" yaml:"status"`
 	Details    map[string]interface{} `json:"details" yaml:"details"`
 	SourceFile string                 `json:"-" yaml:"-"`
+	RawContent string                 `json:"-" yaml:"-"`
 }
 
 // findResources discovers resources in bundle
@@ -301,53 +302,82 @@ func parseResourceFile(path, kind, nameFilter, namespaceFilter, selector string)
 	content := string(data)
 	var resources []ResourceInfo
 
-	// Simple parsing: split by resource separators
-	// kubectl describe output uses "Name:" as separator
-	sections := strings.Split(content, "Name:")
+	// Parse line by line to handle "Name:" at start of line
+	lines := strings.Split(content, "\n")
+	var currentRes *ResourceInfo
+	var currentLines []string
 
-	for _, section := range sections {
-		if strings.TrimSpace(section) == "" {
-			continue
-		}
-
-		res := ResourceInfo{
-			Kind:       kind,
-			SourceFile: path,
-			Labels:     make(map[string]string),
-			Details:    make(map[string]interface{}),
-		}
-
-		// Parse name (first line)
-		lines := strings.Split(section, "\n")
-		if len(lines) > 0 {
-			res.Name = strings.TrimSpace(lines[0])
-		}
-
-		// Parse namespace
-		for _, line := range lines {
-			if strings.HasPrefix(line, "Namespace:") {
-				parts := strings.SplitN(line, ":", 2)
-				if len(parts) == 2 {
-					res.Namespace = strings.TrimSpace(parts[1])
+	for _, line := range lines {
+		// potential start of new resource
+		if strings.HasPrefix(line, "Name:") {
+			// Save previous resource if exists
+			if currentRes != nil {
+				currentRes.RawContent = strings.Join(currentLines, "\n")
+				
+				// Apply filters
+				keep := true
+				if nameFilter != "" && !strings.Contains(currentRes.Name, nameFilter) {
+					keep = false
+				}
+				if namespaceFilter != "" && currentRes.Namespace != namespaceFilter {
+					keep = false
+				}
+				
+				if keep {
+					resources = append(resources, *currentRes)
 				}
 			}
-			if strings.HasPrefix(line, "Status:") || strings.HasPrefix(line, "Phase:") {
+
+			// Start new resource
+			currentRes = &ResourceInfo{
+				Kind:       kind,
+				SourceFile: path,
+				Labels:     make(map[string]string),
+				Details:    make(map[string]interface{}),
+			}
+			currentLines = []string{line}
+
+			// Parse name from line "Name: value"
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				currentRes.Name = strings.TrimSpace(parts[1])
+			}
+		} else if currentRes != nil {
+			// Continue current resource
+			currentLines = append(currentLines, line)
+
+			// Parse namespace
+			if strings.HasPrefix(strings.TrimSpace(line), "Namespace:") {
 				parts := strings.SplitN(line, ":", 2)
 				if len(parts) == 2 {
-					res.Status = strings.TrimSpace(parts[1])
+					currentRes.Namespace = strings.TrimSpace(parts[1])
+				}
+			}
+			if strings.HasPrefix(strings.TrimSpace(line), "Status:") || strings.HasPrefix(strings.TrimSpace(line), "Phase:") {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 {
+					currentRes.Status = strings.TrimSpace(parts[1])
 				}
 			}
 		}
+	}
 
+	// Add last resource
+	if currentRes != nil {
+		currentRes.RawContent = strings.Join(currentLines, "\n")
+		
 		// Apply filters
-		if nameFilter != "" && !strings.Contains(res.Name, nameFilter) {
-			continue
+		keep := true
+		if nameFilter != "" && !strings.Contains(currentRes.Name, nameFilter) {
+			keep = false
 		}
-		if namespaceFilter != "" && res.Namespace != namespaceFilter {
-			continue
+		if namespaceFilter != "" && currentRes.Namespace != namespaceFilter {
+			keep = false
 		}
-
-		resources = append(resources, res)
+		
+		if keep {
+			resources = append(resources, *currentRes)
+		}
 	}
 
 	return resources, nil
@@ -368,25 +398,12 @@ func outputDescribeHuman(resources []ResourceInfo) error {
 			color.GreenString(res.Name),
 		)
 
-		if res.Namespace != "" {
-			fmt.Printf("Namespace:  %s\n", res.Namespace)
+		if res.SourceFile != "" {
+			fmt.Printf("Source:     %s\n", res.SourceFile)
 		}
-		if res.Status != "" {
-			statusColor := color.GreenString
-			if res.Status == "Error" || res.Status == "Failed" {
-				statusColor = color.RedString
-			} else if res.Status == "Pending" || res.Status == "Unknown" {
-				statusColor = color.YellowString
-			}
-			fmt.Printf("Status:     %s\n", statusColor(res.Status))
-		}
-		if len(res.Labels) > 0 {
-			fmt.Println("Labels:")
-			for k, v := range res.Labels {
-				fmt.Printf("  %s=%s\n", k, v)
-			}
-		}
-		fmt.Printf("Source:     %s\n", res.SourceFile)
+		
+		fmt.Println(strings.Repeat("-", 20))
+		fmt.Println(res.RawContent)
 	}
 
 	return nil

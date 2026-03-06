@@ -207,6 +207,7 @@ func loadFromExtractedPath(extractPath, originalPath string, size int64, opts Im
 
 	// Detect format and create path resolver
 	format := DetectFormat(extractPath)
+	health.BundleType = detectBundleType(extractPath)
 	bundleRoot := getBundleRoot(extractPath)
 	pathResolver := NewPathResolver(bundleRoot, format)
 

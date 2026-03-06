@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "tigera-operator" in pod "tigera-operator-5f6c57cffc-tp4fs" not found

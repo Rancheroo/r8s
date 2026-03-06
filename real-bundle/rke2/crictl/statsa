@@ -1,0 +1,26 @@
+[2J[HCONTAINER           NAME                        CPU %               MEM                 DISK                INODES              SWAP
+05b0ee32b92e2       kube-controller-manager     1.78                94.96MB             94.21kB             31                  0B
+0b3e59394dbed       cloud-controller-manager    0.29                23.41MB             94.21kB             30                  0B
+13ef70227b3aa       calico-typha                0.33                33.81MB             45.06kB             14                  0B
+2520954b75872       helm                        0.00                0B                  57.34kB             14                  0B
+277d165c9d28e       helm                        0.00                0B                  3.228MB             118                 0B
+340114c82ddb5       helm                        0.00                0B                  57.34kB             14                  0B
+34f9070b72e85       autoscaler                  0.19                15.35MB             40.96kB             13                  0B
+46750127438ce       kube-apiserver              7.88                748MB               73.73kB             17                  0B
+4dce1a798337b       calico-node                 1.39                161.2MB             868.4kB             139                 0B
+5d8fd97bcc2c2       tigera-operator             0.45                52.79MB             36.86kB             11                  0B
+5f080f71a3941       init-kubeconfig-volume      0.00                0B                  24.58kB             10                  0B
+6642c7b4428e1       ebpf-bootstrap              0.00                0B                  32.77kB             10                  0B
+6fb1ef56f2033       cluster-register            0.93                233.3MB             837MB               56559               0B
+741f433a43257       kube-scheduler              0.51                36.62MB             53.25kB             18                  0B
+7b0ae1a438a68       helm                        0.00                0B                  57.34kB             14                  0B
+7efc2eee1e75b       kube-proxy                  0.03                25.69MB             45.06kB             20                  0B
+80575451321f7       install-cni                 0.00                0B                  57.34kB             16                  0B
+a0bc49528620e       proxy                       0.00                0B                  32.77kB             12                  0B
+a934bf775d5c8       cluster-register            1.64                293.8MB             862.3MB             56559               0B
+b7dd8683343c5       system-upgrade-controller   0.09                16.67MB             57.34kB             17                  0B
+cd52dfaa644fe       rancher-webhook             0.00                24.9MB              24.58kB             9                   0B
+cebfa3603294f       flexvol-driver              0.00                0B                  36.86kB             11                  0B
+cf868160374df       coredns                     0.10                24.55MB             28.67kB             10                  0B
+e052f8245814f       etcd                        3.00                120.4MB             57.34kB             23                  0B
+e1fc2bd2335a8       calico-kube-controllers     0.00                30.14MB             53.25kB             15                  0B

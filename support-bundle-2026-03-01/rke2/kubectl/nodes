@@ -1,0 +1,3 @@
+NAME       STATUS     ROLES                       AGE     VERSION
+master-1   Ready      control-plane,etcd,master   10d     v1.28.4+rke2r1
+worker-1   NotReady   worker                      10d     v1.28.4+rke2r1

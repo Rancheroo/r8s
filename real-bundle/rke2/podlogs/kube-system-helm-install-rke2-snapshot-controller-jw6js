@@ -1,0 +1,59 @@
+if [[ ${KUBERNETES_SERVICE_HOST} =~ .*:.* ]]; then
+	echo "KUBERNETES_SERVICE_HOST is using IPv6"
+	CHART="${CHART//%\{KUBERNETES_API\}%/[${KUBERNETES_SERVICE_HOST}]:${KUBERNETES_SERVICE_PORT}}"
+else
+	CHART="${CHART//%\{KUBERNETES_API\}%/${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}}"
+fi
+
+set +v -x
++ [[ '' == v2 ]]
++ shopt -s nullglob
++ [[ -f /config/ca-file.pem ]]
++ [[ -f /tmp/ca-file.pem ]]
++ [[ false == true ]]
++ [[ false == true ]]
++ [[ -n '' ]]
++ helm_content_decode
++ set -e
++ ENC_CHART_PATH=/chart/rke2-snapshot-controller.tgz.base64
++ CHART_PATH=/tmp/rke2-snapshot-controller.tgz
++ [[ ! -f /chart/rke2-snapshot-controller.tgz.base64 ]]
++ base64 -d /chart/rke2-snapshot-controller.tgz.base64
++ CHART=/tmp/rke2-snapshot-controller.tgz
++ set +e
++ [[ install != delete ]]
++ helm_repo_init
++ grep -q -e 'https\?://'
++ [[ /tmp/rke2-snapshot-controller.tgz == stable/* ]]
++ [[ -n '' ]]
++ helm_update install --set-string global.clusterCIDR=10.42.0.0/16 --set-string global.clusterCIDRv4=10.42.0.0/16 --set-string global.clusterDNS=10.43.0.10 --set-string global.clusterDomain=cluster.local --set-string global.rke2DataDir=/var/lib/rancher/rke2 --set-string global.serviceCIDR=10.43.0.0/16 --set-string global.systemDefaultIngressClass=ingress-nginx
+++ helm ls --all -f '^rke2-snapshot-controller$' --namespace kube-system --output json
+++ jq -r '"\(.[0].chart),\(.[0].status)"'
+++ tr '[:upper:]' '[:lower:]'
++ LINE=null,null
++ IFS=,
++ read -r INSTALLED_VERSION STATUS _
++ VALUES=
++ [[ install = delete ]]
++ [[ null =~ ^(|null)$ ]]
++ [[ null =~ ^(|null)$ ]]
++ echo 'Installing helm chart'
++ helm install --set-string global.clusterCIDR=10.42.0.0/16 --set-string global.clusterCIDRv4=10.42.0.0/16 --set-string global.clusterDNS=10.43.0.10 --set-string global.clusterDomain=cluster.local --set-string global.rke2DataDir=/var/lib/rancher/rke2 --set-string global.serviceCIDR=10.43.0.0/16 --set-string global.systemDefaultIngressClass=ingress-nginx rke2-snapshot-controller /tmp/rke2-snapshot-controller.tgz
+NAME: rke2-snapshot-controller
+LAST DEPLOYED: Tue Feb  3 05:14:26 2026
+NAMESPACE: kube-system
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Volume Snapshot Controller installed.
+
+If you already have volume snapshots deployed using a CRDs before v1, you should
+verify that the existing snapshots are upgradable to v1 CRDs. The snapshot controller (>= v3.0.0)
+will label any invalid snapshots it can find. Use the following commands to find any invalid snapshot
+
+kubectl get volumesnapshots --selector=snapshot.storage.kubernetes.io/invalid-snapshot-resource="" --all-namespaces
+kubectl get volumesnapshotcontents --selector=snapshot.storage.kubernetes.io/invalid-snapshot-resource="" --all-namespaces
+
+If the above commands return any items, you need to remove them before upgrading to the newer v1 CRDs.
++ exit

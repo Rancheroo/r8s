@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "autoscaler" in pod "rke2-coredns-rke2-coredns-autoscaler-67944c44cc-78bfp" not found

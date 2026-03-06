@@ -1,0 +1,14 @@
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAMESPACE               NAME                                      ENDPOINTS                                                         AGE
+calico-system           calico-kube-controllers-metrics           10.42.212.129:9094                                                29m
+calico-system           calico-typha                              209.38.17.11:5473,209.38.21.222:5473                              30m
+cattle-system           cattle-cluster-agent                      10.42.212.137:80,10.42.212.139:80,10.42.212.137:444 + 1 more...   30m
+cattle-system           rancher-webhook                           10.42.212.140:9443                                                26m
+default                 kubernetes                                209.38.17.11:6443                                                 30m
+kube-system             rke2-coredns-rke2-coredns                 10.42.212.132:53,10.42.55.129:53,10.42.212.132:53 + 1 more...     30m
+kube-system             rke2-ingress-nginx-controller-admission   10.42.14.71:8443,10.42.249.68:8443,10.42.55.132:8443              25m
+kube-system             rke2-metrics-server                       10.42.55.130:10250                                                26m
+r8s-test-api-services   r8s-test-api-server                       10.42.249.74:80                                                   3m55s
+r8s-test-app-backend    r8s-test-backend-api                      10.42.14.91:80,10.42.14.96:80,10.42.249.87:80 + 3 more...         3m54s
+r8s-test-app-frontend   r8s-test-frontend                         10.42.14.90:80,10.42.14.92:80,10.42.14.93:80 + 7 more...          3m54s
+r8s-test-web-services   r8s-test-web-nginx                        10.42.14.97:80,10.42.249.99:80,10.42.55.167:80                    3m55s

@@ -1,0 +1,98 @@
+2026-02-03 05:11:11.577 [INFO][1] typha/cmdwrapper.go 56: Starting /usr/bin/kube-controllers
+2026-02-03 05:11:11.639 [INFO][14] kube-controllers/main.go 95: Loaded configuration from environment config=&config.Config{LogLevel:"info", WorkloadEndpointWorkers:1, ProfileWorkers:1, PolicyWorkers:1, NodeWorkers:1, Kubeconfig:"", DatastoreType:"kubernetes"}
+2026-02-03 05:11:11.641 [INFO][14] kube-controllers/main.go 119: Ensuring Calico datastore is initialized
+2026-02-03 05:11:11.689 [INFO][14] kube-controllers/main.go 144: Calico datastore is initialized
+2026-02-03 05:11:11.689 [INFO][14] kube-controllers/main.go 183: Getting initial config snapshot from datastore
+2026-02-03 05:11:11.742 [INFO][14] kube-controllers/main.go 186: Got initial config snapshot
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 200: Starting status report routine
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 209: Starting Prometheus metrics server on port 9094
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 518: Starting informer informer=&cache.sharedIndexInformer{indexer:(*cache.cache)(0xc00000ede0), controller:cache.Controller(nil), processor:(*cache.sharedProcessor)(0xc0003c6f00), cacheMutationDetector:cache.dummyMutationDetector{}, listerWatcher:(*cache.ListWatch)(0xc000575020), objectType:(*v1.Pod)(0xc000400908), objectDescription:"", resyncCheckPeriod:0, defaultEventHandlerResyncPeriod:0, clock:(*clock.RealClock)(0x3f95300), started:false, stopped:false, startedLock:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, blockDeltas:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, watchErrorHandler:(cache.WatchErrorHandlerWithContext)(nil), transform:(cache.TransformFunc)(0x1f18740)}
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 518: Starting informer informer=&cache.sharedIndexInformer{indexer:(*cache.cache)(0xc00000f008), controller:cache.Controller(nil), processor:(*cache.sharedProcessor)(0xc0003c6f50), cacheMutationDetector:cache.dummyMutationDetector{}, listerWatcher:(*cache.ListWatch)(0xc000575230), objectType:(*v1.Node)(0xc000604308), objectDescription:"", resyncCheckPeriod:0, defaultEventHandlerResyncPeriod:0, clock:(*clock.RealClock)(0x3f95300), started:false, stopped:false, startedLock:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, blockDeltas:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, watchErrorHandler:(cache.WatchErrorHandlerWithContext)(nil), transform:(cache.TransformFunc)(nil)}
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 518: Starting informer informer=&cache.sharedIndexInformer{indexer:(*cache.cache)(0xc00000f020), controller:cache.Controller(nil), processor:(*cache.sharedProcessor)(0xc0003c6fa0), cacheMutationDetector:cache.dummyMutationDetector{}, listerWatcher:(*cache.ListWatch)(0xc0005753b0), objectType:(*v1.Service)(0xc000606288), objectDescription:"", resyncCheckPeriod:0, defaultEventHandlerResyncPeriod:0, clock:(*clock.RealClock)(0x3f95300), started:false, stopped:false, startedLock:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, blockDeltas:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, watchErrorHandler:(cache.WatchErrorHandlerWithContext)(nil), transform:(cache.TransformFunc)(nil)}
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 518: Starting informer informer=&cache.sharedIndexInformer{indexer:(*cache.cache)(0xc00000f0b0), controller:cache.Controller(nil), processor:(*cache.sharedProcessor)(0xc0003c6ff0), cacheMutationDetector:cache.dummyMutationDetector{}, listerWatcher:(*cache.ListWatch)(0xc0005755c0), objectType:(*v1.Namespace)(0xc000617080), objectDescription:"", resyncCheckPeriod:0, defaultEventHandlerResyncPeriod:0, clock:(*clock.RealClock)(0x3f95300), started:false, stopped:false, startedLock:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, blockDeltas:sync.Mutex{_:sync.noCopy{}, mu:sync.Mutex{state:0, sema:0x0}}, watchErrorHandler:(cache.WatchErrorHandlerWithContext)(nil), transform:(cache.TransformFunc)(nil)}
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 524: Starting controller ControllerType="Node"
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/main.go 524: Starting controller ControllerType="LoadBalancer"
+2026-02-03 05:11:11.743 [INFO][14] kube-controllers/watchersyncer.go 118: Start called
+2026-02-03 05:11:11.748 [INFO][14] kube-controllers/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:11:11.757 [INFO][14] kube-controllers/syncer.go 94: Node controller syncer status updated: wait-for-ready
+2026-02-03 05:11:11.759 [INFO][14] kube-controllers/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:11:11.748 [INFO][14] kube-controllers/controller.go 168: Starting Node controller
+I0203 05:11:11.763129      14 shared_informer.go:350] "Waiting for caches to sync" controller="nodes"
+2026-02-03 05:11:11.762 [INFO][14] kube-controllers/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/hostendpoints"
+2026-02-03 05:11:11.748 [INFO][14] kube-controllers/resources.go 349: Main client watcher loop
+2026-02-03 05:11:11.762 [INFO][14] kube-controllers/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:11:11.763 [INFO][14] kube-controllers/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/clusterinformations"
+2026-02-03 05:11:11.763 [INFO][14] kube-controllers/watchercache.go 243: Full resync is required ListRoot=".../ipam/v2/assignment/"
+2026-02-03 05:11:11.763 [INFO][14] kube-controllers/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:11:11.795 [INFO][14] kube-controllers/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:11:11.794 [INFO][14] kube-controllers/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/clusterinformations"
+2026-02-03 05:11:11.797 [INFO][14] kube-controllers/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:11:11.797 [INFO][14] kube-controllers/syncer.go 94: Node controller syncer status updated: resync
+2026-02-03 05:11:11.797 [INFO][14] kube-controllers/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:11:11.797 [INFO][14] kube-controllers/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:11:11.798 [INFO][14] kube-controllers/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/hostendpoints"
+2026-02-03 05:11:11.802 [INFO][14] kube-controllers/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:11:11.805 [INFO][14] kube-controllers/watchercache.go 447: Sending synced update ListRoot=".../ipam/v2/assignment/"
+2026-02-03 05:11:11.807 [INFO][14] kube-controllers/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:11:11.810 [INFO][14] kube-controllers/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:11:11.810 [INFO][14] kube-controllers/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:11:11.810 [INFO][14] kube-controllers/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:11:11.810 [INFO][14] kube-controllers/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:11:11.810 [INFO][14] kube-controllers/syncer.go 94: Node controller syncer status updated: in-sync
+2026-02-03 05:11:11.847 [INFO][14] kube-controllers/loadbalancer_controller.go 237: Will run periodic IPAM sync every 5m0s
+2026-02-03 05:11:11.847 [INFO][14] kube-controllers/ipam.go 2387: Upgrading any IPAM affinities from older versions.... node="load-balancer"
+2026-02-03 05:11:11.856 [INFO][14] kube-controllers/ipam.go 2427: No affinities needed to be upgraded.
+I0203 05:11:11.863851      14 shared_informer.go:357] "Caches are synced" controller="nodes"
+I0203 05:11:11.863884      14 shared_informer.go:350] "Waiting for caches to sync" controller="pods"
+I0203 05:11:11.863891      14 shared_informer.go:357] "Caches are synced" controller="pods"
+2026-02-03 05:11:11.863 [INFO][14] kube-controllers/hostendpoints.go 149: Will run periodic HostEndpoint sync every 5m0s
+2026-02-03 05:11:11.863 [INFO][14] kube-controllers/ipam.go 312: Will run periodic IPAM sync every 7m30s
+2026-02-03 05:11:11.863 [INFO][14] kube-controllers/hostendpoints.go 186: Syncer is InSync, kicking sync channel status=in-sync
+2026-02-03 05:11:11.863 [INFO][14] kube-controllers/hostendpoints.go 259: Syncing all HostEndpoints
+2026-02-03 05:11:12.859 [INFO][14] kube-controllers/loadbalancer_controller.go 271: Syncer is InSync, kicking sync channel status=in-sync
+2026-02-03 05:11:12.871 [INFO][14] kube-controllers/ipam.go 379: Syncer is InSync, kicking sync channel status=in-sync
+2026-02-03 05:16:11.849 [INFO][14] kube-controllers/loadbalancer_controller.go 252: Running periodic IPAM sync of Service LoadBalancer
+2026-02-03 05:16:11.864 [INFO][14] kube-controllers/hostendpoints.go 156: Running periodic HostEndpoint sync
+2026-02-03 05:16:11.866 [INFO][14] kube-controllers/hostendpoints.go 259: Syncing all HostEndpoints
+2026-02-03 05:18:41.867 [INFO][14] kube-controllers/ipam.go 298: Marking IPAM for full resync reason="periodic sync"
+2026-02-03 05:18:41.869 [INFO][14] kube-controllers/ipam.go 795: Performing a full scan of IPAM allocations to check for leaks and redundant affinities
+2026-02-03 05:21:11.847 [INFO][14] kube-controllers/loadbalancer_controller.go 252: Running periodic IPAM sync of Service LoadBalancer
+2026-02-03 05:21:11.864 [INFO][14] kube-controllers/hostendpoints.go 156: Running periodic HostEndpoint sync
+2026-02-03 05:21:11.864 [INFO][14] kube-controllers/hostendpoints.go 259: Syncing all HostEndpoints
+2026-02-03 05:26:11.847 [INFO][14] kube-controllers/loadbalancer_controller.go 252: Running periodic IPAM sync of Service LoadBalancer
+2026-02-03 05:26:11.864 [INFO][14] kube-controllers/hostendpoints.go 156: Running periodic HostEndpoint sync
+2026-02-03 05:26:11.864 [INFO][14] kube-controllers/hostendpoints.go 259: Syncing all HostEndpoints
+2026-02-03 05:26:11.864 [INFO][14] kube-controllers/ipam.go 298: Marking IPAM for full resync reason="periodic sync"
+2026-02-03 05:26:11.864 [INFO][14] kube-controllers/ipam.go 795: Performing a full scan of IPAM allocations to check for leaks and redundant affinities
+2026-02-03 05:31:11.847 [INFO][14] kube-controllers/loadbalancer_controller.go 252: Running periodic IPAM sync of Service LoadBalancer
+2026-02-03 05:31:11.864 [INFO][14] kube-controllers/hostendpoints.go 156: Running periodic HostEndpoint sync
+2026-02-03 05:31:11.864 [INFO][14] kube-controllers/hostendpoints.go 259: Syncing all HostEndpoints
+2026-02-03 05:33:41.865 [INFO][14] kube-controllers/ipam.go 298: Marking IPAM for full resync reason="periodic sync"
+2026-02-03 05:33:41.865 [INFO][14] kube-controllers/ipam.go 795: Performing a full scan of IPAM allocations to check for leaks and redundant affinities
+2026-02-03 05:36:11.847 [INFO][14] kube-controllers/loadbalancer_controller.go 252: Running periodic IPAM sync of Service LoadBalancer
+2026-02-03 05:36:11.865 [INFO][14] kube-controllers/hostendpoints.go 156: Running periodic HostEndpoint sync
+2026-02-03 05:36:11.865 [INFO][14] kube-controllers/hostendpoints.go 259: Syncing all HostEndpoints
+2026-02-03 05:37:49.257 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.a80ba9c66f55058913502e90d55e333138e57ffc8043c3496eba1aada3990dcf" ip="10.42.14.85" node="r8s-wk-jnhwv-j5k8h" pod="r8s-test-app-frontend/r8s-test-frontend-547885cbd7-5dxqx"
+2026-02-03 05:37:49.259 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.4b1ed9af5ceed4bcf358450df5ef8e7a3dbfb786ebd7579ef140805ed9f3192d" ip="10.42.14.77" node="r8s-wk-jnhwv-j5k8h" pod="r8s-test-app-frontend/r8s-test-frontend-547885cbd7-vhtrl"
+2026-02-03 05:37:49.264 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.6ccbc7387f433add25d53129da7f3ec6d6f62bb3130afd76ad1eb0ec55202f40" ip="10.42.55.147" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-547885cbd7-jv5sx"
+2026-02-03 05:37:49.265 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.2172b80c224a89768e1164a19fab5bbe4b250e922abc04cb089a2809f784e7ae" ip="10.42.55.148" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-547885cbd7-7jqw8"
+2026-02-03 05:38:20.434 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.578cb5f92aa3644a9cd57533de81e487b99bdb813cefc242faedbc8aeb911560" ip="10.42.249.86" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-cdbxf"
+2026-02-03 05:38:20.435 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.1ddb06c72ef0dcb025e4f3651349567274b94e53b49829293436c1ce92918d55" ip="10.42.249.90" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-2vbkf"
+2026-02-03 05:38:20.446 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.c4ab3bb99263006302ebff2432378f5d959c99287266f2951eb8f433b24f44a6" ip="10.42.55.152" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-4jt5v"
+2026-02-03 05:38:20.446 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.b7479c17146162162be3419f3cba38223f87b1dbda4913725d0ea13d6c9351f3" ip="10.42.55.156" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-cr78j"
+2026-02-03 05:38:24.426 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.0f905406792701af2b69367d798879ce58161a2a3e9052179f393df414ab9eca" ip="10.42.249.91" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-hmh2l"
+2026-02-03 05:38:24.427 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.c97224f736f6983f6fdabf5c41ef96daee2e7412e1110f1d7c32b5adcdd24697" ip="10.42.249.88" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-d7hfl"
+2026-02-03 05:38:24.427 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.45d0966849a7441f8a737d0109b48f57795e2af0b5191601b9859f96ed890b62" ip="10.42.55.160" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-g8pml"
+2026-02-03 05:38:24.428 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.d38b32cc20b5c9b3871690879f95b688e85d0a65ee2835b22e0f2fe086decc35" ip="10.42.55.159" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-khsj5"
+2026-02-03 05:38:28.882 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.7c26a421daec09a27798496501e702f20bcc2fbf84e5b8bf43b073cbbcdf0a7d" ip="10.42.55.161" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-lr2nf"
+2026-02-03 05:38:28.882 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.8e19821c56d0bdd05a5702d665e99ac782a9555d5107d81c6f7b772b96e07513" ip="10.42.55.151" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-mrljh"
+2026-02-03 05:38:28.883 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.c80bfedf5ba2b1aae15364b809d72cbd22ab86f5a84c8f36970b7f5be2a61c71" ip="10.42.249.85" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-m7b29"
+2026-02-03 05:38:28.885 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.480583d7ec12b3aa3363577326e479fdf8e185f7964224380e7ea2d233a0cc15" ip="10.42.249.93" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-jsx7n"
+2026-02-03 05:38:32.325 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.e324a21e8806856840ac58bd230ea96270eed21a56c33060eb3dd8b6b0c6b6a0" ip="10.42.249.96" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-84skd"
+2026-02-03 05:38:33.327 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.4b95abfb9e06a76094d90e737b8fc3fffc6fbe46db04d1e0db32bda423bf0cd2" ip="10.42.55.164" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-fw4vn"
+2026-02-03 05:38:33.327 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.64bb41956575d1f3f47dfab1960b9be0d1221625d488632680da8024fceec8fe" ip="10.42.55.141" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-demo-worker/r8s-test-worker-processor-b75d6b657-wz5ln"
+2026-02-03 05:38:36.771 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.75ae2fe0b86774232ce20a61b8c7c47f78f1630ccd56a68c0f09fdb6efc6c781" ip="10.42.55.165" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-b74vw"
+2026-02-03 05:38:36.773 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.afee53be19e189f7a37d63b7446ae8d519472ba90336413eec1679f5769a7604" ip="10.42.55.154" node="r8s-wk-jnhwv-4xqzn" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-n68zf"
+2026-02-03 05:38:36.774 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.79c4ac6f91cf307ec02945934557bbfdb4b43ee8ac598399fe980e329fd87099" ip="10.42.249.92" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-app-frontend/r8s-test-frontend-697886896d-nvwx8"
+2026-02-03 05:38:36.774 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.52c51f2833f369f9dbf4568ab681c150626dc087b8572649faa7bf01eeeb501a" ip="10.42.249.97" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-web-services/r8s-test-web-nginx-597d4b5d7-bf6rl"
+2026-02-03 05:38:52.941 [INFO][14] kube-controllers/ipam_allocation.go 176: Candidate IP leak handle="k8s-pod-network.c73321365d2cfe40e492360dc8ead9e9e93ed0f8fd55c550658597f6e486cf01" ip="10.42.249.70" node="r8s-wk-jnhwv-vpdq4" pod="r8s-test-batch-jobs/r8s-test-crash-random"

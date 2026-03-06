@@ -19,11 +19,15 @@
 
 ## 2. Setup
 
-*Assume the following environment variables are set for the demo:*
+Run the demo generator to create rich, realistic bundles in `/tmp`.
 
 ```bash
-export r8sbundle1="./support-bundle-2026-03-01" # A bundle with a critical failure
-export r8sbundle2="./support-bundle-2026-03-02" # A bundle for deep-dive investigation
+# Generate data and set variables
+eval $(/tmp/generate-demo-bundle.sh env)
+
+# Verify
+echo $r8sbundle1
+# Output: /tmp/r8s-demo-critical
 ```
 
 ---
@@ -32,23 +36,14 @@ export r8sbundle2="./support-bundle-2026-03-02" # A bundle for deep-dive investi
 
 *Context: A customer uploads a bundle saying "Production is down". You have 5 minutes to find the root cause.*
 
-### Step 1: Validate the Artifact
-First, check if the bundle is even usable.
-
-```bash
-r8s validate $r8sbundle1
-```
-
-*   **Talking Point:** "How many times have you debugged a partial bundle for an hour only to realize logs are missing? `r8s` tells you immediately."
-
-### Step 2: Instant Analysis
-Run the AI analyzer to find smoking guns.
+### Step 1: Instant Analysis & Validation
+Run the AI analyzer. It performs an automatic health check before scanning.
 
 ```bash
 r8s analyze $r8sbundle1
 ```
 
-*   **Talking Point:** "r8s scans for 19+ specific patterns like Etcd Quorum Loss, CNI failures, and OOMKilled pods. It highlights CRITICAL issues in red."
+*   **Talking Point:** "Notice the first step: `✓ Bundle validated`. r8s instantly checks if the bundle is complete and healthy before wasting your time scanning it. It then scans for 19+ specific patterns..."
 
 ### Step 3: Natural Language Query
 Instead of grepping, just ask.
@@ -83,7 +78,7 @@ r8s get pods $r8sbundle2 -n cattle-system
 r8s get pods $r8sbundle2 -n cattle-system -o wide
 
 # Describe a node to check capacity and conditions
-r8s describe node $r8sbundle2 worker-2
+r8s describe node $r8sbundle2 r8s-wk-jnhwv-4xqzn
 ```
 
 *   **Talking Point:** "It supports standard flags like `-n`, `-A` (all namespaces), and `-o wide`. You don't need to learn a new syntax."
@@ -154,6 +149,60 @@ r8s analyze $r8sbundle2 --format=json | jq '.issues[] | select(.severity=="criti
 
 **Q: How does it handle huge bundles (10GB+)?**
 **A:** `r8s` streams logs and uses efficient parsing. It doesn't load the whole bundle into RAM. However, `grep` might still be faster for *massive* raw log searches, but `r8s` is faster for structured data.
+
+**Q: Can I integrate this into Slack or Jira?**
+**A:** Yes. Since `r8s` outputs structured JSON (`--format=json`), you can easily wrap it in a script (like a GitHub Action or a simple webhook bot) to post analysis results directly to a Slack channel or Jira ticket when a bundle is uploaded.
+
+**Q: Does it support custom patterns?**
+**A:** Currently, patterns are compiled into the binary for performance. However, we are planning a feature to load custom YAML patterns from a `~/.r8s/patterns/` directory in a future release.
+
+**Q: Is it safe to run on my laptop with customer data?**
+**A:** Yes. `r8s` runs entirely locally. It does not upload any data to the cloud. Even the AI features (`r8s ask` and `r8s generate prompt`) are local algorithms or local formatting. If you pipe output to `opencode` or `claude`, *you* control that data flow explicitly.
+
+**Q: Does it work with k3s bundles?**
+**A:** Yes, it fully supports both RKE2 and K3s bundles produced by the standard Rancher support tool. It auto-detects the format.
+
+**Q: Can I filter logs by container in a multi-container pod?**
+**A:** Yes. Use `r8s logs ./bundle/ pod-name -c container-name` just like kubectl.
+
+**Q: Does it show previous (crashed) logs?**
+**A:** Yes. If a pod has restarted, `r8s` automatically detects the `-previous.log` files and can display them. It often prioritizes them for crash analysis.
+
+**Q: How do I know if the bundle is complete?**
+**A:** Run `r8s validate ./bundle/`. It checks for core files (nodes, pods, events) and gives you a completeness score.
+
+**Q: Can I use label selectors?**
+**A:** Basic filtering is supported (e.g. by namespace). Full label selector support (`-l app=nginx`) is on the roadmap for v1.4.
+
+**Q: Does it check for certificates?**
+**A:** Yes. It has specific patterns to detect "x509: certificate has expired" errors in logs and events.
+
+**Q: Can I export the report to PDF?**
+**A:** Not directly, but you can export to Markdown (`--format=markdown`) and then use any Markdown-to-PDF converter (like Pandoc or VS Code).
+
+**Q: Does it analyze system logs (journald)?**
+**A:** Yes. It scans `systemlogs/` and `journald/` directories for system-level issues like OOM kills, disk pressure, and CNI failures.
+
+**Q: What if the bundle is just a `kubectl cluster-info dump`?**
+**A:** It has partial support for generic kubectl dumps, but it works best with the structured Rancher support bundle format.
+
+**Q: Can I contribute a new pattern?**
+**A:** Absolutely. Open a PR adding a new YAML file to `internal/ai/patterns/`. It's very easy to add regex-based detection rules.
+
+**Q: How often is it updated?**
+**A:** We aim for a release every sprint (2 weeks). Since it's a CLI tool, you can update it instantly with `curl`.
+
+**Q: Does it require Docker?**
+**A:** No. It is a single static Go binary. No dependencies required.
+
+**Q: Can I use it on Windows?**
+**A:** Yes, we build binaries for Linux, macOS, and Windows. It works in PowerShell or WSL.
+
+**Q: Does it handle Windows containers/nodes?**
+**A:** It parses Windows node logs if they are captured in the standard bundle format, but some Linux-specific checks (like dmesg) won't apply.
+
+**Q: Can I diff two bundles?**
+**A:** You can run `r8s analyze --format=json` on both and use `diff` or `jd` (JSON diff) to compare the outputs programmatically.
 
 **Q: Where do I get it?**
 **A:** It's open source! `github.com/Rancheroo/r8s`.

@@ -1,0 +1,4 @@
+NAMESPACE                  NAME                     SCHEDULE    TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE     CONTAINERS               IMAGES    SELECTOR
+r8s-test-batch-jobs        r8s-test-daily-cleanup   0 0 * * *   <none>     False     0        <none>          3m29s   r8s-test-daily-cleanup   alpine    <none>
+r8s-test-batch-jobs        r8s-test-hourly-backup   0 * * * *   <none>     False     0        <none>          3m29s   r8s-test-hourly-backup   busybox   <none>
+r8s-test-monitoring-test   r8s-test-weekly-report   0 0 * * 0   <none>     False     0        <none>          3m28s   r8s-test-weekly-report   busybox   <none>

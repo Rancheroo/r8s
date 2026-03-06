@@ -1,0 +1,205 @@
+top - 05:39:01 up 31 min,  1 user,  load average: 2.14, 1.30, 0.91
+Tasks: 198 total,   1 running, 197 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 15.0 us, 30.0 sy,  0.0 ni, 55.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st 
+MiB Mem :   3916.0 total,    141.5 free,   2211.2 used,   1861.1 buff/cache     
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.   1704.8 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   2514 root      20   0 2073180 760884  54400 S   9.1  19.0   3:33.13 kube-apiserver --admission-control-config-file=/etc/rancher/rke2/rke2-pss.yaml --allow-privileged=true --anonymous-auth=false --api-audiences=https://kubernetes.default.svc.cluster.local,rke2 --authorization-mode=Node,RBAC --bind-address=0.0.0.0 --cert-dir=/var/lib/rancher/rke2/server/tls/temporary-certs --client-ca-file=/var/lib/rancher/rke2/server/tls/client-ca.crt --egress-selector-config-file=/var/lib/rancher/rke2/server/etc/egress+
+      1 root      20   0   23608  12776   7528 S   0.0   0.3   0:09.98 /sbin/init
+      2 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [kthreadd]
+      3 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [pool_workqueue_release]
+      4 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-rcu_g]
+      5 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-rcu_p]
+      6 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-slub_]
+      7 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-netns]
+      9 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/0:0H-events_highpri]
+     11 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [kworker/u4:0-ext4-rsv-conversion]
+     12 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-mm_pe]
+     13 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [rcu_tasks_kthread]
+     14 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [rcu_tasks_rude_kthread]
+     15 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [rcu_tasks_trace_kthread]
+     16 root      20   0       0      0      0 S   0.0   0.0   0:00.88 [ksoftirqd/0]
+     17 root      20   0       0      0      0 I   0.0   0.0   0:01.51 [rcu_preempt]
+     18 root      rt   0       0      0      0 S   0.0   0.0   0:00.01 [migration/0]
+     19 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 [idle_inject/0]
+     20 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [cpuhp/0]
+     21 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [cpuhp/1]
+     22 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 [idle_inject/1]
+     23 root      rt   0       0      0      0 S   0.0   0.0   0:00.28 [migration/1]
+     24 root      20   0       0      0      0 S   0.0   0.0   0:00.95 [ksoftirqd/1]
+     26 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/1:0H-kblockd]
+     27 root      20   0       0      0      0 I   0.0   0.0   0:00.34 [kworker/u5:0-events_power_efficient]
+     29 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [kdevtmpfs]
+     30 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-inet_]
+     31 root      20   0       0      0      0 I   0.0   0.0   0:00.56 [kworker/u5:1-events_power_efficient]
+     32 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [kauditd]
+     33 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [khungtaskd]
+     34 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [oom_reaper]
+     35 root      20   0       0      0      0 I   0.0   0.0   0:00.72 [kworker/u5:2-events_power_efficient]
+     36 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-write]
+     37 root      20   0       0      0      0 S   0.0   0.0   0:00.66 [kcompactd0]
+     38 root      25   5       0      0      0 S   0.0   0.0   0:00.00 [ksmd]
+     39 root      39  19       0      0      0 S   0.0   0.0   0:00.00 [khugepaged]
+     40 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-kinte]
+     41 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-kbloc]
+     42 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-blkcg]
+     43 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 [irq/9-acpi]
+     44 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-tpm_d]
+     45 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-ata_s]
+     46 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-md]
+     47 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-md_bi]
+     48 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-edac-]
+     49 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-devfr]
+     50 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 [watchdogd]
+     52 root       0 -20       0      0      0 I   0.0   0.0   0:00.57 [kworker/0:1H-kblockd]
+     53 root      20   0       0      0      0 S   0.0   0.0   0:03.20 [kswapd0]
+     54 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [ecryptfs-kthread]
+     55 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-kthro]
+     56 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-acpi_]
+     58 root       0 -20       0      0      0 I   0.0   0.0   0:00.57 [kworker/1:1H-kblockd]
+     59 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [scsi_eh_0]
+     60 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-scsi_]
+     61 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [scsi_eh_1]
+     62 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-scsi_]
+     63 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [scsi_eh_2]
+     64 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-scsi_]
+     65 root      20   0       0      0      0 I   0.0   0.0   0:01.00 [kworker/u6:2-events_power_efficient]
+     67 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-mld]
+     68 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-ipv6_]
+     75 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-kstrp]
+     77 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/u7:0]
+     78 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/u8:0]
+     79 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/u9:0]
+     84 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-crypt]
+     85 root      20   0       0      0      0 I   0.0   0.0   0:00.34 [kworker/1:2-events]
+     94 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-charg]
+    143 root      20   0       0      0      0 I   0.0   0.0   0:00.36 [kworker/0:2-events]
+    188 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-raid5]
+    225 root      20   0       0      0      0 S   0.0   0.0   0:01.11 [jbd2/vda1-8]
+    226 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-ext4-]
+    298 root      19  -1   34396   8584   7560 S   0.0   0.2   0:00.60 /usr/lib/systemd/systemd-journald
+    318 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-kmpat]
+    319 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-kmpat]
+    353 root      rt   0  288952  27136   8704 S   0.0   0.7   0:00.21 /sbin/multipathd -d -s
+    354 root      20   0       0      0      0 I   0.0   0.0   0:02.14 [kworker/u4:1-ext4-rsv-conversion]
+    435 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [jbd2/vda16-8]
+    436 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-ext4-]
+    504 systemd+  20   0   91024   6400   5504 S   0.0   0.2   0:00.06 /usr/lib/systemd/systemd-timesyncd
+    676 systemd+  20   0   22428   7040   5888 S   0.0   0.2   0:00.09 /usr/lib/systemd/systemd-networkd
+    711 systemd+  20   0   21724   8192   5760 S   0.0   0.2   0:00.31 /usr/lib/systemd/systemd-resolved
+    737 root      20   0   26056   6628   4068 S   0.0   0.2   0:00.25 /usr/lib/systemd/systemd-udevd
+    738 root      -2   0       0      0      0 S   0.0   0.0   0:00.00 [psimon]
+    861 root      20   0    7224   2688   2432 S   0.0   0.1   0:00.00 /usr/sbin/cron -f -P
+    862 message+  20   0    9900   4864   4096 S   0.0   0.1   0:01.05 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+    867 polkitd   20   0  308164   5760   4992 S   0.0   0.1   0:00.15 /usr/lib/polkit-1/polkitd --no-debug
+    874 root      20   0   17984   7296   6272 S   0.0   0.2   0:00.27 /usr/lib/systemd/systemd-logind
+    886 root      20   0  468952   8576   6400 S   0.0   0.2   0:00.52 /usr/libexec/udisks2/udisksd
+    917 root      20   0  110000  13952   4608 S   0.0   0.3   0:00.10 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+    922 syslog    20   0  222508   4992   3584 S   0.0   0.1   0:00.12 /usr/sbin/rsyslogd -n -iNONE
+    978 root      20   0  392088   7040   5120 S   0.0   0.2   0:00.09 /usr/sbin/ModemManager
+    989 root      20   0    6148   2048   1920 S   0.0   0.1   0:00.01 /sbin/agetty -o -p -- \u --keep-baud 115200,57600,38400,9600 - vt220
+   1020 root      20   0    6104   1920   1792 S   0.0   0.0   0:00.00 /sbin/agetty -o -p -- \u --noclear - linux
+   1192 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworker/R-tls-s]
+   1765 root      20   0 1239988   2432    896 S   0.0   0.1   0:00.01 /opt/digitalocean/bin/droplet-agent
+   2208 root      20   0 1617716  68896  30080 S   0.0   1.7   0:34.61 /usr/local/bin/rke2 server
+   2233 root      20   0 1303816  69424  27456 S   0.0   1.7   4:08.77 containerd -c /var/lib/rancher/rke2/agent/etc/containerd/config.toml
+   2254 root      20   0 1312768  78268  33536 S   0.0   2.0   0:54.58 kubelet --volume-plugin-dir=/var/lib/kubelet/volumeplugins --file-check-frequency=5s --sync-frequency=30s --cloud-provider=external --config-dir=/var/lib/rancher/rke2/agent/etc/kubelet.conf.d --containerd=/run/k3s/containerd/containerd.sock --hostname-override=r8s-cp-wlp7h-lhvgq --kubeconfig=/var/lib/rancher/rke2/agent/kubelet.kubeconfig --node-ip=209.38.17.11 --node-labels=rke.cattle.io/machine=a243b941-9386-4dda-85aa-9ae1510e1943 --r+
+   2303 root      20   0 1243560  17804  13440 S   0.0   0.4   0:00.61 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id e89f791dde5de98d08bf8c368dbd8845c98f4a9bb94e6fd56dc7c89d005ee3bc -address /run/k3s/containerd/containerd.sock
+   2311 root      20   0 1243164  17804  13312 S   0.0   0.4   0:00.56 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 16a045e5d5947c3a2addcd224e27b8e4aad50964681a15e1e37d8489f4c9cc8e -address /run/k3s/containerd/containerd.sock
+   2354 65535     20   0     972    512    512 S   0.0   0.0   0:00.00 /pause
+   2361 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   2402 root      20   0 1299988  29724  15744 S   0.0   0.7   0:01.59 kube-proxy --cluster-cidr=10.42.0.0/16 --conntrack-max-per-core=0 --conntrack-tcp-timeout-close-wait=0s --conntrack-tcp-timeout-established=0s --healthz-bind-address=127.0.0.1 --hostname-override=r8s-cp-wlp7h-lhvgq --kubeconfig=/var/lib/rancher/rke2/agent/kubeproxy.kubeconfig --proxy-mode=iptables
+   2414 root      20   0   11.3g 115580  31744 S   0.0   2.9   1:10.56 etcd --config-file=/var/lib/rancher/rke2/server/db/etcd/config
+   2465 root      20   0 1243816  18776  13696 S   0.0   0.5   0:03.97 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 3faa3248dfac727ae629e9db33e761b7ee9133b928c42431ee37fa23d776c7e8 -address /run/k3s/containerd/containerd.sock
+   2489 65535     20   0     972    512    512 S   0.0   0.0   0:00.03 /pause
+   2549 root      20   0 1243676  17748  13440 S   0.0   0.4   0:00.54 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id e5922a731b50d7a42b720920b0df4f66049028d399c3776699bc30c38759ea24 -address /run/k3s/containerd/containerd.sock
+   2563 root      20   0 1243676  17904  13440 S   0.0   0.4   0:00.58 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 7fa78d1effabb4aed03380f28c37cfddaa7d3eb6c7a2db1cde202bbcefc0792c -address /run/k3s/containerd/containerd.sock
+   2594 65535     20   0     972    512    512 S   0.0   0.0   0:00.05 /pause
+   2606 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   2645 root      20   0 1299840  45696  20480 S   0.0   1.1   0:12.63 kube-scheduler --permit-port-sharing=true --authentication-kubeconfig=/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig --authorization-kubeconfig=/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig --bind-address=127.0.0.1 --cert-dir=/var/lib/rancher/rke2/server/tls/kube-scheduler --kubeconfig=/var/lib/rancher/rke2/server/cred/scheduler.kubeconfig --profiling=false --secure-port=10259 --tls-cert-file=/var/lib/rancher/rke2/serv+
+   2657 root      20   0 1387092 106396  30464 S   0.0   2.7   0:35.26 kube-controller-manager --permit-port-sharing=true --flex-volume-plugin-dir=/var/lib/kubelet/volumeplugins --terminated-pod-gc-threshold=1000 --allocate-node-cidrs=true --authentication-kubeconfig=/var/lib/rancher/rke2/server/cred/controller.kubeconfig --authorization-kubeconfig=/var/lib/rancher/rke2/server/cred/controller.kubeconfig --bind-address=127.0.0.1 --cert-dir=/var/lib/rancher/rke2/server/tls/kube-controller-manager --cluster-+
+   2699 root      20   0 1243740  17820  13440 S   0.0   0.4   0:00.54 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 170c196b8d80b5b944c36f7229151775c39013745bd706f3017a850465868cb4 -address /run/k3s/containerd/containerd.sock
+   2722 65535     20   0     972    512    512 S   0.0   0.0   0:00.03 /pause
+   2746 root      20   0 1307628  31980  15872 S   0.0   0.8   0:05.51 cloud-controller-manager
+   3719 root      20   0 1243164  17476  13312 S   0.0   0.4   0:00.54 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id e35747329afe469d9b2b981e9f12792ee9759b6a382543ca04b0f2e1c8260b3b -address /run/k3s/containerd/containerd.sock
+   3743 65535     20   0     972    512    512 S   0.0   0.0   0:00.03 /pause
+   3874 10001     20   0 1903772  56448  18688 S   0.0   1.4   0:10.09 operator -manage-crds=false
+   3914 root      20   0 1243420  18580  13568 S   0.0   0.5   0:01.10 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id d3f5f0d3380960f852766a94e682a15f077948fedbf47c42e85899894d775d10 -address /run/k3s/containerd/containerd.sock
+   3938 65535     20   0     972    512    512 S   0.0   0.0   0:00.00 /pause
+   4418 root      20   0    4480   1152   1152 S   0.0   0.0   0:00.07 /usr/local/bin/runsvdir -P /etc/service/enabled
+   4530 root      20   0 1243420  17704  13440 S   0.0   0.4   0:00.51 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id cabe9a303fdfee0e6aba04558eae5841204c98c0e8277c71c6710a891b9a3bd5 -address /run/k3s/containerd/containerd.sock
+   4574 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   4698 root      20   0    4328   1152   1152 S   0.0   0.0   0:00.00 runsv allocate-tunnel-addrs
+   4699 root      20   0    4328   1152   1152 S   0.0   0.0   0:00.00 runsv felix
+   4700 root      20   0    4328   1152   1152 S   0.0   0.0   0:00.00 runsv complete-startup
+   4701 root      20   0    4328   1152   1152 S   0.0   0.0   0:00.00 runsv monitor-addresses
+   4702 root      20   0    4328   1152   1152 S   0.0   0.0   0:00.00 runsv cni
+   4703 root      20   0    4328   1152   1152 S   0.0   0.0   0:00.00 runsv node-status-reporter
+   4704 root      20   0    4472   1152   1152 S   0.0   0.0   0:00.00 svlogd /var/log/calico/monitor-addresses
+   4705 root      20   0 1753800  53112  33024 S   0.0   1.3   0:00.28 calico-node -monitor-addresses
+   4706 root      20   0   12004   1792   1536 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4707 root      20   0   12004   1792   1536 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4709 root      20   0   12004   1920   1664 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4710 root      20   0 1827276  47596  29056 S   0.0   1.2   0:00.16 calico-node -monitor-token
+   4711 root      20   0   12004   1920   1664 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4713 root      20   0 1827532  48240  29184 S   0.0   1.2   0:00.18 calico-node -complete-startup
+   4736 root      20   0   12004    912    768 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4737 root      20   0   23148   1920   1792 S   0.0   0.0   0:00.01 /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+   4738 root      20   0    4472   1024   1024 S   0.0   0.0   0:00.02 svlogd -ttt /var/log/calico/felix
+   4739 root      20   0   12004   1040    896 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4740 root      20   0   23148   1536   1408 S   0.0   0.0   0:00.00 /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+   4741 root      20   0    4472   1152   1152 S   0.0   0.0   0:00.00 svlogd -ttt /var/log/calico/node-status-reporter
+   4742 root      20   0   12004   1040    896 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4743 root      20   0   23148   1664   1536 S   0.0   0.0   0:00.00 /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+   4744 root      20   0   12004   1040    896 S   0.0   0.0   0:00.00 /bin/bash ./run
+   4745 root      20   0   23148   1792   1664 S   0.0   0.0   0:00.00 /usr/bin/coreutils --coreutils-prog-shebang=tee /usr/bin/tee /dev/fd/63
+   4746 root      20   0    4472   1152   1152 S   0.0   0.0   0:00.00 svlogd -ttt /var/log/calico/cni
+   4751 root      20   0    4472   1152   1152 S   0.0   0.0   0:00.00 svlogd -ttt /var/log/calico/allocate-tunnel-addrs
+   4865 10001     20   0 1285120  41532  14592 S   0.0   1.0   0:05.62 /usr/bin/calico-typha
+   4899 root      20   0 2049240  67320  38528 S   0.0   1.7   0:26.33 calico-node -felix
+   4916 root      20   0 1753800  49408  30080 S   0.0   1.2   0:00.33 calico-node -status-reporter
+   4917 root      20   0 1753800  50168  30208 S   0.0   1.3   0:00.36 calico-node -allocate-tunnel-addrs
+   5104 root      20   0 1243420  18012  13440 S   0.0   0.4   0:01.06 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 84bc140abaee79cc0857b7f19437b458900db91d6132b385edd6bca976c32907 -address /run/k3s/containerd/containerd.sock
+   5132 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   5274 root      20   0 1243676  17724  13312 S   0.0   0.4   0:00.54 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 68ab66b65046c6da3a256f990512bfc8ba3dcccea0638765a48a1fb4bcbb1453 -address /run/k3s/containerd/containerd.sock
+   5309 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   5368 root      20   0 1243164  17772  13440 S   0.0   0.4   0:00.54 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 76d4cae3a0e5f0fffc81e7fb58efd1be1d0db1cab933d14b05f2480e07181584 -address /run/k3s/containerd/containerd.sock
+   5394 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   5521 999       20   0 1242220   2176    128 S   0.0   0.1   0:00.06 /usr/bin/wrapper /usr/bin/kube-controllers
+   5540 999       20   0 1288820  30988  15104 S   0.0   0.8   0:02.13 /usr/bin/kube-controllers
+   5606 root      20   0 1275800  17428  10368 S   0.0   0.4   0:00.56 /cluster-proportional-autoscaler --namespace=kube-system --configmap=rke2-coredns-rke2-coredns-autoscaler --target=Deployment/rke2-coredns-rke2-coredns --logtostderr=true --v=2
+   5640 root      20   0 1305692  23936  12928 S   0.0   0.6   0:02.11 /coredns -conf /etc/coredns/Corefile
+   8231 root      20   0 1243420  17556  13312 S   0.0   0.4   0:00.53 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 8adf918b6a77b7e3b6708571d9363b5668bf6b2d39aecd2889da6137756021e3 -address /run/k3s/containerd/containerd.sock
+   8260 65535     20   0     972    512    512 S   0.0   0.0   0:00.03 /pause
+   8288 root      20   0    2684    256    256 S   0.0   0.0   0:00.07 tini -- agent
+   8352 root      20   0 1702832 288912 102784 S   0.0   7.2   0:59.62 agent
+   9277 root      20   0 1243420  17984  13440 S   0.0   0.4   0:00.55 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id d044fd6d795b30900e5236f26c020488fa592b138ab209d9b55f19de39e01fa6 -address /run/k3s/containerd/containerd.sock
+   9311 65535     20   0     972    512    512 S   0.0   0.0   0:00.03 /pause
+   9336 root      20   0    2684    128    128 S   0.0   0.0   0:00.08 tini -- agent
+   9401 root      20   0 1634640 224960  96256 S   0.0   5.6   0:23.75 agent
+   9690 root      20   0 1243164  17852  13440 S   0.0   0.4   0:00.53 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id 44c1747fda313cb3881f4af869b6926cf01c3ac9a648fa2280139f7d3468c9a6 -address /run/k3s/containerd/containerd.sock
+   9713 65535     20   0     972    512    512 S   0.0   0.0   0:00.04 /pause
+   9799 1000      20   0 1285008  60876  37248 S   0.0   1.5   0:01.73 webhook
+  10450 root      20   0 1243420  17792  13440 S   0.0   0.4   0:00.47 /var/lib/rancher/rke2/data/v1.33.7-rke2r1-9d9964a3b7f9/bin/containerd-shim-runc-v2 -namespace k8s.io -id cd8561bfeeb70b9e77fff924c9fed474b59ff5ede1605eaab4633d8fcea4e06e -address /run/k3s/containerd/containerd.sock
+  10476 65535     20   0     972    512    512 S   0.0   0.0   0:00.03 /pause
+  10609 nobody    20   0 1276068  48352  33920 S   0.0   1.2   0:01.76 /bin/system-upgrade-controller
+  11033 root      20   0 1284552  38408  16384 S   0.0   1.0   0:04.90 /usr/local/bin/rancher-system-agent sentinel
+  11440 root      -2   0       0      0      0 S   0.0   0.0   0:00.00 [psimon]
+  14766 root      20   0       0      0      0 I   0.0   0.0   0:00.04 [kworker/u6:0-events_power_efficient]
+  17634 root      20   0       0      0      0 I   0.0   0.0   0:00.26 [kworker/1:1-events]
+  17998 root      20   0   12020   8064   7040 S   0.0   0.2   0:00.00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+  17999 root      20   0   14972  10368   8576 S   0.0   0.3   0:00.03 sshd: root@pts/0
+  18003 root      20   0       0      0      0 I   0.0   0.0   0:00.05 [kworker/u6:1-writeback]
+  18004 root      20   0   20812  11392   8960 S   0.0   0.3   0:00.22 /usr/lib/systemd/systemd --user
+  18006 root      20   0   21156   3376   1664 S   0.0   0.1   0:00.00 (sd-pam)
+  18011 root      -2   0       0      0      0 S   0.0   0.0   0:00.00 [psimon]
+  18187 root      20   0    9192   5376   3712 S   0.0   0.1   0:00.02 -bash
+  19879 root      20   0       0      0      0 I   0.0   0.0   0:00.31 [kworker/0:1-events]
+  24389 root      20   0       0      0      0 I   0.0   0.0   0:00.01 [kworker/u6:3-writeback]
+  25859 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [kworker/1:0-events]
+  25863 root      20   0       0      0      0 I   0.0   0.0   0:00.01 [kworker/0:0-events]
+  26191 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [kworker/u5:3-events_power_efficient]
+  27143 root      20   0       0      0      0 I   0.0   0.0   0:00.00 [kworker/u5:4]
+  27359 root      39  19    8944   4736   3200 S   0.0   0.1   0:00.01 bash rancher2_logs_collector.sh
+  27504 root      39  19   10380   6016   3840 R   0.0   0.2   0:00.01 top -cbn 1

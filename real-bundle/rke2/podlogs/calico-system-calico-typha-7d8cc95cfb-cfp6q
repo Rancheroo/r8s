@@ -1,0 +1,281 @@
+2026-02-03 05:14:11.201 [INFO][1] typha/logutils.go 79: Early screen log level set to info
+2026-02-03 05:14:11.201 [INFO][1] typha/daemon.go 169: Typha starting up GOMAXPROCS=4 buildDate="2025-11-17T23:42:16+0000" gitCommit="dd5575465ed825f86a3bc10f17bb5f7dc106d0f0" version="v3.31.2"
+2026-02-03 05:14:11.201 [INFO][1] typha/daemon.go 170: Command line arguments: map[--config-file:/etc/calico/typha.cfg --version:false]
+2026-02-03 05:14:11.201 [INFO][1] typha/daemon.go 180: Kubernetes server override env vars. KUBERNETES_SERVICE_HOST="10.43.0.1" KUBERNETES_SERVICE_PORT="443"
+2026-02-03 05:14:11.201 [INFO][1] typha/daemon.go 185: Loading configuration...
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "healthenabled"="true"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "logseverityscreen"="info"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "connectionrebalancingmode"="kubernetes"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "cafile"="/etc/pki/tls/certs/tigera-ca-bundle.crt"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "servercertfile"="/typha-certs/tls.crt"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "clientcn"="typha-client"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "logfilepath"="none"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "logseveritysys"="none"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "healthport"="9098"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "k8snamespace"="calico-system"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "serverkeyfile"="/typha-certs/tls.key"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "shutdowntimeoutsecs"="300"
+2026-02-03 05:14:11.202 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "datastoretype"="kubernetes"
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 173: Merging in config from environment variable: map[cafile:/etc/pki/tls/certs/tigera-ca-bundle.crt clientcn:typha-client connectionrebalancingmode:kubernetes datastoretype:kubernetes healthenabled:true healthport:9098 k8snamespace:calico-system logfilepath:none logseverityscreen:info logseveritysys:none servercertfile:/typha-certs/tls.crt serverkeyfile:/typha-certs/tls.key shutdowntimeoutsecs:300]
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.crt"
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for ShutdownTimeoutSecs: 300 (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for ShutdownTimeoutSecs: 5m0s (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.key"
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/param_types.go 200: Looking for required file path="/etc/pki/tls/certs/tigera-ca-bundle.crt"
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for LogFilePath: none (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for LogFilePath:  (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for LogSeverityScreen: info (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 256: Parsed value for LogSeverityScreen: INFO (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 222: Parsing value for LogSeveritySys: none (from environment variable)
+2026-02-03 05:14:11.202 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for LogSeveritySys:  (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for HealthEnabled: true (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for HealthEnabled: true (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 173: Merging in config from config file: map[LogFilePath:None LogSeverityFile:None MetadataAddr:None]
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for ShutdownTimeoutSecs: 300 (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for ShutdownTimeoutSecs: 5m0s (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.key"
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/param_types.go 200: Looking for required file path="/etc/pki/tls/certs/tigera-ca-bundle.crt"
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for LogFilePath: none (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for LogFilePath:  (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for LogSeverityScreen: info (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for LogSeverityScreen: INFO (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for LogSeveritySys: none (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for LogSeveritySys:  (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for HealthEnabled: true (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for HealthEnabled: true (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.crt"
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for LogFilePath: None (from config file)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for LogFilePath:  (from config file)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 259: Skipping config value for LogFilePath from config file; already have a value from environment variable
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 222: Parsing value for LogSeverityFile: None (from config file)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 256: Parsed value for LogSeverityFile:  (from config file)
+2026-02-03 05:14:11.203 [INFO][1] typha/config_params.go 210: Ignoring unknown config param. raw name="MetadataAddr"
+2026-02-03 05:14:11.204 [INFO][1] typha/daemon.go 247: Successfully loaded configuration. GOMAXPROCS=4 buildDate="2025-11-17T23:42:16+0000" config=&config.Config{DatastoreType:"kubernetes", EtcdAddr:"127.0.0.1:2379", EtcdScheme:"http", EtcdKeyFile:"", EtcdCertFile:"", EtcdCaFile:"", EtcdEndpoints:[]string(nil), LogFilePath:"", LogSeverityFile:"", LogSeverityScreen:"INFO", LogSeveritySys:"", HealthEnabled:true, HealthHost:"localhost", HealthPort:9098, PrometheusMetricsEnabled:false, PrometheusMetricsHost:"", PrometheusMetricsPort:9093, PrometheusGoMetricsEnabled:true, PrometheusProcessMetricsEnabled:true, SnapshotCacheMaxBatchSize:100, ServerMaxMessageSize:100, ServerMaxFallBehindSecs:300000000000, ServerNewClientFallBehindGracePeriod:300000000000, ServerMinBatchingAgeThresholdSecs:10000000, ServerPingIntervalSecs:10000000000, ServerPongTimeoutSecs:60000000000, ServerHandshakeTimeoutSecs:10000000000, ServerPort:0, ServerHost:"", ServerKeyFile:"/typha-certs/tls.key", ServerCertFile:"/typha-certs/tls.crt", CAFile:"/etc/pki/tls/certs/tigera-ca-bundle.crt", ClientCN:"typha-client", ClientURISAN:"", DebugMemoryProfilePath:"", DebugDisableLogDropping:false, DebugHost:"localhost", DebugPort:0, ConnectionRebalancingMode:"kubernetes", ConnectionDropIntervalSecs:1000000000, ShutdownTimeoutSecs:300000000000, ShutdownConnectionDropIntervalMaxSecs:1000000000, MaxConnectionsUpperLimit:10000, MaxConnectionsLowerLimit:400, K8sServicePollIntervalSecs:30000000000, K8sNamespace:"calico-system", K8sServiceName:"calico-typha", K8sPortName:"calico-typha", sourceToRawConfig:map[config.Source]map[string]string{0x3:map[string]string{"LogFilePath":"None", "LogSeverityFile":"None", "MetadataAddr":"None"}, 0x4:map[string]string{"cafile":"/etc/pki/tls/certs/tigera-ca-bundle.crt", "clientcn":"typha-client", "connectionrebalancingmode":"kubernetes", "datastoretype":"kubernetes", "healthenabled":"true", "healthport":"9098", "k8snamespace":"calico-system", "logfilepath":"none", "logseverityscreen":"info", "logseveritysys":"none", "servercertfile":"/typha-certs/tls.crt", "serverkeyfile":"/typha-certs/tls.key", "shutdowntimeoutsecs":"300"}}, rawValues:map[string]string{"CAFile":"/etc/pki/tls/certs/tigera-ca-bundle.crt", "ClientCN":"typha-client", "ConnectionRebalancingMode":"kubernetes", "DatastoreType":"kubernetes", "HealthEnabled":"true", "HealthPort":"9098", "K8sNamespace":"calico-system", "LogFilePath":"none", "LogSeverityFile":"None", "LogSeverityScreen":"info", "LogSeveritySys":"none", "MetadataAddr":"None", "ServerCertFile":"/typha-certs/tls.crt", "ServerKeyFile":"/typha-certs/tls.key", "ShutdownTimeoutSecs":"300"}} gitCommit="dd5575465ed825f86a3bc10f17bb5f7dc106d0f0" version="v3.31.2"
+2026-02-03 05:14:11.204 [INFO][1] typha/daemon.go 256: Using Kubernetes API datastore, checking if we need to migrate v1 -> v3
+2026-02-03 05:14:11.214 [INFO][1] typha/daemon.go 295: Migration not required.
+2026-02-03 05:14:11.214 [INFO][1] typha/daemon.go 311: Initializing the datastore (if needed).
+2026-02-03 05:14:11.233 [INFO][1] typha/daemon.go 321: Datastore initialized.
+2026-02-03 05:14:11.233 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:14:11.233 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:14:11.234 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:14:11.234 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:14:11.234 [INFO][1] typha/sync_server.go 173: Defaulting BinarySnapshotTimeout. default=1s value=0s
+2026-02-03 05:14:11.234 [INFO][1] typha/sync_server.go 227: Defaulting write timeout. default=2m0s
+2026-02-03 05:14:11.234 [INFO][1] typha/sync_server.go 263: Defaulting Port. default=5473 value=0
+2026-02-03 05:14:11.234 [INFO][1] typha/sync_server.go 282: Creating server config=syncserver.Config{Host:"", Port:5473, MaxMessageSize:100, BinarySnapshotTimeout:1000000000, MaxFallBehind:300000000000, NewClientFallBehindGracePeriod:300000000000, MinBatchingAgeThreshold:10000000, PingInterval:10000000000, PongTimeout:60000000000, HandshakeTimeout:10000000000, WriteTimeout:120000000000, DropInterval:1000000000, ShutdownTimeout:300000000000, ShutdownMaxDropInterval:1000000000, MaxConns:10000, HealthAggregator:(*health.HealthAggregator)(0xc0004392c0), KeyFile:"/typha-certs/tls.key", CertFile:"/typha-certs/tls.crt", CAFile:"/etc/pki/tls/certs/tigera-ca-bundle.crt", ClientCN:"typha-client", ClientURISAN:"", WriteBufferSize:0, DebugLogWrites:false}
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 411: Starting the datastore Syncer/cache layer
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="felix"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="felix"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="felix"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 109: Starting cache syncerType="felix"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="felix"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="bgp"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="bgp"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="bgp"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 109: Starting cache syncerType="bgp"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="bgp"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="tunnel-ip-allocation"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="tunnel-ip-allocation"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:14:11.236 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:14:11.236 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="tunnel-ip-allocation"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 109: Starting cache syncerType="tunnel-ip-allocation"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/clusterinformations"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="tunnel-ip-allocation"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="node-status"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="node-status"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="node-status"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 109: Starting cache syncerType="node-status"
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="node-status"
+2026-02-03 05:14:11.236 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 417: Kubernetes connection rebalancing is enabled, starting k8s poll goroutine.
+2026-02-03 05:14:11.236 [INFO][1] typha/daemon.go 424: Started the datastore Syncer/cache layer/server.
+2026-02-03 05:14:11.237 [INFO][1] typha/daemon.go 442: Health enabled.  Starting server. host="localhost" port=9098
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../ipam/v2/host/"
+2026-02-03 05:14:11.237 [INFO][1] typha/health.go 377: Health enabled.  Starting server. host="localhost" port=9098
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:14:11.237 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:14:11.237 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:14:11.237 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:14:11.237 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:14:11.237 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgpfilters"
+2026-02-03 05:14:11.237 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:14:11.237 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../ipam/v2/assignment/"
+2026-02-03 05:14:11.237 [INFO][1] typha/sync_server.go 343: Opening TLS listen socket port=5473 pwd="/"
+2026-02-03 05:14:11.237 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/stagedkubernetesnetworkpolicies"
+2026-02-03 05:14:11.237 [INFO][1] typha/rebalance.go 44: Kubernetes poll goroutine started. thread="k8s-poll"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/felixconfigurations"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/networksets"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/profiles"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/globalnetworkpolicies"
+2026-02-03 05:14:11.238 [INFO][1] typha/sync_server.go 359: Will verify client certificates port=5473
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/stagedglobalnetworkpolicies"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/tiers"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/workloadendpoints"
+2026-02-03 05:14:11.238 [INFO][1] typha/tlsutils.go 39: Make certificate verifier requiredCN="typha-client" requiredURISAN="" roots=&x509.CertPool{byName:map[string][]int{"0!1\x1f0\x1d\x06\x03U\x04\x03\x13\x16tigera-operator-signer":[]int{0}}, lazyCerts:[]x509.lazyCert{x509.lazyCert{rawSubject:[]uint8{0x30, 0x21, 0x31, 0x1f, 0x30, 0x1d, 0x6, 0x3, 0x55, 0x4, 0x3, 0x13, 0x16, 0x74, 0x69, 0x67, 0x65, 0x72, 0x61, 0x2d, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x2d, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72}, constraint:(func([]*x509.Certificate) error)(nil), getCert:(func() (*x509.Certificate, error))(0x732bc0)}}, haveSum:map[x509.sum224]bool{x509.sum224{0xd7, 0x2e, 0x64, 0x33, 0x6, 0x72, 0x4d, 0x7e, 0x7, 0xd6, 0xc, 0x3c, 0x70, 0x12, 0x21, 0xd8, 0x5d, 0x53, 0xa, 0xb3, 0x11, 0xa4, 0x65, 0xb1, 0x1f, 0x6b, 0x6c, 0xdf}:true}, systemPool:false}
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/hostendpoints"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/networkpolicies"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/stagednetworkpolicies"
+2026-02-03 05:14:11.238 [INFO][1] typha/sync_server.go 387: Opened listen socket port=5473
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesnetworkpolicies"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesadminnetworkpolicies"
+2026-02-03 05:14:11.238 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/caliconodestatuses"
+2026-02-03 05:14:11.239 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesbaselineadminnetworkpolicies"
+2026-02-03 05:14:11.239 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/globalnetworksets"
+2026-02-03 05:14:11.239 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesservice"
+2026-02-03 05:14:11.239 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesendpointslices"
+2026-02-03 05:14:11.242 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/clusterinformations"
+2026-02-03 05:14:11.242 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:14:11.242 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.242 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:14:11.244 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/globalnetworksets"
+2026-02-03 05:14:11.245 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.245 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:14:11.245 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:14:11.245 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:14:11.245 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.245 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:14:11.245 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.245 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.245 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:14:11.261 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesendpointslices"
+2026-02-03 05:14:11.261 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.261 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../ipam/v2/host/"
+2026-02-03 05:14:11.261 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgpfilters"
+2026-02-03 05:14:11.261 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.261 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.262 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/stagedkubernetesnetworkpolicies"
+2026-02-03 05:14:11.263 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.263 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/hostendpoints"
+2026-02-03 05:14:11.263 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:14:11.264 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/networksets"
+2026-02-03 05:14:11.264 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:14:11.264 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.264 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.264 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.264 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.264 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/tiers"
+2026-02-03 05:14:11.265 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/globalnetworkpolicies"
+2026-02-03 05:14:11.266 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/networkpolicies"
+2026-02-03 05:14:11.266 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.266 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.266 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/stagedglobalnetworkpolicies"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/stagednetworkpolicies"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.267 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:14:11.267 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesnetworkpolicies"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:14:11.267 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:14:11.267 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:14:11.267 [INFO][1] typha/health.go 204: Health of component changed name="bgp-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:14:11.268 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesadminnetworkpolicies"
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/felixconfigurations"
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.268 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:14:11.269 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:14:11.269 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.269 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:14:11.269 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:14:11.269 [INFO][1] typha/health.go 204: Health of component changed name="tunnel-ip-allocation-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:14:11.269 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/caliconodestatuses"
+2026-02-03 05:14:11.269 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesservice"
+2026-02-03 05:14:11.269 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.270 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.270 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:14:11.270 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:14:11.270 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../ipam/v2/assignment/"
+2026-02-03 05:14:11.270 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:14:11.270 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:14:11.270 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:14:11.270 [INFO][1] typha/health.go 204: Health of component changed name="node-status-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:14:11.270 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.270 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesbaselineadminnetworkpolicies"
+2026-02-03 05:14:11.271 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.277 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/workloadendpoints"
+2026-02-03 05:14:11.277 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.288 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/profiles"
+2026-02-03 05:14:11.289 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:14:11.289 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:14:11.289 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:14:11.292 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:14:11.292 [INFO][1] typha/health.go 204: Health of component changed name="felix-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:14:11.372 [INFO][1] typha/health.go 334: Overall health status changed: live=true ready=true
++----------------------------+---------+----------------+-----------------+--------+
+|         COMPONENT          | TIMEOUT |    LIVENESS    |    READINESS    | DETAIL |
++----------------------------+---------+----------------+-----------------+--------+
+| SyncServer                 | 20s     | reporting live | -               |        |
+| bgp-cache                  | 20s     | reporting live | reporting ready |        |
+| felix-cache                | 20s     | reporting live | reporting ready |        |
+| node-status-cache          | 20s     | reporting live | reporting ready |        |
+| tunnel-ip-allocation-cache | 20s     | reporting live | reporting ready |        |
++----------------------------+---------+----------------+-----------------+--------+
+2026-02-03 05:14:42.374 [INFO][1] typha/rebalance.go 77: Calculated new connection limit. newLimit=400 numNodes=4 numSyncerTypes=4 numTyphas=2 reason="configured lower limit" thread="k8s-poll"
+2026-02-03 05:14:42.374 [INFO][1] typha/sync_server.go 537: New target number of connections currentNum=0 newMax=400 oldMax=10000 thread="numConnsGov"

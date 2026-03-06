@@ -1,0 +1,359 @@
+Chain PREROUTING (policy ACCEPT 1162 packets, 68888 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 1833  117K cali-PREROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:6gwbT8clXdHdC1b1 */
+ 1845  117K KUBE-SERVICES  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 7414 packets, 457K bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 6853  420K cali-OUTPUT  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:tVnHkvAo15HuiPy0 */
+ 7503  463K KUBE-SERVICES  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+
+Chain POSTROUTING (policy ACCEPT 7718 packets, 484K bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 7856  493K KUBE-POSTROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */
+ 7137  445K cali-POSTROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:0i8pjzKKPyA34aQD */
+
+Chain KUBE-EXT-INSOL646YPXFRCJP (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* masquerade traffic for r8s-test-api-services/r8s-test-api-server external destinations */
+    0     0 KUBE-SVC-INSOL646YPXFRCJP  0    --  *      *       0.0.0.0/0            0.0.0.0/0           
+
+Chain KUBE-EXT-KTBE7ECJOHPNNRXB (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* masquerade traffic for r8s-test-app-frontend/r8s-test-frontend external destinations */
+    0     0 KUBE-SVC-KTBE7ECJOHPNNRXB  0    --  *      *       0.0.0.0/0            0.0.0.0/0           
+
+Chain KUBE-KUBELET-CANARY (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-MARK-MASQ (51 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 MARK       0    --  *      *       0.0.0.0/0            0.0.0.0/0            MARK or 0x4000
+
+Chain KUBE-NODEPORTS (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-EXT-INSOL646YPXFRCJP  6    --  *      *       0.0.0.0/0            127.0.0.0/8          /* r8s-test-api-services/r8s-test-api-server */ tcp dpt:31068 nfacct-name  localhost_nps_accepted_pkts
+    0     0 KUBE-EXT-INSOL646YPXFRCJP  6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-api-services/r8s-test-api-server */ tcp dpt:31068
+    0     0 KUBE-EXT-KTBE7ECJOHPNNRXB  6    --  *      *       0.0.0.0/0            127.0.0.0/8          /* r8s-test-app-frontend/r8s-test-frontend */ tcp dpt:31223 nfacct-name  localhost_nps_accepted_pkts
+    0     0 KUBE-EXT-KTBE7ECJOHPNNRXB  6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp dpt:31223
+
+Chain KUBE-POSTROUTING (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+  352 21120 RETURN     0    --  *      *       0.0.0.0/0            0.0.0.0/0            mark match ! 0x4000/0x4000
+    0     0 MARK       0    --  *      *       0.0.0.0/0            0.0.0.0/0            MARK xor 0x4000
+    0     0 MASQUERADE  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ random-fully
+
+Chain KUBE-PROXY-CANARY (0 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain KUBE-SEP-2NPDRNRXOUX2T7IJ (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.96          0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */ tcp to:10.42.14.96:80
+
+Chain KUBE-SEP-3VCAJUEHTS7I3TRG (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.132        0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:tcp-53 */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:tcp-53 */ tcp to:10.42.212.132:53
+
+Chain KUBE-SEP-6CWBZ77AME27WXPJ (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.132         0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook */ tcp to:10.42.55.132:8443
+
+Chain KUBE-SEP-6WX5FXQ5YATY6NZM (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.97          0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx */ tcp to:10.42.14.97:80
+
+Chain KUBE-SEP-7RTFVLLMCHN2YOMK (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.100        0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.249.100:80
+
+Chain KUBE-SEP-AVHOGN73QTR76HY3 (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.132        0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:udp-53 */
+    3   268 DNAT       17   --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:udp-53 */ udp to:10.42.212.132:53
+
+Chain KUBE-SEP-AWE6D3APBLFBYRPH (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.71          0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook */ tcp to:10.42.14.71:8443
+
+Chain KUBE-SEP-BSXYUTBE2GKU7RJX (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.129         0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:tcp-53 */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:tcp-53 */ tcp to:10.42.55.129:53
+
+Chain KUBE-SEP-D5W3E6WXUJEHU5Y6 (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       209.38.21.222        0.0.0.0/0            /* calico-system/calico-typha:calico-typha */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* calico-system/calico-typha:calico-typha */ tcp to:209.38.21.222:5473
+
+Chain KUBE-SEP-FTTU2TIMIL4I775A (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.162         0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.55.162:80
+
+Chain KUBE-SEP-FU6NIKUWJSD7SQRX (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.153         0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */ tcp to:10.42.55.153:80
+
+Chain KUBE-SEP-GGE6WDXLRBNI2T7F (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.168         0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.55.168:80
+
+Chain KUBE-SEP-GOBTSNK7N6MATL7U (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.139        0.0.0.0/0            /* cattle-system/cattle-cluster-agent:http */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:http */ tcp to:10.42.212.139:80
+
+Chain KUBE-SEP-IEIVYUMXLP5S6MI2 (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.87         0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */ tcp to:10.42.249.87:80
+
+Chain KUBE-SEP-ISCJHPJGGOASRCSP (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.98         0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.249.98:80
+
+Chain KUBE-SEP-IZ47JOPAMMWPCQBA (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.130         0.0.0.0/0            /* kube-system/rke2-metrics-server:https */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-metrics-server:https */ tcp to:10.42.55.130:10250
+
+Chain KUBE-SEP-JH5TJSQ5NIODR4RO (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       209.38.17.11         0.0.0.0/0            /* calico-system/calico-typha:calico-typha */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* calico-system/calico-typha:calico-typha */ tcp to:209.38.17.11:5473
+
+Chain KUBE-SEP-KUVKK6Y2HFBI2K5Q (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.137        0.0.0.0/0            /* cattle-system/cattle-cluster-agent:https-internal */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:https-internal */ tcp to:10.42.212.137:444
+
+Chain KUBE-SEP-L6UFBLZMPEKAYZST (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.99         0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx */ tcp to:10.42.249.99:80
+
+Chain KUBE-SEP-LBIWXZ7376QE5R4W (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.94          0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.14.94:80
+
+Chain KUBE-SEP-LHFMCC3JA3UGQX3H (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.140        0.0.0.0/0            /* cattle-system/rancher-webhook:https */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/rancher-webhook:https */ tcp to:10.42.212.140:9443
+
+Chain KUBE-SEP-ODB7APEZBEW644YR (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.92          0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.14.92:80
+
+Chain KUBE-SEP-OQR5UQEBCHXDPVQP (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.137        0.0.0.0/0            /* cattle-system/cattle-cluster-agent:http */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:http */ tcp to:10.42.212.137:80
+
+Chain KUBE-SEP-OVWCTFYLC7APTXJZ (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.68         0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook */ tcp to:10.42.249.68:8443
+
+Chain KUBE-SEP-PMEUI4BIJN4NHQFZ (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.89         0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */ tcp to:10.42.249.89:80
+
+Chain KUBE-SEP-QIBCIBXODCEF4EHQ (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.90          0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.14.90:80
+
+Chain KUBE-SEP-QRGLEMPRCGNXPMPX (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.91          0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */ tcp to:10.42.14.91:80
+
+Chain KUBE-SEP-T3S2S2VDOQYZMZON (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.167         0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx */ tcp to:10.42.55.167:80
+
+Chain KUBE-SEP-T5EBTOPJY5NJPIBT (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.129         0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:udp-53 */
+    5   500 DNAT       17   --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:udp-53 */ udp to:10.42.55.129:53
+
+Chain KUBE-SEP-TJMXSQ5ZZBREC6B4 (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.94         0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.249.94:80
+
+Chain KUBE-SEP-TKGTPA2KVQ3BNFLH (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.249.74         0.0.0.0/0            /* r8s-test-api-services/r8s-test-api-server */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-api-services/r8s-test-api-server */ tcp to:10.42.249.74:80
+
+Chain KUBE-SEP-Y3SVIH6FAKPDIF7Y (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.166         0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.55.166:80
+
+Chain KUBE-SEP-YNB5S2ZOV45SZHWS (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.212.139        0.0.0.0/0            /* cattle-system/cattle-cluster-agent:https-internal */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:https-internal */ tcp to:10.42.212.139:444
+
+Chain KUBE-SEP-YNX7HLDUBB3ZTWVT (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       209.38.17.11         0.0.0.0/0            /* default/kubernetes:https */
+   17  1020 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* default/kubernetes:https */ tcp to:209.38.17.11:6443
+
+Chain KUBE-SEP-YTRVHAZXBH6CV6EN (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.14.93          0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend */ tcp to:10.42.14.93:80
+
+Chain KUBE-SEP-Z5KRAGMBCDB7DF24 (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  0    --  *      *       10.42.55.155         0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */
+    0     0 DNAT       6    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api */ tcp to:10.42.55.155:80
+
+Chain KUBE-SERVICES (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-SVC-RXZQBFX6IWO22WWW  6    --  *      *       0.0.0.0/0            10.43.90.205         /* cattle-system/cattle-cluster-agent:http cluster IP */ tcp dpt:80
+    0     0 KUBE-SVC-YFPH5LFNKP7E3G4L  17   --  *      *       0.0.0.0/0            10.43.0.10           /* kube-system/rke2-coredns-rke2-coredns:udp-53 cluster IP */ udp dpt:53
+    0     0 KUBE-SVC-46CB5Z6CZH2WFWVP  6    --  *      *       0.0.0.0/0            10.43.156.144        /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook cluster IP */ tcp dpt:443
+    0     0 KUBE-SVC-WVO5D2SCRAX7PYVR  6    --  *      *       0.0.0.0/0            10.43.250.205        /* r8s-test-web-services/r8s-test-web-nginx cluster IP */ tcp dpt:80
+    0     0 KUBE-SVC-3HCIR6ANNNHMOGFQ  6    --  *      *       0.0.0.0/0            10.43.122.236        /* r8s-test-app-backend/r8s-test-backend-api cluster IP */ tcp dpt:3000
+    0     0 KUBE-SVC-DISNXZXWEI7GIGLU  6    --  *      *       0.0.0.0/0            10.43.90.205         /* cattle-system/cattle-cluster-agent:https-internal cluster IP */ tcp dpt:443
+    0     0 KUBE-SVC-PUNXDRXNIM3ELMDM  6    --  *      *       0.0.0.0/0            10.43.0.10           /* kube-system/rke2-coredns-rke2-coredns:tcp-53 cluster IP */ tcp dpt:53
+    0     0 KUBE-SVC-RK657RLKDNVNU64O  6    --  *      *       0.0.0.0/0            10.43.77.51          /* calico-system/calico-typha:calico-typha cluster IP */ tcp dpt:5473
+    0     0 KUBE-SVC-BOJCKSINR77JVVPB  6    --  *      *       0.0.0.0/0            10.43.47.67          /* cattle-system/rancher-webhook:https cluster IP */ tcp dpt:443
+    0     0 KUBE-SVC-HP77IKALGGR6UULO  6    --  *      *       0.0.0.0/0            10.43.6.109          /* kube-system/rke2-metrics-server:https cluster IP */ tcp dpt:443
+    0     0 KUBE-SVC-INSOL646YPXFRCJP  6    --  *      *       0.0.0.0/0            10.43.80.37          /* r8s-test-api-services/r8s-test-api-server cluster IP */ tcp dpt:8080
+    0     0 KUBE-SVC-KTBE7ECJOHPNNRXB  6    --  *      *       0.0.0.0/0            10.43.144.65         /* r8s-test-app-frontend/r8s-test-frontend cluster IP */ tcp dpt:443
+    0     0 KUBE-SVC-NPX46M4PTMTKRN6Y  6    --  *      *       0.0.0.0/0            10.43.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+  431 25770 KUBE-NODEPORTS  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL
+
+Chain KUBE-SVC-3HCIR6ANNNHMOGFQ (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.122.236        /* r8s-test-app-backend/r8s-test-backend-api cluster IP */ tcp dpt:3000
+    0     0 KUBE-SEP-QRGLEMPRCGNXPMPX  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api -> 10.42.14.91:80 */ statistic mode random probability 0.16666666651
+    0     0 KUBE-SEP-2NPDRNRXOUX2T7IJ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api -> 10.42.14.96:80 */ statistic mode random probability 0.20000000019
+    0     0 KUBE-SEP-IEIVYUMXLP5S6MI2  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api -> 10.42.249.87:80 */ statistic mode random probability 0.25000000000
+    0     0 KUBE-SEP-PMEUI4BIJN4NHQFZ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api -> 10.42.249.89:80 */ statistic mode random probability 0.33333333349
+    0     0 KUBE-SEP-FU6NIKUWJSD7SQRX  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api -> 10.42.55.153:80 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-Z5KRAGMBCDB7DF24  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-backend/r8s-test-backend-api -> 10.42.55.155:80 */
+
+Chain KUBE-SVC-46CB5Z6CZH2WFWVP (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.156.144        /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook cluster IP */ tcp dpt:443
+    0     0 KUBE-SEP-AWE6D3APBLFBYRPH  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook -> 10.42.14.71:8443 */ statistic mode random probability 0.33333333349
+    0     0 KUBE-SEP-OVWCTFYLC7APTXJZ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook -> 10.42.249.68:8443 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-6CWBZ77AME27WXPJ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-ingress-nginx-controller-admission:https-webhook -> 10.42.55.132:8443 */
+
+Chain KUBE-SVC-BOJCKSINR77JVVPB (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.47.67          /* cattle-system/rancher-webhook:https cluster IP */ tcp dpt:443
+    0     0 KUBE-SEP-LHFMCC3JA3UGQX3H  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/rancher-webhook:https -> 10.42.212.140:9443 */
+
+Chain KUBE-SVC-DISNXZXWEI7GIGLU (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.90.205         /* cattle-system/cattle-cluster-agent:https-internal cluster IP */ tcp dpt:443
+    0     0 KUBE-SEP-KUVKK6Y2HFBI2K5Q  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:https-internal -> 10.42.212.137:444 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-YNB5S2ZOV45SZHWS  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:https-internal -> 10.42.212.139:444 */
+
+Chain KUBE-SVC-HP77IKALGGR6UULO (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.6.109          /* kube-system/rke2-metrics-server:https cluster IP */ tcp dpt:443
+    0     0 KUBE-SEP-IZ47JOPAMMWPCQBA  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-metrics-server:https -> 10.42.55.130:10250 */
+
+Chain KUBE-SVC-INSOL646YPXFRCJP (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.80.37          /* r8s-test-api-services/r8s-test-api-server cluster IP */ tcp dpt:8080
+    0     0 KUBE-SEP-TKGTPA2KVQ3BNFLH  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-api-services/r8s-test-api-server -> 10.42.249.74:80 */
+
+Chain KUBE-SVC-KTBE7ECJOHPNNRXB (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.144.65         /* r8s-test-app-frontend/r8s-test-frontend cluster IP */ tcp dpt:443
+    0     0 KUBE-SEP-QIBCIBXODCEF4EHQ  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.14.90:80 */ statistic mode random probability 0.10000000009
+    0     0 KUBE-SEP-ODB7APEZBEW644YR  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.14.92:80 */ statistic mode random probability 0.11111111101
+    0     0 KUBE-SEP-YTRVHAZXBH6CV6EN  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.14.93:80 */ statistic mode random probability 0.12500000000
+    0     0 KUBE-SEP-LBIWXZ7376QE5R4W  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.14.94:80 */ statistic mode random probability 0.14285714272
+    0     0 KUBE-SEP-7RTFVLLMCHN2YOMK  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.249.100:80 */ statistic mode random probability 0.16666666651
+    0     0 KUBE-SEP-TJMXSQ5ZZBREC6B4  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.249.94:80 */ statistic mode random probability 0.20000000019
+    0     0 KUBE-SEP-ISCJHPJGGOASRCSP  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.249.98:80 */ statistic mode random probability 0.25000000000
+    0     0 KUBE-SEP-FTTU2TIMIL4I775A  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.55.162:80 */ statistic mode random probability 0.33333333349
+    0     0 KUBE-SEP-Y3SVIH6FAKPDIF7Y  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.55.166:80 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-GGE6WDXLRBNI2T7F  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-app-frontend/r8s-test-frontend -> 10.42.55.168:80 */
+
+Chain KUBE-SVC-NPX46M4PTMTKRN6Y (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+   17  1020 KUBE-SEP-YNX7HLDUBB3ZTWVT  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* default/kubernetes:https -> 209.38.17.11:6443 */
+
+Chain KUBE-SVC-PUNXDRXNIM3ELMDM (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.0.10           /* kube-system/rke2-coredns-rke2-coredns:tcp-53 cluster IP */ tcp dpt:53
+    0     0 KUBE-SEP-3VCAJUEHTS7I3TRG  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:tcp-53 -> 10.42.212.132:53 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-BSXYUTBE2GKU7RJX  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:tcp-53 -> 10.42.55.129:53 */
+
+Chain KUBE-SVC-RK657RLKDNVNU64O (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.77.51          /* calico-system/calico-typha:calico-typha cluster IP */ tcp dpt:5473
+    0     0 KUBE-SEP-JH5TJSQ5NIODR4RO  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* calico-system/calico-typha:calico-typha -> 209.38.17.11:5473 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-D5W3E6WXUJEHU5Y6  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* calico-system/calico-typha:calico-typha -> 209.38.21.222:5473 */
+
+Chain KUBE-SVC-RXZQBFX6IWO22WWW (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.90.205         /* cattle-system/cattle-cluster-agent:http cluster IP */ tcp dpt:80
+    0     0 KUBE-SEP-OQR5UQEBCHXDPVQP  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:http -> 10.42.212.137:80 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-GOBTSNK7N6MATL7U  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cattle-system/cattle-cluster-agent:http -> 10.42.212.139:80 */
+
+Chain KUBE-SVC-WVO5D2SCRAX7PYVR (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 KUBE-MARK-MASQ  6    --  *      *      !10.42.0.0/16         10.43.250.205        /* r8s-test-web-services/r8s-test-web-nginx cluster IP */ tcp dpt:80
+    0     0 KUBE-SEP-6WX5FXQ5YATY6NZM  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx -> 10.42.14.97:80 */ statistic mode random probability 0.33333333349
+    0     0 KUBE-SEP-L6UFBLZMPEKAYZST  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx -> 10.42.249.99:80 */ statistic mode random probability 0.50000000000
+    0     0 KUBE-SEP-T3S2S2VDOQYZMZON  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* r8s-test-web-services/r8s-test-web-nginx -> 10.42.55.167:80 */
+
+Chain KUBE-SVC-YFPH5LFNKP7E3G4L (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+    8   768 KUBE-MARK-MASQ  17   --  *      *      !10.42.0.0/16         10.43.0.10           /* kube-system/rke2-coredns-rke2-coredns:udp-53 cluster IP */ udp dpt:53
+    3   268 KUBE-SEP-AVHOGN73QTR76HY3  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:udp-53 -> 10.42.212.132:53 */ statistic mode random probability 0.50000000000
+    5   500 KUBE-SEP-T5EBTOPJY5NJPIBT  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kube-system/rke2-coredns-rke2-coredns:udp-53 -> 10.42.55.129:53 */
+
+Chain cali-OUTPUT (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+ 6853  420K cali-fip-dnat  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:GBTAv2p5CwevEyJm */
+
+Chain cali-POSTROUTING (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+ 7137  445K cali-fip-snat  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:Z-c7XtVd2Bq7s_hA */
+ 7137  445K cali-nat-outgoing  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:nYKhEzDlr11Jccal */
+    0     0 MASQUERADE  0    --  *      vxlan.calico  0.0.0.0/0            0.0.0.0/0            /* cali:e9dnSgSVNmIcpVhP */ ADDRTYPE match src-type !LOCAL limit-out ADDRTYPE match src-type LOCAL random-fully
+
+Chain cali-PREROUTING (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+ 1833  117K cali-fip-dnat  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:r6XmIziWUJsdOK6Z */
+
+Chain cali-fip-dnat (2 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain cali-fip-snat (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain cali-nat-outgoing (1 references)
+ pkts bytes target     prot opt in     out     source               destination         
+   49  3051 MASQUERADE  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* cali:flqWnvo8yq4ULQLa */ match-set cali40masq-ipam-pools src ! match-set cali40all-ipam-pools dst random-fully

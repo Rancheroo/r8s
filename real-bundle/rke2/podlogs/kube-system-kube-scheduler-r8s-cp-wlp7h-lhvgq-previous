@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "kube-scheduler" in pod "kube-scheduler-r8s-cp-wlp7h-lhvgq" not found

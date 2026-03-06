@@ -1,0 +1,6 @@
+I0203 05:14:35.221075       1 main.go:169] Version: v8.2.0
+I0203 05:14:35.222605       1 main.go:214] Metrics path successfully registered at /metrics
+I0203 05:14:35.242182       1 main.go:277] Metrics http server successfully started on :8080, /metrics
+I0203 05:14:35.242656       1 leaderelection.go:254] attempting to acquire leader lease kube-system/snapshot-controller-leader...
+I0203 05:14:35.249932       1 leaderelection.go:268] successfully acquired lease kube-system/snapshot-controller-leader
+I0203 05:14:35.251176       1 snapshot_controller_base.go:255] Starting snapshot controller

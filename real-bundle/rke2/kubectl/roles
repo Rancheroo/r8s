@@ -1,0 +1,13 @@
+NAMESPACE       NAME                                             CREATED AT
+cattle-system   helm-operation-4l78f-helm-installer-role         2026-02-03T05:14:09Z
+cattle-system   helm-operation-7dwbk-helm-installer-role         2026-02-03T05:14:37Z
+cattle-system   helm-operation-lcgjt-helm-installer-role         2026-02-03T05:13:22Z
+kube-public     system:controller:bootstrap-signer               2026-02-03T05:09:33Z
+kube-system     extension-apiserver-authentication-reader        2026-02-03T05:09:33Z
+kube-system     rke2-ingress-nginx                               2026-02-03T05:14:37Z
+kube-system     rke2-snapshot-controller                         2026-02-03T05:14:27Z
+kube-system     system::leader-locking-kube-controller-manager   2026-02-03T05:09:33Z
+kube-system     system::leader-locking-kube-scheduler            2026-02-03T05:09:33Z
+kube-system     system:controller:bootstrap-signer               2026-02-03T05:09:33Z
+kube-system     system:controller:cloud-provider                 2026-02-03T05:09:33Z
+kube-system     system:controller:token-cleaner                  2026-02-03T05:09:33Z

@@ -1,0 +1,19 @@
+{
+  "status": {
+    "containerFilesystems": [],
+    "imageFilesystems": [
+      {
+        "fsId": {
+          "mountpoint": "/var/lib/rancher/rke2/agent/containerd/io.containerd.snapshotter.v1.overlayfs"
+        },
+        "inodesUsed": {
+          "value": "147544"
+        },
+        "timestamp": "1770097220662767390",
+        "usedBytes": {
+          "value": "5557997568"
+        }
+      }
+    ]
+  }
+}

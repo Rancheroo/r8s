@@ -1,0 +1,22 @@
+I0203 05:14:23.534284       1 leaderelection.go:257] attempting to acquire leader lease cattle-fleet-system/fleet-agent...
+I0203 05:14:23.549748       1 leaderelection.go:271] successfully acquired lease cattle-fleet-system/fleet-agent
+{"level":"info","ts":"2026-02-03T05:14:23Z","logger":"setup","msg":"renewed leader","identity":"fleet-agent-66b6b7fd98-g42m8-1"}
+time="2026-02-03T05:14:23Z" level=warning msg="Cannot find fleet-agent secret, running registration"
+time="2026-02-03T05:14:23Z" level=info msg="Creating clusterregistration with id '9c6kqpnjmmtd8gwd9gdrcdx4nvc2p56nj9bx5njlfsnzt58r6x2slv' for new token"
+time="2026-02-03T05:14:25Z" level=info msg="Waiting for secret 'cattle-fleet-clusters-system/c-e3236832ff41153023a6566c03e4109caa96a6f06ddabcc3fba4036eb94b9' on management cluster for request 'fleet-default/request-nqj8s': secrets \"c-e3236832ff41153023a6566c03e4109caa96a6f06ddabcc3fba4036eb94b9\" not found"
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"setup","msg":"successfully registered with upstream cluster","namespace":"cluster-fleet-default-r8s-c3a0902a1ad7"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"setup","msg":"listening for changes on upstream cluster","cluster":"r8s","namespace":"cluster-fleet-default-r8s-c3a0902a1ad7"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"setup","msg":"Starting controller","metricsAddr":":8080","probeAddr":":8081","systemNamespace":"cattle-fleet-system"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"setup","msg":"starting manager"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"controller-runtime.metrics","msg":"Starting metrics server"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"starting server","name":"health probe","addr":"[::]:8081"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"controller-runtime.metrics","msg":"Serving metrics server","bindAddress":":8080","secure":false}
+{"level":"info","ts":"2026-02-03T05:14:27Z","logger":"setup","msg":"Starting cluster status ticker","checkin interval":"15m0s","cluster namespace":"fleet-default","cluster name":"r8s"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"Starting EventSource","controller":"drift-reconciler","source":"channel source: 0xc0008101c0"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"Starting Controller","controller":"drift-reconciler"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"Starting workers","controller":"drift-reconciler","worker count":50}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"Starting EventSource","controller":"bundledeployment","controllerGroup":"fleet.cattle.io","controllerKind":"BundleDeployment","source":"kind source: *v1alpha1.BundleDeployment"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"Starting Controller","controller":"bundledeployment","controllerGroup":"fleet.cattle.io","controllerKind":"BundleDeployment"}
+{"level":"info","ts":"2026-02-03T05:14:27Z","msg":"Starting workers","controller":"bundledeployment","controllerGroup":"fleet.cattle.io","controllerKind":"BundleDeployment","worker count":50}
+{"level":"info","ts":"2026-02-03T05:14:28Z","logger":"bundledeployment.helm-deployer.install","msg":"Installing helm release","controller":"bundledeployment","controllerGroup":"fleet.cattle.io","controllerKind":"BundleDeployment","BundleDeployment":{"name":"fleet-agent-r8s","namespace":"cluster-fleet-default-r8s-c3a0902a1ad7"},"namespace":"cluster-fleet-default-r8s-c3a0902a1ad7","name":"fleet-agent-r8s","reconcileID":"9518861c-f767-4790-8d52-8b9d5f033f4e","commit":"","dryRun":false}
+{"level":"info","ts":"2026-02-03T05:14:29Z","logger":"bundledeployment.deploy-bundle","msg":"Deployed bundle","controller":"bundledeployment","controllerGroup":"fleet.cattle.io","controllerKind":"BundleDeployment","BundleDeployment":{"name":"fleet-agent-r8s","namespace":"cluster-fleet-default-r8s-c3a0902a1ad7"},"namespace":"cluster-fleet-default-r8s-c3a0902a1ad7","name":"fleet-agent-r8s","reconcileID":"9518861c-f767-4790-8d52-8b9d5f033f4e","deploymentID":"s-2d235ca5ea8020efea34be7529e28da87d992720006e1a0cc6b857ccc1918:01fd67cf824154b36ddb0866059a1a2177377764125dfe1b4509d8b5bcedb298","appliedDeploymentID":"","release":"cattle-fleet-system/fleet-agent-r8s:1","DeploymentID":"s-2d235ca5ea8020efea34be7529e28da87d992720006e1a0cc6b857ccc1918:01fd67cf824154b36ddb0866059a1a2177377764125dfe1b4509d8b5bcedb298"}

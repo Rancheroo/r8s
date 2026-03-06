@@ -1,0 +1,36 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 3101147959916839066 (0x2b097da392c5409a)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN = rke2-server-ca@1770095300
+        Validity
+            Not Before: Feb  3 05:08:20 2026 GMT
+            Not After : Feb  3 05:08:20 2027 GMT
+        Subject: CN = kube-apiserver
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:c0:a8:ca:a5:dc:ee:03:c1:dd:4c:d3:23:34:13:
+                    d6:bc:db:12:ef:87:06:2e:24:59:33:00:91:00:d3:
+                    73:9e:a8:0d:cf:a1:9c:bd:73:95:42:35:c0:ed:af:
+                    f7:f7:12:61:f4:2b:c6:aa:8d:e3:da:47:59:ce:e7:
+                    1c:26:cc:90:7a
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Authority Key Identifier: 
+                E1:02:4A:EF:50:81:02:10:2A:DC:A8:36:D0:B2:E8:03:F1:A8:8C:17
+            X509v3 Subject Alternative Name: 
+                DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, DNS:localhost, DNS:r8s-cp-wlp7h-lhvgq, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1, IP Address:209.38.17.11, IP Address:10.43.0.1
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:46:02:21:00:af:3f:fd:f6:35:46:1a:cc:03:b8:de:7d:bb:
+        e4:5f:66:af:2a:56:30:c6:5f:9d:48:19:46:45:ce:8b:ac:f9:
+        ea:02:21:00:a2:7d:3e:ff:d5:49:95:de:2f:4a:4b:91:a0:b2:
+        07:62:cc:11:44:f1:ba:f5:f6:ef:c6:a6:22:a2:0f:23:68:48

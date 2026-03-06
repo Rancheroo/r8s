@@ -1,0 +1,59 @@
+default via 209.38.16.1 dev eth0 proto static 
+10.42.14.64 dev vxlan.calico scope link mtu 1450 
+10.42.14.64/26 via 10.42.14.64 dev vxlan.calico onlink mtu 1450 
+10.42.55.128 dev vxlan.calico scope link mtu 1450 
+10.42.55.128/26 via 10.42.55.128 dev vxlan.calico onlink mtu 1450 
+blackhole 10.42.212.128/26 proto 80 
+10.42.212.129 dev calid8e2a0adf4b scope link 
+10.42.212.131 dev cali495b8ee3db2 scope link 
+10.42.212.132 dev cali74ae4c9e9aa scope link 
+10.42.212.137 dev cali04c9dffa526 scope link 
+10.42.212.139 dev calid65a82ecbed scope link 
+10.42.212.140 dev calie889fcca20f scope link 
+10.42.212.141 dev cali611edc3ad34 scope link 
+10.42.249.64 dev vxlan.calico scope link mtu 1450 
+10.42.249.64/26 via 10.42.249.64 dev vxlan.calico onlink mtu 1450 
+10.49.0.0/16 dev eth0 proto kernel scope link src 10.49.0.7 
+10.126.0.0/20 dev eth1 proto kernel scope link src 10.126.0.4 
+209.38.16.0/20 dev eth0 proto kernel scope link src 209.38.17.11 
+local 10.42.212.128 dev vxlan.calico table local proto kernel scope host src 10.42.212.128 
+local 10.49.0.7 dev eth0 table local proto kernel scope host src 10.49.0.7 
+broadcast 10.49.255.255 dev eth0 table local proto kernel scope link src 10.49.0.7 
+local 10.126.0.4 dev eth1 table local proto kernel scope host src 10.126.0.4 
+broadcast 10.126.15.255 dev eth1 table local proto kernel scope link src 10.126.0.4 
+local 127.0.0.0/8 dev lo table local proto kernel scope host src 127.0.0.1 
+local 127.0.0.1 dev lo table local proto kernel scope host src 127.0.0.1 
+broadcast 127.255.255.255 dev lo table local proto kernel scope link src 127.0.0.1 
+local 209.38.17.11 dev eth0 table local proto kernel scope host src 209.38.17.11 
+broadcast 209.38.31.255 dev eth0 table local proto kernel scope link src 209.38.17.11 
+fe80::/64 dev eth0 proto kernel metric 256 pref medium
+fe80::/64 dev eth1 proto kernel metric 256 pref medium
+fe80::/64 dev vxlan.calico proto kernel metric 256 pref medium
+fe80::/64 dev calid8e2a0adf4b proto kernel metric 256 pref medium
+fe80::/64 dev cali495b8ee3db2 proto kernel metric 256 pref medium
+fe80::/64 dev cali74ae4c9e9aa proto kernel metric 256 pref medium
+fe80::/64 dev cali04c9dffa526 proto kernel metric 256 pref medium
+fe80::/64 dev calid65a82ecbed proto kernel metric 256 pref medium
+fe80::/64 dev calie889fcca20f proto kernel metric 256 pref medium
+fe80::/64 dev cali611edc3ad34 proto kernel metric 256 pref medium
+local ::1 dev lo table local proto kernel metric 0 pref medium
+local fe80::141f:53ff:feb6:f933 dev calid65a82ecbed table local proto kernel metric 0 pref medium
+local fe80::648f:32ff:fec7:6bb0 dev vxlan.calico table local proto kernel metric 0 pref medium
+local fe80::c4fe:7cff:fe18:51e0 dev eth1 table local proto kernel metric 0 pref medium
+local fe80::cc2f:bfff:fe7b:9ebe dev eth0 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev calid8e2a0adf4b table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali495b8ee3db2 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali74ae4c9e9aa table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali04c9dffa526 table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev calie889fcca20f table local proto kernel metric 0 pref medium
+local fe80::ecee:eeff:feee:eeee dev cali611edc3ad34 table local proto kernel metric 0 pref medium
+multicast ff00::/8 dev eth0 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev eth1 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev vxlan.calico table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev calid8e2a0adf4b table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali495b8ee3db2 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali74ae4c9e9aa table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali04c9dffa526 table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev calid65a82ecbed table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev calie889fcca20f table local proto kernel metric 256 pref medium
+multicast ff00::/8 dev cali611edc3ad34 table local proto kernel metric 256 pref medium

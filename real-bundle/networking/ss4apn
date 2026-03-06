@@ -1,0 +1,406 @@
+Netid State     Recv-Q Send-Q Local Address:Port   Peer Address:Port Process                                                  
+tcp   UNCONN    0      0            0.0.0.0:6           0.0.0.0:*     users:(("droplet-agent",pid=1765,fd=3))                 
+udp   UNCONN    0      0         127.0.0.54:53          0.0.0.0:*     users:(("systemd-resolve",pid=711,fd=16))               
+udp   UNCONN    0      0      127.0.0.53%lo:53          0.0.0.0:*     users:(("systemd-resolve",pid=711,fd=14))               
+udp   UNCONN    0      0            0.0.0.0:4789        0.0.0.0:*                                                             
+tcp   LISTEN    0      4096         0.0.0.0:22          0.0.0.0:*     users:(("sshd",pid=17998,fd=3),("systemd",pid=1,fd=165))
+tcp   LISTEN    0      4096   127.0.0.53%lo:53          0.0.0.0:*     users:(("systemd-resolve",pid=711,fd=15))               
+tcp   LISTEN    0      4096       127.0.0.1:10010       0.0.0.0:*     users:(("containerd",pid=2233,fd=11))                   
+tcp   LISTEN    0      4096    209.38.17.11:2380        0.0.0.0:*     users:(("etcd",pid=2414,fd=7))                          
+tcp   LISTEN    0      4096    209.38.17.11:2379        0.0.0.0:*     users:(("etcd",pid=2414,fd=10))                         
+tcp   LISTEN    0      4096       127.0.0.1:10256       0.0.0.0:*     users:(("kube-proxy",pid=2402,fd=8))                    
+tcp   LISTEN    0      4096       127.0.0.1:10257       0.0.0.0:*     users:(("kube-controller",pid=2657,fd=3))               
+tcp   LISTEN    0      4096       127.0.0.1:10258       0.0.0.0:*     users:(("cloud-controlle",pid=2746,fd=3))               
+tcp   LISTEN    0      4096       127.0.0.1:10259       0.0.0.0:*     users:(("kube-scheduler",pid=2645,fd=3))                
+tcp   LISTEN    0      4096       127.0.0.1:10248       0.0.0.0:*     users:(("kubelet",pid=2254,fd=14))                      
+tcp   LISTEN    0      4096       127.0.0.1:10249       0.0.0.0:*     users:(("kube-proxy",pid=2402,fd=16))                   
+tcp   LISTEN    0      4096       127.0.0.1:2380        0.0.0.0:*     users:(("etcd",pid=2414,fd=6))                          
+tcp   LISTEN    0      4096       127.0.0.1:2381        0.0.0.0:*     users:(("etcd",pid=2414,fd=14))                         
+tcp   LISTEN    0      4096       127.0.0.1:2382        0.0.0.0:*     users:(("etcd",pid=2414,fd=8))                          
+tcp   LISTEN    0      4096       127.0.0.1:2379        0.0.0.0:*     users:(("etcd",pid=2414,fd=9))                          
+tcp   LISTEN    0      4096      127.0.0.54:53          0.0.0.0:*     users:(("systemd-resolve",pid=711,fd=17))               
+tcp   LISTEN    0      4096       127.0.0.1:9098        0.0.0.0:*     users:(("calico-typha",pid=4865,fd=7))                  
+tcp   LISTEN    0      4096       127.0.0.1:9099        0.0.0.0:*     users:(("calico-node",pid=4899,fd=3))                   
+tcp   ESTAB     0      0          127.0.0.1:40696     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=235))              
+tcp   TIME-WAIT 0      0          127.0.0.1:48756     127.0.0.1:9099                                                          
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:39322                                                         
+tcp   ESTAB     0      0          127.0.0.1:49096     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=31))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40602 users:(("etcd",pid=2414,fd=141))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:10257     127.0.0.1:53208                                                         
+tcp   ESTAB     0      0          127.0.0.1:40618     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=225))              
+tcp   ESTAB     0      0          127.0.0.1:40638     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=227))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49252 users:(("etcd",pid=2414,fd=65))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44378 users:(("etcd",pid=2414,fd=125))                        
+tcp   ESTAB     0      0          127.0.0.1:37274     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=7))                
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49274 users:(("etcd",pid=2414,fd=68))                         
+tcp   ESTAB     0      0          127.0.0.1:52424     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=112))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52436 users:(("etcd",pid=2414,fd=108))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:43772     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40676 users:(("etcd",pid=2414,fd=150))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:34146     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37368 users:(("etcd",pid=2414,fd=27))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52340 users:(("etcd",pid=2414,fd=99))                         
+tcp   ESTAB     0      0          127.0.0.1:52366     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=106))              
+tcp   ESTAB     0      0          127.0.0.1:40602     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=220))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52462 users:(("etcd",pid=2414,fd=112))                        
+tcp   ESTAB     0      0          127.0.0.1:44356     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=170))              
+tcp   ESTAB     0      0          127.0.0.1:37458     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=21))               
+tcp   TIME-WAIT 0      0          127.0.0.1:34430     127.0.0.1:6443                                                          
+tcp   TIME-WAIT 0      0          127.0.0.1:32960     127.0.0.1:10256                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37440 users:(("etcd",pid=2414,fd=36))                         
+tcp   ESTAB     0      0          127.0.0.1:49274     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=51))               
+tcp   ESTAB     0      0          127.0.0.1:41582     127.0.0.1:6443  users:(("cloud-controlle",pid=2746,fd=7))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44314 users:(("etcd",pid=2414,fd=119))                        
+tcp   ESTAB     0      0          127.0.0.1:49410     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=83))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49132 users:(("etcd",pid=2414,fd=52))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:42328                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:39120 users:(("etcd",pid=2414,fd=138))                        
+tcp   ESTAB     0      0          127.0.0.1:37416     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=16))               
+tcp   TIME-WAIT 0      0       209.38.17.11:46340 10.42.212.132:8181                                                          
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:33108                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:39088 users:(("etcd",pid=2414,fd=134))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40638 users:(("etcd",pid=2414,fd=145))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52424 users:(("etcd",pid=2414,fd=107))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49114 users:(("etcd",pid=2414,fd=50))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52520 users:(("etcd",pid=2414,fd=117))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37254 users:(("etcd",pid=2414,fd=22))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37282 users:(("etcd",pid=2414,fd=24))                         
+tcp   ESTAB     0      0          127.0.0.1:49142     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=37))               
+tcp   ESTAB     0      0          127.0.0.1:40640     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=228))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37416 users:(("etcd",pid=2414,fd=33))                         
+tcp   ESTAB     0      0          127.0.0.1:52378     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=107))              
+tcp   ESTAB     0      0       209.38.17.11:22    134.199.153.4:50846 users:(("sshd",pid=17999,fd=4))                         
+tcp   ESTAB     0      0          127.0.0.1:49382     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=62))               
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:45262                                                         
+tcp   ESTAB     0      0          127.0.0.1:37384     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=12))               
+tcp   TIME-WAIT 0      0          127.0.0.1:10258     127.0.0.1:51384                                                         
+tcp   ESTAB     0      0       209.38.17.11:59568  209.38.17.11:9345  users:(("rke2",pid=2208,fd=27))                         
+tcp   ESTAB     0      0          127.0.0.1:37368     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=10))               
+tcp   ESTAB     0      0       209.38.17.11:42390  209.38.17.11:5473  users:(("calico-node",pid=4899,fd=13))                  
+tcp   ESTAB     0      0          127.0.0.1:52384     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=108))              
+tcp   ESTAB     0      0          127.0.0.1:44378     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=172))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40696 users:(("etcd",pid=2414,fd=152))                        
+tcp   ESTAB     0      0          127.0.0.1:49198     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=43))               
+tcp   ESTAB     0      0          127.0.0.1:34492     127.0.0.1:9345  users:(("rke2",pid=2208,fd=7))                          
+tcp   ESTAB     0      0          127.0.0.1:41456     127.0.0.1:6443  users:(("rke2",pid=2208,fd=24))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:45252                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:43300     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:37308     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=9))                
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52310 users:(("etcd",pid=2414,fd=96))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44388 users:(("etcd",pid=2414,fd=127))                        
+tcp   ESTAB     0      0          127.0.0.1:49420     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=84))               
+tcp   ESTAB     0      0       209.38.17.11:59154     10.43.0.1:443   users:(("calico-typha",pid=4865,fd=3))                  
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52384 users:(("etcd",pid=2414,fd=103))                        
+tcp   ESTAB     0      0          127.0.0.1:41584     127.0.0.1:6443  users:(("kube-controller",pid=2657,fd=14))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40632 users:(("etcd",pid=2414,fd=144))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:59120                                                         
+tcp   ESTAB     0      0          127.0.0.1:40648     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=229))              
+tcp   ESTAB     0      0          127.0.0.1:49366     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=61))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49290 users:(("etcd",pid=2414,fd=69))                         
+tcp   ESTAB     0      0          127.0.0.1:49294     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=53))               
+tcp   ESTAB     0      0          127.0.0.1:52436     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=113))              
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:53130                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:34218     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:52310     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=101))              
+tcp   ESTAB     0      0          127.0.0.1:40598     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=129))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44394 users:(("etcd",pid=2414,fd=128))                        
+tcp   ESTAB     0      0       209.38.17.11:42378  209.38.17.11:5473  users:(("calico-node",pid=4916,fd=6))                   
+tcp   TIME-WAIT 0      0          127.0.0.1:34516     127.0.0.1:10248                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37482 users:(("etcd",pid=2414,fd=42))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37422 users:(("etcd",pid=2414,fd=34))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52506 users:(("etcd",pid=2414,fd=116))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37360 users:(("etcd",pid=2414,fd=30))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:55160     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52274 users:(("etcd",pid=2414,fd=91))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52458 users:(("etcd",pid=2414,fd=111))                        
+tcp   ESTAB     0      0          127.0.0.1:52418     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=111))              
+tcp   ESTAB     0      0          127.0.0.1:41566     127.0.0.1:6443  users:(("kube-proxy",pid=2402,fd=3))                    
+tcp   ESTAB     0      0          127.0.0.1:49216     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=45))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49342 users:(("etcd",pid=2414,fd=76))                         
+tcp   ESTAB     0      0          127.0.0.1:49086     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=29))               
+tcp   ESTAB     0      0          127.0.0.1:49178     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=40))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49170 users:(("etcd",pid=2414,fd=56))                         
+tcp   ESTAB     0      0          127.0.0.1:39088     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=124))              
+tcp   TIME-WAIT 0      0          127.0.0.1:40336     127.0.0.1:10257                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:39098 users:(("etcd",pid=2414,fd=135))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:43316     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:52388     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=109))              
+tcp   ESTAB     0      0          127.0.0.1:52520     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=122))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49142 users:(("etcd",pid=2414,fd=54))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52334 users:(("etcd",pid=2414,fd=98))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49324 users:(("etcd",pid=2414,fd=74))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37478 users:(("etcd",pid=2414,fd=41))                         
+tcp   ESTAB     0      0          127.0.0.1:52296     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=98))               
+tcp   TIME-WAIT 0      0          127.0.0.1:48230     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37332 users:(("etcd",pid=2414,fd=28))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:39102 users:(("etcd",pid=2414,fd=136))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52378 users:(("etcd",pid=2414,fd=102))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:10257     127.0.0.1:53204                                                         
+tcp   ESTAB     0      0          127.0.0.1:52474     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=118))              
+tcp   ESTAB     0      0          127.0.0.1:52286     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=97))               
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:48060                                                         
+tcp   ESTAB     0      0          127.0.0.1:52354     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=105))              
+tcp   TIME-WAIT 0      0          127.0.0.1:45972     127.0.0.1:10256                                                         
+tcp   TIME-WAIT 0      0       209.38.17.11:54024 10.42.212.132:8181                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49096 users:(("etcd",pid=2414,fd=48))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:43758     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37472 users:(("etcd",pid=2414,fd=40))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:60026 users:(("etcd",pid=2414,fd=118))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:60158     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:41540     127.0.0.1:6443  users:(("kube-controller",pid=2657,fd=8))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44424 users:(("etcd",pid=2414,fd=131))                        
+tcp   ESTAB     0      0          127.0.0.1:49158     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=38))               
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:53168                                                         
+tcp   ESTAB     0      0      10.42.212.128:37182  10.42.55.130:10250 users:(("rke2",pid=2208,fd=35))                         
+tcp   ESTAB     0      0          127.0.0.1:52458     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=116))              
+tcp   ESTAB     0      0          127.0.0.1:52266     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=95))               
+tcp   TIME-WAIT 0      0          127.0.0.1:33110     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:49342     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=59))               
+tcp   TIME-WAIT 0      0          127.0.0.1:60146     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49294 users:(("etcd",pid=2414,fd=70))                         
+tcp   ESTAB     0      0          127.0.0.1:41580     127.0.0.1:6443  users:(("cloud-controlle",pid=2746,fd=6))               
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:39236                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52300 users:(("etcd",pid=2414,fd=94))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:54332     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:60026     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=134))              
+tcp   ESTAB     0      0          127.0.0.1:42766     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=94))               
+tcp   ESTAB     0      0          127.0.0.1:37472     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=23))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49178 users:(("etcd",pid=2414,fd=57))                         
+tcp   ESTAB     0      0          127.0.0.1:49394     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=64))               
+tcp   ESTAB     0      0          127.0.0.1:37440     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=19))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37460 users:(("etcd",pid=2414,fd=39))                         
+tcp   ESTAB     0      0          127.0.0.1:40632     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=226))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40680 users:(("etcd",pid=2414,fd=151))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37384 users:(("etcd",pid=2414,fd=29))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10256     127.0.0.1:49024                                                         
+tcp   ESTAB     0      0      10.42.212.128:37148  10.42.55.130:10250 users:(("rke2",pid=2208,fd=40))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37500 users:(("etcd",pid=2414,fd=44))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:42738                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40598 users:(("etcd",pid=2414,fd=140))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37274 users:(("etcd",pid=2414,fd=23))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49158 users:(("etcd",pid=2414,fd=55))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49410 users:(("etcd",pid=2414,fd=82))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49272 users:(("etcd",pid=2414,fd=67))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:42748 users:(("etcd",pid=2414,fd=86))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37458 users:(("etcd",pid=2414,fd=38))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49240 users:(("etcd",pid=2414,fd=64))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:33094     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49328 users:(("etcd",pid=2414,fd=75))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:44770     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44326 users:(("etcd",pid=2414,fd=120))                        
+tcp   ESTAB     0      0          127.0.0.1:39136     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=183))              
+tcp   ESTAB     0      0          127.0.0.1:37282     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=6))                
+tcp   ESTAB     0      0          127.0.0.1:41532     127.0.0.1:6443  users:(("kube-scheduler",pid=2645,fd=7))                
+tcp   ESTAB     0      0          127.0.0.1:52452     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=115))              
+tcp   TIME-WAIT 0      0          127.0.0.1:43210     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:49104     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=32))               
+tcp   TIME-WAIT 0      0          127.0.0.1:44250     127.0.0.1:9098                                                          
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:39256                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52320 users:(("etcd",pid=2414,fd=97))                         
+tcp   ESTAB     0      0          127.0.0.1:44410     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=176))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40672 users:(("etcd",pid=2414,fd=149))                        
+tcp   ESTAB     0      0          127.0.0.1:52340     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=104))              
+tcp   ESTAB     0      0          127.0.0.1:49116     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=34))               
+tcp   ESTAB     0      0          127.0.0.1:33128     127.0.0.1:6443  users:(("kube-controller",pid=2657,fd=21))              
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:45240                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:44758     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37298 users:(("etcd",pid=2414,fd=25))                         
+tcp   ESTAB     0      0          127.0.0.1:52334     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=103))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49138 users:(("etcd",pid=2414,fd=53))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:48286     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52354 users:(("etcd",pid=2414,fd=100))                        
+tcp   ESTAB     0      0          127.0.0.1:37500     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=27))               
+tcp   ESTAB     0      0          127.0.0.1:49352     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=60))               
+tcp   ESTAB     0      0          127.0.0.1:52440     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=114))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52452 users:(("etcd",pid=2414,fd=110))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:49086                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:34102                                                         
+tcp   ESTAB     0      0          127.0.0.1:52274     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=96))               
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:42724                                                         
+tcp   TIME-WAIT 0      0       209.38.17.11:58122 10.42.212.132:8181                                                          
+tcp   ESTAB     0      0          127.0.0.1:37510     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=28))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44352 users:(("etcd",pid=2414,fd=122))                        
+tcp   ESTAB     0      0          127.0.0.1:52320     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=102))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49116 users:(("etcd",pid=2414,fd=51))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40610 users:(("etcd",pid=2414,fd=142))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49366 users:(("etcd",pid=2414,fd=78))                         
+tcp   ESTAB     0      0          127.0.0.1:40664     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=230))              
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:40752                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:42762 users:(("etcd",pid=2414,fd=87))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:48054                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:60174     127.0.0.1:9099                                                          
+tcp   TIME-WAIT 0      0       209.38.17.11:50538 10.42.212.132:8080                                                          
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:34752                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:52792     127.0.0.1:2381                                                          
+tcp   ESTAB     0      0          127.0.0.1:49192     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=42))               
+tcp   TIME-WAIT 0      0          127.0.0.1:34510     127.0.0.1:10248                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:9098      127.0.0.1:52426                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52388 users:(("etcd",pid=2414,fd=104))                        
+tcp   ESTAB     0      0          127.0.0.1:40610     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=222))              
+tcp   ESTAB     0      0          127.0.0.1:49312     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=56))               
+tcp   ESTAB     0      0          127.0.0.1:49392     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=63))               
+tcp   ESTAB     0      39         127.0.0.1:2379      127.0.0.1:37390 users:(("etcd",pid=2414,fd=31))                         
+tcp   ESTAB     0      0          127.0.0.1:49448     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=86))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52296 users:(("etcd",pid=2414,fd=93))                         
+tcp   ESTAB     0      0          127.0.0.1:37478     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=24))               
+tcp   ESTAB     0      0          127.0.0.1:49076     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=18))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49298 users:(("etcd",pid=2414,fd=71))                         
+tcp   ESTAB     0      39         127.0.0.1:2379      127.0.0.1:49382 users:(("etcd",pid=2414,fd=79))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40640 users:(("etcd",pid=2414,fd=146))                        
+tcp   ESTAB     0      0          127.0.0.1:39118     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=200))              
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:48256                                                         
+tcp   ESTAB     0      0          127.0.0.1:44438     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=179))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:39118 users:(("etcd",pid=2414,fd=137))                        
+tcp   ESTAB     0      0          127.0.0.1:49324     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=57))               
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:43302                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:45160     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37452 users:(("etcd",pid=2414,fd=37))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44438 users:(("etcd",pid=2414,fd=132))                        
+tcp   ESTAB     0      0          127.0.0.1:37298     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=8))                
+tcp   ESTAB     0      0          127.0.0.1:49170     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=39))               
+tcp   ESTAB     0      0          127.0.0.1:49138     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=36))               
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:34440                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10256     127.0.0.1:44212                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:52802     127.0.0.1:2381                                                          
+tcp   TIME-WAIT 0      0          127.0.0.1:10256     127.0.0.1:41006                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49088 users:(("etcd",pid=2414,fd=47))                         
+tcp   ESTAB     0      0          127.0.0.1:44352     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=169))              
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:52784                                                         
+tcp   ESTAB     0      0          127.0.0.1:52506     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=121))              
+tcp   ESTAB     0      0          127.0.0.1:49088     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=30))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49312 users:(("etcd",pid=2414,fd=73))                         
+tcp   ESTAB     0      0          127.0.0.1:52306     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=100))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49448 users:(("etcd",pid=2414,fd=85))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10257     127.0.0.1:53318                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:53838                                                         
+tcp   ESTAB     0      0          127.0.0.1:44380     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=173))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40618 users:(("etcd",pid=2414,fd=143))                        
+tcp   ESTAB     0      0          127.0.0.1:49328     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=58))               
+tcp   ESTAB     0      0          127.0.0.1:49252     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=48))               
+tcp   ESTAB     0      0          127.0.0.1:36876     127.0.0.1:6443  users:(("kubelet",pid=2254,fd=24))                      
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44372 users:(("etcd",pid=2414,fd=124))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:45180     127.0.0.1:10256                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37510 users:(("etcd",pid=2414,fd=45))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52474 users:(("etcd",pid=2414,fd=113))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49394 users:(("etcd",pid=2414,fd=81))                         
+tcp   ESTAB     0      0          127.0.0.1:37390     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=14))               
+tcp   ESTAB     0      0          127.0.0.1:49132     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=35))               
+tcp   ESTAB     0      0          127.0.0.1:44326     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=166))              
+tcp   ESTAB     0      0          127.0.0.1:49290     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=52))               
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:44776                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49086 users:(("etcd",pid=2414,fd=46))                         
+tcp   ESTAB     0      0          127.0.0.1:49298     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=54))               
+tcp   ESTAB     0      0          127.0.0.1:37254     127.0.0.1:2379  users:(("rke2",pid=2208,fd=12))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:48308     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52488 users:(("etcd",pid=2414,fd=114))                        
+tcp   ESTAB     0      0          127.0.0.1:41466     127.0.0.1:6443  users:(("rke2",pid=2208,fd=21))                         
+tcp   ESTAB     0      0       209.38.17.11:53844     10.43.0.1:443   users:(("calico-node",pid=4705,fd=3))                   
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52366 users:(("etcd",pid=2414,fd=101))                        
+tcp   ESTAB     0      0          127.0.0.1:37460     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=22))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49200 users:(("etcd",pid=2414,fd=61))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44380 users:(("etcd",pid=2414,fd=126))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52494 users:(("etcd",pid=2414,fd=115))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49392 users:(("etcd",pid=2414,fd=80))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10256     127.0.0.1:48868                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44410 users:(("etcd",pid=2414,fd=129))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44356 users:(("etcd",pid=2414,fd=123))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:45154                                                         
+tcp   ESTAB     0      0          127.0.0.1:49240     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=47))               
+tcp   ESTAB     0      0          127.0.0.1:49200     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=44))               
+tcp   ESTAB     0      0          127.0.0.1:49184     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=41))               
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:48754                                                         
+tcp   ESTAB     0      0          127.0.0.1:41518     127.0.0.1:6443  users:(("kube-scheduler",pid=2645,fd=6))                
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49184 users:(("etcd",pid=2414,fd=58))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:43788                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44412 users:(("etcd",pid=2414,fd=130))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:55146                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:34438                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:9099      127.0.0.1:45142                                                         
+tcp   ESTAB     0      0          127.0.0.1:37422     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=17))               
+tcp   ESTAB     0      0          127.0.0.1:44336     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=168))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52266 users:(("etcd",pid=2414,fd=90))                         
+tcp   ESTAB     0      0          127.0.0.1:49272     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=50))               
+tcp   TIME-WAIT 0      0       209.38.17.11:56040 10.42.212.132:8181                                                          
+tcp   ESTAB     0      0          127.0.0.1:39098     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=181))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52264 users:(("etcd",pid=2414,fd=89))                         
+tcp   ESTAB     0      0          127.0.0.1:52462     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=117))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49352 users:(("etcd",pid=2414,fd=77))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:44336 users:(("etcd",pid=2414,fd=121))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52440 users:(("etcd",pid=2414,fd=109))                        
+tcp   ESTAB     0      0          127.0.0.1:44394     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=175))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37484 users:(("etcd",pid=2414,fd=43))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:34768     127.0.0.1:10248                                                         
+tcp   ESTAB     0      0          127.0.0.1:41502     127.0.0.1:6443  users:(("rke2",pid=2208,fd=23))                         
+tcp   ESTAB     0      0          127.0.0.1:49030     127.0.0.1:9345  users:(("kube-apiserver",pid=2514,fd=237))              
+tcp   ESTAB     0      0          127.0.0.1:49302     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=55))               
+tcp   TIME-WAIT 0      0          127.0.0.1:58788     127.0.0.1:9098                                                          
+tcp   ESTAB     0      0          127.0.0.1:37360     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=13))               
+tcp   ESTAB     0      0          127.0.0.1:39102     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=182))              
+tcp   ESTAB     0      0          127.0.0.1:49262     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=49))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52286 users:(("etcd",pid=2414,fd=92))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49422 users:(("etcd",pid=2414,fd=84))                         
+tcp   ESTAB     0      0          127.0.0.1:49422     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=85))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49420 users:(("etcd",pid=2414,fd=83))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:2381      127.0.0.1:48074                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10257     127.0.0.1:38516                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:43218                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:59108                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10258     127.0.0.1:48698                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49216 users:(("etcd",pid=2414,fd=62))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:39136 users:(("etcd",pid=2414,fd=139))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:2379      127.0.0.1:37166                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49076 users:(("etcd",pid=2414,fd=35))                         
+tcp   ESTAB     0      0          127.0.0.1:44412     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=177))              
+tcp   TIME-WAIT 0      0          127.0.0.1:54890     127.0.0.1:10248                                                         
+tcp   ESTAB     0      0          127.0.0.1:40672     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=231))              
+tcp   ESTAB     0      0          127.0.0.1:37452     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=20))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52418 users:(("etcd",pid=2414,fd=106))                        
+tcp   ESTAB     0      0          127.0.0.1:39120     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=185))              
+tcp   ESTAB     0      0          127.0.0.1:52494     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=120))              
+tcp   ESTAB     0      0       209.38.17.11:42370  209.38.17.11:5473  users:(("calico-node",pid=4917,fd=6))                   
+tcp   ESTAB     0      0          127.0.0.1:41538     127.0.0.1:6443  users:(("kube-controller",pid=2657,fd=6))               
+tcp   ESTAB     0      0          127.0.0.1:44372     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=171))              
+tcp   ESTAB     0      0          127.0.0.1:37484     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=26))               
+tcp   ESTAB     0      0          127.0.0.1:52488     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=119))              
+tcp   TIME-WAIT 0      0       209.38.17.11:39482 10.42.212.132:8080                                                          
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49262 users:(("etcd",pid=2414,fd=66))                         
+tcp   ESTAB     0      0          127.0.0.1:42762     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=93))               
+tcp   ESTAB     0      0          127.0.0.1:37332     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=11))               
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:48208                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49302 users:(("etcd",pid=2414,fd=72))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:55580                                                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49104 users:(("etcd",pid=2414,fd=49))                         
+tcp   ESTAB     0      0          127.0.0.1:44388     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=174))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49226 users:(("etcd",pid=2414,fd=63))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49192 users:(("etcd",pid=2414,fd=59))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37404 users:(("etcd",pid=2414,fd=32))                         
+tcp   ESTAB     0      0          127.0.0.1:42748     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=92))               
+tcp   TIME-WAIT 0      0          127.0.0.1:35454     127.0.0.1:9099                                                          
+tcp   ESTAB     0      0          127.0.0.1:40676     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=232))              
+tcp   ESTAB     0      0          127.0.0.1:49012     127.0.0.1:9345  users:(("kube-apiserver",pid=2514,fd=240))              
+tcp   ESTAB     0      0          127.0.0.1:52404     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=110))              
+tcp   ESTAB     0      0          127.0.0.1:44314     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=140))              
+tcp   TIME-WAIT 0      0          127.0.0.1:39298     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0          127.0.0.1:44424     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=178))              
+tcp   ESTAB     0      0          127.0.0.1:37404     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=15))               
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:53852                                                         
+tcp   ESTAB     0      0          127.0.0.1:52264     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=91))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40664 users:(("etcd",pid=2414,fd=148))                        
+tcp   ESTAB     0      0          127.0.0.1:52300     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=99))               
+tcp   ESTAB     0      0          127.0.0.1:49226     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=46))               
+tcp   ESTAB     0      0          127.0.0.1:49114     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=33))               
+tcp   ESTAB     0      0          127.0.0.1:37482     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=25))               
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52306 users:(("etcd",pid=2414,fd=95))                         
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:52404 users:(("etcd",pid=2414,fd=105))                        
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:42766 users:(("etcd",pid=2414,fd=88))                         
+tcp   ESTAB     0      0       209.38.17.11:47816 134.199.153.4:443   users:(("rancher-system-",pid=11033,fd=6))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:49198 users:(("etcd",pid=2414,fd=60))                         
+tcp   TIME-WAIT 0      0          127.0.0.1:43298     127.0.0.1:10259                                                         
+tcp   ESTAB     0      0       209.38.17.11:51314     10.43.0.1:443   users:(("operator",pid=3874,fd=3))                      
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:40648 users:(("etcd",pid=2414,fd=147))                        
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:53212                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10248     127.0.0.1:54884                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:53120                                                         
+tcp   TIME-WAIT 0      0          127.0.0.1:10259     127.0.0.1:42402                                                         
+tcp   ESTAB     0      0          127.0.0.1:40680     127.0.0.1:2379  users:(("kube-apiserver",pid=2514,fd=233))              
+tcp   ESTAB     0      0          127.0.0.1:2379      127.0.0.1:37308 users:(("etcd",pid=2414,fd=26))                         

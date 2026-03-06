@@ -1,0 +1,36 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 3253684231283423364 (0x2d276891d0f03884)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN = rke2-server-ca@1770095300
+        Validity
+            Not Before: Feb  3 05:08:20 2026 GMT
+            Not After : Feb  3 05:08:22 2027 GMT
+        Subject: CN = r8s-cp-wlp7h-lhvgq
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:7c:f5:fe:c0:9c:d2:17:ce:5d:7e:87:58:a1:7f:
+                    05:95:c3:05:08:11:65:71:ba:9d:c6:35:ec:93:1c:
+                    5c:14:a7:fc:fa:23:67:06:c6:5c:88:24:d1:a8:83:
+                    bb:af:e5:7e:84:cb:a5:03:d6:20:d5:f3:e6:bf:8c:
+                    92:05:e0:b7:fa
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Authority Key Identifier: 
+                E1:02:4A:EF:50:81:02:10:2A:DC:A8:36:D0:B2:E8:03:F1:A8:8C:17
+            X509v3 Subject Alternative Name: 
+                DNS:r8s-cp-wlp7h-lhvgq, DNS:localhost, IP Address:127.0.0.1, IP Address:209.38.17.11
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:45:02:20:72:d7:fc:c0:d1:ee:15:0f:9a:c8:aa:28:88:4a:
+        2f:47:f3:cd:f2:f9:8f:64:34:bc:db:66:3d:b3:31:46:a4:fd:
+        02:21:00:9e:b4:cb:56:ad:95:6b:2f:46:bd:ba:a7:a2:79:23:
+        8a:b5:60:db:74:76:fc:1f:39:b8:46:66:20:e7:99:7f:37

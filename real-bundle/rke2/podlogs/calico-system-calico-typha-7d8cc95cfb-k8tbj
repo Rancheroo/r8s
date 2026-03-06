@@ -1,0 +1,427 @@
+2026-02-03 05:10:55.362 [INFO][1] typha/logutils.go 79: Early screen log level set to info
+2026-02-03 05:10:55.363 [INFO][1] typha/daemon.go 169: Typha starting up GOMAXPROCS=2 buildDate="2025-11-17T23:42:16+0000" gitCommit="dd5575465ed825f86a3bc10f17bb5f7dc106d0f0" version="v3.31.2"
+2026-02-03 05:10:55.363 [INFO][1] typha/daemon.go 170: Command line arguments: map[--config-file:/etc/calico/typha.cfg --version:false]
+2026-02-03 05:10:55.363 [INFO][1] typha/daemon.go 180: Kubernetes server override env vars. KUBERNETES_SERVICE_HOST="10.43.0.1" KUBERNETES_SERVICE_PORT="443"
+2026-02-03 05:10:55.363 [INFO][1] typha/daemon.go 185: Loading configuration...
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "healthport"="9098"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "k8snamespace"="calico-system"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "servercertfile"="/typha-certs/tls.crt"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "shutdowntimeoutsecs"="300"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "logseveritysys"="none"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "connectionrebalancingmode"="kubernetes"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "datastoretype"="kubernetes"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "cafile"="/etc/pki/tls/certs/tigera-ca-bundle.crt"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "clientcn"="typha-client"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "logseverityscreen"="info"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "logfilepath"="none"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "healthenabled"="true"
+2026-02-03 05:10:55.363 [INFO][1] typha/env_var_loader.go 40: Found typha environment variable: "serverkeyfile"="/typha-certs/tls.key"
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 173: Merging in config from environment variable: map[cafile:/etc/pki/tls/certs/tigera-ca-bundle.crt clientcn:typha-client connectionrebalancingmode:kubernetes datastoretype:kubernetes healthenabled:true healthport:9098 k8snamespace:calico-system logfilepath:none logseverityscreen:info logseveritysys:none servercertfile:/typha-certs/tls.crt serverkeyfile:/typha-certs/tls.key shutdowntimeoutsecs:300]
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.crt"
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.key"
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for LogFilePath: none (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for LogFilePath:  (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/param_types.go 200: Looking for required file path="/etc/pki/tls/certs/tigera-ca-bundle.crt"
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for LogSeverityScreen: info (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for LogSeverityScreen: INFO (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for HealthEnabled: true (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for HealthEnabled: true (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for ShutdownTimeoutSecs: 300 (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for ShutdownTimeoutSecs: 5m0s (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 222: Parsing value for LogSeveritySys: none (from environment variable)
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:10:55.364 [INFO][1] typha/config_params.go 256: Parsed value for LogSeveritySys:  (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 173: Merging in config from config file: map[LogFilePath:None LogSeverityFile:None MetadataAddr:None]
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for LogFilePath: none (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for LogFilePath:  (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for DatastoreType: kubernetes (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/param_types.go 200: Looking for required file path="/etc/pki/tls/certs/tigera-ca-bundle.crt"
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for CAFile: /etc/pki/tls/certs/tigera-ca-bundle.crt (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for LogSeverityScreen: info (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for LogSeverityScreen: INFO (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for HealthEnabled: true (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for HealthEnabled: true (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for K8sNamespace: calico-system (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for ShutdownTimeoutSecs: 300 (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for ShutdownTimeoutSecs: 5m0s (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for LogSeveritySys: none (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for LogSeveritySys:  (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 256: Parsed value for HealthPort: 9098 (from environment variable)
+2026-02-03 05:10:55.365 [INFO][1] typha/config_params.go 222: Parsing value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.crt"
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 256: Parsed value for ServerCertFile: /typha-certs/tls.crt (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 222: Parsing value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 256: Parsed value for ClientCN: typha-client (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 222: Parsing value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/param_types.go 200: Looking for required file path="/typha-certs/tls.key"
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 256: Parsed value for ServerKeyFile: /typha-certs/tls.key (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 222: Parsing value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 256: Parsed value for ConnectionRebalancingMode: kubernetes (from environment variable)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 210: Ignoring unknown config param. raw name="MetadataAddr"
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 222: Parsing value for LogFilePath: None (from config file)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 256: Parsed value for LogFilePath:  (from config file)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 259: Skipping config value for LogFilePath from config file; already have a value from environment variable
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 222: Parsing value for LogSeverityFile: None (from config file)
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 238: Value set to 'none', replacing with zero-value: "".
+2026-02-03 05:10:55.366 [INFO][1] typha/config_params.go 256: Parsed value for LogSeverityFile:  (from config file)
+2026-02-03 05:10:55.368 [INFO][1] typha/daemon.go 247: Successfully loaded configuration. GOMAXPROCS=2 buildDate="2025-11-17T23:42:16+0000" config=&config.Config{DatastoreType:"kubernetes", EtcdAddr:"127.0.0.1:2379", EtcdScheme:"http", EtcdKeyFile:"", EtcdCertFile:"", EtcdCaFile:"", EtcdEndpoints:[]string(nil), LogFilePath:"", LogSeverityFile:"", LogSeverityScreen:"INFO", LogSeveritySys:"", HealthEnabled:true, HealthHost:"localhost", HealthPort:9098, PrometheusMetricsEnabled:false, PrometheusMetricsHost:"", PrometheusMetricsPort:9093, PrometheusGoMetricsEnabled:true, PrometheusProcessMetricsEnabled:true, SnapshotCacheMaxBatchSize:100, ServerMaxMessageSize:100, ServerMaxFallBehindSecs:300000000000, ServerNewClientFallBehindGracePeriod:300000000000, ServerMinBatchingAgeThresholdSecs:10000000, ServerPingIntervalSecs:10000000000, ServerPongTimeoutSecs:60000000000, ServerHandshakeTimeoutSecs:10000000000, ServerPort:0, ServerHost:"", ServerKeyFile:"/typha-certs/tls.key", ServerCertFile:"/typha-certs/tls.crt", CAFile:"/etc/pki/tls/certs/tigera-ca-bundle.crt", ClientCN:"typha-client", ClientURISAN:"", DebugMemoryProfilePath:"", DebugDisableLogDropping:false, DebugHost:"localhost", DebugPort:0, ConnectionRebalancingMode:"kubernetes", ConnectionDropIntervalSecs:1000000000, ShutdownTimeoutSecs:300000000000, ShutdownConnectionDropIntervalMaxSecs:1000000000, MaxConnectionsUpperLimit:10000, MaxConnectionsLowerLimit:400, K8sServicePollIntervalSecs:30000000000, K8sNamespace:"calico-system", K8sServiceName:"calico-typha", K8sPortName:"calico-typha", sourceToRawConfig:map[config.Source]map[string]string{0x3:map[string]string{"LogFilePath":"None", "LogSeverityFile":"None", "MetadataAddr":"None"}, 0x4:map[string]string{"cafile":"/etc/pki/tls/certs/tigera-ca-bundle.crt", "clientcn":"typha-client", "connectionrebalancingmode":"kubernetes", "datastoretype":"kubernetes", "healthenabled":"true", "healthport":"9098", "k8snamespace":"calico-system", "logfilepath":"none", "logseverityscreen":"info", "logseveritysys":"none", "servercertfile":"/typha-certs/tls.crt", "serverkeyfile":"/typha-certs/tls.key", "shutdowntimeoutsecs":"300"}}, rawValues:map[string]string{"CAFile":"/etc/pki/tls/certs/tigera-ca-bundle.crt", "ClientCN":"typha-client", "ConnectionRebalancingMode":"kubernetes", "DatastoreType":"kubernetes", "HealthEnabled":"true", "HealthPort":"9098", "K8sNamespace":"calico-system", "LogFilePath":"none", "LogSeverityFile":"None", "LogSeverityScreen":"info", "LogSeveritySys":"none", "MetadataAddr":"None", "ServerCertFile":"/typha-certs/tls.crt", "ServerKeyFile":"/typha-certs/tls.key", "ShutdownTimeoutSecs":"300"}} gitCommit="dd5575465ed825f86a3bc10f17bb5f7dc106d0f0" version="v3.31.2"
+2026-02-03 05:10:55.368 [INFO][1] typha/daemon.go 256: Using Kubernetes API datastore, checking if we need to migrate v1 -> v3
+2026-02-03 05:10:55.378 [INFO][1] typha/daemon.go 295: Migration not required.
+2026-02-03 05:10:55.378 [INFO][1] typha/daemon.go 311: Initializing the datastore (if needed).
+2026-02-03 05:10:55.405 [INFO][1] typha/daemon.go 321: Datastore initialized.
+2026-02-03 05:10:55.405 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:10:55.405 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:10:55.406 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:10:55.406 [INFO][1] typha/cache.go 185: Defaulting WakeUpInterval. default=1s value=0s
+2026-02-03 05:10:55.406 [INFO][1] typha/sync_server.go 173: Defaulting BinarySnapshotTimeout. default=1s value=0s
+2026-02-03 05:10:55.406 [INFO][1] typha/sync_server.go 227: Defaulting write timeout. default=2m0s
+2026-02-03 05:10:55.406 [INFO][1] typha/sync_server.go 263: Defaulting Port. default=5473 value=0
+2026-02-03 05:10:55.406 [INFO][1] typha/sync_server.go 282: Creating server config=syncserver.Config{Host:"", Port:5473, MaxMessageSize:100, BinarySnapshotTimeout:1000000000, MaxFallBehind:300000000000, NewClientFallBehindGracePeriod:300000000000, MinBatchingAgeThreshold:10000000, PingInterval:10000000000, PongTimeout:60000000000, HandshakeTimeout:10000000000, WriteTimeout:120000000000, DropInterval:1000000000, ShutdownTimeout:300000000000, ShutdownMaxDropInterval:1000000000, MaxConns:10000, HealthAggregator:(*health.HealthAggregator)(0xc000308c30), KeyFile:"/typha-certs/tls.key", CertFile:"/typha-certs/tls.crt", CAFile:"/etc/pki/tls/certs/tigera-ca-bundle.crt", ClientCN:"typha-client", ClientURISAN:"", WriteBufferSize:0, DebugLogWrites:false}
+2026-02-03 05:10:55.408 [INFO][1] typha/daemon.go 411: Starting the datastore Syncer/cache layer
+2026-02-03 05:10:55.408 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="felix"
+2026-02-03 05:10:55.408 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:10:55.408 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="felix"
+2026-02-03 05:10:55.408 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="felix"
+2026-02-03 05:10:55.408 [INFO][1] typha/daemon.go 109: Starting cache syncerType="felix"
+2026-02-03 05:10:55.408 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="felix"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="bgp"
+2026-02-03 05:10:55.409 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="bgp"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="bgp"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 109: Starting cache syncerType="bgp"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="bgp"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="tunnel-ip-allocation"
+2026-02-03 05:10:55.409 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="tunnel-ip-allocation"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="tunnel-ip-allocation"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 109: Starting cache syncerType="tunnel-ip-allocation"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="tunnel-ip-allocation"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 103: Starting syncer syncerType="node-status"
+2026-02-03 05:10:55.409 [INFO][1] typha/watchersyncer.go 118: Start called
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 105: Starting syncer-to-validator decoupler syncerType="node-status"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 107: Starting validator-to-cache decoupler syncerType="node-status"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 109: Starting cache syncerType="node-status"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 111: Started syncer pipeline syncerType="node-status"
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 417: Kubernetes connection rebalancing is enabled, starting k8s poll goroutine.
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 424: Started the datastore Syncer/cache layer/server.
+2026-02-03 05:10:55.409 [INFO][1] typha/daemon.go 442: Health enabled.  Starting server. host="localhost" port=9098
+2026-02-03 05:10:55.409 [INFO][1] typha/health.go 377: Health enabled.  Starting server. host="localhost" port=9098
+2026-02-03 05:10:55.410 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:10:55.410 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:10:55.410 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../ipam/v2/host/"
+2026-02-03 05:10:55.411 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:10:55.411 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:10:55.411 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:10:55.411 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:10:55.412 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:10:55.412 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:10:55.412 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:10:55.410 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=wait-for-ready
+2026-02-03 05:10:55.412 [INFO][1] typha/watchersyncer.go 177: Starting main event processing loop
+2026-02-03 05:10:55.412 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../ipam/v2/assignment/"
+2026-02-03 05:10:55.412 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/caliconodestatuses"
+2026-02-03 05:10:55.413 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:10:55.413 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=wait-for-ready
+2026-02-03 05:10:55.413 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/clusterinformations"
+2026-02-03 05:10:55.413 [INFO][1] typha/sync_server.go 343: Opening TLS listen socket port=5473 pwd="/"
+2026-02-03 05:10:55.413 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/felixconfigurations"
+2026-02-03 05:10:55.413 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/globalnetworkpolicies"
+2026-02-03 05:10:55.414 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/stagedglobalnetworkpolicies"
+2026-02-03 05:10:55.414 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/globalnetworksets"
+2026-02-03 05:10:55.414 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:10:55.415 [INFO][1] typha/sync_server.go 359: Will verify client certificates port=5473
+2026-02-03 05:10:55.415 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:10:55.415 [INFO][1] typha/rebalance.go 44: Kubernetes poll goroutine started. thread="k8s-poll"
+2026-02-03 05:10:55.415 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/profiles"
+2026-02-03 05:10:55.415 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/workloadendpoints"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/networkpolicies"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/stagednetworkpolicies"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/stagedkubernetesnetworkpolicies"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/networksets"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/tiers"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/hostendpoints"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:10:55.416 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesnetworkpolicies"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesadminnetworkpolicies"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesbaselineadminnetworkpolicies"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesendpointslices"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/kubernetesservice"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/bgpfilters"
+2026-02-03 05:10:55.417 [INFO][1] typha/watchercache.go 243: Full resync is required ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:10:55.420 [INFO][1] typha/tlsutils.go 39: Make certificate verifier requiredCN="typha-client" requiredURISAN="" roots=&x509.CertPool{byName:map[string][]int{"0!1\x1f0\x1d\x06\x03U\x04\x03\x13\x16tigera-operator-signer":[]int{0}}, lazyCerts:[]x509.lazyCert{x509.lazyCert{rawSubject:[]uint8{0x30, 0x21, 0x31, 0x1f, 0x30, 0x1d, 0x6, 0x3, 0x55, 0x4, 0x3, 0x13, 0x16, 0x74, 0x69, 0x67, 0x65, 0x72, 0x61, 0x2d, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x2d, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72}, constraint:(func([]*x509.Certificate) error)(nil), getCert:(func() (*x509.Certificate, error))(0x732bc0)}}, haveSum:map[x509.sum224]bool{x509.sum224{0xd7, 0x2e, 0x64, 0x33, 0x6, 0x72, 0x4d, 0x7e, 0x7, 0xd6, 0xc, 0x3c, 0x70, 0x12, 0x21, 0xd8, 0x5d, 0x53, 0xa, 0xb3, 0x11, 0xa4, 0x65, 0xb1, 0x1f, 0x6b, 0x6c, 0xdf}:true}, systemPool:false}
+2026-02-03 05:10:55.420 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:10:55.420 [INFO][1] typha/sync_server.go 387: Opened listen socket port=5473
+2026-02-03 05:10:55.421 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../ipam/v2/host/"
+2026-02-03 05:10:55.422 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:10:55.422 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.422 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:10:55.422 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/clusterinformations"
+2026-02-03 05:10:55.423 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:10:55.423 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.423 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:10:55.424 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/caliconodestatuses"
+2026-02-03 05:10:55.424 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.424 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:10:55.424 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:10:55.424 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:10:55.424 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:10:55.424 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:10:55.424 [INFO][1] typha/health.go 204: Health of component changed name="node-status-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:10:55.424 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=resync
+2026-02-03 05:10:55.424 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.424 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=resync
+2026-02-03 05:10:55.435 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../ipam/v2/assignment/"
+2026-02-03 05:10:55.437 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/networkpolicies"
+2026-02-03 05:10:55.438 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/tiers"
+2026-02-03 05:10:55.439 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/hostendpoints"
+2026-02-03 05:10:55.439 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesbaselineadminnetworkpolicies"
+2026-02-03 05:10:55.440 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:10:55.441 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:10:55.442 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgpconfigurations"
+2026-02-03 05:10:55.442 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:10:55.443 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgpfilters"
+2026-02-03 05:10:55.443 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:10:55.443 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:10:55.444 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/stagednetworkpolicies"
+2026-02-03 05:10:55.444 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/stagedkubernetesnetworkpolicies"
+2026-02-03 05:10:55.445 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesservice"
+2026-02-03 05:10:55.445 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/nodes"
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:10:55.446 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:10:55.446 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:10:55.446 [INFO][1] typha/health.go 204: Health of component changed name="bgp-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:10:55.446 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:10:55.446 [INFO][1] typha/health.go 204: Health of component changed name="tunnel-ip-allocation-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.447 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.450 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/globalnetworkpolicies"
+2026-02-03 05:10:55.450 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/stagedglobalnetworkpolicies"
+2026-02-03 05:10:55.450 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.450 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.450 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/globalnetworksets"
+2026-02-03 05:10:55.450 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/ippools"
+2026-02-03 05:10:55.451 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.451 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.441 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/felixconfigurations"
+2026-02-03 05:10:55.468 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/bgppeers"
+2026-02-03 05:10:55.470 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesnetworkpolicies"
+2026-02-03 05:10:55.472 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/networksets"
+2026-02-03 05:10:55.474 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.474 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.474 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.474 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/workloadendpoints"
+2026-02-03 05:10:55.474 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.474 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.475 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/profiles"
+2026-02-03 05:10:55.475 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesadminnetworkpolicies"
+2026-02-03 05:10:55.475 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.475 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.479 [INFO][1] typha/watchercache.go 447: Sending synced update ListRoot=".../v3/pc.org/kubernetesendpointslices"
+2026-02-03 05:10:55.479 [INFO][1] typha/watchersyncer.go 243: Received InSync event from one of the watcher caches
+2026-02-03 05:10:55.479 [INFO][1] typha/watchersyncer.go 255: All watchers have sync'd data - sending data and final sync
+2026-02-03 05:10:55.480 [INFO][1] typha/watchersyncer.go 158: Sending status update Status=in-sync
+2026-02-03 05:10:55.480 [INFO][1] typha/cache.go 303: Received status update message from datastore. status=in-sync
+2026-02-03 05:10:55.480 [INFO][1] typha/health.go 204: Health of component changed name="felix-cache" newReport="live,ready" oldReport="live,non-ready"
+2026-02-03 05:10:55.838 [INFO][1] typha/health.go 334: Overall health status changed: live=true ready=true
++----------------------------+---------+----------------+-----------------+--------+
+|         COMPONENT          | TIMEOUT |    LIVENESS    |    READINESS    | DETAIL |
++----------------------------+---------+----------------+-----------------+--------+
+| SyncServer                 | 20s     | reporting live | -               |        |
+| bgp-cache                  | 20s     | reporting live | reporting ready |        |
+| felix-cache                | 20s     | reporting live | reporting ready |        |
+| node-status-cache          | 20s     | reporting live | reporting ready |        |
+| tunnel-ip-allocation-cache | 20s     | reporting live | reporting ready |        |
++----------------------------+---------+----------------+-----------------+--------+
+2026-02-03 05:10:56.735 [INFO][1] typha/sync_server.go 429: Accepted from 209.38.17.11:42370 port=5473
+2026-02-03 05:10:56.736 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000001 port=5473
+2026-02-03 05:10:56.736 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=209.38.17.11:42370 connID=0xe687e5b900000001
+2026-02-03 05:10:56.739 [INFO][1] typha/sync_server.go 429: Accepted from 209.38.17.11:42378 port=5473
+2026-02-03 05:10:56.739 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000002 port=5473
+2026-02-03 05:10:56.740 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=209.38.17.11:42378 connID=0xe687e5b900000002
+2026-02-03 05:10:56.753 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=209.38.17.11:42370 connID=0xe687e5b900000001 msg=syncproto.MsgClientHello{Hostname:"r8s-cp-wlp7h-lhvgq", Info:"tunnel-ip-allocation v3.31.2", Version:"v3.31.2", SyncerType:"tunnel-ip-allocation", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x1d99625900000001}
+2026-02-03 05:10:56.754 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=209.38.17.11:42370 connID=0xe687e5b900000001 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="tunnel-ip-allocation"
+2026-02-03 05:10:56.754 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=209.38.17.11:42378 connID=0xe687e5b900000002 msg=syncproto.MsgClientHello{Hostname:"r8s-cp-wlp7h-lhvgq", Info:"node-status v3.31.2", Version:"v3.31.2", SyncerType:"node-status", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0xfdf3d24d00000001}
+2026-02-03 05:10:56.755 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=209.38.17.11:42378 connID=0xe687e5b900000002 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="node-status"
+2026-02-03 05:10:56.756 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.17.11:42370 connID=0xe687e5b900000001 msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:10:56.756 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0x2 status=in-sync syncer="tunnel-ip-allocation" thread="snapshotter"
+2026-02-03 05:10:56.756 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0x2 status=in-sync syncer="tunnel-ip-allocation" thread="snapshotter"
+2026-02-03 05:10:56.756 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.17.11:42378 connID=0xe687e5b900000002 msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:10:56.757 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0x1 status=in-sync syncer="node-status" thread="snapshotter"
+2026-02-03 05:10:56.757 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0x1 status=in-sync syncer="node-status" thread="snapshotter"
+2026-02-03 05:10:56.761 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.17.11:42378 connID=0xe687e5b900000002 msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:10:56.761 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=209.38.17.11:42378 connID=0xe687e5b900000002 type="node-status"
+2026-02-03 05:10:56.761 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=209.38.17.11:42378 connID=0xe687e5b900000002 type="node-status"
+2026-02-03 05:10:56.761 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:15:56.761581334 +0000 UTC m=+301.433203747
+2026-02-03 05:10:56.761 [INFO][1] typha/sync_server.go 1085: Status update to send. client=209.38.17.11:42378 connID=0xe687e5b900000002 newStatus=in-sync thread="kv-sender" type="node-status"
+2026-02-03 05:10:56.763 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.17.11:42370 connID=0xe687e5b900000001 msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:10:56.763 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=209.38.17.11:42370 connID=0xe687e5b900000001 type="tunnel-ip-allocation"
+2026-02-03 05:10:56.763 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=209.38.17.11:42370 connID=0xe687e5b900000001 type="tunnel-ip-allocation"
+2026-02-03 05:10:56.763 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:15:56.763800924 +0000 UTC m=+301.435423339
+2026-02-03 05:10:56.763 [INFO][1] typha/sync_server.go 1085: Status update to send. client=209.38.17.11:42370 connID=0xe687e5b900000001 newStatus=in-sync thread="kv-sender" type="tunnel-ip-allocation"
+2026-02-03 05:10:57.043 [INFO][1] typha/sync_server.go 429: Accepted from 209.38.17.11:42390 port=5473
+2026-02-03 05:10:57.043 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000003 port=5473
+2026-02-03 05:10:57.044 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=209.38.17.11:42390 connID=0xe687e5b900000003
+2026-02-03 05:10:57.056 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=209.38.17.11:42390 connID=0xe687e5b900000003 msg=syncproto.MsgClientHello{Hostname:"r8s-cp-wlp7h-lhvgq", Info:"Revision: dd5575465ed825f86a3bc10f17bb5f7dc106d0f0; Build date: 2025-11-17T22:59:12+0000", Version:"v3.31.2", SyncerType:"felix", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x5f9e891400000001}
+2026-02-03 05:10:57.057 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=209.38.17.11:42390 connID=0xe687e5b900000003 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="felix"
+2026-02-03 05:10:57.058 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.17.11:42390 connID=0xe687e5b900000003 msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:10:57.058 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0x7 status=in-sync syncer="felix" thread="snapshotter"
+2026-02-03 05:10:57.060 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0x7 status=in-sync syncer="felix" thread="snapshotter"
+2026-02-03 05:10:57.067 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.17.11:42390 connID=0xe687e5b900000003 msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:10:57.067 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=209.38.17.11:42390 connID=0xe687e5b900000003 type="felix"
+2026-02-03 05:10:57.067 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=209.38.17.11:42390 connID=0xe687e5b900000003 type="felix"
+2026-02-03 05:10:57.067 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:15:57.067643566 +0000 UTC m=+301.739266058
+2026-02-03 05:10:57.068 [INFO][1] typha/sync_server.go 1085: Status update to send. client=209.38.17.11:42390 connID=0xe687e5b900000003 newStatus=in-sync thread="kv-sender" type="felix"
+2026-02-03 05:14:05.746 [INFO][1] typha/rebalance.go 77: Calculated new connection limit. newLimit=400 numNodes=4 numSyncerTypes=4 numTyphas=2 reason="configured lower limit" thread="k8s-poll"
+2026-02-03 05:14:05.747 [INFO][1] typha/sync_server.go 537: New target number of connections currentNum=3 newMax=400 oldMax=10000 thread="numConnsGov"
+2026-02-03 05:14:06.152 [INFO][1] typha/sync_server.go 429: Accepted from 209.38.21.222:43810 port=5473
+2026-02-03 05:14:06.152 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000004 port=5473
+2026-02-03 05:14:06.157 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=209.38.21.222:43810 connID=0xe687e5b900000004
+2026-02-03 05:14:06.165 [INFO][1] typha/sync_server.go 429: Accepted from 209.38.21.222:43812 port=5473
+2026-02-03 05:14:06.165 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000005 port=5473
+2026-02-03 05:14:06.165 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=209.38.21.222:43812 connID=0xe687e5b900000005
+2026-02-03 05:14:06.174 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=209.38.21.222:43810 connID=0xe687e5b900000004 msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-j5k8h", Info:"node-status v3.31.2", Version:"v3.31.2", SyncerType:"node-status", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0xbfe21a6700000001}
+2026-02-03 05:14:06.174 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=209.38.21.222:43810 connID=0xe687e5b900000004 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="node-status"
+2026-02-03 05:14:06.176 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=209.38.21.222:43812 connID=0xe687e5b900000005 msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-j5k8h", Info:"tunnel-ip-allocation v3.31.2", Version:"v3.31.2", SyncerType:"tunnel-ip-allocation", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x26b73cf600000001}
+2026-02-03 05:14:06.176 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=209.38.21.222:43812 connID=0xe687e5b900000005 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="tunnel-ip-allocation"
+2026-02-03 05:14:06.176 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.21.222:43810 connID=0xe687e5b900000004 msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:14:06.177 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.21.222:43810 connID=0xe687e5b900000004 msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:14:06.177 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.21.222:43812 connID=0xe687e5b900000005 msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:14:06.178 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0xd status=in-sync syncer="tunnel-ip-allocation" thread="snapshotter"
+2026-02-03 05:14:06.178 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0xd status=in-sync syncer="tunnel-ip-allocation" thread="snapshotter"
+2026-02-03 05:14:06.177 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=209.38.21.222:43810 connID=0xe687e5b900000004 type="node-status"
+2026-02-03 05:14:06.178 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=209.38.21.222:43810 connID=0xe687e5b900000004 type="node-status"
+2026-02-03 05:14:06.178 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:06.178694199 +0000 UTC m=+490.850316809
+2026-02-03 05:14:06.178 [INFO][1] typha/sync_server.go 1085: Status update to send. client=209.38.21.222:43810 connID=0xe687e5b900000004 newStatus=in-sync thread="kv-sender" type="node-status"
+2026-02-03 05:14:06.180 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.21.222:43812 connID=0xe687e5b900000005 msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:14:06.180 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=209.38.21.222:43812 connID=0xe687e5b900000005 type="tunnel-ip-allocation"
+2026-02-03 05:14:06.180 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=209.38.21.222:43812 connID=0xe687e5b900000005 type="tunnel-ip-allocation"
+2026-02-03 05:14:06.180 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:06.180143454 +0000 UTC m=+490.851765871
+2026-02-03 05:14:06.180 [INFO][1] typha/sync_server.go 1085: Status update to send. client=209.38.21.222:43812 connID=0xe687e5b900000005 newStatus=in-sync thread="kv-sender" type="tunnel-ip-allocation"
+2026-02-03 05:14:06.934 [INFO][1] typha/sync_server.go 429: Accepted from 209.38.21.222:43816 port=5473
+2026-02-03 05:14:06.934 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000006 port=5473
+2026-02-03 05:14:06.947 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=209.38.21.222:43816 connID=0xe687e5b900000006
+2026-02-03 05:14:06.964 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=209.38.21.222:43816 connID=0xe687e5b900000006 msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-j5k8h", Info:"Revision: dd5575465ed825f86a3bc10f17bb5f7dc106d0f0; Build date: 2025-11-17T22:59:12+0000", Version:"v3.31.2", SyncerType:"felix", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x83c2d6a100000001}
+2026-02-03 05:14:06.964 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=209.38.21.222:43816 connID=0xe687e5b900000006 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="felix"
+2026-02-03 05:14:06.965 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.21.222:43816 connID=0xe687e5b900000006 msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:14:06.965 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0x6a status=in-sync syncer="felix" thread="snapshotter"
+2026-02-03 05:14:06.966 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0x6a status=in-sync syncer="felix" thread="snapshotter"
+2026-02-03 05:14:06.976 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=209.38.21.222:43816 connID=0xe687e5b900000006 msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:14:06.978 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=209.38.21.222:43816 connID=0xe687e5b900000006 type="felix"
+2026-02-03 05:14:06.990 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:06.990153036 +0000 UTC m=+491.661775422
+2026-02-03 05:14:06.990 [INFO][1] typha/sync_server.go 1085: Status update to send. client=209.38.21.222:43816 connID=0xe687e5b900000006 newStatus=in-sync thread="kv-sender" type="felix"
+2026-02-03 05:14:06.982 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=209.38.21.222:43816 connID=0xe687e5b900000006 type="felix"
+2026-02-03 05:14:08.214 [INFO][1] typha/sync_server.go 429: Accepted from 170.64.184.21:57882 port=5473
+2026-02-03 05:14:08.214 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000007 port=5473
+2026-02-03 05:14:08.214 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=170.64.184.21:57882 connID=0xe687e5b900000007
+2026-02-03 05:14:08.227 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=170.64.184.21:57882 connID=0xe687e5b900000007 msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-4xqzn", Info:"tunnel-ip-allocation v3.31.2", Version:"v3.31.2", SyncerType:"tunnel-ip-allocation", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x49d8187d00000001}
+2026-02-03 05:14:08.228 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=170.64.184.21:57882 connID=0xe687e5b900000007 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="tunnel-ip-allocation"
+2026-02-03 05:14:08.230 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=170.64.184.21:57882 connID=0xe687e5b900000007 msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:14:08.231 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0x12 status=in-sync syncer="tunnel-ip-allocation" thread="snapshotter"
+2026-02-03 05:14:08.231 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0x12 status=in-sync syncer="tunnel-ip-allocation" thread="snapshotter"
+2026-02-03 05:14:08.234 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=170.64.184.21:57882 connID=0xe687e5b900000007 msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:14:08.234 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=170.64.184.21:57882 connID=0xe687e5b900000007 type="tunnel-ip-allocation"
+2026-02-03 05:14:08.234 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=170.64.184.21:57882 connID=0xe687e5b900000007 type="tunnel-ip-allocation"
+2026-02-03 05:14:08.234 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:08.234584907 +0000 UTC m=+492.906207316
+2026-02-03 05:14:08.234 [INFO][1] typha/sync_server.go 1085: Status update to send. client=170.64.184.21:57882 connID=0xe687e5b900000007 newStatus=in-sync thread="kv-sender" type="tunnel-ip-allocation"
+2026-02-03 05:14:08.305 [INFO][1] typha/sync_server.go 429: Accepted from 170.64.184.21:57890 port=5473
+2026-02-03 05:14:08.305 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000008 port=5473
+2026-02-03 05:14:08.305 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=170.64.184.21:57890 connID=0xe687e5b900000008
+2026-02-03 05:14:08.322 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=170.64.184.21:57890 connID=0xe687e5b900000008 msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-4xqzn", Info:"node-status v3.31.2", Version:"v3.31.2", SyncerType:"node-status", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x88f39cf300000001}
+2026-02-03 05:14:08.323 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=170.64.184.21:57890 connID=0xe687e5b900000008 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="node-status"
+2026-02-03 05:14:08.323 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=170.64.184.21:57890 connID=0xe687e5b900000008 msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:14:08.325 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=170.64.184.21:57890 connID=0xe687e5b900000008 msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:14:08.325 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=170.64.184.21:57890 connID=0xe687e5b900000008 type="node-status"
+2026-02-03 05:14:08.325 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=170.64.184.21:57890 connID=0xe687e5b900000008 type="node-status"
+2026-02-03 05:14:08.325 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:08.325715822 +0000 UTC m=+492.997338382
+2026-02-03 05:14:08.325 [INFO][1] typha/sync_server.go 1085: Status update to send. client=170.64.184.21:57890 connID=0xe687e5b900000008 newStatus=in-sync thread="kv-sender" type="node-status"
+2026-02-03 05:14:08.945 [INFO][1] typha/sync_server.go 429: Accepted from 170.64.184.21:57896 port=5473
+2026-02-03 05:14:08.945 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b900000009 port=5473
+2026-02-03 05:14:08.946 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=170.64.184.21:57896 connID=0xe687e5b900000009
+2026-02-03 05:14:08.947 [INFO][1] typha/sync_server.go 429: Accepted from 134.199.155.171:40302 port=5473
+2026-02-03 05:14:08.948 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b90000000a port=5473
+2026-02-03 05:14:08.948 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=134.199.155.171:40302 connID=0xe687e5b90000000a
+2026-02-03 05:14:08.956 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=170.64.184.21:57896 connID=0xe687e5b900000009 msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-4xqzn", Info:"Revision: dd5575465ed825f86a3bc10f17bb5f7dc106d0f0; Build date: 2025-11-17T22:59:12+0000", Version:"v3.31.2", SyncerType:"felix", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x556b47f000000001}
+2026-02-03 05:14:08.957 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=170.64.184.21:57896 connID=0xe687e5b900000009 reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="felix"
+2026-02-03 05:14:08.957 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=170.64.184.21:57896 connID=0xe687e5b900000009 msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:14:08.958 [INFO][1] typha/sync_server.go 1240: Starting to write snapshot destination="compressed in-memory cache" seqNo=0x73 status=in-sync syncer="felix" thread="snapshotter"
+2026-02-03 05:14:08.958 [INFO][1] typha/sync_server.go 429: Accepted from 134.199.155.171:40314 port=5473
+2026-02-03 05:14:08.958 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b90000000b port=5473
+2026-02-03 05:14:08.958 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=134.199.155.171:40314 connID=0xe687e5b90000000b
+2026-02-03 05:14:08.961 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=134.199.155.171:40302 connID=0xe687e5b90000000a msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-vpdq4", Info:"node-status v3.31.2", Version:"v3.31.2", SyncerType:"node-status", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0xbd1b961b00000001}
+2026-02-03 05:14:08.961 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=134.199.155.171:40302 connID=0xe687e5b90000000a reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="node-status"
+2026-02-03 05:14:08.961 [INFO][1] typha/sync_server.go 1284: Finished writing snapshot. destination="compressed in-memory cache" seqNo=0x73 status=in-sync syncer="felix" thread="snapshotter"
+2026-02-03 05:14:08.962 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=134.199.155.171:40302 connID=0xe687e5b90000000a msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:14:08.963 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=134.199.155.171:40302 connID=0xe687e5b90000000a msg=syncproto.MsgACK{} type="node-status"
+2026-02-03 05:14:08.963 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=134.199.155.171:40302 connID=0xe687e5b90000000a type="node-status"
+2026-02-03 05:14:08.963 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=134.199.155.171:40302 connID=0xe687e5b90000000a type="node-status"
+2026-02-03 05:14:08.964 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:08.963898783 +0000 UTC m=+493.635521178
+2026-02-03 05:14:08.964 [INFO][1] typha/sync_server.go 1085: Status update to send. client=134.199.155.171:40302 connID=0xe687e5b90000000a newStatus=in-sync thread="kv-sender" type="node-status"
+2026-02-03 05:14:08.967 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=134.199.155.171:40314 connID=0xe687e5b90000000b msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-vpdq4", Info:"tunnel-ip-allocation v3.31.2", Version:"v3.31.2", SyncerType:"tunnel-ip-allocation", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0x7a1961b600000001}
+2026-02-03 05:14:08.967 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=134.199.155.171:40314 connID=0xe687e5b90000000b reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="tunnel-ip-allocation"
+2026-02-03 05:14:08.968 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=134.199.155.171:40314 connID=0xe687e5b90000000b msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:14:08.971 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=134.199.155.171:40314 connID=0xe687e5b90000000b msg=syncproto.MsgACK{} type="tunnel-ip-allocation"
+2026-02-03 05:14:08.971 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=134.199.155.171:40314 connID=0xe687e5b90000000b type="tunnel-ip-allocation"
+2026-02-03 05:14:08.971 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=134.199.155.171:40314 connID=0xe687e5b90000000b type="tunnel-ip-allocation"
+2026-02-03 05:14:08.971 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:08.971319407 +0000 UTC m=+493.642941848
+2026-02-03 05:14:08.971 [INFO][1] typha/sync_server.go 1085: Status update to send. client=134.199.155.171:40314 connID=0xe687e5b90000000b newStatus=in-sync thread="kv-sender" type="tunnel-ip-allocation"
+2026-02-03 05:14:08.975 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=170.64.184.21:57896 connID=0xe687e5b900000009 msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:14:08.976 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=170.64.184.21:57896 connID=0xe687e5b900000009 type="felix"
+2026-02-03 05:14:08.976 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=170.64.184.21:57896 connID=0xe687e5b900000009 type="felix"
+2026-02-03 05:14:08.977 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:08.977667869 +0000 UTC m=+493.649290364
+2026-02-03 05:14:08.977 [INFO][1] typha/sync_server.go 1085: Status update to send. client=170.64.184.21:57896 connID=0xe687e5b900000009 newStatus=in-sync thread="kv-sender" type="felix"
+2026-02-03 05:14:09.594 [INFO][1] typha/sync_server.go 429: Accepted from 134.199.155.171:40324 port=5473
+2026-02-03 05:14:09.594 [INFO][1] typha/sync_server.go 438: New connection connID=0xe687e5b90000000c port=5473
+2026-02-03 05:14:09.594 [INFO][1] typha/sync_server.go 726: Per-connection goroutine started client=134.199.155.171:40324 connID=0xe687e5b90000000c
+2026-02-03 05:14:09.603 [INFO][1] typha/sync_server.go 912: Received Hello message from client. client=134.199.155.171:40324 connID=0xe687e5b90000000c msg=syncproto.MsgClientHello{Hostname:"r8s-wk-jnhwv-vpdq4", Info:"Revision: dd5575465ed825f86a3bc10f17bb5f7dc106d0f0; Build date: 2025-11-17T22:59:12+0000", Version:"v3.31.2", SyncerType:"felix", SupportsDecoderRestart:true, SupportedCompressionAlgorithms:[]syncproto.CompressionAlgorithm{"snappy"}, ClientConnID:0xac76c42500000001}
+2026-02-03 05:14:09.604 [INFO][1] typha/sync_server.go 753: Restarting encoding. client=134.199.155.171:40324 connID=0xe687e5b90000000c reasons=[]string{"enable compression: snappy", "send binary snapshot"} type="felix"
+2026-02-03 05:14:09.605 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=134.199.155.171:40324 connID=0xe687e5b90000000c msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:14:09.619 [INFO][1] typha/sync_server.go 993: Received ACK message from client. client=134.199.155.171:40324 connID=0xe687e5b90000000c msg=syncproto.MsgACK{} type="felix"
+2026-02-03 05:14:09.619 [INFO][1] typha/sync_server.go 779: Sent compressed binary snapshot and received ACK from client. client=134.199.155.171:40324 connID=0xe687e5b90000000c type="felix"
+2026-02-03 05:14:09.619 [INFO][1] typha/sync_server.go 811: Waiting for messages from client client=134.199.155.171:40324 connID=0xe687e5b90000000c type="felix"
+2026-02-03 05:14:09.620 [INFO][1] typha/sync_server.go 1079: Calculated end of client's grace period. graceEnd=2026-02-03 05:19:09.619973848 +0000 UTC m=+494.291596229
+2026-02-03 05:14:09.620 [INFO][1] typha/sync_server.go 1085: Status update to send. client=134.199.155.171:40324 connID=0xe687e5b90000000c newStatus=in-sync thread="kv-sender" type="felix"

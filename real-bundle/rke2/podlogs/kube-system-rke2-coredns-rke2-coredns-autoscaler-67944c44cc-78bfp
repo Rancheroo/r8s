@@ -1,0 +1,15 @@
+I0203 05:11:15.691395       1 autoscaler.go:49] Scaling Namespace: kube-system, Target: deployment/rke2-coredns-rke2-coredns
+I0203 05:11:15.902345       1 plugin.go:50] Set control mode to linear
+I0203 05:11:15.902403       1 linear_controller.go:60] ConfigMap version change (old:  new: 721) - rebuilding params
+I0203 05:11:15.902411       1 linear_controller.go:61] Params from apiserver: 
+{
+  "coresPerReplica": 256,
+  "nodesPerReplica": 16,
+  "preventSinglePointFailure": true,
+  "min": 0,
+  "max": 0,
+  "includeUnschedulableNodes": false
+}
+I0203 05:11:15.902487       1 linear_controller.go:80] Defaulting min replicas count to 1 for linear controller
+I0203 05:14:05.915909       1 k8sclient.go:312] Cluster status: SchedulableNodes[3], TotalNodes[4], SchedulableCores[10], TotalCores[14]
+I0203 05:14:05.919155       1 k8sclient.go:318] Replicas are not as expected : updating deployment/rke2-coredns-rke2-coredns from 1 to 2

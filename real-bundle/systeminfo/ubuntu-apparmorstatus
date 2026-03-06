@@ -1,0 +1,152 @@
+apparmor module is loaded.
+120 profiles are loaded.
+25 profiles are in enforce mode.
+   /usr/bin/man
+   /usr/lib/snapd/snap-confine
+   /usr/lib/snapd/snap-confine//mount-namespace-capture-helper
+   cri-containerd.apparmor.d
+   lsb_release
+   man_filter
+   man_groff
+   nvidia_modprobe
+   nvidia_modprobe//kmod
+   plasmashell
+   plasmashell//QtWebEngineProcess
+   rsyslogd
+   tcpdump
+   ubuntu_pro_apt_news
+   ubuntu_pro_esm_cache
+   ubuntu_pro_esm_cache//apt_methods
+   ubuntu_pro_esm_cache//apt_methods_gpgv
+   ubuntu_pro_esm_cache//cloud_id
+   ubuntu_pro_esm_cache//dpkg
+   ubuntu_pro_esm_cache//ps
+   ubuntu_pro_esm_cache//ubuntu_distro_info
+   ubuntu_pro_esm_cache_systemctl
+   ubuntu_pro_esm_cache_systemd_detect_virt
+   unix-chkpwd
+   unprivileged_userns
+4 profiles are in complain mode.
+   transmission-cli
+   transmission-daemon
+   transmission-gtk
+   transmission-qt
+0 profiles are in prompt mode.
+0 profiles are in kill mode.
+91 profiles are in unconfined mode.
+   1password
+   Discord
+   MongoDB Compass
+   QtWebEngineProcess
+   balena-etcher
+   brave
+   buildah
+   busybox
+   cam
+   ch-checkns
+   ch-run
+   chrome
+   crun
+   devhelp
+   element-desktop
+   epiphany
+   evolution
+   firefox
+   flatpak
+   foliate
+   geary
+   github-desktop
+   goldendict
+   ipa_verify
+   kchmviewer
+   keybase
+   lc-compliance
+   libcamerify
+   linux-sandbox
+   loupe
+   lxc-attach
+   lxc-create
+   lxc-destroy
+   lxc-execute
+   lxc-stop
+   lxc-unshare
+   lxc-usernsexec
+   mmdebstrap
+   msedge
+   nautilus
+   notepadqq
+   obsidian
+   opam
+   opera
+   pageedit
+   podman
+   polypane
+   privacybrowser
+   qcam
+   qmapshack
+   qutebrowser
+   rootlesskit
+   rpm
+   rssguard
+   runc
+   sbuild
+   sbuild-abort
+   sbuild-adduser
+   sbuild-apt
+   sbuild-checkpackages
+   sbuild-clean
+   sbuild-createchroot
+   sbuild-destroychroot
+   sbuild-distupgrade
+   sbuild-hold
+   sbuild-shell
+   sbuild-unhold
+   sbuild-update
+   sbuild-upgrade
+   scide
+   signal-desktop
+   slack
+   slirp4netns
+   steam
+   stress-ng
+   surfshark
+   systemd-coredump
+   thunderbird
+   toybox
+   trinity
+   tup
+   tuxedo-control-center
+   userbindmount
+   uwsgi-core
+   vdens
+   virtiofsd
+   vivaldi-bin
+   vpnns
+   vscode
+   wike
+   wpcom
+18 processes have profiles defined.
+18 processes are in enforce mode.
+   /usr/local/bin/etcd (2414) cri-containerd.apparmor.d
+   /usr/local/bin/kube-apiserver (2514) cri-containerd.apparmor.d
+   /usr/local/bin/kube-scheduler (2645) cri-containerd.apparmor.d
+   /usr/local/bin/kube-controller-manager (2657) cri-containerd.apparmor.d
+   /usr/local/bin/rke2-cloud-provider (2746) cri-containerd.apparmor.d
+   /usr/bin/operator (3874) cri-containerd.apparmor.d
+   /usr/bin/calico-typha (4865) cri-containerd.apparmor.d
+   /usr/bin/wrapper (5521) cri-containerd.apparmor.d
+   /usr/bin/kube-controllers (5540) cri-containerd.apparmor.d
+   /cluster-proportional-autoscaler (5606) cri-containerd.apparmor.d
+   /coredns (5640) cri-containerd.apparmor.d
+   /usr/bin/tini (8288) cri-containerd.apparmor.d
+   /usr/bin/agent (8352) cri-containerd.apparmor.d
+   /usr/bin/tini (9336) cri-containerd.apparmor.d
+   /usr/bin/agent (9401) cri-containerd.apparmor.d
+   /usr/bin/webhook (9799) cri-containerd.apparmor.d
+   /bin/system-upgrade-controller (10609) cri-containerd.apparmor.d
+   /usr/sbin/rsyslogd (922) rsyslogd
+0 processes are in complain mode.
+0 processes are in prompt mode.
+0 processes are in kill mode.
+0 processes are unconfined but have a profile defined.
+0 processes are in mixed mode.

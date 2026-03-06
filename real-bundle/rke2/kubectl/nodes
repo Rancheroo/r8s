@@ -1,0 +1,5 @@
+NAME                 STATUS   ROLES                       AGE   VERSION          INTERNAL-IP       EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+r8s-cp-wlp7h-lhvgq   Ready    control-plane,etcd,master   30m   v1.33.7+rke2r1   209.38.17.11      <none>        Ubuntu 24.04.3 LTS   6.8.0-71-generic   containerd://2.1.5-k3s1
+r8s-wk-jnhwv-4xqzn   Ready    worker                      26m   v1.33.7+rke2r1   170.64.184.21     <none>        Ubuntu 24.04.3 LTS   6.8.0-71-generic   containerd://2.1.5-k3s1
+r8s-wk-jnhwv-j5k8h   Ready    worker                      26m   v1.33.7+rke2r1   209.38.21.222     <none>        Ubuntu 24.04.3 LTS   6.8.0-71-generic   containerd://2.1.5-k3s1
+r8s-wk-jnhwv-vpdq4   Ready    worker                      26m   v1.33.7+rke2r1   134.199.155.171   <none>        Ubuntu 24.04.3 LTS   6.8.0-71-generic   containerd://2.1.5-k3s1

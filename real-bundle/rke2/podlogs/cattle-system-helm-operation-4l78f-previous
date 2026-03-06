@@ -1,0 +1,1 @@
+Error from server (BadRequest): previous terminated container "init-kubeconfig-volume" in pod "helm-operation-4l78f" not found
