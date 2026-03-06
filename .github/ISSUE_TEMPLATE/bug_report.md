@@ -16,9 +16,13 @@ r8s version
 ```
 
 ## Mode Used
-<!-- Check ONE of the following -->
+<!-- Check all that apply -->
 - [ ] Live cluster (`r8s tui`)
 - [ ] Bundle mode (`r8s tui --bundle=...`)
+- [ ] Analysis (`r8s analyze`)
+- [ ] NLQ (`r8s ask`)
+- [ ] Logs (`r8s logs`)
+- [ ] Test Cluster (`r8s test-cluster`)
 - [ ] Demo mode (embedded example bundle)
 
 ## Bundle Information (if applicable)
