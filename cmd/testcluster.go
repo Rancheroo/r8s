@@ -222,6 +222,34 @@ func testOOMEvents(extractPath string) TestResult {
 		return result
 	}
 
+	// Also check for pods with OOMKilled status (events might be rotated)
+	pods, err := bundle.ParsePods(extractPath)
+	if err == nil {
+		for _, pod := range pods {
+			if strings.Contains(strings.ToLower(pod.KubectlStatus), "oomkilled") ||
+				strings.Contains(strings.ToLower(pod.State), "oomkilled") {
+
+				// Avoid duplicates if already found in events
+				isDuplicate := false
+				for _, event := range analysis {
+					if strings.Contains(event.PodName, pod.Name) {
+						isDuplicate = true
+						break
+					}
+				}
+
+				if !isDuplicate {
+					// Add synthetic analysis result
+					analysis = append(analysis, bundle.OOMAnalysis{
+						PodName:       fmt.Sprintf("%s/%s", pod.NamespaceID, pod.Name),
+						ContainerName: "unknown",
+						OOMKillTime:   "Detected in Pod Status",
+					})
+				}
+			}
+		}
+	}
+
 	if len(analysis) == 0 {
 		result.Details = append(result.Details, "No OOM events found")
 		return result
