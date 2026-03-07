@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 
-**r8s** (pronounced "rates") is **The CLI Automation Engine for Kubernetes Triage**.
+**r8s** (pronounced "rates") is **The CLI Automation Engine for RKE2 & K3S Triage**.
 
 Stop scrolling through thousands of text files. **r8s** turns static support bundles into a live, queryable environment. It combines `kubectl` muscle memory with an AI-driven analysis engine, allowing you to **validate**, **triage**, and **resolve** issues before you even open a log file.
 
