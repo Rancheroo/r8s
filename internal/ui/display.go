@@ -197,7 +197,6 @@ func ShowRandomTip() {
 	if len(R8sFacts) == 0 {
 		return
 	}
-	rand.Seed(time.Now().UnixNano())
 	tip := R8sFacts[rand.Intn(len(R8sFacts))]
 	tipColor := color.New(color.Italic, color.FgCyan)
 	tipColor.Fprintln(os.Stderr, "💡 "+tip)

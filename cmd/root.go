@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -85,7 +86,8 @@ func Execute() {
 
 	if err := rootCmd.Execute(); err != nil {
 		// Check for exit code error (type assertion, not value check)
-		if exitErr, ok := err.(*ExitCodeError); ok {
+		var exitErr *ExitCodeError
+		if errors.As(err, &exitErr) {
 			// ExitCodeError means the command already displayed the error
 			os.Exit(exitErr.Code)
 		}

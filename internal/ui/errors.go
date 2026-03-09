@@ -1,12 +1,15 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ShowUnknownCommandError displays a friendly error for unknown commands
@@ -344,8 +347,8 @@ func (e *UsageError) Error() string {
 
 // IsUsageError checks if an error is a UsageError
 func IsUsageError(err error) bool {
-	_, ok := err.(*UsageError)
-	return ok
+	var usageErr *UsageError
+	return errors.As(err, &usageErr)
 }
 
 // ShowCmdUsage displays a friendly usage guide for a command
@@ -354,7 +357,7 @@ func ShowCmdUsage(cmdName, usage, description string) {
 	
 	// Header
 	header := color.New(color.Bold, color.FgCyan)
-	header.Fprintf(os.Stderr, "📖 %s Guide\n", strings.Title(cmdName))
+	header.Fprintf(os.Stderr, "📖 %s Guide\n", cases.Title(language.English).String(cmdName))
 	fmt.Fprintln(os.Stderr)
 	
 	// Description
