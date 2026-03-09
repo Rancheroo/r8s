@@ -85,7 +85,7 @@ func Execute() {
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		// Check for exit code error (type assertion, not value check)
+		// Check for exit code error
 		var exitErr *ExitCodeError
 		if errors.As(err, &exitErr) {
 			// ExitCodeError means the command already displayed the error
@@ -128,10 +128,10 @@ func init() {
 
 	// Add version command
 	rootCmd.AddCommand(versionCmd)
-	
+
 	// Fix: #95 Add completion command explicitly to root
 	rootCmd.AddCommand(completionCmd)
-	
+
 	// Add custom help command to show tip
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		// Fix: Show Long description if available (restores missing docs)
@@ -141,7 +141,7 @@ func init() {
 
 		// Default help (using standard Cobra method)
 		cmd.Printf(cmd.UsageString())
-		
+
 		// Show tip at bottom of help
 		fmt.Println()
 		ui.ShowRandomTip()
@@ -157,7 +157,7 @@ var versionCmd = &cobra.Command{
 			versionInfo.Commit,
 			versionInfo.Date,
 		)
-		
+
 		// Show a tip on version command
 		fmt.Println()
 		ui.ShowRandomTip()
@@ -224,7 +224,6 @@ PowerShell:
 		return nil
 	},
 }
-
 
 // SetVersionInfo sets the version information from main
 func SetVersionInfo(version, commit, date string) {
