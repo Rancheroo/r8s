@@ -67,10 +67,9 @@ RUN apk add --no-cache ca-certificates tzdata && \
 RUN addgroup -g 65532 nonroot && \
     adduser -u 65532 -G nonroot -s /sbin/nologin -D nonroot
 
+# The Go compiler sets the executable bit on the output binary automatically.
+# COPY --from=builder preserves those permissions; no chmod layer needed.
 COPY --from=builder /build/r8s /usr/local/bin/r8s
-
-# Ensure the binary is executable
-RUN chmod +x /usr/local/bin/r8s
 
 USER nonroot
 
