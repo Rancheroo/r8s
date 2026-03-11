@@ -23,7 +23,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}   # e.g. rancheroo/r8s  (lowercase)
+  # github.repository is e.g. "Rancheroo/r8s" — lowercased where needed below
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   docker:
@@ -41,10 +42,17 @@ jobs:
           fetch-depth: 0   # full history so git describe works for VERSION
 
       # ── 2. Derive version metadata ─────────────────────────────────────────
+      # Fix (CodeRabbit): prefer the workflow_dispatch input tag when provided;
+      # only fall back to `git describe` when running from an automatic tag push.
       - name: Derive version metadata
         id: meta_vars
         run: |
-          VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+          DISPATCH_TAG="${{ github.event.inputs.tag }}"
+          if [ -n "${DISPATCH_TAG}" ]; then
+            VERSION="${DISPATCH_TAG}"
+          else
+            VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+          fi
           COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
           DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "VERSION=${VERSION}"  >> "$GITHUB_OUTPUT"
@@ -104,9 +112,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ── 8. Smoke-test the published image ──────────────────────────────────
+      # Fix (CodeRabbit): github.repository can contain uppercase characters
+      # (e.g. "Rancheroo/r8s") which are invalid in OCI image references.
+      # Normalise to lowercase before constructing the docker pull reference.
       - name: Smoke test published image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-$(git rev-parse --short HEAD)"
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:sha-$(git rev-parse --short HEAD)"
+
           echo "=== Pulling image: ${IMAGE} ==="
           docker pull "${IMAGE}"
 
@@ -116,7 +129,7 @@ jobs:
           echo "=== Running: r8s version ==="
           docker run --rm "${IMAGE}" version
 
-          echo "✓ Smoke tests passed"
+          echo "Smoke tests passed"
 
       # ── 9. Print image digest for audit trail ──────────────────────────────
       - name: Print image digest
