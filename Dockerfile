@@ -37,9 +37,14 @@ ARG COMMIT=unknown
 ARG DATE=unknown
 
 # Build a fully static binary:
-#   CGO_ENABLED=0   — no C dependencies
+#   CGO_ENABLED=0   — no C dependencies, fully portable
 #   -trimpath       — reproducible builds, removes local path prefixes
 #   -ldflags        — inject version metadata + strip debug symbols (-s -w)
+#
+# NOTE: use `go build .` (package path) NOT `go build main.go` (file path).
+#       Building a named file skips the linker's package resolution step,
+#       which means -X main.version / -X main.commit / -X main.date are
+#       silently ignored.  Building the package (`.`) applies them correctly.
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
     -ldflags "-s -w \
@@ -47,7 +52,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
               -X main.commit=${COMMIT} \
               -X main.date=${DATE}" \
     -o /build/r8s \
-    main.go
+    .
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM alpine:3.19
