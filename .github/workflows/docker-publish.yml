@@ -115,10 +115,12 @@ jobs:
       # Fix (CodeRabbit): github.repository can contain uppercase characters
       # (e.g. "Rancheroo/r8s") which are invalid in OCI image references.
       # Normalise to lowercase before constructing the docker pull reference.
+      # Fix (CodeRabbit): reuse the already-captured COMMIT from meta_vars
+      # instead of re-running git rev-parse to guarantee tag consistency.
       - name: Smoke test published image
         run: |
           IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:sha-$(git rev-parse --short HEAD)"
+          IMAGE="${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:sha-${{ steps.meta_vars.outputs.COMMIT }}"
 
           echo "=== Pulling image: ${IMAGE} ==="
           docker pull "${IMAGE}"
