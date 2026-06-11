@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -394,6 +395,6 @@ func (e *UsageError) Error() string {
 
 // IsUsageError checks if an error is a UsageError
 func IsUsageError(err error) bool {
-	_, ok := err.(*UsageError)
-	return ok
+	var usageErr *UsageError
+	return errors.As(err, &usageErr)
 }

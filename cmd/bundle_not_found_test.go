@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -60,8 +61,8 @@ func assertExitCodeError(t *testing.T, err error) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	exitErr, ok := err.(*ExitCodeError)
-	if !ok {
+	var exitErr *ExitCodeError
+	if !errors.As(err, &exitErr) {
 		t.Fatalf("expected ExitCodeError, got %T (%v)", err, err)
 	}
 	if exitErr.Code != ExitError {

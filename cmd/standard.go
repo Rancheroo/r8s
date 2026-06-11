@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -77,7 +78,8 @@ func GetExitCode(err error) int {
 	if err == nil {
 		return ExitSuccess
 	}
-	if exitErr, ok := err.(*ExitCodeError); ok {
+	var exitErr *ExitCodeError
+	if errors.As(err, &exitErr) {
 		return exitErr.Code
 	}
 	return ExitError

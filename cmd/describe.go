@@ -11,6 +11,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 
 	"github.com/Rancheroo/r8s/internal/ui"
@@ -394,7 +396,7 @@ func outputDescribeHuman(resources []ResourceInfo) error {
 
 		fmt.Printf("%s %s/%s\n",
 			color.CyanString("==>"),
-			color.YellowString(strings.Title(res.Kind)),
+			color.YellowString(cases.Title(language.English).String(res.Kind)),
 			color.GreenString(res.Name),
 		)
 

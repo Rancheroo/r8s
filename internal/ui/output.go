@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 )
@@ -104,7 +103,6 @@ func PrintAnalysisTable(result AnalysisResult) error {
 
 	// Show random tip at the end
 	if len(R8sFacts) > 0 {
-		rand.Seed(time.Now().UnixNano())
 		tip := R8sFacts[rand.Intn(len(R8sFacts))]
 		// Use Cyan for better visibility than gray
 		tipColor := color.New(color.Italic, color.FgCyan)
