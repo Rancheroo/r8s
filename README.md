@@ -1,3 +1,12 @@
+# 🚨 THIS REPOSITORY HAS MOVED 🚨
+
+**The official `r8s` repository has moved to rancherlabs/r8s:**
+👉 **[https://github.com/rancherlabs/r8s](https://github.com/rancherlabs/r8s)** 👈
+
+*This personal repository is now archived and read-only. Please update your bookmarks, clones, and remotes to point to the new official location.*
+
+---
+
 # r8s
 
 > **r8s — CLI-Powered Automation Engine & kubectl for RKE2 & K3S Bundles with AI (of course)**
