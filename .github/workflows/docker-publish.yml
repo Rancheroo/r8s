@@ -1,0 +1,141 @@
+# Docker Build & Publish Workflow for r8s
+# Resolves: https://github.com/Rancheroo/r8s/issues/112
+#
+# Triggers:
+#   - Push of a versioned tag  (e.g. v0.9.1)
+#   - Manual dispatch          (workflow_dispatch)
+#
+# Publishes to: ghcr.io/rancheroo/r8s
+# Platforms:    linux/amd64, linux/arm64
+
+name: Docker Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag override (e.g. v0.9.1-test). Defaults to git ref.'
+        required: false
+        default: ''
+
+env:
+  REGISTRY: ghcr.io
+  # github.repository is e.g. "Rancheroo/r8s" — lowercased where needed below
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # required to push to GHCR
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so git describe works for VERSION
+
+      # ── 2. Derive version metadata ─────────────────────────────────────────
+      # Fix (CodeRabbit): prefer the workflow_dispatch input tag when provided;
+      # only fall back to `git describe` when running from an automatic tag push.
+      - name: Derive version metadata
+        id: meta_vars
+        run: |
+          DISPATCH_TAG="${{ github.event.inputs.tag }}"
+          if [ -n "${DISPATCH_TAG}" ]; then
+            VERSION="${DISPATCH_TAG}"
+          else
+            VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+          fi
+          COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "VERSION=${VERSION}"  >> "$GITHUB_OUTPUT"
+          echo "COMMIT=${COMMIT}"    >> "$GITHUB_OUTPUT"
+          echo "DATE=${DATE}"        >> "$GITHUB_OUTPUT"
+
+      # ── 3. Set up QEMU for cross-compilation ───────────────────────────────
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # ── 4. Set up Docker Buildx ────────────────────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── 5. Log in to GHCR ──────────────────────────────────────────────────
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 6. Generate image tags & labels ────────────────────────────────────
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # On versioned tag push: v1.2.3, v1.2, v1, latest
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Always include the short git SHA for traceability
+            type=sha,prefix=sha-
+            # Manual dispatch: use the user-supplied tag if set
+            type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event.inputs.tag != '' }}
+
+      # ── 7. Build & push multi-arch image ───────────────────────────────────
+      - name: Build and push Docker image
+        id: build_push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Pass version info from git into the build
+          build-args: |
+            VERSION=${{ steps.meta_vars.outputs.VERSION }}
+            COMMIT=${{ steps.meta_vars.outputs.COMMIT }}
+            DATE=${{ steps.meta_vars.outputs.DATE }}
+          # Layer caching to speed up subsequent builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── 8. Smoke-test the published image ──────────────────────────────────
+      # Fix (CodeRabbit): github.repository can contain uppercase characters
+      # (e.g. "Rancheroo/r8s") which are invalid in OCI image references.
+      # Normalise to lowercase before constructing the docker pull reference.
+      # Fix (CodeRabbit): reuse the already-captured COMMIT from meta_vars
+      # instead of re-running git rev-parse to guarantee tag consistency.
+      - name: Smoke test published image
+        run: |
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="${{ env.REGISTRY }}/${IMAGE_NAME_LOWER}:sha-${{ steps.meta_vars.outputs.COMMIT }}"
+
+          echo "=== Pulling image: ${IMAGE} ==="
+          docker pull "${IMAGE}"
+
+          echo "=== Running: r8s --help ==="
+          docker run --rm "${IMAGE}" --help
+
+          echo "=== Running: r8s version ==="
+          docker run --rm "${IMAGE}" version
+
+          echo "Smoke tests passed"
+
+      # ── 9. Print image digest for audit trail ──────────────────────────────
+      - name: Print image digest
+        run: |
+          echo "Image digest: ${{ steps.build_push.outputs.digest }}"
+          echo "Tags pushed:"
+          echo "${{ steps.meta.outputs.tags }}"

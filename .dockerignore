@@ -1,0 +1,49 @@
+# =============================================================================
+# .dockerignore for r8s
+# Keeps the Docker build context minimal and prevents unnecessary files
+# from being sent to the Docker daemon during `docker build`.
+# =============================================================================
+
+# ── Version control ───────────────────────────────────────────────────────────
+.git
+.gitignore
+.github
+
+# ── Documentation ─────────────────────────────────────────────────────────────
+*.md
+docs/
+
+# ── Build artifacts ───────────────────────────────────────────────────────────
+bin/
+releases/
+
+# ── Test & coverage ───────────────────────────────────────────────────────────
+coverage.out
+coverage.html
+**/*_test.go
+
+# ── Logs & temp files ─────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.swp
+*.swo
+
+# ── Environment & secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+
+# ── OS metadata ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE configs ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+
+# ── Linter / tool config (not needed at runtime) ─────────────────────────────
+.coderabbit.yaml
+.markdownlint.json
+.golangci.yml
